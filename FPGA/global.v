@@ -2,6 +2,27 @@
 
 `include "version.v" 
  
+`define A  0
+`define B  20
+`define C  40
+`define D  60
+`define E  80
+`define F  100
+`define G  120
+`define H  140
+`define J  160
+`define K  180
+`define L  200
+`define M  220
+`define N  240
+`define P  260
+`define R  280
+`define T  300
+`define U  320
+`define V  340
+`define W  360
+`define Y  380
+
 //CPU IO
 `define PWM1A 145
 `define PWM1B 146
