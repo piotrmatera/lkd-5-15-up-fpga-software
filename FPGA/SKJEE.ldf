@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381C" default_implementation="ACDC">
+    <Options/>
+    <Implementation title="ACDC" dir="ACDC" description="ACDC" synthesis="lse" default_strategy="Strategy1">
+        <Options top="SerDes_master"/>
+        <Source name="comm_core.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="crc_generator.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="global.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="miscellanous.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="PWM.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="SD_filter.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="sed.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="SerDes.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="synchronization.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="testbench.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="top_slave.v" type="Verilog" type_short="Verilog" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="version.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Clarity/Clarity.sbx" type="sbx" type_short="SBX">
+            <Options/>
+        </Source>
+        <Source name="constraint_ACDC.ldc" type="LSE Design Constraints File" type_short="LDC">
+            <Options/>
+        </Source>
+        <Source name="SKJEE.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Strategy name="Strategy1" file="SKJEE1.sty"/>
+</BaliProject>
