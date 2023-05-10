@@ -65,14 +65,10 @@ LOCATE COMP "CPU_io[55]" SITE "G19" ;
 LOCATE COMP "CPU_io[54]" SITE "F20" ;
 LOCATE COMP "CPU_io[53]" SITE "H16" ;
 /////////////////////////// EMIF_CONTROL
-//F16 -> D12
-//H18 -> D11
-//D11 -> E15
-//C17 -> D17
 //LOCATE COMP "CPU_io[31]" SITE "F16" ;
 //LOCATE COMP "CPU_io[37]" SITE "H18" ;
-LOCATE COMP "CPU_io[37]" SITE "F3" ;
-LOCATE COMP "CPU_io[31]" SITE "D12" ;
+LOCATE COMP "CPU_io[37]" SITE "D12" ;
+LOCATE COMP "CPU_io[31]" SITE "F3" ;
 LOCATE COMP "CPU_io[32]" SITE "G18" ;
 LOCATE COMP "CPU_io[33]" SITE "G16" ;
 /////////////////////////// EMIF_ADDRESS
@@ -103,8 +99,8 @@ DEFINE PORT GROUP "EMIF_address" "CPU_io[38]"
 "CPU_io[47]" 
 "CPU_io[48]" 
 "CPU_io[49]" 
-"CPU_io[50]" ;
-//"CPU_io[51]"
+"CPU_io[50]"
+"CPU_io[51]" ;
 //"CPU_io[52]"
 //"CPU_io[86]"
 //"CPU_io[87]"
@@ -359,3 +355,11 @@ CLOCK_TO_OUT GROUP "EMIF_data" 20.000000 ns CLKNET "EMIF_oe_i" ;
 MAXDELAY FROM GROUP "EMIF_address" TO GROUP "EMIF_data" 15.000000 ns ;
 USE PRIMARY NET "EMIF_oe_i" ;
 USE PRIMARY NET "EMIF_we_i" ;
+
+LOCATE COMP "Resonant1_Mem2_addrw_8__I_0/Slice2/Slice_0_mult_out_rob_0_17__I_0" SITE "MULT18_R13C4";
+LOCATE COMP "Resonant1_Mem2_addrw_8__I_0/Slice2/Slice_0_mult_out_rob_1_17__I_0" SITE "MULT18_R13C5";
+LOCATE COMP "Resonant1_Mem2_addrw_8__I_0/Slice2/dsp_alu_0" SITE "ALU54_R13C7";
+
+LOCATE COMP "Res_ctrl2/Slice2/Slice_0_mult_out_rob_0_17__I_0" SITE "MULT18_R13C8";
+LOCATE COMP "Res_ctrl2/Slice2/Slice_0_mult_out_rob_1_17__I_0" SITE "MULT18_R13C9";
+LOCATE COMP "Res_ctrl2/Slice2/dsp_alu_0" SITE "ALU54_R13C11";

@@ -34,15 +34,24 @@
             <Options/>
         </Source>
         <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="top_slave.v" type="Verilog" type_short="Verilog" excluded="TRUE">
-            <Options/>
+            <Options top_module="SerDes_master"/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="Clarity/Clarity.sbx" type="sbx" type_short="SBX">
+            <Options/>
+        </Source>
+        <Source name="Kalman.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Resonant_controler.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Slice2.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="ACDC/ACDC.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
         <Source name="constraint_ACDC.ldc" type="LSE Design Constraints File" type_short="LDC">
