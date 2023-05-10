@@ -2,7 +2,7 @@
 
 module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, BAMemsel,
 	BBMemsel, CMemsel, SignAA, SignAB, SignBA, SignBB, AMuxsel, BMuxsel, CMuxsel, Opcode, 
-	Result, Result54, EQZ, EQZM, EQOM, EQPAT, EQPATB, OVER, UNDER);
+	Result, Result54, SIGNEDR, EQZ, EQZM, EQOM, EQPAT, EQPATB, OVER, UNDER, CIN, SIGNEDCIN, CO);
     input wire CLK0;
     input wire CE0;
 	input wire CE1;
@@ -26,6 +26,7 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
     input wire [3:0] Opcode;
     output wire [35:0] Result;
 	output wire [53:0] Result54;
+	output wire SIGNEDR;
     output wire EQZ;
     output wire EQZM;
     output wire EQOM;
@@ -33,8 +34,10 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
     output wire EQPATB;
     output wire OVER;
     output wire UNDER;
+	input wire [53:0] CIN;
+	input wire SIGNEDCIN;
+	output wire [53:0] CO;
 
-    wire Slice_alu_signedr_1_0;
     wire Slice_alu_output[53:0];
     wire Slice_0_mult_out_rob_0[17:0];
     wire Slice_0_mult_out_roa_0[17:0];
@@ -77,7 +80,7 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	
 	defparam dsp_alu_0.CLK3_DIV = "ENABLED" ;
     defparam dsp_alu_0.CLK2_DIV = "ENABLED" ;
-    defparam dsp_alu_0.CLK1_DIV = "DISABLED" ;
+    defparam dsp_alu_0.CLK1_DIV = "ENABLED" ;
     defparam dsp_alu_0.CLK0_DIV = "ENABLED" ;
     defparam dsp_alu_0.REG_INPUTCFB_RST = "RST0" ;
     defparam dsp_alu_0.REG_INPUTCFB_CE = "CE0" ;
@@ -98,10 +101,10 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
     defparam dsp_alu_0.REG_OPCODEOP0_0_CLK = "CLK0" ;
     defparam dsp_alu_0.REG_INPUTC1_RST = "RST0" ;
     defparam dsp_alu_0.REG_INPUTC1_CE = "CE0" ;
-    defparam dsp_alu_0.REG_INPUTC1_CLK = "CLK1" ;
+    defparam dsp_alu_0.REG_INPUTC1_CLK = "CLK0" ;
     defparam dsp_alu_0.REG_INPUTC0_RST = "RST0" ;
     defparam dsp_alu_0.REG_INPUTC0_CE = "CE0" ;
-    defparam dsp_alu_0.REG_INPUTC0_CLK = "CLK1" ;
+    defparam dsp_alu_0.REG_INPUTC0_CLK = "CLK0" ;
     defparam dsp_alu_0.LEGACY = "DISABLED" ;
     defparam dsp_alu_0.REG_FLAG_RST = "RST0" ;
     defparam dsp_alu_0.REG_FLAG_CE = "CE0" ;
@@ -181,7 +184,7 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .CE1(scuba_vhi), .CE2(scuba_vhi), .CE3(scuba_vhi), .CLK0(CLK0), 
         .CLK1(CLK0), .CLK2(scuba_vlo), .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), 
         .RST2(scuba_vlo), .RST3(scuba_vlo), .SIGNEDIA(Slice_0_mult_out_signedp_0), 
-        .SIGNEDIB(Slice_0_mult_out_signedp_1), .SIGNEDCIN(scuba_vlo), .MA35(Slice_0_mult_out_p_0[35]), 
+        .SIGNEDIB(Slice_0_mult_out_signedp_1), .SIGNEDCIN(SIGNEDCIN), .MA35(Slice_0_mult_out_p_0[35]), 
         .MA34(Slice_0_mult_out_p_0[34]), .MA33(Slice_0_mult_out_p_0[33]), 
         .MA32(Slice_0_mult_out_p_0[32]), .MA31(Slice_0_mult_out_p_0[31]), 
         .MA30(Slice_0_mult_out_p_0[30]), .MA29(Slice_0_mult_out_p_0[29]), 
@@ -213,20 +216,20 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .MB10(Slice_0_mult_out_p_1[10]), .MB9(Slice_0_mult_out_p_1[9]), .MB8(Slice_0_mult_out_p_1[8]), 
         .MB7(Slice_0_mult_out_p_1[7]), .MB6(Slice_0_mult_out_p_1[6]), .MB5(Slice_0_mult_out_p_1[5]), 
         .MB4(Slice_0_mult_out_p_1[4]), .MB3(Slice_0_mult_out_p_1[3]), .MB2(Slice_0_mult_out_p_1[2]), 
-        .MB1(Slice_0_mult_out_p_1[1]), .MB0(Slice_0_mult_out_p_1[0]), .CIN53(scuba_vlo), 
-        .CIN52(scuba_vlo), .CIN51(scuba_vlo), .CIN50(scuba_vlo), .CIN49(scuba_vlo), 
-        .CIN48(scuba_vlo), .CIN47(scuba_vlo), .CIN46(scuba_vlo), .CIN45(scuba_vlo), 
-        .CIN44(scuba_vlo), .CIN43(scuba_vlo), .CIN42(scuba_vlo), .CIN41(scuba_vlo), 
-        .CIN40(scuba_vlo), .CIN39(scuba_vlo), .CIN38(scuba_vlo), .CIN37(scuba_vlo), 
-        .CIN36(scuba_vlo), .CIN35(scuba_vlo), .CIN34(scuba_vlo), .CIN33(scuba_vlo), 
-        .CIN32(scuba_vlo), .CIN31(scuba_vlo), .CIN30(scuba_vlo), .CIN29(scuba_vlo), 
-        .CIN28(scuba_vlo), .CIN27(scuba_vlo), .CIN26(scuba_vlo), .CIN25(scuba_vlo), 
-        .CIN24(scuba_vlo), .CIN23(scuba_vlo), .CIN22(scuba_vlo), .CIN21(scuba_vlo), 
-        .CIN20(scuba_vlo), .CIN19(scuba_vlo), .CIN18(scuba_vlo), .CIN17(scuba_vlo), 
-        .CIN16(scuba_vlo), .CIN15(scuba_vlo), .CIN14(scuba_vlo), .CIN13(scuba_vlo), 
-        .CIN12(scuba_vlo), .CIN11(scuba_vlo), .CIN10(scuba_vlo), .CIN9(scuba_vlo), 
-        .CIN8(scuba_vlo), .CIN7(scuba_vlo), .CIN6(scuba_vlo), .CIN5(scuba_vlo), .CIN4(scuba_vlo), 
-        .CIN3(scuba_vlo), .CIN2(scuba_vlo), .CIN1(scuba_vlo), .CIN0(scuba_vlo), .OP10(Opcode[3]), 
+        .MB1(Slice_0_mult_out_p_1[1]), .MB0(Slice_0_mult_out_p_1[0]), .CIN53(CIN[53]), 
+        .CIN52(CIN[52]), .CIN51(CIN[51]), .CIN50(CIN[50]), .CIN49(CIN[49]), 
+        .CIN48(CIN[48]), .CIN47(CIN[47]), .CIN46(CIN[46]), .CIN45(CIN[45]), 
+        .CIN44(CIN[44]), .CIN43(CIN[43]), .CIN42(CIN[42]), .CIN41(CIN[41]), 
+        .CIN40(CIN[40]), .CIN39(CIN[39]), .CIN38(CIN[38]), .CIN37(CIN[37]), 
+        .CIN36(CIN[36]), .CIN35(CIN[35]), .CIN34(CIN[34]), .CIN33(CIN[33]), 
+        .CIN32(CIN[32]), .CIN31(CIN[31]), .CIN30(CIN[30]), .CIN29(CIN[29]), 
+        .CIN28(CIN[28]), .CIN27(CIN[27]), .CIN26(CIN[26]), .CIN25(CIN[25]), 
+        .CIN24(CIN[24]), .CIN23(CIN[23]), .CIN22(CIN[22]), .CIN21(CIN[21]), 
+        .CIN20(CIN[20]), .CIN19(CIN[19]), .CIN18(CIN[18]), .CIN17(CIN[17]), 
+        .CIN16(CIN[16]), .CIN15(CIN[15]), .CIN14(CIN[14]), .CIN13(CIN[13]), 
+        .CIN12(CIN[12]), .CIN11(CIN[11]), .CIN10(CIN[10]), .CIN9(CIN[9]), 
+        .CIN8(CIN[8]), .CIN7(CIN[7]), .CIN6(CIN[6]), .CIN5(CIN[5]), .CIN4(CIN[4]), 
+        .CIN3(CIN[3]), .CIN2(CIN[2]), .CIN1(CIN[1]), .CIN0(CIN[0]), .OP10(Opcode[3]), 
         .OP9(Opcode[2]), .OP8(Opcode[1]), .OP7(Opcode[0]), .OP6(CMuxsel[2]), 
         .OP5(CMuxsel[1]), .OP4(CMuxsel[0]), .OP3(BMuxsel[1]), .OP2(BMuxsel[0]), 
         .OP1(AMuxsel[1]), .OP0(AMuxsel[0]), .R53(Slice_alu_output[53]), 
@@ -255,19 +258,19 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .R8(Slice_alu_output[8]), .R7(Slice_alu_output[7]), .R6(Slice_alu_output[6]), 
         .R5(Slice_alu_output[5]), .R4(Slice_alu_output[4]), .R3(Slice_alu_output[3]), 
         .R2(Slice_alu_output[2]), .R1(Slice_alu_output[1]), .R0(Slice_alu_output[0]), 
-        .CO53(), .CO52(), .CO51(), .CO50(), .CO49(), .CO48(), .CO47(), .CO46(), 
-        .CO45(), .CO44(), .CO43(), .CO42(), .CO41(), .CO40(), .CO39(), .CO38(), 
-        .CO37(), .CO36(), .CO35(), .CO34(), .CO33(), .CO32(), .CO31(), .CO30(), 
-        .CO29(), .CO28(), .CO27(), .CO26(), .CO25(), .CO24(), .CO23(), .CO22(), 
-        .CO21(), .CO20(), .CO19(), .CO18(), .CO17(), .CO16(), .CO15(), .CO14(), 
-        .CO13(), .CO12(), .CO11(), .CO10(), .CO9(), .CO8(), .CO7(), .CO6(), 
-        .CO5(), .CO4(), .CO3(), .CO2(), .CO1(), .CO0(), .EQZ(EQZ), .EQZM(EQZM), 
+		.CO53(CO[53]), .CO52(CO[52]), .CO51(CO[51]), .CO50(CO[50]), .CO49(CO[49]), .CO48(CO[48]), .CO47(CO[47]), .CO46(CO[46]),
+		.CO45(CO[45]), .CO44(CO[44]), .CO43(CO[43]), .CO42(CO[42]), .CO41(CO[41]), .CO40(CO[40]), .CO39(CO[39]), .CO38(CO[38]),
+		.CO37(CO[37]), .CO36(CO[36]), .CO35(CO[35]), .CO34(CO[34]), .CO33(CO[33]), .CO32(CO[32]), .CO31(CO[31]), .CO30(CO[30]),
+		.CO29(CO[29]), .CO28(CO[28]), .CO27(CO[27]), .CO26(CO[26]), .CO25(CO[25]), .CO24(CO[24]), .CO23(CO[23]), .CO22(CO[22]),
+		.CO21(CO[21]), .CO20(CO[20]), .CO19(CO[19]), .CO18(CO[18]), .CO17(CO[17]), .CO16(CO[16]), .CO15(CO[15]), .CO14(CO[14]),
+		.CO13(CO[13]), .CO12(CO[12]), .CO11(CO[11]), .CO10(CO[10]), .CO9(CO[9]), .CO8(CO[8]), .CO7(CO[7]), .CO6(CO[6]),
+		.CO5(CO[5]), .CO4(CO[4]), .CO3(CO[3]), .CO2(CO[2]), .CO1(CO[1]), .CO0(CO[0]), .EQZ(EQZ), .EQZM(EQZM), 
         .EQOM(EQOM), .EQPAT(EQPAT), .EQPATB(EQPATB), .OVER(OVER), .UNDER(UNDER), 
-        .OVERUNDER(), .SIGNEDR(Slice_alu_signedr_1_0));
+        .OVERUNDER(), .SIGNEDR(SIGNEDR));
 
     defparam dsp_mult_1.CLK3_DIV = "ENABLED" ;
     defparam dsp_mult_1.CLK2_DIV = "ENABLED" ;
-    defparam dsp_mult_1.CLK1_DIV = "DISABLED" ;
+    defparam dsp_mult_1.CLK1_DIV = "ENABLED" ;
     defparam dsp_mult_1.CLK0_DIV = "ENABLED" ;
     defparam dsp_mult_1.HIGHSPEED_CLK = "NONE" ;
     defparam dsp_mult_1.REG_INPUTC_RST = "RST0" ;
@@ -365,7 +368,7 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 
     defparam dsp_mult_0.CLK3_DIV = "ENABLED" ;
     defparam dsp_mult_0.CLK2_DIV = "ENABLED" ;
-    defparam dsp_mult_0.CLK1_DIV = "DISABLED" ;
+    defparam dsp_mult_0.CLK1_DIV = "ENABLED" ;
     defparam dsp_mult_0.CLK0_DIV = "ENABLED" ;
     defparam dsp_mult_0.HIGHSPEED_CLK = "NONE" ;
     defparam dsp_mult_0.REG_INPUTC_RST = "RST0" ;

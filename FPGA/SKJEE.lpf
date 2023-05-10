@@ -355,11 +355,3 @@ CLOCK_TO_OUT GROUP "EMIF_data" 20.000000 ns CLKNET "EMIF_oe_i" ;
 MAXDELAY FROM GROUP "EMIF_address" TO GROUP "EMIF_data" 15.000000 ns ;
 USE PRIMARY NET "EMIF_oe_i" ;
 USE PRIMARY NET "EMIF_we_i" ;
-
-LOCATE COMP "Resonant1_Mem2_addrw_8__I_0/Slice2/Slice_0_mult_out_rob_0_17__I_0" SITE "MULT18_R13C4";
-LOCATE COMP "Resonant1_Mem2_addrw_8__I_0/Slice2/Slice_0_mult_out_rob_1_17__I_0" SITE "MULT18_R13C5";
-LOCATE COMP "Resonant1_Mem2_addrw_8__I_0/Slice2/dsp_alu_0" SITE "ALU54_R13C7";
-
-LOCATE COMP "Res_ctrl2/Slice2/Slice_0_mult_out_rob_0_17__I_0" SITE "MULT18_R13C8";
-LOCATE COMP "Res_ctrl2/Slice2/Slice_0_mult_out_rob_1_17__I_0" SITE "MULT18_R13C9";
-LOCATE COMP "Res_ctrl2/Slice2/dsp_alu_0" SITE "ALU54_R13C11";

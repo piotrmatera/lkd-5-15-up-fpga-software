@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 // T=(21*h+8)*s
-module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_clk_en_w, enable_i, Mem0_addrw_o, Mem0_we_o, Mem0_data_io, WIP_flag_o);
+module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_clk_en_w, enable_i, Mem0_addrw_o, Mem0_we_o, Mem0_data_io, WIP_flag_o, CIN, SIGNEDCIN, CO, SIGNEDCO);
 	GSR GSR_INST (.GSR (1'b1));
 	PUR PUR_INST (.PUR (1'b0));
 	
@@ -101,6 +101,10 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	output Mem0_we_o;
 	output [35:0] Mem0_data_io;
 	output WIP_flag_o;
+	input wire [53:0] CIN;
+	input wire SIGNEDCIN;
+	output wire [53:0] CO;
+	output wire SIGNEDCO;
 	
 	wire wip_flag;
 	reg[OPCODE_WIDTH-1:0]Opcode;
@@ -1070,8 +1074,8 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	.RST0(1'b0), .Mem0(Mem0_data_o), .Mem1(Mem1_data_o), .AAMemsel(AAMemsel_pip), .ABMemsel(ABMemsel_pip), 
 	.BAMemsel(BAMemsel_pip), .BBMemsel(BBMemsel_pip), .CMemsel(CMemsel_pip), .SignAA(SignAA_pip), .SignAB(SignAB_pip),
 	.SignBA(SignBA_pip), .SignBB(SignBB_pip), .AMuxsel(AMuxsel_pip), .BMuxsel(BMuxsel_pip), .CMuxsel(CMuxsel_pip), 
-	.Opcode(Opcode_pip), .Result(Mem0_data_i), .Result54(), .EQZ(), .EQZM(), .EQOM(), .EQPAT(), 
-	.EQPATB(), .OVER(), .UNDER());
+	.Opcode(Opcode_pip), .Result(Mem0_data_i), .Result54(CO), .SIGNEDR(SIGNEDCO), .EQZ(), .EQZM(), .EQOM(), .EQPAT(), 
+	.EQPATB(), .OVER(), .UNDER(), .CIN(CIN), .SIGNEDCIN(SIGNEDCIN), .CO());
 	
 	//Parametry pamieci
 	pmi_ram_dp #(.pmi_wr_addr_depth(M0_ADDR_NUM), .pmi_wr_addr_width(M0_ADDR_WIDTH), .pmi_wr_data_width(36),
