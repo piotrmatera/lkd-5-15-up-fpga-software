@@ -1,0 +1,363 @@
+#Mapa rejestrow MODBUS
+# ograniczony dostep
+VERSION 0305
+
+#poczatek sekcji typow danych bity/enumy z nazwami bitow/stanow
+SECTION_TYPE_DEF
+#typ bitowy musi sie rozpoczynac od bit
+#nazwa nowego typu musi miec na koncu :
+bit16_alarm0_m:
+#kolejne sa oznaczenia bitow (od zerowego - LE)
+	rx1_crc_error
+	rx1_overrun_error
+	rx1_frame_error
+	rx2_crc_error
+	rx2_overrun_error
+	rx2_frame_error
+	rx1_port_nrdy
+	rx2_port_nrdy
+	Not_enough_data_master
+	CT_char_error
+	PLL_UNSYNC
+	FLT_SUPPLY_MASTER
+	sed_err
+	no_sync
+	U_grid_rms_a_L
+	U_grid_rms_b_L
+
+bit16_alarm1_m:
+	U_grid_rms_c_L
+	U_grid_abs_a_H
+	U_grid_abs_b_H
+	U_grid_abs_c_H
+
+bit16_alarm0_s:
+	Driver_FLT_a_A
+	Driver_FLT_a_B
+	Driver_FLT_b_A
+	Driver_FLT_b_B
+	Driver_FLT_c_A
+	Driver_FLT_c_B
+	Driver_FLT_n_A
+	Driver_FLT_n_B
+	Driver_nRDY_a_A
+	Driver_nRDY_a_B
+	Driver_nRDY_b_A
+	Driver_nRDY_b_B
+	Driver_nRDY_c_A
+	Driver_nRDY_c_B
+	Driver_nRDY_n_A
+	Driver_nRDY_n_B
+
+bit16_alarm1_s:
+	I_conv_a_H
+	I_conv_a_L
+	I_conv_b_H
+	I_conv_b_L
+	I_conv_c_H
+	I_conv_c_L
+	I_conv_n_H
+	I_conv_n_L
+	I_conv_rms_a
+	I_conv_rms_b
+	I_conv_rms_c
+	I_conv_rms_n
+	U_dc_H
+	U_dc_L
+	Temperature_H
+	Temperature_L
+
+bit16_alarm2_s:
+	Not_enough_data_slave
+	CONV_SOFTSTART
+	FUSE_BROKEN
+	FLT_SUPPLY_SLAVE
+	TZ_FPGA_FLT
+	TZ_CLOCKFAIL
+	TZ_EMUSTOP
+	TZ
+	sync_error
+	rx1_crc_error
+	rx1_overrun_error
+	rx1_frame_error
+	rx2_crc_error
+	rx2_overrun_error
+	rx2_frame_error
+	rx1_port_nrdy
+
+bit16_alarm3_s:
+	rx2_port_nrdy
+	sed_err
+	U_dc_balance
+	lopri_timeout
+	lopri_error
+	rsvd2
+
+bit16_status0_m:
+	Init_done
+	ONOFF_state
+	DS1_switch_SD_CT
+	DS2_enable_Q_comp
+	DS3_enable_P_sym
+	DS4_enable_H_comp
+	DS5_limit_to_9odd_harmonics
+	DS6_limit_to_14odd_harmonics
+	DS7_limit_to_19odd_harmonics
+	DS8_DS_override
+	calibration_procedure_error
+	L_grid_measured
+	Scope_snapshot_pending
+	Scope_snapshot_error
+	SD_card_not_enough_data
+	SD_no_CT_characteristic
+
+bit16_status1_m:
+	SD_no_calibration
+	SD_no_harmonic_settings
+	SD_no_settings
+	FLASH_not_enough_data
+	FLASH_no_CT_characteristic
+	FLASH_no_calibration
+	FLASH_no_harmonic_settings
+	FLASH_no_settings
+	in_limit_Q
+	in_limit_P
+	in_limit_H
+	Conv_active
+	PLL_sync
+	Grid_present
+	SD_no_meter
+	wifi_on
+
+bit16_status2_m:
+	no_CT_connected_a
+	no_CT_connected_b
+	no_CT_connected_c
+	CT_connection_a1
+	CT_connection_a0
+	CT_connection_b1
+	CT_connection_b0
+	CT_connection_c1
+	CT_connection_c0
+	slave_rdy_0
+	slave_rdy_1
+	slave_rdy_2
+	slave_rdy_3
+	error_retry3
+	error_retry2
+	error_retry1
+
+bit16_status3_m:
+	error_retry0
+	exp_slaves3
+	exp_slaves2
+	exp_slaves1
+	exp_slaves0
+	scope_trigger_request
+	slave_any_sync
+	incorrect_nr_of_slaves
+
+
+
+SECTION_INPUT_REGISTERS_DEF
+
+0000	u16 prad #(wielkość wczytywana z pliku knfiguracyjnego, obecnie 8 lub 16)
+0001	u16 U1 #(jed. Volt) adres 340
+0002	u16 U2 #(jed. Volt)
+0003	u16 U3 #(jed. Volt)
+0004	u16 THDU1 #(jed. dziesiąta część procenta) adres 	354
+0005	u16 THDU2
+0006	u16 THDU3
+0007	u16 f #Cżestotliwość (jed. dziesiąta część Hz) adres 396
+0008	u16 t_lkd #temperatura LKD (jed. stopien) max( Temp1, Temp2) adres 144, 145
+0009	u16 t_env #temperatura zewnętrzna (jed. stopien) Temp3 adres 140
+
+0010	u16 I1 #(jde. Amper) adres 346
+0011	u16 I2 #(jde. Amper)
+0012	u16 I3 #(jde. Amper)
+0013	u16 THDI1 #(jed. dziesiąta część procenta) adres 328
+0014	u16 THDI2 #(jed. dziesiąta część procenta)
+0015	u16 THDI3 #(jed. dziesiąta część procenta)
+0016	u16 PF1 #(jed. tysiączna część procenta) adres 380
+0017	u16 PF2 #(jed. tysiączna część procenta)
+0018	u16 PF3 #(jed. tysiączna część procenta)
+0019	u16 Moc_pozorna1 # faza 1 (jed. VA) adres 360
+
+0020	u16 Moc_pozorna2 # faza 2 (jed. VA)
+0021	u16 Moc_pozorna3 #faza 3 (jed. VA)
+0022	u16 Moc_czynna_P50Hz_1 #faza 1 (jed. W) adres 268
+0023	u16 Moc_czynna_P50Hz_2 # faza 2 (jed. W)
+0024	u16 Moc_czynna_P50Hz_3 # faza 3 (jed. W)
+0025	u16 Moc_bierna_P50Hz_1 # faza 1 (jed. Var) adres 286
+0026	u16 Moc_bierna_P50Hz_2 # faza 2 (jed. Var)
+0027	u16 Moc_bierna_P50Hz_3 # faza 3 (jed. Var)
+0028	u16 Icomp1 #Prąd kompensatora I1 (jed. Amper) adres 352
+0029	u16 Icomp2 #Prąd kompensatora I2 (jed. Amper)
+
+0030	u16 Icomp3 #Prąd kompensatora I3 (jed. Amper)
+0031	u16 Zasoby_1 #(je. procent) adres 372
+0032	u16 Zasoby_2 # 2 (je. procent)
+0033	u16 Zasoby_3 # faza 3 (je. procent)
+0034	u16 Moc_bierna_komp1 #(jed. Var) adres 298
+0035	u16 Moc_bierna_komp2 #ensatora faza 2
+0036	u16 Moc_bierna_komp3 #ensatora faza 3
+0037	u16 Moc_pozorna_obc50_1 # obciązenia 50Hz faza 1 (jed. VA) adres 310
+0038	u16 Moc_pozorna_obc50_2 # obciązenia 50Hz faza 2 (jed. VA)
+0039	u16 Moc_pozorna_obc50_3 #iązenia 50Hz faza 3 (jed. VA)
+
+0040	u16 Moc_czynna_obc50_1 #iązenia 50Hz faza 1 (jed. W) adres 274
+0041	u16 Moc_czynna_obc50_2 #a 50Hz faza 2 (jed. W)
+0042	u16 Moc_czynna_obc50_3 #a 50Hz faza 3 (jed. W)
+0043	u16 Moc_bierna_obc50_1 #a 50Hz faza 1 (jed. Var) adres 292
+0044	u16 Moc_bierna_obc50_2 #a 50Hz faza 2 (jed. Var)
+0045	u16 Moc_bierna_obc50_3 #a 50Hz faza 3 (jed. Var)
+0046	u16 Reserved1
+0047	u16 Reserved2
+0048	u16 Reserved3
+0049	u16 Reserved4
+
+0050	u16 Time_godzina
+0051	u16 Time_minuta
+0052	u16 Sekunda
+0053	u16 Rok
+0054	u16 Miesiac
+0055	u16 Dzien
+0056	bit16_alarm0_m Alarm0_m
+0057	bit16_alarm1_m Alarm1_m
+0058	u16 Reserved41
+0059	bit16_status0_m Status0_m
+0060	bit16_status1_m Status1_m
+
+0061	bit16_status2_m Status2_m
+0062	bit16_status3_m Status3_m
+0063	bit16_alarm0_s Alarm0_s
+0064	bit16_alarm0_s Alarm1_s
+0065	bit16_alarm0_s Alarm2_s
+0066	bit16_alarm0_s Alarm3_s
+0067	bit16_status0_s Status0_s
+0068	u16 Reserved12
+0069	u16 Reserved13
+
+0070	u16	P_p0
+0071	u16	P_p0x
+0072	u16	P_p0b
+0073	u16	P_p0bx
+0074	u16	P_p1
+0075	u16	P_p1x
+0076	u16	P_p1b
+0077	u16	P_p1bx
+0078	u16	P_p2
+0079	u16	P_p2x
+0080	u16	P_p2b
+0081	u16	P_p2bx
+0082	u16	P_n0
+0083	u16	P_n0x
+0084	u16	P_n0b
+0085	u16	P_n0bx
+0086	u16	P_n1
+0087	u16	P_n1x
+0088	u16	P_n1b
+0089	u16	P_n1bx
+0090	u16	P_n2
+0091	u16	P_n2x
+0092	u16	P_n2b
+0093	u16	P_n2bx
+0094	u16	QI0
+0095	u16	QI0x
+0096	u16	QI0b
+0097	u16	QI0bx
+0098	u16	QI1
+0099	u16	QI1x
+0100	u16	QI1b
+0101	u16	QI1bx
+0102	u16	QI2
+0103	u16	QI2x
+0104	u16	QI2b
+0105	u16	QI2bx
+0106	u16	QII0
+0107	u16	QII0x
+0108	u16	QII0b
+0109	u16	QII0bx
+0110	u16	QII1
+0111	u16	QII1x
+0112	u16	QII1b
+0113	u16	QII1bx
+0114	u16	QII2
+0115	u16	QII2x
+0116	u16	QII2b
+0117	u16	QII2bx
+0118	u16	QIII0
+0119	u16	QIII0x
+0120	u16	QIII0b
+0121	u16	QIII0bx
+0122	u16	QIII1
+0123	u16	QIII1x
+0124	u16	QIII1b
+0125	u16	QIII1bx
+0126	u16	QIII2
+0127	u16	QIII2x
+0128	u16	QIII2b
+0129	u16	QIII2bx
+0130	u16	QIV0
+0131	u16	QIV0x
+0132	u16	QIV0b
+0133	u16	QIV0bx
+0134	u16	QIV1
+0135	u16	QIV1x
+0136	u16	QIV1b
+0137	u16	QIV1bx
+0138	u16	QIV2
+0139	u16	QIV2x
+0140	u16	QIV2b
+0141	u16	QIV2bx
+0142	u16	vector_P_p
+0143	u16	vector_P_px
+0144	u16	vector_P_pb
+0145	u16	vector_P_pbx
+0146	u16	vector_P_n
+0147	u16	vector_P_nx
+0148	u16	vector_P_nb
+0149	u16	vector_P_nbx
+0150	u16	vector_QI
+0151	u16	vector_QIx
+0152	u16	vector_QIb
+0153	u16	vector_QIbx
+0154	u16	vector_QII
+0155	u16	vector_QIIx
+0156	u16	vector_QIIb
+0157	u16	vector_QIIbx
+0158	u16	vector_QIII
+0159	u16	vector_QIIIx
+0160	u16	vector_QIIIb
+0161	u16	vector_QIIIbx
+0162	u16	vector_QIV
+0163	u16	vector_QIVx
+0164	u16	vector_QIVb
+0165	u16	vector_QIVbx
+0166	u16	algebraic_P_p
+0167	u16	algebraic_P_px
+0168	u16	algebraic_P_pb
+0169	u16	algebraic_P_pbx
+0170	u16	algebraic_P_n
+0171	u16	algebraic_P_nx
+0172	u16	algebraic_P_nb
+0173	u16	algebraic_P_nbx
+0174	u16	algebraic_QI
+0175	u16	algebraic_QIx
+0176	u16	algebraic_QIb
+0177	u16	algebraic_QIbx
+0178	u16	algebraic_QII
+0179	u16	algebraic_QIIx
+0180	u16	algebraic_QIIb
+0181	u16	algebraic_QIIbx
+0182	u16	algebraic_QIII
+0183	u16	algebraic_QIIIx
+0184	u16	algebraic_QIIIb
+0185	u16	algebraic_QIIIbx
+0186	u16	algebraic_QIV
+0187	u16	algebraic_QIVx
+0188	u16	algebraic_QIVb
+0189	u16	algebraic_QIVbx
+
+
+SECTION_HOLDING_REGISTERS_DEF

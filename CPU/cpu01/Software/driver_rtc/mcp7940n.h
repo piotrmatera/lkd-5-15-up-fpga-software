@@ -1,0 +1,44 @@
+/*
+ * mcp7940n.h
+ *
+ *  Created on: 2 paŸ 2020
+ *      Author: Piotr
+ */
+
+#ifndef SOFTWARE_DRIVER_RTC_MCP7940N_H_
+#define SOFTWARE_DRIVER_RTC_MCP7940N_H_
+
+
+#define MCP7940N_ADDRESS               (0xde>>1) //RTC
+
+#define MCP7940N_SEC_REG 0
+# define MCP7940N_SEC_MASK 0x7F
+# define MCP7940N_ST_MASK 0x80
+
+#define MCP7940N_MIN_REG 1
+# define MCP7940N_MIN_MASK 0x7F
+
+#define MCP7940N_HOUR_REG 2
+# define MCP7940N_HOUR_MASK 0x3F
+
+#define MCP7940N_WEEKDAY_REG 3
+# define MCP7940N_WEEKDAY_MASK 0x07
+# define MCP7940N_WEEKDAY_OSCRUN_MASK (1<<5)
+# define MCP7940N_WEEKDAY_VBATEN_MASK (1<<3)
+
+#define MCP7940N_DAY_REG 4
+# define MCP7940N_DAY_MASK 0x3F
+
+#define MCP7940N_MONTH_REG 5
+# define MCP7940N_MONTH_MASK 0x1F
+
+#define MCP7940N_YEAR_REG 6
+
+#define MCP7940N_LAST_REG 0x1F
+#define MCP7940N_RES1     0x09
+#define MCP7940N_RES2     0x10
+#define MCP7940N_RES3     0x17
+
+
+
+#endif /* SOFTWARE_DRIVER_RTC_MCP7940N_H_ */

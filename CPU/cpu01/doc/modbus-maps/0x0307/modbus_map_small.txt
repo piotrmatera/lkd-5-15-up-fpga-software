@@ -1,0 +1,726 @@
+# Plik opisu mapy MODBUS - wersja small
+#
+# Format
+# biale znaki (spacje i tabulacje) sa zjadane z poczatku linii
+# Linie rozpoczynajace sie od znaku # - komentarz, dozwolone linie puste
+#
+# 2020-11-05 PR uzupelnienie brakujacych parametrow w holding-registers (wstawienie tangens_range)
+# 2022-01-18 PR dodane rejestry licznikow energii 
+# [...]
+# 2022-06-27 PR poprawka bitow bit16_h_even - byl blad uniemozliwiajacy kontrolowanie parzystych harmonciznych
+# 2022-07-13 PR dodane pola do przeksztaltnikow
+# 2022-08-31 PR dodane liczniki
+# 2022-09-09 PR kontrola zapadow
+# 2023-01-04 PR mapa dla mastera
+# 2023-01-10 PR poprawki mapy, zmiany dla slave'a
+# 2023.01.11-13 PR poprawka alokacji pol bitowych
+
+#oznaczenie wersji mapy
+VERSION 0307
+
+#Sekcja typow danych bity/enumy
+SECTION_TYPE_DEF
+#typ bitowy musi sie rozpoczynac od bit
+#nazwa nowego typu musi miec na koncu :
+bit16_alarm0_m:
+#kolejne sa oznaczenia bitow (od zerowego - LE)
+	rx1_crc_error
+	rx1_overrun_error
+	rx1_frame_error
+	rx2_crc_error
+	rx2_overrun_error
+	rx2_frame_error
+	rx1_port_nrdy
+	rx2_port_nrdy
+	Not_enough_data_master
+	CT_char_error
+	PLL_UNSYNC
+	FLT_SUPPLY_MASTER
+	sed_err
+	no_sync
+	U_grid_rms_a_L
+	U_grid_rms_b_L
+
+bit16_alarm1_m:
+	U_grid_rms_c_L
+	U_grid_abs_a_H
+	U_grid_abs_b_H
+	U_grid_abs_c_H
+
+bit16_alarm0_s:
+	Driver_FLT_a_A
+	Driver_FLT_a_B
+	Driver_FLT_b_A
+	Driver_FLT_b_B
+	Driver_FLT_c_A
+	Driver_FLT_c_B
+	Driver_FLT_n_A
+	Driver_FLT_n_B
+	Driver_nRDY_a_A
+	Driver_nRDY_a_B
+	Driver_nRDY_b_A
+	Driver_nRDY_b_B
+	Driver_nRDY_c_A
+	Driver_nRDY_c_B
+	Driver_nRDY_n_A
+	Driver_nRDY_n_B
+
+bit16_alarm1_s:
+	I_conv_a_H
+	I_conv_a_L
+	I_conv_b_H
+	I_conv_b_L
+	I_conv_c_H
+	I_conv_c_L
+	I_conv_n_H
+	I_conv_n_L
+	I_conv_rms_a
+	I_conv_rms_b
+	I_conv_rms_c
+	I_conv_rms_n
+	U_dc_H
+	U_dc_L
+	Temperature_H
+	Temperature_L
+
+bit16_alarm2_s:
+	Not_enough_data_slave
+	CONV_SOFTSTART
+	FUSE_BROKEN
+	FLT_SUPPLY_SLAVE
+	TZ_FPGA_FLT
+	TZ_CLOCKFAIL
+	TZ_EMUSTOP
+	TZ
+	sync_error
+	rx1_crc_error
+	rx1_overrun_error
+	rx1_frame_error
+	rx2_crc_error
+	rx2_overrun_error
+	rx2_frame_error
+	rx1_port_nrdy
+
+bit16_alarm3_s:
+	rx2_port_nrdy
+	sed_err
+	U_dc_balance
+	lopri_timeout
+	lopri_error
+	rsvd2
+
+bit16_status0_m:
+	Init_done
+	ONOFF_state
+	DS1_switch_SD_CT
+	DS2_enable_Q_comp
+	DS3_enable_P_sym
+	DS4_enable_H_comp
+	DS5_limit_to_9odd_harmonics
+	DS6_limit_to_14odd_harmonics
+	DS7_limit_to_19odd_harmonics
+	DS8_DS_override
+	calibration_procedure_error
+	L_grid_measured
+	Scope_snapshot_pending
+	Scope_snapshot_error
+	SD_card_not_enough_data
+	SD_no_CT_characteristic
+
+bit16_status1_m:
+	SD_no_calibration
+	SD_no_harmonic_settings
+	SD_no_settings
+	FLASH_not_enough_data
+	FLASH_no_CT_characteristic
+	FLASH_no_calibration
+	FLASH_no_harmonic_settings
+	FLASH_no_settings
+	in_limit_Q
+	in_limit_P
+	in_limit_H
+	Conv_active
+	PLL_sync
+	Grid_present
+	SD_no_meter
+	wifi_on
+
+bit16_status2_m:
+	no_CT_connected_a
+	no_CT_connected_b
+	no_CT_connected_c
+	CT_connection_a1
+	CT_connection_a0
+	CT_connection_b1
+	CT_connection_b0
+	CT_connection_c1
+	CT_connection_c0
+	slave_rdy_0
+	slave_rdy_1
+	slave_rdy_2
+	slave_rdy_3
+	
+bit16_status3_m:
+	error_retry0
+	error_retry1
+	error_retry2
+        error_retry3
+	exp_slaves0
+	exp_slaves1
+	exp_slaves2
+	exp_slaves3
+	scope_trigger_request
+	slave_any_sync
+	incorrect_nr_of_slaves
+
+bit16_status0_s:
+	comm_sync
+	comm_msg2
+	Init_done
+	in_limit_H
+	Conv_active
+	calibration_proc_err
+	ONOFF_current
+	SD_card_not_enough_data
+	SD_no_calibration
+	SD_no_settings
+	error_retry0
+	error_retry1
+	error_retry2
+	error_retry3
+	recent_error
+	Conv_enable
+
+#typ wyliczeniowy musi sie rozpoczynac od enum
+#wartosci musza byc po kolei pierwsz oznacza 0
+
+
+bit16_h_odd:
+	res1
+	harm3
+	harm5
+	harm7
+	harm9
+	harm11
+	harm13
+	harm15
+	harm17
+	harm19
+	harm21
+	harm23
+	harm25
+	harm27
+	harm29
+	harm31
+
+bit16_h_oddH:
+	harm33
+	harm35
+	harm37
+	harm39
+	harm41
+	harm43
+	harm45
+	harm47
+	harm49
+
+bit16_h_even:	
+	harm2
+	harm4
+
+bit16_ctrl_flags:
+	Modbus_FatFS_repeat
+	enable_Q_comp_a
+	enable_Q_comp_b
+	enable_Q_comp_c
+	enable_P_sym
+	enable_H_comp
+	version_Q_comp_a
+	version_Q_comp_b
+	version_Q_comp_c
+	version_P_sym
+
+
+bit16_ctrl_triggers:
+	Scope_snapshot
+	save_to_FLASH
+	SD_save_H_Settings
+	SD_save_Settings
+	CPU_reset
+	SD_reset_energy_meter
+	ONOFF_set
+	ONOFF_reset
+
+
+SECTION_INPUT_REGISTERS_DEF
+	128	bit16_alarm0_m	Alarm_master0
+	129	bit16_alarm1_m	Alarm_master1
+	130	bit16_alarm0_m	Alarm_master0_snapshot
+	131	bit16_alarm1_m	Alarm_master1_snapshot
+
+	132	bit16_status0_m	STATUS_0
+	133	bit16_status1_m	STATUS_1
+	134	bit16_status2_m	STATUS_2
+	135	bit16_status3_m	STATUS_3
+
+	136	u32	Machine_state
+	138	u32	Converter_state
+	140	i16	Temp1
+	141	i16	Temp2
+	142	i16	Temp3
+	143	i16	Temp_CPU
+
+	144	float	L_grid_previous_0
+	146	float	L_grid_previous_1
+	148	float	L_grid_previous_2
+	150	float	L_grid_previous_3
+	152	float	L_grid_previous_4
+	154	float	L_grid_previous_5
+	156	float	L_grid_previous_6
+	158	float	L_grid_previous_7
+	160	float	L_grid_previous_8
+	162	float	L_grid_previous_9
+
+	164	u16	file_number_errors
+	165	time	RTC_current_time
+
+	168	u16	file_number_logs
+	170	bit16_alarm0_s	Alarm_slave0
+	171	bit16_alarm1_s	Alarm_slave1
+	172	bit16_alarm2_s	Alarm_slave2
+	173	bit16_alarm3_s	Alarm_slave3
+
+	174	bit16_alarm0_s	Alarm_slave0_snapshot
+	175	bit16_alarm1_s	Alarm_slave1_snapshot
+	176	bit16_alarm2_s	Alarm_slave2_snapshot
+	177	bit16_alarm3_s	Alarm_slave3_snapshot
+
+	178	bit16_status0_s	STATUS_0_slave
+	179	u16 STATUS_1_slave
+
+	256	float3	I_grid_1h
+	262	float3	U_grid_1h
+	268	float3	P_grid_1h
+	274	float3	P_load_1h
+	280	float3	P_conv_1h
+	286	float3	Q_grid_1h
+	292	float3	Q_load_1h
+	298	float3	Q_conv_1h
+	304	float3	S_grid_1h
+	310	float3	S_load_1h
+	316	float3	S_conv_1h
+	322	float3	PF_grid_1h
+	328	float3	THD_I_grid
+	334	float3	THD_U_grid
+	340	float3	U_grid
+	346	float3	I_grid
+	352	float4	I_conv
+	360	float3	S_grid
+	366	float3	S_conv
+	372	float4	Used_resources
+	380	float	PF_grid_1h
+	382	float	P_load_1h
+	384	float	Q_load_1h
+	386	float	S_load_1h
+	388	float	P_grid_1h
+	390	float	Q_grid_1h
+	392	float	S_grid_1h
+	394	float	U_grid_1h
+	396	float	frequency
+	398	u16	rtu_port_id
+
+#Liczniki energii
+	400	u32	P_p0
+	402	u32	P_p0b
+	404	u32	P_p1
+	406	u32	P_p1b
+	408	u32	P_p2
+	410	u32	P_p2b
+	412	u32	P_n0
+	414	u32	P_n0b
+	416	u32	P_n1
+	418	u32	P_n1b
+	420	u32	P_n2
+	422	u32	P_n2b
+	424	u32	QI0
+	426	u32	QI0b
+	428	u32	QI1
+	430	u32	QI1b
+	432	u32	QI2
+	434	u32	QI2b
+	436	u32	QII0
+	438	u32	QII0b
+	440	u32	QII1
+	442	u32	QII1b
+	444	u32	QII2
+	446	u32	QII2b
+	448	u32	QIII0
+	450	u32	QIII0b
+	452	u32	QIII1
+	454	u32	QIII1b
+	456	u32	QIII2
+	458	u32	QIII2b
+	460	u32	QIV0
+	462	u32	QIV0b
+	464	u32	QIV1
+	466	u32	QIV1b
+	468	u32	QIV2
+	470	u32	QIV2b
+
+	472	u32	P_p
+	474	u32	P_pb
+	476	u32	P_n
+	478	u32	P_nb
+	480	u32	QI
+	482	u32	QIb
+	484	u32	QII
+	486	u32	QIIb
+	488	u32	QIII
+	490	u32	QIIIb
+	492	u32	QIV
+	494	u32	QIVb
+
+	512	float	I_grid_L1_harmonic_amplitudes_00
+	514	float	I_grid_L1_harmonic_amplitudes_01
+	516	float	I_grid_L1_harmonic_amplitudes_02
+	518	float	I_grid_L1_harmonic_amplitudes_03
+	520	float	I_grid_L1_harmonic_amplitudes_04
+	522	float	I_grid_L1_harmonic_amplitudes_05
+	524	float	I_grid_L1_harmonic_amplitudes_06
+	526	float	I_grid_L1_harmonic_amplitudes_07
+	528	float	I_grid_L1_harmonic_amplitudes_08
+	530	float	I_grid_L1_harmonic_amplitudes_09
+	532	float	I_grid_L1_harmonic_amplitudes_10
+	534	float	I_grid_L1_harmonic_amplitudes_11
+	536	float	I_grid_L1_harmonic_amplitudes_12
+	538	float	I_grid_L1_harmonic_amplitudes_13
+	540	float	I_grid_L1_harmonic_amplitudes_14
+	542	float	I_grid_L1_harmonic_amplitudes_15
+	544	float	I_grid_L1_harmonic_amplitudes_16
+	546	float	I_grid_L1_harmonic_amplitudes_17
+	548	float	I_grid_L1_harmonic_amplitudes_18
+	550	float	I_grid_L1_harmonic_amplitudes_19
+	552	float	I_grid_L1_harmonic_amplitudes_20
+	554	float	I_grid_L1_harmonic_amplitudes_21
+	556	float	I_grid_L1_harmonic_amplitudes_22
+	558	float	I_grid_L1_harmonic_amplitudes_23
+	560	float	I_grid_L1_harmonic_amplitudes_24
+	562	float	I_grid_L1_harmonic_amplitudes_25
+	564	float	I_grid_L2_harmonic_amplitudes_00
+	566	float	I_grid_L2_harmonic_amplitudes_01
+	568	float	I_grid_L2_harmonic_amplitudes_02
+	570	float	I_grid_L2_harmonic_amplitudes_03
+	572	float	I_grid_L2_harmonic_amplitudes_04
+	574	float	I_grid_L2_harmonic_amplitudes_05
+	576	float	I_grid_L2_harmonic_amplitudes_06
+	578	float	I_grid_L2_harmonic_amplitudes_07
+	580	float	I_grid_L2_harmonic_amplitudes_08
+	582	float	I_grid_L2_harmonic_amplitudes_09
+	584	float	I_grid_L2_harmonic_amplitudes_10
+	586	float	I_grid_L2_harmonic_amplitudes_11
+	588	float	I_grid_L2_harmonic_amplitudes_12
+	590	float	I_grid_L2_harmonic_amplitudes_13
+	592	float	I_grid_L2_harmonic_amplitudes_14
+	594	float	I_grid_L2_harmonic_amplitudes_15
+	596	float	I_grid_L2_harmonic_amplitudes_16
+	598	float	I_grid_L2_harmonic_amplitudes_17
+	600	float	I_grid_L2_harmonic_amplitudes_18
+	602	float	I_grid_L2_harmonic_amplitudes_19
+	604	float	I_grid_L2_harmonic_amplitudes_20
+	606	float	I_grid_L2_harmonic_amplitudes_21
+	608	float	I_grid_L2_harmonic_amplitudes_22
+	610	float	I_grid_L2_harmonic_amplitudes_23
+	612	float	I_grid_L2_harmonic_amplitudes_24
+	614	float	I_grid_L2_harmonic_amplitudes_25
+	616	float	I_grid_L3_harmonic_amplitudes_00
+	618	float	I_grid_L3_harmonic_amplitudes_01
+	620	float	I_grid_L3_harmonic_amplitudes_02
+	622	float	I_grid_L3_harmonic_amplitudes_03
+	624	float	I_grid_L3_harmonic_amplitudes_04
+	626	float	I_grid_L3_harmonic_amplitudes_05
+	628	float	I_grid_L3_harmonic_amplitudes_06
+	630	float	I_grid_L3_harmonic_amplitudes_07
+	632	float	I_grid_L3_harmonic_amplitudes_08
+	634	float	I_grid_L3_harmonic_amplitudes_09
+	636	float	I_grid_L3_harmonic_amplitudes_10
+	638	float	I_grid_L3_harmonic_amplitudes_11
+	640	float	I_grid_L3_harmonic_amplitudes_12
+	642	float	I_grid_L3_harmonic_amplitudes_13
+	644	float	I_grid_L3_harmonic_amplitudes_14
+	646	float	I_grid_L3_harmonic_amplitudes_15
+	648	float	I_grid_L3_harmonic_amplitudes_16
+	650	float	I_grid_L3_harmonic_amplitudes_17
+	652	float	I_grid_L3_harmonic_amplitudes_18
+	654	float	I_grid_L3_harmonic_amplitudes_19
+	656	float	I_grid_L3_harmonic_amplitudes_20
+	658	float	I_grid_L3_harmonic_amplitudes_21
+	660	float	I_grid_L3_harmonic_amplitudes_22
+	662	float	I_grid_L3_harmonic_amplitudes_23
+	664	float	I_grid_L3_harmonic_amplitudes_24
+	666	float	I_grid_L3_harmonic_amplitudes_25
+	668	float	U_grid_L1_harmonic_amplitudes_00
+	670	float	U_grid_L1_harmonics_amplitudes_01
+	672	float	U_grid_L1_harmonics_amplitudes_02
+	674	float	U_grid_L1_harmonics_amplitudes_03
+	676	float	U_grid_L1_harmonics_amplitudes_04
+	678	float	U_grid_L1_harmonics_amplitudes_05
+	680	float	U_grid_L1_harmonics_amplitudes_06
+	682	float	U_grid_L1_harmonics_amplitudes_07
+	684	float	U_grid_L1_harmonics_amplitudes_08
+	686	float	U_grid_L1_harmonics_amplitudes_09
+	688	float	U_grid_L1_harmonics_amplitudes_10
+	690	float	U_grid_L1_harmonics_amplitudes_11
+	692	float	U_grid_L1_harmonics_amplitudes_12
+	694	float	U_grid_L1_harmonics_amplitudes_13
+	696	float	U_grid_L1_harmonics_amplitudes_14
+	698	float	U_grid_L1_harmonics_amplitudes_15
+	700	float	U_grid_L1_harmonics_amplitudes_16
+	702	float	U_grid_L1_harmonics_amplitudes_17
+	704	float	U_grid_L1_harmonics_amplitudes_18
+	706	float	U_grid_L1_harmonics_amplitudes_19
+	708	float	U_grid_L1_harmonics_amplitudes_20
+	710	float	U_grid_L1_harmonics_amplitudes_21
+	712	float	U_grid_L1_harmonics_amplitudes_22
+	714	float	U_grid_L1_harmonics_amplitudes_23
+	716	float	U_grid_L1_harmonics_amplitudes_24
+	718	float	U_grid_L1_harmonics_amplitudes_25
+	720	float	U_grid_L2_harmonic_amplitudes_00
+	722	float	U_grid_L2_harmonic_amplitudes_01
+	724	float	U_grid_L2_harmonic_amplitudes_02
+	726	float	U_grid_L2_harmonic_amplitudes_03
+	728	float	U_grid_L2_harmonic_amplitudes_04
+	730	float	U_grid_L2_harmonic_amplitudes_05
+	732	float	U_grid_L2_harmonic_amplitudes_06
+	734	float	U_grid_L2_harmonic_amplitudes_07
+	736	float	U_grid_L2_harmonic_amplitudes_08
+	738	float	U_grid_L2_harmonic_amplitudes_09
+	740	float	U_grid_L2_harmonic_amplitudes_10
+	742	float	U_grid_L2_harmonic_amplitudes_11
+	744	float	U_grid_L2_harmonic_amplitudes_12
+	746	float	U_grid_L2_harmonic_amplitudes_13
+	748	float	U_grid_L2_harmonic_amplitudes_14
+	750	float	U_grid_L2_harmonic_amplitudes_15
+	752	float	U_grid_L2_harmonic_amplitudes_16
+	754	float	U_grid_L2_harmonic_amplitudes_17
+	756	float	U_grid_L2_harmonic_amplitudes_18
+	758	float	U_grid_L2_harmonic_amplitudes_19
+	760	float	U_grid_L2_harmonic_amplitudes_20
+	762	float	U_grid_L2_harmonic_amplitudes_21
+	764	float	U_grid_L2_harmonic_amplitudes_22
+	766	float	U_grid_L2_harmonic_amplitudes_23
+	768	float	U_grid_L2_harmonic_amplitudes_24
+	770	float	U_grid_L2_harmonic_amplitudes_25
+	772	float	U_grid_L3_harmonic_amplitudes_00
+	774	float	U_grid_L3_harmonic_amplitudes_01
+	776	float	U_grid_L3_harmonic_amplitudes_02
+	778	float	U_grid_L3_harmonic_amplitudes_03
+	780	float	U_grid_L3_harmonic_amplitudes_04
+	782	float	U_grid_L3_harmonic_amplitudes_05
+	784	float	U_grid_L3_harmonic_amplitudes_06
+	786	float	U_grid_L3_harmonic_amplitudes_07
+	788	float	U_grid_L3_harmonic_amplitudes_08
+	790	float	U_grid_L3_harmonic_amplitudes_09
+	792	float	U_grid_L3_harmonic_amplitudes_10
+	794	float	U_grid_L3_harmonic_amplitudes_11
+	796	float	U_grid_L3_harmonic_amplitudes_12
+	798	float	U_grid_L3_harmonic_amplitudes_13
+	800	float	U_grid_L3_harmonic_amplitudes_14
+	802	float	U_grid_L3_harmonic_amplitudes_15
+	804	float	U_grid_L3_harmonic_amplitudes_16
+	806	float	U_grid_L3_harmonic_amplitudes_17
+	808	float	U_grid_L3_harmonic_amplitudes_18
+	810	float	U_grid_L3_harmonic_amplitudes_19
+	812	float	U_grid_L3_harmonic_amplitudes_20
+	814	float	U_grid_L3_harmonic_amplitudes_21
+	816	float	U_grid_L3_harmonic_amplitudes_22
+	818	float	U_grid_L3_harmonic_amplitudes_23
+	820	float	U_grid_L3_harmonic_amplitudes_24
+	822	float	U_grid_L3_harmonic_amplitudes_25
+	824	float	I_grid_L1_harmonic_THD_00
+	826	float	I_grid_L1_harmonic_THD_01
+	828	float	I_grid_L1_harmonic_THD_02
+	830	float	I_grid_L1_harmonic_THD_03
+	832	float	I_grid_L1_harmonic_THD_04
+	834	float	I_grid_L1_harmonic_THD_05
+	836	float	I_grid_L1_harmonic_THD_06
+	838	float	I_grid_L1_harmonic_THD_07
+	840	float	I_grid_L1_harmonic_THD_08
+	842	float	I_grid_L1_harmonic_THD_09
+	844	float	I_grid_L1_harmonic_THD_10
+	846	float	I_grid_L1_harmonic_THD_11
+	848	float	I_grid_L1_harmonic_THD_12
+	850	float	I_grid_L1_harmonic_THD_13
+	852	float	I_grid_L1_harmonic_THD_14
+	854	float	I_grid_L1_harmonic_THD_15
+	856	float	I_grid_L1_harmonic_THD_16
+	858	float	I_grid_L1_harmonic_THD_17
+	860	float	I_grid_L1_harmonic_THD_18
+	862	float	I_grid_L1_harmonic_THD_19
+	864	float	I_grid_L1_harmonic_THD_20
+	866	float	I_grid_L1_harmonic_THD_21
+	868	float	I_grid_L1_harmonic_THD_22
+	870	float	I_grid_L1_harmonic_THD_23
+	872	float	I_grid_L1_harmonic_THD_24
+	874	float	I_grid_L1_harmonic_THD_25
+	876	float	I_grid_L2_harmonic_THD_00
+	878	float	I_grid_L2_harmonic_THD_01
+	880	float	I_grid_L2_harmonic_THD_02
+	882	float	I_grid_L2_harmonic_THD_03
+	884	float	I_grid_L2_harmonic_THD_04
+	886	float	I_grid_L2_harmonic_THD_05
+	888	float	I_grid_L2_harmonic_THD_06
+	890	float	I_grid_L2_harmonic_THD_07
+	892	float	I_grid_L2_harmonic_THD_08
+	894	float	I_grid_L2_harmonic_THD_09
+	896	float	I_grid_L2_harmonic_THD_10
+	898	float	I_grid_L2_harmonic_THD_11
+	900	float	I_grid_L2_harmonic_THD_12
+	902	float	I_grid_L2_harmonic_THD_13
+	904	float	I_grid_L2_harmonic_THD_14
+	906	float	I_grid_L2_harmonic_THD_15
+	908	float	I_grid_L2_harmonic_THD_16
+	910	float	I_grid_L2_harmonic_THD_17
+	912	float	I_grid_L2_harmonic_THD_18
+	914	float	I_grid_L2_harmonic_THD_19
+	916	float	I_grid_L2_harmonic_THD_20
+	918	float	I_grid_L2_harmonic_THD_21
+	920	float	I_grid_L2_harmonic_THD_22
+	922	float	I_grid_L2_harmonic_THD_23
+	924	float	I_grid_L2_harmonic_THD_24
+	926	float	I_grid_L2_harmonic_THD_25
+	928	float	I_grid_L3_harmonic_THD_00
+	930	float	I_grid_L3_harmonic_THD_01
+	932	float	I_grid_L3_harmonic_THD_02
+	934	float	I_grid_L3_harmonic_THD_03
+	936	float	I_grid_L3_harmonic_THD_04
+	938	float	I_grid_L3_harmonic_THD_05
+	940	float	I_grid_L3_harmonic_THD_06
+	942	float	I_grid_L3_harmonic_THD_07
+	944	float	I_grid_L3_harmonic_THD_08
+	946	float	I_grid_L3_harmonic_THD_09
+	948	float	I_grid_L3_harmonic_THD_10
+	950	float	I_grid_L3_harmonic_THD_11
+	952	float	I_grid_L3_harmonic_THD_12
+	954	float	I_grid_L3_harmonic_THD_13
+	956	float	I_grid_L3_harmonic_THD_14
+	958	float	I_grid_L3_harmonic_THD_15
+	960	float	I_grid_L3_harmonic_THD_16
+	962	float	I_grid_L3_harmonic_THD_17
+	964	float	I_grid_L3_harmonic_THD_18
+	966	float	I_grid_L3_harmonic_THD_19
+	968	float	I_grid_L3_harmonic_THD_20
+	970	float	I_grid_L3_harmonic_THD_21
+	972	float	I_grid_L3_harmonic_THD_22
+	974	float	I_grid_L3_harmonic_THD_23
+	976	float	I_grid_L3_harmonic_THD_24
+	978	float	I_grid_L3_harmonic_THD_25
+	980	float	U_grid_L1_harmonic_THD_00
+	982	float	U_grid_L1_harmonic_THD_01
+	984	float	U_grid_L1_harmonic_THD_02
+	986	float	U_grid_L1_harmonic_THD_03
+	988	float	U_grid_L1_harmonic_THD_04
+	990	float	U_grid_L1_harmonic_THD_05
+	992	float	U_grid_L1_harmonic_THD_06
+	994	float	U_grid_L1_harmonic_THD_07
+	996	float	U_grid_L1_harmonic_THD_08
+	998	float	U_grid_L1_harmonic_THD_09
+	1000	float	U_grid_L1_harmonic_THD_10
+	1002	float	U_grid_L1_harmonic_THD_11
+	1004	float	U_grid_L1_harmonic_THD_12
+	1006	float	U_grid_L1_harmonic_THD_13
+	1008	float	U_grid_L1_harmonic_THD_14
+	1010	float	U_grid_L1_harmonic_THD_15
+	1012	float	U_grid_L1_harmonic_THD_16
+	1014	float	U_grid_L1_harmonic_THD_17
+	1016	float	U_grid_L1_harmonic_THD_18
+	1018	float	U_grid_L1_harmonic_THD_19
+	1020	float	U_grid_L1_harmonic_THD_20
+	1022	float	U_grid_L1_harmonic_THD_21
+	1024	float	U_grid_L1_harmonic_THD_22
+	1026	float	U_grid_L1_harmonic_THD_23
+	1028	float	U_grid_L1_harmonic_THD_24
+	1030	float	U_grid_L1_harmonic_THD_25
+	1032	float	U_grid_L2_harmonic_THD_00
+	1034	float	U_grid_L2_harmonic_THD_01
+	1036	float	U_grid_L2_harmonic_THD_02
+	1038	float	U_grid_L2_harmonic_THD_03
+	1040	float	U_grid_L2_harmonic_THD_04
+	1042	float	U_grid_L2_harmonic_THD_05
+	1044	float	U_grid_L2_harmonic_THD_06
+	1046	float	U_grid_L2_harmonic_THD_07
+	1048	float	U_grid_L2_harmonic_THD_08
+	1050	float	U_grid_L2_harmonic_THD_09
+	1052	float	U_grid_L2_harmonic_THD_10
+	1054	float	U_grid_L2_harmonic_THD_11
+	1056	float	U_grid_L2_harmonic_THD_12
+	1058	float	U_grid_L2_harmonic_THD_13
+	1060	float	U_grid_L2_harmonic_THD_14
+	1062	float	U_grid_L2_harmonic_THD_15
+	1064	float	U_grid_L2_harmonic_THD_16
+	1066	float	U_grid_L2_harmonic_THD_17
+	1068	float	U_grid_L2_harmonic_THD_18
+	1070	float	U_grid_L2_harmonic_THD_19
+	1072	float	U_grid_L2_harmonic_THD_20
+	1074	float	U_grid_L2_harmonic_THD_21
+	1076	float	U_grid_L2_harmonic_THD_22
+	1078	float	U_grid_L2_harmonic_THD_23
+	1080	float	U_grid_L2_harmonic_THD_24
+	1082	float	U_grid_L2_harmonic_THD_25
+	1084	float	U_grid_L3_harmonic_THD_00
+	1086	float	U_grid_L3_harmonic_THD_01
+	1088	float	U_grid_L3_harmonic_THD_02
+	1090	float	U_grid_L3_harmonic_THD_03
+	1092	float	U_grid_L3_harmonic_THD_04
+	1094	float	U_grid_L3_harmonic_THD_05
+	1096	float	U_grid_L3_harmonic_THD_06
+	1098	float	U_grid_L3_harmonic_THD_07
+	1100	float	U_grid_L3_harmonic_THD_08
+	1102	float	U_grid_L3_harmonic_THD_09
+	1104	float	U_grid_L3_harmonic_THD_10
+	1106	float	U_grid_L3_harmonic_THD_11
+	1108	float	U_grid_L3_harmonic_THD_12
+	1110	float	U_grid_L3_harmonic_THD_13
+	1112	float	U_grid_L3_harmonic_THD_14
+	1114	float	U_grid_L3_harmonic_THD_15
+	1116	float	U_grid_L3_harmonic_THD_16
+	1118	float	U_grid_L3_harmonic_THD_17
+	1120	float	U_grid_L3_harmonic_THD_18
+	1122	float	U_grid_L3_harmonic_THD_19
+	1124	float	U_grid_L3_harmonic_THD_20
+	1126	float	U_grid_L3_harmonic_THD_21
+	1128	float	U_grid_L3_harmonic_THD_22
+	1130	float	U_grid_L3_harmonic_THD_23
+	1132	float	U_grid_L3_harmonic_THD_24
+	1134	float	U_grid_L3_harmonic_THD_25
+	1136	u32	algebraic_P_p
+	1138	u32	algebraic_P_pb
+	1140	u32	algebraic_P_n
+	1142	u32	algebraic_P_nb
+	1144	u32	algebraic_QI
+	1146	u32	algebraic_QIb
+	1148	u32	algebraic_QII
+	1150	u32	algebraic_QIIb
+	1152	u32	algebraic_QIII
+	1154	u32	algebraic_QIIIb
+	1156	u32	algebraic_QIV
+	1158	u32	algebraic_QIVb
+
+SECTION_HOLDING_REGISTERS_DEF
+	128	bit16_h_odd	H_odd_a
+	129	bit16_h_oddH	H_oddH_a
+	130	bit16_h_odd	H_odd_b
+	131	bit16_h_oddH	H_oddH_b
+	132	bit16_h_odd	H_odd_c
+	133	bit16_h_oddH	H_oddH_c
+	134	bit16_h_even	H_even_a
+	136	bit16_h_even	H_even_b
+	138	bit16_h_even	H_even_c
+	140	float3	Q_set
+	146	bit16_ctrl_flags	control_bitsH
+	147	bit16_ctrl_triggers	control_bits
+	148	float3	tangens_range_H
+	154	float3	tangens_range_L
+	160	time	RTC_new_time
+	164	u16	hbaudrate #wartosc baudrate/100
+	165	u16	ext_server_id
+	

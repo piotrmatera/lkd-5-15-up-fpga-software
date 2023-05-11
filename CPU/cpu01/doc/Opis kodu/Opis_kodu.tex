@@ -1,0 +1,829 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8x]{inputenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{graphicx}
+
+\addtolength{\hoffset}{-1.5cm}
+\addtolength{\marginparwidth}{-1.5cm}
+\addtolength{\textwidth}{3cm}
+\addtolength{\voffset}{-1cm}
+\addtolength{\textheight}{4.0cm}
+\setlength{\topmargin}{0cm}
+\setlength{\headheight}{0cm}
+
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{inconsolata}
+\usepackage{indentfirst}
+
+% VS2017 C++ color scheme
+\definecolor{clr-background}{RGB}{255,255,255}
+\definecolor{clr-text}{RGB}{0,0,0}
+\definecolor{clr-string}{RGB}{163,21,21}
+\definecolor{clr-namespace}{RGB}{0,0,0}
+\definecolor{clr-preprocessor}{RGB}{128,128,128}
+\definecolor{clr-keyword}{RGB}{0,0,255}
+\definecolor{clr-type}{RGB}{43,145,175}
+\definecolor{clr-variable}{RGB}{0,0,0}
+\definecolor{clr-constant}{RGB}{111,0,138} % macro color
+\definecolor{clr-comment}{RGB}{0,128,0}
+
+\lstdefinestyle{customc}{
+	backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+	breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+	breaklines=true,                 % sets automatic line breaking
+	captionpos=b,                    % sets the caption-position to bottom
+	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+	language=C,                 % the language of the code
+	numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+	numbersep=7pt,                   % how far the line-numbers are from the code
+	numberstyle=\tiny\color{clr-preprocessor}, % the style that is used for the line-numbers
+	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,          % underline spaces within strings only
+	showtabs=false,                  % show tabs within strings adding particular underscores
+	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{blue},     % string literal style
+	tabsize=2,	                   % sets default tabsize to 2 spaces
+	title=\lstname,                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+	frame=shadowbox,
+	rulesepcolor=\color{black},
+	%showspaces=false,showtabs=false,tabsize=2,
+	xleftmargin=\parindent,
+	basicstyle=\ttfamily\scriptsize,
+	breaklines=true,
+	keywordstyle=\color{clr-keyword},
+	commentstyle=\itshape\color{clr-comment},
+	%identifierstyle=\color{blue},
+}
+
+\lstset{emph={Uint32, Uint16, FRESULT, FIL, TCHAR, BYTE, UINT},emphstyle={\color{clr-type}}}%
+
+\addto\captionspolish{\renewcommand{\tablename}{Tabela}}
+\renewcommand{\lstlistingname}{Wydruk}
+\renewcommand\lstlistlistingname{Spis wydruków}
+
+\usepackage{makecell}
+
+\begin{document}
+\sloppy
+\title{Opis kodu i problemów sterowania członami pasywnymi}
+\author{Tomasz Święchowicz}
+\date{\today}
+
+\maketitle
+%\tableofcontents
+
+
+\section{Globalne struktury alarmów, statusów i kontroli}
+Sterowanie przekształtnikiem przez użytkownika zostało skupione w 3 strukturach: \textbf{alarm}, \textbf{alarm\_snapshot}, \textbf{status} i \textbf{control}. W \textbf{alarm} znajdują się flagi błędów, które powodują zatrzymanie pracy przekształtnika. \textbf{Alarm\_snapshot} zawiera w sobie błędy, które jako pierwsze spowodowały zatrzymanie przekształtnika. Struktura \textbf{status} przechowuje flagi informujące o stanie przekształtnika i jego elementów peryferyjnych, ale nie powodujące zatrzymania pracy. Struktura \textbf{control} zawiera natomiast parametry na które użytkownik ma wpływ - może to być załączenie danego typu kompensacji lub zainicjowanie procedury zapisu danych na kartę SD.
+
+\subsection{Struktura alarm}
+
+\lstinputlisting[float=!t, style=customc, caption={Struktura \textbf{alarm}}, label={lst:alarm}, firstline=65, lastline=134, belowskip=-10pt]{../../stdafx.h}
+
+Znaczenie poszczególnych flag:
+\begin{enumerate}
+	\setlength\itemsep{0mm}
+	\item \textbf{I\_conv} - pierwsze 16 bitów flag informuje o przekroczeniu prądu przekształtnika. Litera H informuje o przekroczeniu górnego poziomu, natomiast L dolnego poziomu. Dopisek SD oznacza błąd z komparatora badającego prąd za okno 2$\mu s$, czyli jest w stanie zareagować przekroczenie prądu krótsze niż okres sterowania wynoszący 32$\mu s$. Brak dopisku oznacza błąd przekroczenia średniej wartości prądu w poprzednim okresie.
+	
+	\item \textbf{Temperature} - Limity temperatury są porównywane względem największej wartości z trzech dostępnych termistorów - daje to możliwość podpięcia dowolnej liczby termistorów. Całkowity brak termistorów daje domyślną wartość -27$^\circ C$, przez zostanie wywołany błąd przekroczenia dolnego poziomu temperatury.
+	
+	\item \textbf{U\_dc} - Dolny poziom sprawdzenia przekroczenia napięcia DC zmienia swój stan w trakcie pracy - domyślnie jest on ustawiony na wartość -5$V$, a w trakcie pracy przekształtnika wynosi 610V.
+	
+	\item \textbf{Driver} - dotyczą błędów przychodzących z poszczególnych sterowników bramkowych. Litera A oznacza górny, a B dolny tranzystor gałęzi.
+
+	\item \textbf{No\_calibration} - brak danych kalibracyjnych na karcie SD jak i w pamięci FLASH. Uruchomienie przekształtnika spowoduje przejście w tryb pół-automatycznej kalibracji.
+
+	\item \textbf{CT\_char\_error} - brak charakterystyki przekładnika na karcie SD jak i w pamięci FLASH lub niepoprawnie wypełnione jej dane. Flaga jest sprawdzana tylko w trybie pracy z przekładnikiem.
+
+	\item \textbf{PLL\_unsync} - utracenie synchronizacji w trakcie pracy przekształtnika.
+
+	\item \textbf{CONV\_SOFTSTART} - nieudana procedura startu przekształtnika.
+
+	\item \textbf{FUSE\_BROKEN} - wykryty przepalony bezpiecznik.
+	
+	\item \textbf{TZ\_FLT\_SUPPLY} - zanikające lub niepoprawne napięcie 24V.
+	
+	\item \textbf{TZ\_DRV\_FLT} - zbiorcza flaga błędów sterowników bramkowych.
+	
+	\item \textbf{TZ\_CLOCKFAIL} - problemy z zegarem mikrokontrolera.
+	
+	\item \textbf{TZ\_EMUSTOP} - program zatrzymany przez breakpoint podczas debugowania.
+	
+	\item \textbf{TZ\_SD\_COMP} - zbiorcza flaga przekroczeń prądu SD.
+
+	\item \textbf{TZ} - zbiorcza flaga TripZone.
+
+	\item \textbf{I\_conv\_rms} - błąd przekroczenia wartości RMS prądu przekształtnika ponad 120$\%$ nominalnej wartości. Prąd rms jest badany z oknem 1$s$.
+
+	\item \textbf{U\_grid\_rms} - błąd przekroczenia wartości RMS napięcia sieci poniżej 110$Vrms$. Napięcie jest badane z oknem 20$ms$.
+
+	\item \textbf{U\_grid\_abs} - błąd przekroczenia chwilowej wartości absolutnej napięcia sieci ponad 380$V$. Napięcie jest próbkowane co 32$\mu s$.
+
+	\item \textbf{rsvd1} - przestrzeń na dodatkowe flagi.
+\end{enumerate}
+
+\subsection{Struktura status}
+
+\lstinputlisting[float=!b, style=customc, caption={Struktura \textbf{status}}, label={lst:status}, firstline=135, lastline=174, belowskip=-10pt]{../../stdafx.h}
+
+Znaczenie poszczególnych flag:
+\begin{enumerate}
+	\setlength\itemsep{0mm}
+	\item \textbf{Init\_done} - zakończona inicjalizacja kodu i modułów peryferyjnych mikrokontrolera.
+	
+	\item \textbf{ONOFF} - stan włącznika monostabilnego/bistabilnego.
+	
+	\item \textbf{DS1\_switch\_SD\_CT} - stan DipSwitch decydującego o użyciu przekładników prądowych.
+	
+	\item \textbf{DS2\_enable\_Q\_comp} - stan DipSwitch decydujący o załączeniu kompensacji mocy biernej. Ustawienie aktywne, gdy DS8 jest załączony.
+	
+	\item \textbf{DS3\_emable\_P\_sym} - stan DipSwitch decydujący o załączeniu symetryzacji prądów czynnych. Ustawienie aktywne, gdy DS8 jest załączony.
+	
+	\item \textbf{DS4\_enable\_H\_comp} - stan DipSwitch decydujący o załączeniu kompensacji harmonicznych. Ustawienie aktywne, gdy DS8 jest załączony.
+	
+	\item \textbf{DS5\_limit\_to\_9odd\_harmonics} - stan DipSwitch ograniczający kompensowane harmoniczne do 19. Ustawienie aktywne, gdy DS8 jest załączony.
+	
+	\item \textbf{DS6\_limit\_to\_14odd\_harmonics} - stan DipSwitch ograniczający kompensowane harmoniczne do 29. Ustawienie aktywne, gdy DS8 jest załączony.
+	
+	\item \textbf{DS7\_limit\_to\_19odd\_harmonics} - stan DipSwitch ograniczający kompensowane harmoniczne do 39. Ustawienie aktywne, gdy DS8 jest załączony.
+	
+	\item \textbf{DS8\_DS\_override} - stan DipSwitch decydujący o użyciu ustawień z DipSwitch zamiast karty SD/pamięci FLASH.
+		
+	\item \textbf{calibration\_procedure\_error} - niepowodzenie danego etapu kalibracji.
+	
+	\item \textbf{L\_grid\_measured} - badanie impedancji zostało przeprowadzone. Wykonuje się ono tylko raz po uruchomieniu zasilania 24$V$.
+		
+	\item \textbf{Scope\_snapshot\_pending} - trwa zapisywanie przebiegów z oscyloskopu zainicjowane przez użytkownika.
+	
+	\item \textbf{Scope\_snapshot\_error} - błąd podczas zapisywania przebiegów z oscyloskopu.
+
+	\item \textbf{SD\_card\_not\_enough\_data} - brak karty SD lub niewystarczające dane do uruchomienia przekształtnika.
+	
+	\item \textbf{SD\_no\_CT\_characteristic} - brak pliku z charakterystyką przekładników.
+	
+	\item \textbf{SD\_no\_calibration} - brak pliku z danymi kalibracji.
+	
+	\item \textbf{SD\_no\_harmonic\_settings} - brak pliku z informacją o kompensowanych harmonicznych.
+	
+	\item \textbf{SD\_no\_settings} - brak pliku z ogólnymi ustawieniami pracy przekształtnika.
+		
+	\item \textbf{FLASH\_not\_enough\_data} - brak lub niewystarczające dane zapisane w pamięci FLASH.
+	
+	\item \textbf{FLASH\_no\_CT\_characteristic} - brak danych z charakterystyką przekładników w pamięci FLASH.
+
+	\item \textbf{FLASH\_no\_calibration} - brak danych z danymi kalibracji w pamięci FLASH.
+
+	\item \textbf{FLASH\_no\_harmonic\_settings} - brak danych z informacją o kompensowanych harmonicznych w pamięci FLASH.
+
+	\item \textbf{FLASH\_no\_settings} - brak danych z ogólnymi ustawieniami pracy przekształtnika w pamięci FLASH.
+
+	\item \textbf{in\_limit\_Q} - przekształtnik w limicie kompensacji mocy biernej.
+	
+	\item \textbf{in\_limit\_P} - przekształtnik w limicie symetryzacji mocy czynnej.
+	
+	\item \textbf{in\_limit\_H} - przekształtnik w limicie kompensacji harmonicznych.
+	
+	\item \textbf{Conv\_active} - przekształtnik przeszedł procedurę ładowania obwodu DC i dokonał synchronizacji z siecią - układ pracuje.
+	
+	\item \textbf{PLL\_sync} - PLL zsynchronizowany z siecią.
+	
+	\item \textbf{Grid\_present} - flaga zapalona, gdy napięcia każdej z faz są większe od 120$V_{rms}$.
+	
+	\item \textbf{rsvd1} - przestrzeń na dodatkowe flagi.
+		
+	\item \textbf{rsvd2} - przestrzeń na dodatkowe flagi.
+\end{enumerate}
+
+\subsection{Struktura control}
+
+\lstinputlisting[float=!t, style=customc, caption={Struktura \textbf{control}}, label={lst:control}, firstline=176, lastline=247, belowskip=-10pt]{../../stdafx.h}
+
+Znaczenie poszczególnych pozycji:
+\begin{enumerate}
+	\setlength\itemsep{0mm}
+	\item \textbf{H\_odd\_a, H\_odd\_b, H\_odd\_c} - zmienne 32-bitowe dla trzech faz, każda zawierająca flagi selektywnej kompensacji nieparzystych harmonicznych.
+
+	\item \textbf{H\_even\_a, H\_even\_b, H\_even\_c} - zmienne 32-bitowe dla trzech faz, każda zawierająca flagi selektywnej kompensacji parzystych harmonicznych.
+		
+	\item \textbf{Q\_set} - 3 wartości typu float definiujące przesunięcie od zera kompensacji mocy biernej.
+	
+	\item \textbf{Scope\_snapshot} - wyzwolenie zapisu oscyloskopu na kartę SD. Oscyloskop jest synchronizowany względem przejścia napięcia fazy A przez zero.
+	
+	\item \textbf{Modbus\_FatFS\_repeat} - opcja pozwalająca na szybki odczyt danych z karty SD. .
+	
+	\item \textbf{save\_to\_FLASH} - zapisz do pamięci FLASH obecnie używane dane (kalibracja, chrakterystyka przekładnika, opcje harmonicznych, ogólne opcje).
+	
+	\item \textbf{SD\_save\_H\_settings} - zapisz na kartę SD obecnie ustawione harmoniczne do kompensacji.
+	
+	\item \textbf{SD\_save\_settings} - zapisz na kartę SD obecnie ustawione ogólne opcje.
+	
+	\item \textbf{CPU\_reset} - wykonaj sprzętowy reset przekształtnika.
+	
+	\item \textbf{ONOFF\_override} - przejmij kontrolę nad przełącznikiem ONOFF. Kontrola jest wyłączana gdy nastąpi użycie rzeczywistego przełącznika.
+	
+	\item \textbf{ONOFF} - wirtualny przełącznik. Jego wartość jest aktywna gdy flaga \textbf{ONOFF\_override} jest załączona.
+	
+	\item \textbf{enable\_Q\_comp\_a} - załączenie kompensacji mocy biernej w pierwszej fazie.
+	
+	\item \textbf{enable\_Q\_comp\_b} - załączenie kompensacji mocy biernej w drugiej fazie.
+	
+	\item \textbf{enable\_Q\_comp\_c} - załączenie kompensacji mocy biernej w trzeciej fazie.
+	
+	\item \textbf{enable\_P\_sym} - załączenie symetryzacji mocy czynnej.
+	
+	\item \textbf{enable\_H\_comp} - załączenie kompensacji harmonicznych.
+	
+	\item \textbf{version\_Q\_comp\_a} - wersja kompensacji mocy biernej fazy pierwszej. 0: skompensuj moc bierną sieci do wartości zadanej przez \textbf{Q\_set}; 1: wprowadź do sieci moc bierną o wartości zadanej przez \textbf{Q\_set}.
+	
+	\item \textbf{version\_Q\_comp\_b} - wersja kompensacji mocy biernej fazy drugiej. 0: skompensuj moc bierną sieci do wartości zadanej przez \textbf{Q\_set}; 1: wprowadź do sieci moc bierną o wartości zadanej przez \textbf{Q\_set}.
+			
+	\item \textbf{version\_Q\_comp\_c} - wersja kompensacji mocy biernej fazy trzeciej. 0: skompensuj moc bierną sieci do wartości zadanej przez \textbf{Q\_set}; 1: wprowadź do sieci moc bierną o wartości zadanej przez \textbf{Q\_set}.
+			
+	\item \textbf{version\_P\_sym} -  wersja symetryzacji mocy czynnej. 0: symetryzuj prądy czynne sieci; 1: symetryzuj moc czynną sieci.
+				
+	\item \textbf{tangens\_range} - zadane wartości tangensa dla każdej fazy, które ma utrzymywać przekształtnik. Przy zadaniu wartości (0,0) dla danej fazy, moc jest kompensowana do zera mocy biernej. Zadanie wartości (-0.05,0.15) spowoduje skompensowanie mocy biernej przekraczającej tangens powyżej 0.15 i mocy biernej poniżej -0.05. Pomiędzy tymi zakresami moc bierna nie jest kompensowana. Zalecane wartości to (0.05,0.15).
+	
+	\item \textbf{rsvd1} - przestrzeń na dodatkowe flagi.
+	
+\end{enumerate}
+
+\section{Sygnalizacja diodami}
+Na płycie znajduje znajduje się 5 diod LED:
+\begin{itemize}
+	\item LED1 - dioda zielona
+	\item LED2 - dioda żółta
+	\item LED3 - dioda czerwona
+	\item LED4 - dioda zielona
+	\item LED5 - dioda żółta
+\end{itemize}
+\subsection{Stan normalny}
+LED1(zielona) odpowiada stanowi włącznika ON/OFF i częściowo stanowi przekształtnika. Wyłączona dioda oznacza stan OFF. Migająca dioda z częstotliwością 1$Hz$ oznacza oczekiwanie na ponowne załączenie (powrót sieci lub upłynięcie czasu ograniczającego częstotliwość restartów). Podczas uruchamiania przekształtnika dioda będzie migać z częstotliwością 0.5$Hz$, a po uruchomieniu zapali się. LED5 (żółta) zapala się gdy przekształtnik pracuje, ale ostatnio wystąpił błąd. Tę sygnalizację można zresetować poprzez utrzymanie przełącznika w pozycji ON na 2$s$. LED3(czerwona) migając oznacza, że urządzenie jest w stanie błędu. LED2(pomarańczowa) wypełnieniem przebiegu o częstotliwości 0.5$Hz$ informuje o obecnym limicie kompensacji:
+\begin{itemize}
+	\item 0\%(dioda zgaszona) - przekształtnik nie jest w limicie.
+	\item 33\% - limit kompensacji harmonicznych.
+	\item 66\% - limit symetryzacji mocy czynnej.
+	\item 100\%(dioda zapalona) - limit kompensacji mocy biernej.
+\end{itemize}
+\subsection{Stan kalibracji}
+Podczas kalibracji diody przyjmują inne funkcje. LED1(zielona) jest zapalona na czas kalibracji. LED3(czerwona) zapala się, gdy nie udało się przejść do następnego etapu kalibracji. LED2(żółta) sygnalizuje liczbą mignięć na którym etapie kalibracji obecnie jest urządzenie:
+\begin{enumerate}
+	\item Usuwanie przesunięć zera.
+	\item Kalibracja pomiarów prądu wzorcem 5$A$.
+	\item Kalibracja pomiarów napięcia sieci wzorcem 30$V$.
+	\item Kalibracja pomiaru napięcia obwodu DC wzorcem 30$V$.
+\end{enumerate}
+
+\section{Komunikacja Modbus}
+W mapie pamięci zostały wykorzystane tylko \textbf{holding\_registers} i \textbf{input\_registers}, ale  \textbf{discrete\_inputs} i \textbf{coils} są zaimplementowane. W \textbf{holding\_registers} umieszczona została wcześniej opisana struktura \textbf{control} i przestrzeń do pracy z kartą SD.
+
+W \textbf{input\_registers} znajdują się wartości pomiarowe i określające stan urządzenia. Jest tutaj także umieszczona na początku tablica \textbf{FatFS\_response}. Jej pozycja została wybrana w ten sposób, aby była elementem niezmiennym w wypadku modyfikacji mapy pamięci. W tablicy \textbf{L\_grid\_previous} znajduje się 10 ostatnich pomiarów impedancji sieci. Parametr \textbf{KALMAN\_HARMONICS} ma wartość 26 - tablica harmonicznych zawiera składową stałą pod indeksem zero, a następnie nieparzyste harmoniczne od 1 do 49. \textbf{harmonic\_rms\_values} to są wartości bezwzględne RMS harmonicznych, natomiast \textbf{harmonic\_THD\_individual} są obliczone według wzoru:
+
+$$\frac{U_{n\_RMS}}{U_{1\_RMS}}$$
+gdzie \textit{n} to numer harmonicznej pod danym indeksem tablicy.
+
+Wartości są uporządkowane w strukturach \textbf{abc\_struct} i \textbf{abcn\_struct}, pokazanych na Wydrukach \ref{lst:abc} i \ref{lst:abcn}. Wartości w strukturze \textbf{Grid\_filter} są uśrednione za okres 1$s$. Wartości THD w strukturze \textbf{Grid\_filter} uwzględniają tylko nieparzyste harmoniczne od 1 do 49.
+
+Czas do zapisu i odczytu z RTC jest umieszczony w zmiennej 48-bitowej \textbf{time\_BCD\_struct}, widocznej na Wydruku \ref{lst:timebcd}. Po zapisie całego czasu w jednej ramce Modbus jest on automatycznie programowany w układzie RTC.
+
+\lstinputlisting[float=!h, style=customc, caption={Struktura \textbf{input\_registers} będąca elementem \textbf{Modbus\_converter}}, label={lst:modbus}, firstline=26, lastline=64, belowskip=-10pt]{../../Software/Modbus_Converter_memory.h}
+
+\lstinputlisting[float=!h, style=customc, caption={Struktura \textbf{holding\_registers} będąca elementem \textbf{Modbus\_converter}}, label={lst:modbus}, firstline=65, lastline=71, belowskip=-10pt]{../../Software/Modbus_Converter_memory.h}
+
+\lstinputlisting[float=!t, style=customc, caption={Struktura \textbf{Grid\_filter} będąca elementem \textbf{input\_registers}}, label={lst:grid}, firstline=49, lastline=82, belowskip=-10pt]{../../../CPU_shared.h}
+
+\lstinputlisting[float=!t, style=customc, caption={Struktura \textbf{abc\_struct}}, label={lst:abc}, firstline=155, lastline=160, belowskip=-10pt]{../../CLA_files/Controllers.h}
+
+\lstinputlisting[float=!t, style=customc, caption={Struktura \textbf{abcn\_struct}}, label={lst:abcn}, firstline=147, lastline=153, belowskip=-10pt]{../../CLA_files/Controllers.h}
+
+\lstinputlisting[float=!t, style=customc, caption={Struktura \textbf{time\_BCD\_struct}}, label={lst:timebcd}, firstline=133, lastline=147, belowskip=-10pt]{../../Software/State.h}
+
+\clearpage
+
+\subsection{Numery identyfikacyjne urządzenia}
+W funkcji Modbus \textbf{0x11 Report Server ID} zostały zawarte numery identyfikujące urządzenie i jego elementy. Wygenerowanie pliku version-id.h wymaga posiadania Git Bash. Elementy \textbf{modbus\_id}, \textbf{board\_id}, \textbf{software\_id} są to wartości zakodowane BCD. Wartość 0x0101 oznacza wersję 1.01. \textbf{fw\_descriptor.dsc} zawiera w sobie znak obecności bootloadera (0xD=Loaded\_FW, 0xB=Basic\_FW(no BLD)), 6 znaków git sha\_hex i ostatni znak oznaczający czy repozytorium było czyste (brak różnic git).
+Kolejna jest tablica 16 znaków typu urządzenia, a za nią 32bity unikalnego numeru urządzenia nadawanego przez producenta mikrokontrolera.
+
+\begin{lstlisting}[float=!h, style=customc, caption={struktura \textbf{fw\_descriptor.dsc}}, label={lst:fwdesc}, belowskip=-10pt]
+struct dsc_s{
+	uint32_t    type:4;
+	uint32_t    sha_hex:24;
+	uint32_t    rsvd:3;
+	uint32_t    clean:1;
+} dsc;
+\end{lstlisting}
+
+\lstinputlisting[float=!h, style=customc, caption={Funkcja Modbus \textbf{0x11 Report Server ID}}, label={lst:ServerID}, firstline=366, lastline=408, belowskip=-10pt]{../../Software/Modbus_ADU_slave.cpp}
+
+
+\subsection{Modbus FatFS}
+W \textbf{holding\_registers} i \textbf{input\_registers} znajdują się pola służące do obsługi FatFS poprzez Modbus. W \textbf{FatFS\_request} należy podać funkcję i jej parametry, a zwrócone wartości pojawią się w \textbf{FatFS\_response}.
+
+Budowanie ramki należy rozpocząć od podania wywoływanej funkji. Typ enum z Wydruku~\ref{lst:fatfsenum} zawiera wszystkie funkcje dostępne w bibliotece FatFS, ale nie wszystkie są zaimplementowane. Wybraną wartość należy umieścić w pozycji 0 tabeli \textbf{FatFS\_request}, traktując ją jako 8-bitową - 256 pozycji względem 128 przy 16-bitowej interpretacji.
+W celu pozostawienia swobody implementacji po stronie zewnętrznego sterownika, parametry do funkcji są podawane przez wskaźniki. Na przykładzie funkcji f\_open:
+
+\begin{lstlisting}[float=!h, style=customc, caption={Funkcja f\_open}, label={lst:fopen}, belowskip=-10pt]
+FRESULT f_open (
+FIL* fp,           /* [OUT] Pointer to the file object structure */
+const TCHAR* path, /* [IN] File name */
+BYTE mode          /* [IN] Mode flags */
+);
+\end{lstlisting}
+\noindent pierwszym parametrem jest FRESULT, czyli wartość zwracana funkcji. Na pozycji 1 tabeli \textbf{FatFS\_request} należy umieścić liczbę, która będzie odpowiadać pozycji w tabeli \textbf{FatFS\_response} - pod tym adresem znajdzie się FRESULT. Kolejnym parametrem jest struktura, do której zostanie przypisany plik. Obecnie dopuszczalne są operacje tylko na jednym pliku na raz, dlatego nie jest konieczne wypełnianie wskaźnika tego elementu. Podobnie wygląda sytuacja ze strukturą DIR, która też jest tylko jedna. Następnie mamy string z nazwą pliku do otwarcia. W pozycji 3 tabeli \textbf{FatFS\_request} należy umieścić indeks, pod którym będzie się zaczynał string. Ostatnim elementem jest tryb otwierania pliku i jak w poprzednich elementach należy podać indeks tabeli, pod którym znajduje się potrzebna wartość. Pozostałe funkcje są obsługiwane w analogiczny sposób, przykład f\_read:
+\begin{lstlisting}[float=!h, style=customc, caption={Funkcja f\_read}, label={lst:fread}, belowskip=-10pt]
+FRESULT f_read (
+FIL* fp,     /* [IN] File object */
+void* buff,  /* [OUT] Buffer to store read data */
+UINT btr,    /* [IN] Number of bytes to read */
+UINT* br     /* [OUT] Number of bytes read */
+);
+\end{lstlisting}
+
+\noindent8-bitowa tabela wskaźników w \textbf{FatFS\_request}, zapisana także w pseudokodzie na wydruku \ref{lst:pseudo}:
+\begin{enumerate}
+	\setlength\itemsep{0mm}
+	\setcounter{enumi}{-1}
+	\item enum FatFS\_function\_enum function = FatFS\_f\_read;
+	\item indeks tablicy \textbf{FatFS\_response}, pod którym się znajdzie FRESULT;
+	\item istnieje tylko jeden plik, a więc wartość może być dowolna;
+	\item indeks tablicy \textbf{FatFS\_response}, od którego będą zaczynać się odczytane dane;
+	\item indeks tablicy \textbf{FatFS\_request}, pod którym znajduje się liczba bajtów do odczytania;
+	\item indeks tablicy \textbf{FatFS\_response}, pod którym znajdzie się liczba odczytanych bajtów;
+\end{enumerate}
+
+\begin{lstlisting}[float=!h, style=customc, caption={Pseudokod wykorzystania FatFS przez Modbus}, label={lst:pseudo}, belowskip=-10pt]
+Uint8 *FatFs_response8 = &FatFs_response;
+Uint8 *FatFs_request8 = &FatFs_request;
+//wywolanie
+FatFs_request8[0] = FatFS_f_read;
+FatFs_request8[1] = 1;
+FatFs_request8[2] = x;
+FatFs_request8[3] = 3;
+FatFs_request8[4] = 6;
+FatFs_request8[5] = 2;
+
+//wewnetrzne wywolanie funkcji
+FatFs_response8[1] = f_read(&fp, &FatFs_response8[3], FatFs_request8[6], &FatFs_response8[2])
+
+//odczyt
+FRESULT fresult = FatFs_response8[1];
+Uint8 bytes_written = FatFs_response8[2];
+Uint8 *data = &FatFs_response8[3];
+\end{lstlisting}
+
+Aby przyspieszyć odczyt danych z karty SD, można użyć flagi \textbf{Modbus\_FatFS\_repeat}. Sprawia ona, że jeśli poprzednią funkcją było f\_read to po odczycie \textbf{FatFS\_response} następuje jej automatyczne ponowienie. Kolejny odczyt \textbf{FatFS\_response} będzie zawierał nowe dane i nie jest potrzebny zapis do \textbf{FatFS\_request}, aby je zaktualizować.
+
+\lstinputlisting[float=!t, style=customc, caption={Typ enum określający wywoływaną funkcję.}, label={lst:fatfsenum}, firstline=60, lastline=104, belowskip=-10pt]{../../Software/SD_card.h}
+
+\section{Pliki używane przez przekształtnik}
+Formaty plików używane na karcie SD to CSV (MS-DOS), txt lub binarne. Nazwy plików nie mogą przekraczać 12 znaków. Wszystkie pliki znajdują się w głównym katalogu.
+
+\subsection{Plik harmon.csv}
+Ten plik zawsze jest wymagany do uruchomienia, nawet gdy nie jest włączona kompensacja harmonicznych. Przy odczycie pliku pierwszy wiersz z nazwami jest pomijany. Parametry są wprowadzane poprzez podanie numeru harmonicznej (obsługiwane nieparzyste od 3 do 49, parzyste 2 i 4), a następnie wartości zero lub jeden oznaczającej wyłączenie lub załączenie kompensacji harmonicznej w danej fazie. Przykład podano w tabeli \ref{tab:harmon}.
+\begin{table}[]
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		harmonic & on\_off phase A & on\_off phase B & on\_off phase C \\ \hline
+		2 & 1 & 1 & 1 \\ \hline
+		3 & 1 & 1 & 1 \\ \hline
+		4 & 1 & 1 & 1 \\ \hline
+		5 & 1 & 1 & 1 \\ \hline
+		7 & 1 & 1 & 1 \\ \hline
+		9 & 1 & 1 & 1 \\ \hline
+		11 & 1 & 1 & 1 \\ \hline
+		13 & 1 & 1 & 1 \\ \hline
+		15 & 1 & 1 & 1 \\ \hline
+		17 & 1 & 1 & 1 \\ \hline
+		19 & 1 & 1 & 1 \\ \hline
+		21 & 1 & 1 & 1 \\ \hline
+		23 & 1 & 1 & 1 \\ \hline
+		25 & 1 & 1 & 1 \\ \hline
+		27 & 1 & 1 & 1 \\ \hline
+		29 & 1 & 1 & 1 \\ \hline
+		31 & 1 & 1 & 1 \\ \hline
+		33 & 1 & 1 & 1 \\ \hline
+		35 & 1 & 1 & 1 \\ \hline
+		37 & 1 & 1 & 1 \\ \hline
+		39 & 1 & 1 & 1 \\ \hline
+		41 & 1 & 1 & 1 \\ \hline
+		43 & 1 & 1 & 1 \\ \hline
+		45 & 1 & 1 & 1 \\ \hline
+		47 & 1 & 1 & 1 \\ \hline
+		49 & 1 & 1 & 1 \\ \hline
+	\end{tabular}
+\caption{\label{tab:harmon}Przykładowa tablica z załączoną kompensacją wszystkich harmonicznych.}
+\end{table}
+
+\subsection{Plik settings.csv}
+W tym pliku podawane są ogólne opcje działania przekształtnika. Ten plik także jest zawsze wymagany do działania urządzenia. Dostępne opcje ustawień są podane w tabeli \ref{tab:settings}. W pierwszej kolumnie powinien się znajdować dokładny tekst danej opcji (wielkie litery), natomiast w drugiej kolumnie parametr tej opcji. Opisy poszczególnych opcji znajdują się w strukturze \textbf{control}. Parametry C, L, I powinny być ustawione przy produkcji. Oznaczają kolejno pojemność obwodu DC, indukcyjność dławików, znamionowy prąd przekształtnika. Parametr BAUDRATE ustawia prędkość Modbus.
+
+\begin{table}[]
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		STATIC Q COMPENSATION A & 10 \\ \hline
+		STATIC Q COMPENSATION B & -10 \\ \hline
+		STATIC Q COMPENSATION C & 0 \\ \hline
+		ENABLE Q COMPENSATION A & 1 \\ \hline
+		ENABLE Q COMPENSATION B & 1 \\ \hline
+		ENABLE Q COMPENSATION C & 1 \\ \hline
+		ENABLE P SYMMETRIZATION & 0 \\ \hline
+		ENABLE H COMPENSATION & 0 \\ \hline
+		VERSION P SYMMETRIZATION & 0 \\ \hline
+		VERSION Q COMPENSATION A & 0 \\ \hline
+		VERSION Q COMPENSATION B & 0 \\ \hline
+		VERSION Q COMPENSATION C & 0 \\ \hline
+		C & 0.00099 \\ \hline
+		L & 0.00047 \\ \hline
+		I & 16 \\ \hline
+		TANGENS RANGE A HIGH & 0.05 \\ \hline
+		TANGENS RANGE B HIGH & 0.05 \\ \hline
+		TANGENS RANGE C HIGH & 0.05 \\ \hline
+		TANGENS RANGE A LOW & 0.15 \\ \hline
+		TANGENS RANGE B LOW & 0.15 \\ \hline
+		TANGENS RANGE C LOW & 0.15 \\ \hline
+		BAUDRATE & 115200 \\ \hline
+	\end{tabular}
+\caption{\label{tab:settings}Przykładowa tablica z opcjami działania urządzenia.}
+\end{table}
+
+\subsection{Plik calib.csv}
+Ten plik jest tworzony przez urządzenie po przejściu procesu kalibracji. Jest on niezbędny do działania urządzenia. Nie należy go tworzyć samodzielnie.
+
+\subsection{Plik CT\_CHAR.TXT}
+W tym pliku znajduje się charakterystyka przekładników użytych w urządzeniu. Jest on wymagany, gdy DIPSWITCH konfigurujący  wskazuje na pracę z przekładnikami. Domyślnie ten plik jest generowany przez urządzenie do badania przekładników, ale jest możliwość ręcznego wypełnienia go. Algorytm dokonuje liniowej interpolacji między punktami, a więc zadanie dwóch punktów spowoduje liniową zmianę przesunięcia między zadanymi punktami. Nie jest dokonywana ekstrapolacja - jeśli zmierzony prąd przekładnika wychodzi poza opisaną charakterystykę przyjmuje się punkt skrajny do obliczeń.
+
+Pierwszy wiersz jest zawsze pomijany (kolejność kolumn jest z góry zdefiniowana). Maksymalna liczba punktów pomiarowych wynosi 60, a ich kolejność nie ma znaczenia. Możliwe jest także podanie jednego punktu pomiarowego, uzyskując kompensację przekładnika niezależną od jego prądu. Pierwsza kolumna zawiera prąd przekładnika, przy którym został wykonany pomiar. 3 kolejne kolumny zawierają przekładnię przekładnika dla zadanego prądu. W ostatnich 3 kolumnach znajduje się przesunięcie przekładnika dla 50$Hz$ wymuszenia.
+
+\begin{table}[]
+	\centering
+	\resizebox{13cm}{!}{
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		\makecell{Current\\{[}A{]}} & \makecell{CT A ratio\\{[}A/A{]}} & \makecell{CT B ratio\\{[}A/A{]}} & \makecell{CT C ratio\\{[}A/A{]}} & \makecell{CT A phase\\{[}degrees{]}} & \makecell{CT B phase\\{[}degrees{]}} & \makecell{CT C phase\\{[}degrees{]}} \\ \hline
+		96 & 20.045 & 20.0784 & 20.2585 & 0.295057 & 0.308327 & 0.855952 \\ \hline
+		85.5601 & 20.0505 & 20.0815 & 20.2606 & 0.316761 & 0.333645 & 0.786549 \\ \hline
+		76.2555 & 20.0545 & 20.0853 & 20.2676 & 0.341358 & 0.36046 & 0.793838 \\ \hline
+		67.9628 & 20.0584 & 20.0893 & 20.2757 & 0.367688 & 0.389332 & 0.825237 \\ \hline
+		60.5719 & 20.0616 & 20.093 & 20.2841 & 0.39356 & 0.418437 & 0.873105 \\ \hline
+		53.9848 & 20.0645 & 20.0967 & 20.2929 & 0.420092 & 0.447429 & 0.932033 \\ \hline
+		48.114 & 20.0675 & 20.1003 & 20.3015 & 0.445378 & 0.475754 & 0.999408 \\ \hline
+		42.8816 & 20.0703 & 20.1037 & 20.3087 & 0.470222 & 0.503979 & 1.0751 \\ \hline
+		38.2183 & 20.0727 & 20.1063 & 20.3162 & 0.494301 & 0.53102 & 1.15654 \\ \hline
+		34.0621 & 20.075 & 20.1088 & 20.3226 & 0.518138 & 0.55701 & 1.24109 \\ \hline
+		30.3579 & 20.0772 & 20.1114 & 20.3294 & 0.541239 & 0.583441 & 1.32927 \\ \hline
+		27.0565 & 20.0792 & 20.1134 & 20.3363 & 0.562897 & 0.608012 & 1.41942 \\ \hline
+		24.1141 & 20.0808 & 20.1156 & 20.3422 & 0.586405 & 0.633909 & 1.5103 \\ \hline
+		21.4917 & 20.0828 & 20.1174 & 20.3481 & 0.609687 & 0.659467 & 1.60142 \\ \hline
+		19.1545 & 20.0842 & 20.1191 & 20.3527 & 0.634126 & 0.685697 & 1.69168 \\ \hline
+		17.0715 & 20.0861 & 20.1209 & 20.3574 & 0.658828 & 0.711843 & 1.78217 \\ \hline
+		15.215 & 20.088 & 20.1237 & 20.3624 & 0.684166 & 0.739172 & 1.8699 \\ \hline
+		13.5604 & 20.0901 & 20.1259 & 20.367 & 0.71032 & 0.765752 & 1.95554 \\ \hline
+		12.0857 & 20.0929 & 20.1288 & 20.3721 & 0.736042 & 0.793394 & 2.04001 \\ \hline
+		10.7714 & 20.097 & 20.1327 & 20.3783 & 0.761018 & 0.819627 & 2.12281 \\ \hline
+		9.6 & 20.1017 & 20.1377 & 20.3854 & 0.789246 & 0.848453 & 2.20344 \\ \hline
+		8.55601 & 20.1071 & 20.1422 & 20.3939 & 0.818019 & 0.876597 & 2.28638 \\ \hline
+		7.62555 & 20.1129 & 20.1485 & 20.4029 & 0.844877 & 0.906718 & 2.3663 \\ \hline
+		6.79628 & 20.1187 & 20.1554 & 20.4135 & 0.874263 & 0.940678 & 2.44781 \\ \hline
+		6.05719 & 20.1259 & 20.1609 & 20.4251 & 0.903875 & 0.974618 & 2.52564 \\ \hline
+		5.39848 & 20.1338 & 20.1695 & 20.4378 & 0.938458 & 1.01356 & 2.60968 \\ \hline
+		4.8114 & 20.1417 & 20.1778 & 20.452 & 0.972541 & 1.05112 & 2.69315 \\ \hline
+		4.28817 & 20.1495 & 20.1871 & 20.4658 & 1.01092 & 1.09196 & 2.78059 \\ \hline
+		3.82183 & 20.1586 & 20.197 & 20.4812 & 1.05194 & 1.13856 & 2.87539 \\ \hline
+		3.40621 & 20.1658 & 20.2077 & 20.4985 & 1.09237 & 1.18092 & 2.96432 \\ \hline
+		3.03579 & 20.1766 & 20.2197 & 20.5194 & 1.13854 & 1.22919 & 3.0603 \\ \hline
+		2.70565 & 20.1873 & 20.2342 & 20.5426 & 1.18669 & 1.28156 & 3.16011 \\ \hline
+		2.41141 & 20.2019 & 20.248 & 20.5674 & 1.24612 & 1.34942 & 3.26749 \\ \hline
+		2.14917 & 20.2154 & 20.2623 & 20.5931 & 1.29991 & 1.40468 & 3.37931 \\ \hline
+		1.91545 & 20.2313 & 20.2781 & 20.6206 & 1.35978 & 1.47139 & 3.49853 \\ \hline
+		1.70715 & 20.2469 & 20.2967 & 20.6501 & 1.44044 & 1.54247 & 3.62777 \\ \hline
+		1.5215 & 20.2692 & 20.3219 & 20.6842 & 1.5313 & 1.63374 & 3.75475 \\ \hline
+		1.35604 & 20.2899 & 20.3469 & 20.7239 & 1.61721 & 1.72612 & 3.90636 \\ \hline
+		1.20857 & 20.313 & 20.3676 & 20.7604 & 1.70004 & 1.79653 & 4.05177 \\ \hline
+		1.07714 & 20.3526 & 20.4163 & 20.8055 & 1.85527 & 1.95657 & 4.20103 \\ \hline
+		0.960002 & 20.3787 & 20.4461 & 20.849 & 1.95665 & 2.06122 & 4.39098 \\ \hline
+		0.855602 & 20.4217 & 20.4892 & 20.8947 & 2.09968 & 2.18911 & 4.56566 \\ \hline
+		0.762556 & 20.4606 & 20.534 & 20.9453 & 2.22069 & 2.32579 & 4.76015 \\ \hline
+		0.679629 & 20.523 & 20.5908 & 21.0013 & 2.40207 & 2.52493 & 4.99063 \\ \hline
+		0.60572 & 20.6253 & 20.697 & 21.0559 & 2.76056 & 2.88823 & 5.26117 \\ \hline
+		0.539849 & 20.6995 & 20.7795 & 21.1234 & 2.96068 & 3.1181 & 5.48537 \\ \hline
+		0.481141 & 20.768 & 20.8574 & 21.1874 & 3.15373 & 3.29702 & 5.76235 \\ \hline
+		0.428817 & 20.8904 & 20.9813 & 21.2659 & 3.56892 & 3.70349 & 6.12683 \\ \hline
+		0.382184 & 21.0134 & 21.1242 & 21.3365 & 3.99167 & 4.10116 & 6.41307 \\ \hline
+		0.340622 & 21.1466 & 21.2597 & 21.423 & 4.29285 & 4.42276 & 6.76072 \\ \hline
+		0.303579 & 21.2868 & 21.4092 & 21.5233 & 4.71253 & 4.79954 & 7.15292 \\ \hline
+		0.270566 & 21.44 & 21.5686 & 21.6116 & 5.13457 & 5.2575 & 7.53262 \\ \hline
+		0.241142 & 21.6117 & 21.748 & 21.7117 & 5.67949 & 5.81147 & 8.01736 \\ \hline
+		0.214918 & 21.8003 & 21.9721 & 21.8619 & 6.22165 & 6.36811 & 8.53165 \\ \hline
+		0.191546 & 22.0184 & 22.238 & 21.9731 & 6.92668 & 7.07514 & 9.09269 \\ \hline
+		0.170715 & 22.2756 & 22.5018 & 22.121 & 7.67816 & 7.96051 & 9.79948 \\ \hline
+		0.15215 & 22.5915 & 22.8661 & 22.2798 & 8.65635 & 8.82155 & 10.406 \\ \hline
+		0.135604 & 22.9828 & 23.2734 & 22.4682 & 9.87042 & 10.0184 & lis.68 \\ \hline
+		0.120857 & 23.5043 & 23.797 & 22.6715 & 11.154 & 11.315 & 12.1753 \\ \hline
+		0.107714 & 24.1941 & 24.5756 & 22.9851 & 13.0461 & 13.3065 & 13.3434 \\ \hline
+	\end{tabular}}
+	\caption{\label{tab:ctchar}Przykładowa tablica charakterystyki przekładnika.}
+\end{table}
+
+\clearpage
+
+\subsection{Plik HEAD.TXT}
+Ten plik zawiera liczbę identyfikującą ostatnio(obecnie) wykorzystywane pliki i przyjmuje wartości $x$ od 1 do 999. Do tych plików zalicza się:
+\begin{itemize}
+	\item xLogs.bin - zawiera dane binarne zapisywane co 10$s$ działania kompensatora (uruchomione sterowanie). Maksymalna długość pliku to jeden dzień, następnie wartość w head.txt jest inkrementowana. 
+
+	\begin{lstlisting}[float=!h, style=customc, belowskip=-10pt]
+struct FatFS_time_struct
+{
+	Uint32 second_2:5;
+	Uint32 minute:6;
+	Uint32 hour:5;
+	Uint32 day:5;
+	Uint32 month:4;
+	Uint32 year:7;
+};
+\end{lstlisting}
+
+
+	\begin{lstlisting}[float=!h, style=customc, belowskip=-10pt]
+float temp_array[17];
+temp_array[0] = *(float *)&FatFS_time;
+temp_array[1] = Grid_filter.U_grid_1h.a;
+temp_array[2] = Grid_filter.U_grid_1h.b;
+temp_array[3] = Grid_filter.U_grid_1h.c;
+temp_array[4] = Grid_filter.Q_load_1h.a;
+temp_array[5] = Grid_filter.Q_load_1h.b;
+temp_array[6] = Grid_filter.Q_load_1h.c;
+temp_array[7] = Grid_filter.P_load_1h.a;
+temp_array[8] = Grid_filter.P_load_1h.b;
+temp_array[9] = Grid_filter.P_load_1h.c;
+
+temp_array[10] = Grid_filter.Q_conv_1h.a;
+temp_array[11] = Grid_filter.Q_conv_1h.b;
+temp_array[12] = Grid_filter.Q_conv_1h.c;
+temp_array[13] = Grid_filter.P_conv_1h.a;
+temp_array[14] = Grid_filter.P_conv_1h.b;
+temp_array[15] = Grid_filter.P_conv_1h.c;
+temp_array[16] = fmaxf(Meas.Temp1, fmaxf(Meas.Temp2, Meas.Temp3));
+\end{lstlisting}
+	
+	\item xError.txt - zawiera tekstowy opis jak długo pracował przekształtnik i ostatnie alarmy. Przykład:
+	\begin{lstlisting}[]
+The converter has worked for:
+0:9:22:10 days/hours/minutes/seconds
+
+List of snapshot errors:
+I_comp_c_SDL
+TZ_SD_COMP    
+TZ            
+
+List of all errors:
+I_comp_c_SDL
+TZ_SD_COMP    
+TZ      
+	\end{lstlisting}
+	
+	\item xScope.bin - zawiera binarny zrzut oscyloskopu zatrzymany na zdarzeniu, które zatrzymało pracę przekształtnika. Domyślnie punkt zatrzynia jest w 800 próbce.
+
+	\begin{lstlisting}[float=!h, style=customc, belowskip=-10pt]
+//dane poszczegolnych kanalow
+Scope.data_in[0] = &Meas.U_grid.a;
+Scope.data_in[1] = &Meas.U_grid.b;
+Scope.data_in[2] = &Meas.U_grid.c;
+Scope.data_in[3] = &Meas.I_grid_avg.a;
+Scope.data_in[4] = &Meas.I_grid_avg.b;
+Scope.data_in[5] = &Meas.I_grid_avg.c;
+Scope.data_in[6] = &Meas.I_conv_avg.a;
+Scope.data_in[7] = &Meas.I_conv_avg.b;
+Scope.data_in[8] = &Meas.I_conv_avg.c;
+Scope.data_in[9] = &Meas.I_conv_avg.n;
+Scope.data_in[10] = &Meas.U_dc_avg;
+//tablica z danymi zapisywana na karte SD
+float data[11][1250];
+\end{lstlisting}
+
+\end{itemize}
+\section{Proces kalibracji}
+Każdy kontakt z płytą przekształtnika musi być poprzedzony dotknięciem obudowy, a następnie potencjału GND płyty. Ma to na celu wyrównanie w bezpieczny sposób potencjałów między przekształtnikiem, a osobą dotykającą. Procedura kalibracji przebiega według punktów:
+\begin{enumerate}
+	\setlength\itemsep{0mm}
+	\item Skonfiguruj lutowaną zworką odpowiedni pomiar prądu – przewlekany/przekładnik.
+
+	\item Podepnij termistor(y).
+
+	\item Przygotuj okablowanie służące do kalibracji:
+	
+	\begin{enumerate}
+		\vspace{-2mm}
+		\setlength\itemsep{0mm}
+		\item Zewrzyj DC-link przekształtnika;
+
+		\item Połącz w szereg wszystkie pomiary prądu, tak aby przez wszystkie przepływał ten sam prąd – kierunek nie ma znaczenia;
+
+		\item Ujemny zacisk zasilacza laboratoryjnego podepnij do terminala N, a następnie kabelkiem z N do szeregowo połączonych pomiarów prądu. Dodatni zacisk zasilacza podepnij na drugim końcu szeregu.
+		\vspace{-2mm}
+	\end{enumerate}
+	\item Podepnij programator JTAG najpierw od strony PCB, a następnie USB do komputera. Taka kolejność zapewnia większe bezpieczeństwo w przypadku wystąpienia ESD.
+
+	\item Przygotuj kartę SD z plikami podanymi poniżej, a następnie umieść ją w slocie na płycie przekształtnika.
+	\begin{enumerate}
+		\vspace{-2mm}
+		\setlength\itemsep{0mm}
+		\item cpu01.hex;
+
+		\item cpu02.hex;
+
+		\item harmon.csv;
+
+		\item settings.csv – może zawierać przygotowane ustawienia do testów mocy;
+
+		\item CT\_CHAR.CSV, jeśli wykorzystywany jest przekładnik.
+		\vspace{-2mm}
+	\end{enumerate}
+
+	\item Włącz zasilanie 24$V$ – wentylatory zaczną pracować, jeśli obecne.
+
+	\item Wgraj kod bootloadera za pomocą programu UniFlash.
+
+	\item Bootloader załaduje właściwy program z karty SD i po kilku sekundach zacznie migać zielona dioda, a wentylatory się wyłączą.
+
+	\item Sprawdź czy zapalone są diody przy transformatorkach, a także czy równomiernie się świecą.
+
+	\item Przystąp do kalibracji poprzez przełączenie głównego przycisku na pozycję ON. Kolejne przełączenia będą sygnalizować procesowi gotowość ustawień. Ilość mrugnięć pomarańczowej diody sygnalizuje etap w którym obecnie znajduje się kalibracja. Czerwona dioda oznacza niepowodzenie danego etapu kalibracji, który można powtórzyć ponownie przełączając główny przełącznik. W przypadku powtarzającego się niepowodzenia może to oznaczać niedziałające pomiary w danym urządzeniu.
+	
+	\begin{enumerate}
+		\vspace{-2mm}
+		\setlength\itemsep{0mm}
+		\item Pierwszy etap kalibracji ma na celu usunięcie przesunięć zera i błędów wzmocnienia pomiarów, a zarazem jest to test ich działania. W tym punkcie zostaną usunięte przesunięcia zera na pomiarach – zasilacz laboratoryjny musi być wyłączony. Zapali się na pomarańczowo dioda sygnalizująca trwający proces. 
+
+		\item Uruchom zasilacz na dokładne 5$A$ i zmień pozycję głównego przełącznika. Zostanie skalibrowane wzmocnienie każdego pomiaru prądu.
+
+		\item Wyłącz zasilacz laboratoryjny. Odepnij kabelek łączący terminal N z początkiem szeregu pomiarów prądu i uruchom zasilacz na napięcie 30$V$. Po zmianie pozycji głównego przełącznika zostanie skalibrowane wzmocnienie pomiarów napięcia sieci.
+
+		\item Wyłącz zasilacz laboratoryjny i usuń zwarcie na pomiarze napięcia DC-link. Podepnij zasilacz równolegle do DC-link i uruchom na napięciu 30$V$. Po zmianie pozycji głównego przełącznika nastąpi kalibracja wzmocnienia pomiaru napięcia DC-link.
+		\vspace{-2mm}
+	\end{enumerate}
+	\item Po przejściu powyższych etapów dane kalibracji zostaną zapisane na karcie SD i zielona dioda będzie migać. Przy poprawności działania pomiarów inne błędy mogą zostać wychwycone przez sam przekształtnik podczas testów mocy i zasygnalizowane flagą. Zaleca się uruchomienie przekształtnika z niższego napięcia sieci np. 30$Vrms$, aby następnie zrobić test z 230$Vrms$.
+
+\end{enumerate}
+\clearpage
+\section{Problemy ze sterowaniem członami pasywnymi}
+Ten rozdział opisuje obecny algorytm sterowania blokami, jego wady i możliwe rozwiązanie.
+
+\subsection{Algorytm sterowania blokami w LRM001}
+
+\begin{enumerate}
+	\setlength\itemsep{0mm}
+	\item Definicje.
+	\begin{itemize}
+		\vspace{-2mm}
+		\setlength\itemsep{0mm}
+		\item P - aktualna moc czynna
+		\item Q - aktualna moc bierna
+		\item cos\_cfg - ustawiona wartość cosinusa
+		\item cos - aktualna wartość cosinusa
+		\item tg\_cfg - wartość tangensa wyliczona z cos\_cfg. Do wykonywania obliczeń.
+		\item Qblok(min) - najmniejsza wartość bloku regulacyjnego (moduł liczby).
+		\item Moc Q jest dodatnia dla obciążenia indukcyjnego i ujemna dla pojemnościowego.
+		\item Moc Qblok - dodatnia dla bloku indukcyjnego i ujemna dla bloku pojemnościowego.
+		\item Strefa nieczułości dla bloków pojemnościowych:
+		\begin{itemize}
+			\vspace{-2mm}
+			\setlength\itemsep{0mm}
+			\item załączenie bloku, gdy moc bierna jest przekroczona o wartość |Qblok(min)/2|
+			\item wyłączenie bloku, gdy moc bierna jest mniejsza od zdefiniowanej o wartość |Qblok(min)|
+		\end{itemize}
+		\item Timery:
+		\begin{itemize}
+			\vspace{-2mm}
+			\setlength\itemsep{0mm}
+			\item TimerAlarmL, TimerAlarmC - timery alarmów niedokompensowania/przekompensowania.
+			\item TimerOn - timer załączenia bloków pojemnościowych/indukcyjnych.
+			\item TimerOff - timer wyłączenia bloków pojemnościowych/indukcyjnych.
+		\end{itemize}
+		\vspace{-2mm}
+	\end{itemize}
+	\item Wstępna analiza.
+	
+	Analiza odbywa się co 100ms po uśrednieniu pomiarów z 5 okresów.
+	W zależności od znaku mocy biernej uruchamiane jest sterowanie blokami pojemnościowymi
+	lub indukcyjnymi. Nie ma miejsca doregulowywanie blokami indukcyjnymi w przypadku obciążenia
+	indukcyjnego i załączonych blokach pojemnościowych.
+	
+	\item Sterowanie - moc bierna indukcyjna.
+
+	\begin{itemize}
+		\vspace{-2mm}
+		\setlength\itemsep{0mm}
+		\item skasowanie TimerAlarmC
+		\item wyliczenie dopuszczalnej mocy biernej na podstawie aktualnej mocy czynnej:
+		$Qcfg = P * tg\_cfg$
+		\item porównanie wartości cos z cos\_cfg
+		
+		$cos < cos\_cfg \text{  (wymagane załączenie bloku)}$
+		
+		\begin{itemize}
+		\vspace{-2mm}
+		\setlength\itemsep{0mm}
+		\item sprawdzenie, czy nie są przypadkiem załączone bloki indukcyjne.
+		
+		Jeśli tak, wyłączenie zgodnie z TimerOff
+		
+		return
+
+		\item wyliczenie różnicy mocy:
+		
+		$Qdelta = Q - Qcfg$
+		\item gdy |Qdelta| < |Qblok(min)/2| - reset TimerAlarmL, TimerOn, TimerOff.
+		
+		return (strefa nieczułości)
+		\item tutaj odliczamy TimerAlarmL
+		\item odliczanie/zazbrojenie TimerOn. Gdy czas nie upłynął - return.
+		\item wyznaczenie nowego zestawu bloków do załączenia.
+		
+		Wyznaczenie polega na wirtualnym wyłączeniu załączonych bloków
+		(wyznaczenie aktualnej mocy biernej bez załączonych bloków) i przeliczeniu nowego zestawu bloków.
+		Następnie wykonywane jest załączenie wybranych bloków.
+		\end{itemize}
+
+		$cos > cos\_cfg \text{  (możliwe odłączenie bloku)}$
+
+		\begin{itemize}
+			\vspace{-2mm}
+			\setlength\itemsep{0mm}
+			\item skasowanie TimerAlarmL
+			
+			Jeśli tak, wyłączenie zgodnie z TimerOff
+			
+			return
+			
+			\item sprawdzenie, czy są załączone jakieś bloki pojemnościowe. Gdy nie - można załączyć
+			bloki indukcyjne (o ile są) aby przesunąć się w kierunku zadanego cos\_cfg.
+			Jest to wymagane w przypadku kompensacji tylko obciążenia pojemnościowego.
+			Załączenie zgodnie z TimerOn. 
+			
+			return
+			
+			\item sprawdzenie czy można wyłączyć któryś z bloków:
+			
+			$Qdelta = Q - Qcfg$
+			
+			\item gdy |Qdelta| < |Qblok(min)| - reset TimerOn i TimerOff.
+			
+			return (strefa nieczułości)
+			\item odliczanie/zazbrojenie TimerOff. Gdy czas nie upłynął - return.
+			\item wyznaczenie nowego zestawu bloków do załączenia. W tym wypadku Qcfg jest zmniejszona
+			o wartość |Qblok(min)/2| co pozwala lepiej doregulować cos.
+			
+			$cos = cos\_cfg \text{  (chyba niemożliwe)}$
+			
+			\item kasowanie TimerOn, TimerOff, TimerAlarmL.
+		\vspace{-2mm}
+		\end{itemize}
+
+		\vspace{-2mm}
+	\end{itemize}
+
+	\item Sterowanie - moc bierna pojemnościowa.
+	
+	Analogicznie jak powyżej.
+	Zamiana bloków pojemnościowych i indukcyjnych oraz TimerAlarmC i TimerAlarmL.
+	\vspace{-2mm}
+\end{enumerate}
+
+\subsection{Analiza problemów algorytmu sterowania blokami w LRM001}
+Równoległa praca przekształtnika i bloków pasywnych wymaga zmiany założeń i celów osiąganych przez algorytm:
+
+\begin{enumerate}
+	\vspace{-2mm}
+	\setlength\itemsep{0mm}
+	\item Podstawowym celem bloków pasywnych jest zapewnienie pracy przekształtnika w jego możliwym zakresie (bez wchodzenia w limity kompensacji/symetryzacji).
+	\item Dodatkowo, należy dążyć do jak najmniejszego obciążenia przekształtnika (większość mocy biernej kompensowana przez człony pasywne).
+	
+	\indent Wypadkowy prąd w przewodzie neutralnym może osiągać wartości większe niż w przewodach fazowych. Przy kompensacji tylko mocy biernej, moc przekształtnika może zostać ograniczona dwukrotnie przy dużej asymetrii. Biorąc pod uwagę też symetryzację mocy czynnej, prąd w przewodzie neutralnym może osiągnąć wartości 3 razy większe niż prądy fazowe. Prąd przewodu neutralnego przekształtnika przepływa przez kondensatory elektrolityczne, i podgrzewając je pogarsza żywotność. Jest on najbardziej istotny do ograniczenia, a następnie dopiero prądy przewodów fazowych.
+	
+	Takie podejście oznacza, że równoległe załączanie członów pojemnościowych i indukcyjnych może poszerzyć zakres pracy przekształtnika.
+	
+	\item Straty przekształtnika rosną kwadratowo względem prądów przekształtnika. Oznacza to, że praca przy 50\% prądu znamionowego generuje tylko 25\% strat pracy znamionowej. Wpływ na żywotność przekształtnika przy pracy poniżej tego progu jest znikomy i można wprowadzić strefę nieczułości algorytmu załączania bloków pasywnych. Takie podejście zmniejszy zużycie styczników.
+	
+	\item Algorytm powinien działać poprawnie także w przypadku kompensacji do wartości zadanej innej niż 0$var$. Celem wciąż jest odciążenie przekształtnika.
+\end{enumerate}
+
+Obecny algorytm dopuszcza tylko operację załączenia/wyłączenia w jednym cyklu. Jednak mogą nastąpić sytuacje, gdzie stan wszystkich styczników ulegnie zmianie. Przykładem jest kompensacja 5$kvar$ z użyciem członów o mocach 5, 3, 3$kvar$. Wedle obecnego algorytmu (lub mojego zrozumienia) zostanie załączony człon 5kvar - sytuacja poprawna. Następnie moc bierna do kompensacji wzrasta do 6$kvar$ - nic się nie stanie, podczas gdy można załączyć dwa człony 3$kvar$ przy wyłączonym 5$kvar$.
+
+Proponuję rozważenie opcji kompensacji, która wynikła z burzy mózgów w laboratorium. Należy utworzyć listę wszystkich konfiguracji członów (powiedzmy, że na razie tylko indukcyjnych) wraz z ich wypadkową indukcyjnością. Wykonywanie obliczeń na indukcyjnościach uniezależnia nas od zmian napięcia sieci. Od tych indukcyjności należy odjąć zadaną indukcyjność (potrzebną do skompensowania), a następnie z użyciem funkcji qsort(wbudowana w język C) posortować względem wartości absolutnych. Na pierwszej pozycji listy uzyskamy najlepszy wariant członów.
+
+Na bazie otrzymanej listy można wprowadzić dodatkowe funkcjonalności optymalizujące. Z listy możemy wykreślić pozycje, które są obecnie niemożliwe do wykorzystania (np. nie można jeszcze danego członu załączyć). Wciąż uzyskamy rozwiązanie, które jest najbliżej zadanej wartości. Kolejnym krokiem może być wykreślenie pozycji, które wymagają przełączenia więcej niż np. jednego bloku - ograniczamy liczbę przełączeń. W zależności od uchybu mocy lub od całki uchybu mocy, liczbę możliwych przełączeń można modyfikować - zapewniając przełączenia tylko w momentach, w których to jest konieczne.
+
+Zapisanie algorytmu w ten sposób naszym zdaniem umożliwia łatwe zaimplementowanie wielu innych strategii sterowania blokami pasywnymi.
+
+
+\end{document}

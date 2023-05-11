@@ -1,0 +1,57 @@
+#include "stdafx.h"
+
+interrupt void Cla1Task1 ( void )
+{
+    Timer_PWM.CLA_START_TASK = TIMESTAMP_PWM;
+
+    Grid_analyzer_calc();
+
+    Cla1SoftIntRegs.SOFTINTFRC.all =
+    Cla1SoftIntRegs.SOFTINTEN.all = 1;
+
+    Timer_PWM.CLA_GRID = TIMESTAMP_PWM;
+
+    Grid_analyzer_filter_calc();
+
+    Timer_PWM.CLA_GRID_FILTER = TIMESTAMP_PWM;
+
+    CIC1_adaptive_global_CLAasm(&CIC1_adaptive_global__50Hz, CLA1toCLA2.w_filter * MATH_1_2PI);
+
+    ////////////////////////////////////////////////////////////////////////////////
+    Timer_PWM.CLA_ENDTASK = TIMESTAMP_PWM;
+}
+
+interrupt void Cla1Task2 ( void )
+{
+
+}
+
+interrupt void Cla1Task3 ( void )
+{
+
+}
+
+interrupt void Cla1Task4 ( void )
+{
+
+}
+
+interrupt void Cla1Task5 ( void )
+{
+
+}
+
+interrupt void Cla1Task6 ( void )
+{
+
+}
+
+interrupt void Cla1Task7 ( void )
+{
+
+}
+
+interrupt void Cla1Task8 ( void )
+{
+
+}

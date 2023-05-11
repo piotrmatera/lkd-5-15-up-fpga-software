@@ -67,8 +67,8 @@ LOCATE COMP "CPU_io[53]" SITE "H16" ;
 /////////////////////////// EMIF_CONTROL
 //LOCATE COMP "CPU_io[31]" SITE "F16" ;
 //LOCATE COMP "CPU_io[37]" SITE "H18" ;
-LOCATE COMP "CPU_io[37]" SITE "D12" ;
-LOCATE COMP "CPU_io[31]" SITE "F3" ;
+LOCATE COMP "CPU_io[37]" SITE "F3" ;
+LOCATE COMP "CPU_io[31]" SITE "D12" ;
 LOCATE COMP "CPU_io[32]" SITE "G18" ;
 LOCATE COMP "CPU_io[33]" SITE "G16" ;
 /////////////////////////// EMIF_ADDRESS
