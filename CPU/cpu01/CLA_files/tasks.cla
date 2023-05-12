@@ -20,36 +20,13 @@ interrupt void Cla1Task1 ( void )
     register float SD_dat2;
 
     SD_dat2 = 0.5f;
-    offset = Meas_slave_offset[0].U_dc;
-    Efficient_conditioning(EMIF_CLA.slave_meas[0].U_dc,     Meas_slave_gain[0].U_dc,     Meas_slave[0].U_dc,     Meas_slave[0].U_dc_avg,     Meas_slave_offset[0].U_dc_n);
-    Efficient_conditioning(EMIF_CLA.slave_meas[0].U_dc_n,   Meas_slave_gain[0].U_dc_n,   Meas_slave[0].U_dc_n,   Meas_slave[0].U_dc_n_avg,   Meas_slave_offset[0].I_conv.a);
-    Efficient_conditioning(EMIF_CLA.slave_meas[0].I_conv_a, Meas_slave_gain[0].I_conv.a, Meas_slave[0].I_conv.a, Meas_slave[0].I_conv_avg.a, Meas_slave_offset[0].I_conv.b);
-    Efficient_conditioning(EMIF_CLA.slave_meas[0].I_conv_b, Meas_slave_gain[0].I_conv.b, Meas_slave[0].I_conv.b, Meas_slave[0].I_conv_avg.b, Meas_slave_offset[0].I_conv.c);
-    Efficient_conditioning(EMIF_CLA.slave_meas[0].I_conv_c, Meas_slave_gain[0].I_conv.c, Meas_slave[0].I_conv.c, Meas_slave[0].I_conv_avg.c, Meas_slave_offset[0].I_conv.n);
-    Efficient_conditioning(EMIF_CLA.slave_meas[0].I_conv_n, Meas_slave_gain[0].I_conv.n, Meas_slave[0].I_conv.n, Meas_slave[0].I_conv_avg.n, Meas_slave_offset[1].U_dc);
-    Efficient_conditioning(EMIF_CLA.slave_meas[1].U_dc,     Meas_slave_gain[1].U_dc,     Meas_slave[1].U_dc,     Meas_slave[1].U_dc_avg,     Meas_slave_offset[1].U_dc_n);
-    Efficient_conditioning(EMIF_CLA.slave_meas[1].U_dc_n,   Meas_slave_gain[1].U_dc_n,   Meas_slave[1].U_dc_n,   Meas_slave[1].U_dc_n_avg,   Meas_slave_offset[1].I_conv.a);
-    Efficient_conditioning(EMIF_CLA.slave_meas[1].I_conv_a, Meas_slave_gain[1].I_conv.a, Meas_slave[1].I_conv.a, Meas_slave[1].I_conv_avg.a, Meas_slave_offset[1].I_conv.b);
-    Efficient_conditioning(EMIF_CLA.slave_meas[1].I_conv_b, Meas_slave_gain[1].I_conv.b, Meas_slave[1].I_conv.b, Meas_slave[1].I_conv_avg.b, Meas_slave_offset[1].I_conv.c);
-    Efficient_conditioning(EMIF_CLA.slave_meas[1].I_conv_c, Meas_slave_gain[1].I_conv.c, Meas_slave[1].I_conv.c, Meas_slave[1].I_conv_avg.c, Meas_slave_offset[1].I_conv.n);
-    Efficient_conditioning(EMIF_CLA.slave_meas[1].I_conv_n, Meas_slave_gain[1].I_conv.n, Meas_slave[1].I_conv.n, Meas_slave[1].I_conv_avg.n, Meas_slave_offset[2].U_dc);
-    Efficient_conditioning(EMIF_CLA.slave_meas[2].U_dc,     Meas_slave_gain[2].U_dc,     Meas_slave[2].U_dc,     Meas_slave[2].U_dc_avg,     Meas_slave_offset[2].U_dc_n);
-    Efficient_conditioning(EMIF_CLA.slave_meas[2].U_dc_n,   Meas_slave_gain[2].U_dc_n,   Meas_slave[2].U_dc_n,   Meas_slave[2].U_dc_n_avg,   Meas_slave_offset[2].I_conv.a);
-    Efficient_conditioning(EMIF_CLA.slave_meas[2].I_conv_a, Meas_slave_gain[2].I_conv.a, Meas_slave[2].I_conv.a, Meas_slave[2].I_conv_avg.a, Meas_slave_offset[2].I_conv.b);
-    Efficient_conditioning(EMIF_CLA.slave_meas[2].I_conv_b, Meas_slave_gain[2].I_conv.b, Meas_slave[2].I_conv.b, Meas_slave[2].I_conv_avg.b, Meas_slave_offset[2].I_conv.c);
-    Efficient_conditioning(EMIF_CLA.slave_meas[2].I_conv_c, Meas_slave_gain[2].I_conv.c, Meas_slave[2].I_conv.c, Meas_slave[2].I_conv_avg.c, Meas_slave_offset[2].I_conv.n);
-    Efficient_conditioning(EMIF_CLA.slave_meas[2].I_conv_n, Meas_slave_gain[2].I_conv.n, Meas_slave[2].I_conv.n, Meas_slave[2].I_conv_avg.n, Meas_slave_offset[3].U_dc);
-    Efficient_conditioning(EMIF_CLA.slave_meas[3].U_dc,     Meas_slave_gain[3].U_dc,     Meas_slave[3].U_dc,     Meas_slave[3].U_dc_avg,     Meas_slave_offset[3].U_dc_n);
-    Efficient_conditioning(EMIF_CLA.slave_meas[3].U_dc_n,   Meas_slave_gain[3].U_dc_n,   Meas_slave[3].U_dc_n,   Meas_slave[3].U_dc_n_avg,   Meas_slave_offset[3].I_conv.a);
-    Efficient_conditioning(EMIF_CLA.slave_meas[3].I_conv_a, Meas_slave_gain[3].I_conv.a, Meas_slave[3].I_conv.a, Meas_slave[3].I_conv_avg.a, Meas_slave_offset[3].I_conv.b);
-    Efficient_conditioning(EMIF_CLA.slave_meas[3].I_conv_b, Meas_slave_gain[3].I_conv.b, Meas_slave[3].I_conv.b, Meas_slave[3].I_conv_avg.b, Meas_slave_offset[3].I_conv.c);
-    Efficient_conditioning(EMIF_CLA.slave_meas[3].I_conv_c, Meas_slave_gain[3].I_conv.c, Meas_slave[3].I_conv.c, Meas_slave[3].I_conv_avg.c, Meas_slave_offset[3].I_conv.n);
-    Efficient_conditioning(EMIF_CLA.slave_meas[3].I_conv_n, Meas_slave_gain[3].I_conv.n, Meas_slave[3].I_conv.n, Meas_slave[3].I_conv_avg.n, Meas_master_offset.U_grid.a);
-
-    Meas_slave_avg.I_conv_avg.a = Meas_slave[0].I_conv_avg.a + Meas_slave[1].I_conv_avg.a + Meas_slave[2].I_conv_avg.a + Meas_slave[3].I_conv_avg.a;
-    Meas_slave_avg.I_conv_avg.b = Meas_slave[0].I_conv_avg.b + Meas_slave[1].I_conv_avg.b + Meas_slave[2].I_conv_avg.b + Meas_slave[3].I_conv_avg.b;
-    Meas_slave_avg.I_conv_avg.c = Meas_slave[0].I_conv_avg.c + Meas_slave[1].I_conv_avg.c + Meas_slave[2].I_conv_avg.c + Meas_slave[3].I_conv_avg.c;
-    Meas_slave_avg.I_conv_avg.n = Meas_slave[0].I_conv_avg.n + Meas_slave[1].I_conv_avg.n + Meas_slave[2].I_conv_avg.n + Meas_slave[3].I_conv_avg.n;
+    offset = Meas_master_offset.U_dc;
+    Efficient_conditioning(EMIF_CLA.U_dc,     Meas_master_gain.U_dc,     Meas_master.U_dc,     Meas_master.U_dc_avg,     Meas_master_offset.U_dc_n);
+    Efficient_conditioning(EMIF_CLA.U_dc_n,   Meas_master_gain.U_dc_n,   Meas_master.U_dc_n,   Meas_master.U_dc_n_avg,   Meas_master_offset.I_conv.a);
+    Efficient_conditioning(EMIF_CLA.I_conv_a, Meas_master_gain.I_conv.a, Meas_master.I_conv.a, Meas_master.I_conv_avg.a, Meas_master_offset.I_conv.b);
+    Efficient_conditioning(EMIF_CLA.I_conv_b, Meas_master_gain.I_conv.b, Meas_master.I_conv.b, Meas_master.I_conv_avg.b, Meas_master_offset.I_conv.c);
+    Efficient_conditioning(EMIF_CLA.I_conv_c, Meas_master_gain.I_conv.c, Meas_master.I_conv.c, Meas_master.I_conv_avg.c, Meas_master_offset.I_conv.n);
+    Efficient_conditioning(EMIF_CLA.I_conv_n, Meas_master_gain.I_conv.n, Meas_master.I_conv.n, Meas_master.I_conv_avg.n, Meas_master_offset.U_dc);
 
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 1;

@@ -80,7 +80,7 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	
 	defparam dsp_alu_0.CLK3_DIV = "ENABLED" ;
     defparam dsp_alu_0.CLK2_DIV = "ENABLED" ;
-    defparam dsp_alu_0.CLK1_DIV = "ENABLED" ;
+    defparam dsp_alu_0.CLK1_DIV = "DISABLED" ;
     defparam dsp_alu_0.CLK0_DIV = "ENABLED" ;
     defparam dsp_alu_0.REG_INPUTCFB_RST = "RST0" ;
     defparam dsp_alu_0.REG_INPUTCFB_CE = "CE0" ;
@@ -101,10 +101,10 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
     defparam dsp_alu_0.REG_OPCODEOP0_0_CLK = "CLK0" ;
     defparam dsp_alu_0.REG_INPUTC1_RST = "RST0" ;
     defparam dsp_alu_0.REG_INPUTC1_CE = "CE0" ;
-    defparam dsp_alu_0.REG_INPUTC1_CLK = "CLK0" ;
+    defparam dsp_alu_0.REG_INPUTC1_CLK = "CLK1" ;
     defparam dsp_alu_0.REG_INPUTC0_RST = "RST0" ;
     defparam dsp_alu_0.REG_INPUTC0_CE = "CE0" ;
-    defparam dsp_alu_0.REG_INPUTC0_CLK = "CLK0" ;
+    defparam dsp_alu_0.REG_INPUTC0_CLK = "CLK1" ;
     defparam dsp_alu_0.LEGACY = "DISABLED" ;
     defparam dsp_alu_0.REG_FLAG_RST = "RST0" ;
     defparam dsp_alu_0.REG_FLAG_CE = "CE0" ;
@@ -270,7 +270,7 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 
     defparam dsp_mult_1.CLK3_DIV = "ENABLED" ;
     defparam dsp_mult_1.CLK2_DIV = "ENABLED" ;
-    defparam dsp_mult_1.CLK1_DIV = "ENABLED" ;
+    defparam dsp_mult_1.CLK1_DIV = "DISABLED" ;
     defparam dsp_mult_1.CLK0_DIV = "ENABLED" ;
     defparam dsp_mult_1.HIGHSPEED_CLK = "NONE" ;
     defparam dsp_mult_1.REG_INPUTC_RST = "RST0" ;
@@ -368,7 +368,7 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 
     defparam dsp_mult_0.CLK3_DIV = "ENABLED" ;
     defparam dsp_mult_0.CLK2_DIV = "ENABLED" ;
-    defparam dsp_mult_0.CLK1_DIV = "ENABLED" ;
+    defparam dsp_mult_0.CLK1_DIV = "DISABLED" ;
     defparam dsp_mult_0.CLK0_DIV = "ENABLED" ;
     defparam dsp_mult_0.HIGHSPEED_CLK = "NONE" ;
     defparam dsp_mult_0.REG_INPUTC_RST = "RST0" ;

@@ -241,11 +241,4 @@ void Converter_calc()
     Conv.PI_Id[0].integrator -= average2;
     Conv.PI_Id[1].integrator -= average2;
     Conv.PI_Id[2].integrator -= average2;
-
-    //////////////////////////////////////////////////////////////////////////////////
-
-    control_slave[3].flags.bit.enable_H_comp =
-    control_slave[2].flags.bit.enable_H_comp =
-    control_slave[1].flags.bit.enable_H_comp =
-    control_slave[0].flags.bit.enable_H_comp = Conv.enable_H_comp_local;
 }

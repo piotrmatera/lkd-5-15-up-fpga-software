@@ -86,13 +86,13 @@ GPIO_SetupPinOptions(i, GPIOreg[i].dir, GPIOreg[i].options)
 #define GPIO_CLEAR2(pin, val) *(&GpioDataRegs.GPACLEAR.all + (pin / 32)*GPY_DATA_OFFSET) = (Uint32)val << (pin % 32)
 #define GPIO_TOGGLE2(pin, val) *(&GpioDataRegs.GPATOGGLE.all + (pin / 32)*GPY_DATA_OFFSET) = (Uint32)val << (pin % 32)
 
-#define SD_SPISIMO_PIN 122
-#define SD_SPISOMI_PIN 123
-#define SD_SPICLK_PIN 124
-#define SD_SPISTE_PIN 125
+#define SD_SPISIMO_PIN 24
+#define SD_SPISOMI_PIN 25
+#define SD_SPICLK_PIN 26
+#define SD_SPISTE_PIN 27
 
-#define I2CA_SDA_PIN 104
-#define I2CA_SCL_PIN 105
+#define I2CA_SDA_PIN 42
+#define I2CA_SCL_PIN 43
 
 #define EM1D0   85
 #define EM1D1   83
@@ -128,7 +128,7 @@ GPIO_SetupPinOptions(i, GPIOreg[i].dir, GPIOreg[i].options)
 #define EM1D30  54
 #define EM1D31  53
 
-#define EM1CS2  34
+#define EM1CS0  32
 #define EM1WE   31
 #define EM1OE   37
 
@@ -145,63 +145,53 @@ GPIO_SetupPinOptions(i, GPIOreg[i].dir, GPIOreg[i].options)
 #define EM1A10  50
 #define EM1A11  51
 
-#define PWM1A 145
-#define PWM1B 146
-#define PWM2A 147
-#define PWM2B 148
-#define PWM3A 149
-#define PWM3B 150
-#define PWM4A 151
-#define PWM4B 152
-#define PWM5A 153
-#define PWM5B 154
-#define PWM6A 155
-#define PWM6B 156
-#define PWM7A 157
-#define PWM7B 158
-#define PWM8A 159
-#define PWM8B 160
-#define PWM9A 161
-#define PWM9B 162
-#define PWM10A 163
-#define PWM10B 164
-#define PWM11A 165
-#define PWM11B 166
-#define PWM12A 167
-#define PWM12B 168
-
-#define FPGA_CS 135
-#define FPGA_SED 137
-#define FPGA_CFG0 132
-#define FPGA_CFG1 134
-#define FPGA_PROGRAMN 101
-#define FPGA_INITN 99
-#define FPGA_DONE 100
+#define FPGA_CS 92
+#define FPGA_PROGRAMN 90
+#define FPGA_INITN 89
+#define FPGA_DONE 91
 
 //CPU IO MASTER
-#define TRIGGER0_CS  0
-#define TRIGGER1_CS  1
+#define TRIGGER0_CM  0
+#define TRIGGER1_CM  1
 
-#define RST_CM  162
-#define SD_NEW_CM  156
-#define SYNC_PWM_CM  158
-#define ON_OFF_CM  163
+#define RST_CM  2
+#define SD_NEW_CM  3
+#define SYNC_PWM_CM  4
+#define ON_OFF_CM  5
+#define TZ_EN_CM  6
+#define PWM_EN_CM  36
+#define FAN_CM  84
 
-#define LED1_CM  164
-#define LED2_CM  165
-#define LED3_CM  166
-#define LED4_CM  167
-#define LED5_CM  168
+#define LED1_CM  7
+#define LED2_CM  8
+#define LED3_CM  9
+#define LED4_CM  10
+#define LED5_CM  11
 
-#define EN_Mod_1_CM  110
-#define TX_Mod_1_CM  36
-#define RX_Mod_1_CM  35
+#define SS_DClink_CM  15
+#define DClink_DSCH_CM  x
 
-#define EN_Mod_2_CM  14
-#define TX_Mod_2_CM  10
-#define RX_Mod_2_CM  11
+#define C_SS_RLY_L1_CM  16
+#define GR_RLY_L1_CM  17
+#define C_SS_RLY_L2_CM  18
+#define GR_RLY_L2_CM  19
+#define C_SS_RLY_L3_CM  20
+#define GR_RLY_L3_CM  21
+#define C_SS_RLY_N_CM  22
+#define GR_RLY_N_CM  23
 
-#define EN_Mod_3_CM  15
+#define FPGA_SED  133
+
+
+#define EN_Mod_1_CM  30
+#define TX_Mod_1_CM  29
+#define RX_Mod_1_CM  28
+
+#define EN_Mod_2_CM  99
+#define TX_Mod_2_CM  93
+#define RX_Mod_2_CM  94
+
+#define EN_Mod_3_CM  14
 #define TX_Mod_3_CM  12
 #define RX_Mod_3_CM  13
 

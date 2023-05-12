@@ -55,7 +55,6 @@ extern struct CPU2toCPU1_struct CPU2toCPU1;
 extern struct CLA1toCLA2_struct CLA1toCLA2;
 
 extern struct Measurements_master_struct Meas_master;
-extern struct Measurements_slave_struct Meas_slave;
 
 extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 extern struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;

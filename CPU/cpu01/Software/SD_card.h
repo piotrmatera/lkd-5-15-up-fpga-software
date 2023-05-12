@@ -53,7 +53,6 @@ class SD_card_class
     static void save_text_message(FIL *fil);
     static void print_filinfo(Uint16 fno_p);
     static void save_single_state_master(FIL *fil, union ALARM_master alarm_master_temp);
-    static void save_single_state_slave(FIL *fil, union ALARM_slave alarm_slave_temp);
     static Uint32 save_FPGA_scope(FIL* fp, Uint32 index);
 
     static Uint16 *byte2_to_word2(Uint16 *word_array, Uint16 *byte_array, Uint16 size);

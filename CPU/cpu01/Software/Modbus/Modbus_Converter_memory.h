@@ -40,10 +40,7 @@ struct Modbus_Converter_memory_struct
         struct time_BCD_struct RTC_current_time;//48bit
         Uint16 file_number_logs;
         Uint16 reserved_02; //kompilator wyrownuje nastepna unie do parzystego adresu (chyba dlatego, ze jest w niej Uint32 all[2])
-        union ALARM_slave alarm_slave;
-        union ALARM_slave alarm_slave_snapshot;
-        struct STATUS_slave status_slave;
-        Uint16 padding1[128-32-2*sizeof(union ALARM_master)-sizeof(struct STATUS_master)-2-2*sizeof(union ALARM_slave)-sizeof(struct STATUS_slave)];
+        Uint16 padding1[128-32-2*sizeof(union ALARM_master)-sizeof(struct STATUS_master)-2];
         struct Grid_parameters_struct Grid_filter;
         float frequency;
         Uint16 rtu_port_id;

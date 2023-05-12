@@ -28,55 +28,8 @@ interrupt void SD_INT()
     Sync_flags.all = EMIF_mem.read.Sync_flags.all;
     Comm_flags.all = EMIF_mem.read.rx_rdy.all;
 
-    //miejsce odczytu niebezpieczne
-    union COMM_flags_union flags_temp;
-    flags_temp.all = 0;
-    flags_temp.bit.port1_hipri_msg = Comm_flags.bit.port1_hipri_msg;
-    EMIF_mem.write.rx_ack.all = flags_temp.all;
-
     register Uint32 *src;
     register Uint32 *dest;
-
-    dest = (Uint32 *)&EMIF_CLA.slave_meas[0];
-    src = (Uint32 *)((Uint16 *)EMIF_mem.read.rx1_hipri_msg[0] + offsetof(COMM_slave_sync_msg_struct, slave_meas));
-    if(!Sync_flags.bit.slave_rdy_0)
-    {
-        src = zeroes;
-        Conv.I_lim_slave[0] = 0.0f;
-    }
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-
-    src = (Uint32 *)((Uint16 *)EMIF_mem.read.rx1_hipri_msg[1] + offsetof(COMM_slave_sync_msg_struct, slave_meas));
-    if(!Sync_flags.bit.slave_rdy_1)
-    {
-        src = zeroes;
-        Conv.I_lim_slave[1] = 0.0f;
-    }
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-
-    src = (Uint32 *)((Uint16 *)EMIF_mem.read.rx1_hipri_msg[2] + offsetof(COMM_slave_sync_msg_struct, slave_meas));
-    if(!Sync_flags.bit.slave_rdy_2)
-    {
-        src = zeroes;
-        Conv.I_lim_slave[2] = 0.0f;
-    }
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-
-    src = (Uint32 *)((Uint16 *)EMIF_mem.read.rx1_hipri_msg[3] + offsetof(COMM_slave_sync_msg_struct, slave_meas));
-    if(!Sync_flags.bit.slave_rdy_3)
-    {
-        src = zeroes;
-        Conv.I_lim_slave[3] = 0.0f;
-    }
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
 
     Cla1ForceTask1();
 
@@ -87,7 +40,7 @@ interrupt void SD_INT()
     *dest++ = *src++;
     *dest++ = *src++;
 
-    GPIO_SET(TRIGGER1_CS);
+    GPIO_SET(TRIGGER1_CM);
 
     static Uint16 decimator_cpu2 = 0;
 
@@ -106,16 +59,8 @@ interrupt void SD_INT()
         CPU1toCPU2.CLA1toCLA2.w_filter = PLL.w_filter;
         CPU1toCPU2.CLA1toCLA2.I_lim = Conv.I_lim_avg_prefilter;
 
-        src = (Uint32 *)&Meas_slave_avg.I_conv_avg;
-        dest = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.Meas_slave.I_conv_avg;
-
         while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
         PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
-
-        *dest++ = *src++;
-        *dest++ = *src++;
-        *dest++ = *src++;
-        *dest++ = *src++;
 
         IpcRegs.IPCSET.bit.IPC3 = 1;
         IpcRegs.IPCCLR.bit.IPC3 = 1;
@@ -144,7 +89,7 @@ interrupt void SD_INT()
         Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
     }
 
-    GPIO_CLEAR(TRIGGER1_CS);
+    GPIO_CLEAR(TRIGGER1_CM);
 
     register Uint16 number_of_slaves = Sync_flags.bit.sync_ok_0 + Sync_flags.bit.sync_ok_1 + Sync_flags.bit.sync_ok_2 + Sync_flags.bit.sync_ok_3;
     status_master.incorrect_number_of_slaves = number_of_slaves != status_master.expected_number_of_slaves;
@@ -180,7 +125,7 @@ interrupt void SD_INT()
         if(FPGA_flags.bit.rx1_port_nrdy) alarm_master.bit.rx1_port_nrdy = 1;
 //        if(FPGA_flags.bit.rx2_port_nrdy) alarm_master.bit.rx2_port_nrdy = 1;
         if(FPGA_flags.bit.sed_err) alarm_master.bit.sed_err = 1;
-        if(FPGA_flags.bit.fault_supply) alarm_master.bit.FLT_SUPPLY_MASTER = 1;
+//        if(FPGA_flags.bit.fault_supply) alarm_master.bit.FLT_SUPPLY_MASTER = 1;
 
         if(Conv.enable)
         {
@@ -278,53 +223,7 @@ interrupt void SD_INT()
 
     Timer_PWM.CPU_SCOPE = TIMESTAMP_PWM;
 
-    GPIO_SET(TRIGGER0_CS);
-
-    struct COMM_header_struct comm_header;
-    comm_header.length = sizeof(COMM_master_sync_msg2_union)-1;
-    comm_header.rsvd = 0;
-    comm_header.destination_mailbox = 2;
-    Uint32 onoff = Machine.switch_timer != 0;
-    Uint32 header_temp = *(Uint16 *)&comm_header;
-    header_temp |= onoff << 16;
-
-    dest = (Uint32 *)&EMIF_mem.write.tx1_hipri_msg[2];
-    *dest++ = header_temp;
-
-//    src = (Uint32 *)&fw_descriptor.dsc;
-//    *dest++ = *src++;
-    *dest++ = SW_ID;
-    *dest++ = alarm_master.all;
-    src = (Uint32 *)&scope_global;
-    *dest++ = *src++;
-
-    flags_temp.all = 0;
-    flags_temp.bit.port1_hipri_msg = 1 << 2;
-    EMIF_mem.write.tx_start.all = flags_temp.all;
-
-    src = (Uint32 *)&Conv.ratio;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    src = (Uint32 *)&Conv.I_ref;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    src = (Uint32 *)&Conv.U_coupl;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    src = (Uint32 *)&PLL.trig_table[0].cosine;
-    *dest++ = *src++, src++;
-    *dest++ = *src++, src++;
-    *dest++ = *src++, src++;
-    src = (Uint32 *)&Kalman_U_grid[0].estimate;
-    *dest++ = *src++;
-    src = (Uint32 *)&Kalman_U_grid[1].estimate;
-    *dest++ = *src++;
-    src = (Uint32 *)&Kalman_U_grid[2].estimate;
-    *dest++ = *src++;
+    GPIO_SET(TRIGGER0_CM);
 
     Timer_PWM.CPU_TX_MSG2 = TIMESTAMP_PWM;
 
@@ -336,7 +235,7 @@ interrupt void SD_INT()
 
     Fast_copy21_CPUasm();
 
-    GPIO_CLEAR(TRIGGER0_CS);
+    GPIO_CLEAR(TRIGGER0_CM);
 
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
     Timer_PWM.CPU_END = TIMESTAMP_PWM;

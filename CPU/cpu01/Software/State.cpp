@@ -233,12 +233,11 @@ void Blink()
                     if(status_master.no_CT_connected_a || status_master.no_CT_connected_b || status_master.no_CT_connected_c) Blink_LED1.update_pattern(0.2f, 0.5f);
                     else Blink_LED1.update_pattern(true);
                 }
-                else if(status_slave[0].Conv_enable) Blink_LED1.update_pattern(1.0f, 0.5f);
                 else Blink_LED1.update_pattern(2.0f, 0.5f);
             }
             else Blink_LED1.update_pattern(false);
 
-            if(alarm_master.all | alarm_slave[0].all[0] | alarm_slave[0].all[1])
+            if(alarm_master.all)
             {
                 Blink_LED2.update_pattern(false);
                 Blink_LED3.update_pattern(0.67f, 0.5f);
@@ -270,7 +269,7 @@ void Blink()
         }
     }
 
-    if((Machine.recent_error || status_slave[0].recent_error) && Conv.enable) Blink_LED4.update_pattern(true);
+    if(Machine.recent_error && Conv.enable) Blink_LED4.update_pattern(true);
     else Blink_LED4.update_pattern(false);
 
     GPIO_WRITE(LED1_CM, Blink_LED1.task());
@@ -523,7 +522,7 @@ void Machine_class::Background()
     Fiber_comm[1].Main();
     Fiber_comm[2].Main();
     Fiber_comm[3].Main();
-    status_master.in_limit_H = status_slave[0].in_limit_H | status_slave[1].in_limit_H | status_slave[2].in_limit_H | status_slave[3].in_limit_H;
+//    status_master.in_limit_H = status_slave[0].in_limit_H | status_slave[1].in_limit_H | status_slave[2].in_limit_H | status_slave[3].in_limit_H;
 
     SD_card.save_state_task();
     SD_card.Scope_snapshot_task();
@@ -689,29 +688,13 @@ void Machine_class::Background()
             && Modbus_slave_LCD_OLD.RTU->state == Modbus_RTU_class::Modbus_RTU_idle
             && Modbus_slave_EXT.RTU->state == Modbus_RTU_class::Modbus_RTU_idle)
     {
-        static volatile Uint16 state = 0;
+        control_master.triggers.bit.CPU_reset = 0;
 
-        if(!state)
-        {
-            control_slave[0].triggers.bit.CPU_reset = 1;
-            control_slave[1].triggers.bit.CPU_reset = 1;
-            control_slave[2].triggers.bit.CPU_reset = 1;
-            control_slave[3].triggers.bit.CPU_reset = 1;
-            state = 1;
-        }
-        else if(control_slave[0].triggers.bit.CPU_reset == 0 &&
-                control_slave[1].triggers.bit.CPU_reset == 0 &&
-                control_slave[2].triggers.bit.CPU_reset == 0 &&
-                control_slave[3].triggers.bit.CPU_reset == 0)
-        {
-            control_master.triggers.bit.CPU_reset = 0;
-
-            EALLOW;
-            NmiIntruptRegs.NMICFG.bit.NMIE = 1;
-            NmiIntruptRegs.NMIWDPRD = 0;
-            NmiIntruptRegs.NMIFLGFRC.bit.OVF = 1;
-            EDIS;
-        }
+        EALLOW;
+        NmiIntruptRegs.NMICFG.bit.NMIE = 1;
+        NmiIntruptRegs.NMIWDPRD = 0;
+        NmiIntruptRegs.NMIFLGFRC.bit.OVF = 1;
+        EDIS;
     }
 
 }
@@ -745,9 +728,6 @@ void Machine_class::init()
     memset(&Energy_meter, 0, sizeof(Energy_meter));
 
     memset(&scope_global, 0, sizeof(scope_global));
-    memset(&alarm_slave, 0, sizeof(alarm_slave));
-    memset(&status_slave, 0, sizeof(status_slave));
-    memset(&control_slave, 0, sizeof(control_slave));
     memset(&control_master, 0, sizeof(control_master));
     memset(&control_ext_modbus, 0, sizeof(control_ext_modbus));
     memset(&status_master, 0, sizeof(status_master));
@@ -775,17 +755,6 @@ void Machine_class::init()
     SD_card.read_meter_data();
     if(SD_card.meter.available) memcpy(&Energy_meter.upper, &SD_card.meter.Energy_meter, sizeof(Energy_meter.upper));
     else status_master.SD_no_meter = 1;
-
-    union FPGA_master_flags_union FPGA_flags_temp;
-    FPGA_flags_temp.all = EMIF_mem.read.FPGA_flags.all;
-    if(!FPGA_flags_temp.bit.Dipswitch1) status_master.DS1_switch_SD_CT = 1;
-    if(!FPGA_flags_temp.bit.Dipswitch2) status_master.DS2_enable_Q_comp = 1;
-    if(!FPGA_flags_temp.bit.Dipswitch3) status_master.DS3_enable_P_sym = 1;
-    if(!FPGA_flags_temp.bit.Dipswitch4) status_master.DS4_enable_H_comp = 1;
-    if(!FPGA_flags_temp.bit.Dipswitch5) status_master.DS5_limit_to_9odd_harmonics = 1;
-    if(!FPGA_flags_temp.bit.Dipswitch6) status_master.DS6_limit_to_14odd_harmonics = 1;
-    if(!FPGA_flags_temp.bit.Dipswitch7) status_master.DS7_limit_to_19odd_harmonics = 1;
-    if(!FPGA_flags_temp.bit.Dipswitch8) status_master.DS8_DS_override = 1;
 
     if(!SD_card.harmonics.available || !SD_card.settings.available || !SD_card.calibration.available || !SD_card.CT_char.available)
         status_master.SD_card_not_enough_data = 1;
@@ -901,7 +870,7 @@ void Machine_class::init()
     RTU_EXT_parameters.DERE_pin = EN_Mod_2_CM;
     RTU_EXT_parameters.RX_pin = RX_Mod_2_CM;
     RTU_EXT_parameters.TX_pin = TX_Mod_2_CM;
-    RTU_EXT_parameters.SciRegs = &ScibRegs;
+    RTU_EXT_parameters.SciRegs = &ScidRegs;
     RTU_EXT_parameters.ECapRegs = &ECap2Regs;
     if(SD_card.settings.Baudrate >= 9600) RTU_EXT_parameters.baudrate = SD_card.settings.Baudrate;
     else RTU_EXT_parameters.baudrate = 9600;
@@ -1838,61 +1807,6 @@ void Machine_class::operational()
             CT_test_online.state = 1;
 
         ////////////////////////////////////////////////////////////////////
-
-        Uint16 conv_active[4];
-        register Uint16 number_of_converters;
-        number_of_converters = conv_active[0] = status_slave[0].Conv_active;
-        number_of_converters += conv_active[1] = status_slave[1].Conv_active;
-        number_of_converters += conv_active[2] = status_slave[2].Conv_active;
-        number_of_converters += conv_active[3] = status_slave[3].Conv_active;
-
-        static const Uint32 mask_harmonic_versions[16] = {0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000,
-                                                          0x55555555, 0xAAAAAAAA, 0x00000000, 0x00000000,
-                                                          0x49249249, 0x92492492, 0x24924924, 0x00000000,
-                                                          0x11111111, 0x22222222, 0x44444444, 0x88888888};
-
-        Uint32 mask_harmonic[4] = {0};
-        if(number_of_converters) number_of_converters--;
-        register const Uint32 *mask_pointer = mask_harmonic_versions + number_of_converters*4;
-        if(conv_active[0])
-            mask_harmonic[0] = *mask_pointer++;
-        if(conv_active[1])
-            mask_harmonic[1] = *mask_pointer++;
-        if(conv_active[2])
-            mask_harmonic[2] = *mask_pointer++;
-        if(conv_active[3])
-            mask_harmonic[3] = *mask_pointer++;
-
-        register Uint32 H_flags = *(Uint32 *)&control_master.H_odd_a;
-        *(Uint32 *)&control_slave[0].H_odd_a = H_flags & mask_harmonic[0];
-        *(Uint32 *)&control_slave[1].H_odd_a = H_flags & mask_harmonic[1];
-        *(Uint32 *)&control_slave[2].H_odd_a = H_flags & mask_harmonic[2];
-        *(Uint32 *)&control_slave[3].H_odd_a = H_flags & mask_harmonic[3];
-        H_flags = *(Uint32 *)&control_master.H_odd_b;
-        *(Uint32 *)&control_slave[0].H_odd_b = H_flags & mask_harmonic[0];
-        *(Uint32 *)&control_slave[1].H_odd_b = H_flags & mask_harmonic[1];
-        *(Uint32 *)&control_slave[2].H_odd_b = H_flags & mask_harmonic[2];
-        *(Uint32 *)&control_slave[3].H_odd_b = H_flags & mask_harmonic[3];
-        H_flags = *(Uint32 *)&control_master.H_odd_c;
-        *(Uint32 *)&control_slave[0].H_odd_c = H_flags & mask_harmonic[0];
-        *(Uint32 *)&control_slave[1].H_odd_c = H_flags & mask_harmonic[1];
-        *(Uint32 *)&control_slave[2].H_odd_c = H_flags & mask_harmonic[2];
-        *(Uint32 *)&control_slave[3].H_odd_c = H_flags & mask_harmonic[3];
-        H_flags = *(Uint32 *)&control_master.H_even_a;
-        *(Uint32 *)&control_slave[0].H_even_a = H_flags & mask_harmonic[0];
-        *(Uint32 *)&control_slave[1].H_even_a = H_flags & mask_harmonic[1];
-        *(Uint32 *)&control_slave[2].H_even_a = H_flags & mask_harmonic[2];
-        *(Uint32 *)&control_slave[3].H_even_a = H_flags & mask_harmonic[3];
-        H_flags = *(Uint32 *)&control_master.H_even_b;
-        *(Uint32 *)&control_slave[0].H_even_b = H_flags & mask_harmonic[0];
-        *(Uint32 *)&control_slave[1].H_even_b = H_flags & mask_harmonic[1];
-        *(Uint32 *)&control_slave[2].H_even_b = H_flags & mask_harmonic[2];
-        *(Uint32 *)&control_slave[3].H_even_b = H_flags & mask_harmonic[3];
-        H_flags = *(Uint32 *)&control_master.H_even_c;
-        *(Uint32 *)&control_slave[0].H_even_c = H_flags & mask_harmonic[0];
-        *(Uint32 *)&control_slave[1].H_even_c = H_flags & mask_harmonic[1];
-        *(Uint32 *)&control_slave[2].H_even_c = H_flags & mask_harmonic[2];
-        *(Uint32 *)&control_slave[3].H_even_c = H_flags & mask_harmonic[3];
 
         Conv.tangens_range_local[0].a = Saturation(control_master.tangens_range[0].a, -1.0f, 1.0f);
         Conv.tangens_range_local[0].b = Saturation(control_master.tangens_range[0].b, -1.0f, 1.0f);

@@ -57,6 +57,7 @@ struct Converter_struct
     struct abc_Filter1_struct Iq_prefilter;
     float control_type;
     float C_conv;
+    float RDY;
 
     float enable;
 };

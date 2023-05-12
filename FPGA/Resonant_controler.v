@@ -170,7 +170,7 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	reg addrr_M1_sel;
 	reg addrr_M1_inc;
 	reg addrr_M1_rst;
-	reg [1:0] addrr_M1_off;
+	reg [2:0] addrr_M1_off;
 	wire [M1_ADDR_WIDTH-1:0] addrr_M1_out;
 	
 	initial begin

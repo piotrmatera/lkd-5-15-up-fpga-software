@@ -14,11 +14,6 @@ struct Converter_struct Conv;
 struct CLA2toCLA1_struct CLA2toCLA1;
 
 struct SCOPE_global scope_global;
-struct CONTROL_slave control_slave[4];
-struct STATUS_slave status_slave[4];
-union ALARM_slave alarm_slave_snapshot[4];
-union ALARM_slave alarm_slave[4];
-struct LOG_slave log_slave[4];
 
 union CONTROL_EXT_MODBUS control_ext_modbus;
 
@@ -33,14 +28,10 @@ struct CIC2_struct CIC2_calibration;
 CLA_FPTR CIC2_calibration_input;
 
 struct Measurements_master_struct Meas_master;
-struct Measurements_slave_struct Meas_slave[4];
-struct Measurements_slave_struct Meas_slave_avg;
 struct Measurements_master_gain_offset_struct Meas_master_gain_error;
 struct Measurements_master_gain_offset_struct Meas_master_offset_error;
 struct Measurements_master_gain_offset_struct Meas_master_gain;
 struct Measurements_master_gain_offset_struct Meas_master_offset;
-struct Measurements_slave_gain_offset_struct Meas_slave_gain[4];
-struct Measurements_slave_gain_offset_struct Meas_slave_offset[4];
 struct Measurements_alarm_struct Meas_alarm_H;
 struct Measurements_alarm_struct Meas_alarm_L;
 

@@ -51,7 +51,6 @@ struct CLA1toCLA2_struct
     float I_lim;
     float w_filter;
     struct Measurements_master_struct Meas_master;
-    struct Measurements_slave_struct Meas_slave;
 };
 
 struct CLA2toCLA1_struct

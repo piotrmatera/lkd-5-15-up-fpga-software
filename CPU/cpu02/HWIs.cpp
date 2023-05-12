@@ -27,8 +27,8 @@ interrupt void IPC3_INT()
     *dest++ = *src++;
     *dest++ = *src++;
 
-    src = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.Meas_slave.I_conv_avg;
-    dest = (Uint32 *)&Meas_slave.I_conv_avg;
+    src = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.Meas_master.I_conv_avg;
+    dest = (Uint32 *)&Meas_master.I_conv_avg;
     *dest++ = *src++;
     *dest++ = *src++;
     *dest++ = *src++;

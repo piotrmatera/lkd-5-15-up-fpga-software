@@ -17,6 +17,14 @@
 
 class Init_class Init;
 
+struct FAN_struct
+{
+    float on_temp;
+    float full_temp;
+    float on_duty;
+    float slope;
+}FAN;
+
 void Init_class::IPCBootCPU2_flash()
 {
     if(( (IpcRegs.IPCBOOTSTS & 0x0000000F) == C2_BOOTROM_BOOTSTS_SYSTEM_READY)
@@ -46,6 +54,8 @@ void Init_class::clear_alarms()
     GPIO_SET(RST_CM);
     DELAY_US(1000);
     GPIO_CLEAR(RST_CM);
+
+    Init.EPwm_TZclear(&EPwm4Regs);
 
     if(alarm_master.bit.Not_enough_data_master)
     {
@@ -265,14 +275,20 @@ void Init_class::Variables()
     CIC2_calibration.range_modifier = 2500.0f;
     CIC2_calibration.div_range_modifier = 1.0f / CIC2_calibration.range_modifier;
     CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.b;
+
+    ///////////////////////////////////////////////////////////////////
+
+    FAN.on_duty = 0.5f;
+    FAN.on_temp = Meas_alarm_H.Temp - 35.0f;
+    FAN.full_temp = Meas_alarm_H.Temp - 5.0f;
+    FAN.slope = (1.0f - FAN.on_duty)/(FAN.full_temp - FAN.on_temp);
 }
 
-void Init_class::PWM_timestamp(volatile struct EPWM_REGS *EPwmReg)
+void Init_class::PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg)
 {
     EALLOW;
 
     EPwmReg->TBPRD = 1599;                   // PWM frequency = 1/(TBPRD+1)
-    EPwmReg->CMPA.bit.CMPA = 1300;//1480
     EPwmReg->TBCTR = 0;                     //clear counter
     EPwmReg->TBPHS.all = 0;
 
@@ -287,10 +303,24 @@ void Init_class::PWM_timestamp(volatile struct EPWM_REGS *EPwmReg)
     EPwmReg->TBCTL.bit.FREE_SOFT = 2;
     EPwmReg->TBCTL.bit.PRDLD = TB_SHADOW;                 // set Shadow load
 
-    EPwmReg->AQCTLA.bit.CAU = AQ_SET;
-    EPwmReg->AQCTLA.bit.ZRO = AQ_CLEAR;
-    EPwmReg->AQCTLA.bit.PRD = AQ_CLEAR;
+    EPwmReg->AQCTLA.bit.ZRO = AQ_SET;
+    EPwmReg->AQCTLA.bit.PRD = AQ_SET;
 
+    //Configure trip-zone
+    EPwmReg->TZCTL.bit.TZA = TZ_FORCE_LO;
+
+    //    EPwmReg->TZSEL.bit.OSHT1 = 1;
+//    EPwmReg->TZSEL.bit.OSHT3 = 1;
+    EPwmReg->TZSEL.bit.OSHT5 = 1;
+    EPwmReg->TZSEL.bit.OSHT6 = 1;
+    EDIS;
+}
+
+void Init_class::EPwm_TZclear(volatile struct EPWM_REGS *EPwmReg)
+{
+    EALLOW;
+    EPwmReg->TZOSTCLR.all = 0xFF;
+    EPwmReg->TZCLR.bit.OST = 1;
     EDIS;
 }
 
@@ -310,7 +340,56 @@ void Init_class::PWMs()
     SyncSocRegs.SYNCSELECT.bit.EPWM10SYNCIN = 5;
     EDIS;
 
-    PWM_timestamp(&EPwm4Regs);
+    PWM_TZ_timestamp(&EPwm4Regs);
+
+    GPIO_Setup(TZ_EN_CM);
+}
+
+void Init_class::Fan_speed()
+{
+    static volatile float Temp_fan = 0;
+    Temp_fan = fmaxf(Meas_master.Temperature.a, fmaxf(Meas_master.Temperature.b,  fmaxf(Meas_master.Temperature.c, Meas_master.Temperature.n)));
+    static volatile float duty_f;
+    duty_f = fminf(fmaxf((Temp_fan - FAN.on_temp) * FAN.slope + FAN.on_duty, 0.0f), 1.0f);
+    static volatile float duty_f2;
+    if(Conv.RDY)
+        duty_f2 = fmaxf(CLA2toCLA1.Grid_filter.Used_resources.a, fmaxf(CLA2toCLA1.Grid_filter.Used_resources.b, fmaxf(CLA2toCLA1.Grid_filter.Used_resources.c, CLA2toCLA1.Grid_filter.Used_resources.n)));
+    else
+        duty_f2 = 0.0f;
+    float duty_f_max = fmaxf(duty_f, duty_f2);
+
+    static Uint16 fan_decrease_counter = 0;
+    static Uint16 fan_state = 0;
+    switch(fan_state)
+    {
+    case 0:
+    {
+        if(duty_f_max > 0.5f) fan_state++;
+        else
+        {
+            GPIO_CLEAR(FAN_CM);
+        }
+        break;
+    }
+    case 1:
+    {
+        if(duty_f_max < 0.45f)
+        {
+            if(++fan_decrease_counter > 10) fan_state--, fan_decrease_counter = 0;
+        }
+        else
+        {
+            fan_decrease_counter = 0;
+            GPIO_SET(FAN_CM);
+        }
+        break;
+    }
+    default:
+    {
+        fan_state = 0;
+        break;
+    }
+    }
 }
 
 void Init_class::EMIF()
@@ -397,7 +476,7 @@ void Init_class::EMIF()
     GPIO_Setup(EM1D30);
     GPIO_Setup(EM1D31);
 
-    GPIO_Setup(EM1CS2);
+    GPIO_Setup(EM1CS0);
     GPIO_Setup(EM1WE );
     GPIO_Setup(EM1OE );
 
@@ -415,6 +494,35 @@ void Init_class::EMIF()
     GPIO_Setup(EM1A11);
 }
 
+#define TRIGGER0_CM  0
+#define TRIGGER1_CM  1
+
+#define RST_CM  2
+#define SD_NEW_CM  3
+#define SYNC_PWM_CM  4
+#define ON_OFF_CM  5
+#define TZ_EN_CM  6
+#define PWM_EN_CM  36
+#define FAN_CM  84
+
+#define LED1_CM  7
+#define LED2_CM  8
+#define LED3_CM  9
+#define LED4_CM  10
+#define LED5_CM  11
+
+#define SS_DClink_CM  15
+#define DClink_DSCH_CM  x
+
+#define C_SS_RLY_L1_CM  16
+#define GR_RLY_L1_CM  17
+#define C_SS_RLY_L2_CM  18
+#define GR_RLY_L2_CM  19
+#define C_SS_RLY_L3_CM  20
+#define GR_RLY_L3_CM  21
+#define C_SS_RLY_N_CM  22
+#define GR_RLY_N_CM  23
+
 const struct GPIO_struct GPIOreg[169] =
 {
 [SD_SPISIMO_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC | PULLUP},
@@ -422,19 +530,34 @@ const struct GPIO_struct GPIOreg[169] =
 [SD_SPICLK_PIN] = {HIGH, MUX6, CPU1_IO, OUTPUT, PUSHPULL},
 [SD_SPISTE_PIN] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 
-[ON_OFF_CM] = {LOW, MUX0, CPU1_IO, INPUT, QUAL6 | PULLUP},
-[SYNC_PWM_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
-[SD_NEW_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
-[RST_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+[TRIGGER0_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+[TRIGGER1_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 
-[TRIGGER0_CS] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
-[TRIGGER1_CS] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+[RST_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+[SD_NEW_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
+[SYNC_PWM_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
+[ON_OFF_CM] = {LOW, MUX0, CPU1_IO, INPUT, QUAL6 | PULLUP},
+
+[TZ_EN_CM] = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
+[PWM_EN_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[FAN_CM]  = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
 
 [LED1_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [LED2_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [LED3_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [LED4_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [LED5_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+
+//[DClink_DSCH_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+[SS_DClink_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[C_SS_RLY_L1_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[GR_RLY_L1_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[C_SS_RLY_L2_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[GR_RLY_L2_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[C_SS_RLY_L3_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[GR_RLY_L3_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[C_SS_RLY_N_CM ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[GR_RLY_N_CM   ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 
 [EN_Mod_1_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [EN_Mod_2_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
@@ -446,8 +569,8 @@ const struct GPIO_struct GPIOreg[169] =
 [TX_Mod_3_CM]  = {HIGH, MUX6, CPU1_IO, OUTPUT, PUSHPULL},
 [RX_Mod_3_CM]  = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC},
 
-[I2CA_SDA_PIN] = {HIGH, MUX1, CPU1_IO, INPUT, ASYNC|PULLUP},
-[I2CA_SCL_PIN] = {HIGH, MUX1, CPU1_IO, INPUT, ASYNC|PULLUP},
+[I2CA_SDA_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC|PULLUP},
+[I2CA_SCL_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC|PULLUP},
 
 [EM1D0 ] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 [EM1D1 ] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
@@ -482,7 +605,7 @@ const struct GPIO_struct GPIOreg[169] =
 [EM1D30] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 [EM1D31] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 
-[EM1CS2] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
+[EM1CS0] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 [EM1WE ] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 [EM1OE ] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 
@@ -507,14 +630,28 @@ void Init_class::GPIO()
     GPIO_Setup(SYNC_PWM_CM);
     GPIO_Setup(SD_NEW_CM);
 
-    GPIO_Setup(TRIGGER0_CS);
-    GPIO_Setup(TRIGGER1_CS);
+    GPIO_Setup(PWM_EN_CM);
+    GPIO_Setup(FAN_CM);
+
+    GPIO_Setup(TRIGGER0_CM);
+    GPIO_Setup(TRIGGER1_CM);
 
     GPIO_Setup(LED1_CM);
     GPIO_Setup(LED2_CM);
     GPIO_Setup(LED3_CM);
     GPIO_Setup(LED4_CM);
     GPIO_Setup(LED5_CM);
+
+//    GPIO_Setup(DClink_DSCH_CM);
+    GPIO_Setup(SS_DClink_CM  );
+    GPIO_Setup(C_SS_RLY_L1_CM);
+    GPIO_Setup(GR_RLY_L1_CM  );
+    GPIO_Setup(C_SS_RLY_L2_CM);
+    GPIO_Setup(GR_RLY_L2_CM  );
+    GPIO_Setup(C_SS_RLY_L3_CM);
+    GPIO_Setup(GR_RLY_L3_CM  );
+    GPIO_Setup(C_SS_RLY_N_CM );
+    GPIO_Setup(GR_RLY_N_CM   );
 
     GPIO_Setup(I2CA_SDA_PIN);
     GPIO_Setup(I2CA_SCL_PIN);

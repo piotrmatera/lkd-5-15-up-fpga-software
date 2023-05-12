@@ -388,10 +388,10 @@ Uint16 SD_card_class::log_data()
     temp_array[13] = CLA2toCLA1.Grid_filter.P_conv_1h.a;//log_slave[0].Q_conv_1h.a;
     temp_array[14] = CLA2toCLA1.Grid_filter.P_conv_1h.b;//log_slave[0].Q_conv_1h.b;
     temp_array[15] = CLA2toCLA1.Grid_filter.P_conv_1h.c;//log_slave[0].Q_conv_1h.c;
-    temp_array[16] = log_slave[0].Temperature.a;
-    temp_array[17] = log_slave[0].Temperature.b;
-    temp_array[18] = log_slave[0].Temperature.c;
-    temp_array[19] = log_slave[0].Temperature.n;
+//    temp_array[16] = log_slave[0].Temperature.a;
+//    temp_array[17] = log_slave[0].Temperature.b;
+//    temp_array[18] = log_slave[0].Temperature.c;
+//    temp_array[19] = log_slave[0].Temperature.n;
 
 //    if(!status_master.slave_rdy_1)
 //    {
@@ -501,79 +501,64 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
 
     if(alarm_master_temp.bit.no_sync) f_puts("\t\tno_sync \n", fil);
 
+    ///////////////////////////////////////////
+
+    if(alarm_master_temp.bit.I_conv_a_H) f_puts("\t\tI_conv_a_H \n", fil);
+    if(alarm_master_temp.bit.I_conv_a_L) f_puts("\t\tI_conv_a_L \n", fil);
+    if(alarm_master_temp.bit.I_conv_b_H) f_puts("\t\tI_conv_b_H \n", fil);
+    if(alarm_master_temp.bit.I_conv_b_L) f_puts("\t\tI_conv_b_L \n", fil);
+    if(alarm_master_temp.bit.I_conv_c_H) f_puts("\t\tI_conv_c_H \n", fil);
+    if(alarm_master_temp.bit.I_conv_c_L) f_puts("\t\tI_conv_c_L \n", fil);
+    if(alarm_master_temp.bit.I_conv_n_H) f_puts("\t\tI_conv_n_H \n", fil);
+    if(alarm_master_temp.bit.I_conv_n_L) f_puts("\t\tI_conv_n_L \n", fil);
+    //
+    if(alarm_master_temp.bit.Driver_FLT_a_A) f_puts("\tDriver_FLT_a_A \n", fil);
+    if(alarm_master_temp.bit.Driver_FLT_a_B) f_puts("\tDriver_FLT_a_B \n", fil);
+    if(alarm_master_temp.bit.Driver_FLT_b_A) f_puts("\tDriver_FLT_b_A \n", fil);
+    if(alarm_master_temp.bit.Driver_FLT_b_B) f_puts("\tDriver_FLT_b_B \n", fil);
+    if(alarm_master_temp.bit.Driver_FLT_c_A) f_puts("\tDriver_FLT_c_A \n", fil);
+    if(alarm_master_temp.bit.Driver_FLT_c_B) f_puts("\tDriver_FLT_c_B \n", fil);
+    if(alarm_master_temp.bit.Driver_FLT_n_A) f_puts("\tDriver_FLT_n_A \n", fil);
+    if(alarm_master_temp.bit.Driver_FLT_n_B) f_puts("\tDriver_FLT_n_B \n", fil);
+    //
+    if(alarm_master_temp.bit.Driver_nRDY_a_A) f_puts("\tDriver_nRDY_a_A \n", fil);
+    if(alarm_master_temp.bit.Driver_nRDY_a_B) f_puts("\tDriver_nRDY_a_B \n", fil);
+    if(alarm_master_temp.bit.Driver_nRDY_b_A) f_puts("\tDriver_nRDY_b_A \n", fil);
+    if(alarm_master_temp.bit.Driver_nRDY_b_B) f_puts("\tDriver_nRDY_b_B \n", fil);
+    if(alarm_master_temp.bit.Driver_nRDY_c_A) f_puts("\tDriver_nRDY_c_A \n", fil);
+    if(alarm_master_temp.bit.Driver_nRDY_c_B) f_puts("\tDriver_nRDY_c_B \n", fil);
+    if(alarm_master_temp.bit.Driver_nRDY_n_A) f_puts("\tDriver_nRDY_n_A \n", fil);
+    if(alarm_master_temp.bit.Driver_nRDY_n_B) f_puts("\tDriver_nRDY_n_B \n", fil);
+    //
+    if(alarm_master_temp.bit.I_conv_rms_a) f_puts("\t\tI_conv_rms_a  \n", fil);
+    if(alarm_master_temp.bit.I_conv_rms_b) f_puts("\t\tI_conv_rms_b  \n", fil);
+    if(alarm_master_temp.bit.I_conv_rms_c) f_puts("\t\tI_conv_rms_c  \n", fil);
+    if(alarm_master_temp.bit.I_conv_rms_n) f_puts("\t\tI_conv_rms_n  \n", fil);
+    //
+    if(alarm_master_temp.bit.Temperature_H) f_puts("\t\tTemperature_H \n", fil);
+    if(alarm_master_temp.bit.Temperature_L) f_puts("\t\tTemperature_L \n", fil);
+    if(alarm_master_temp.bit.U_dc_H       ) f_puts("\t\tU_dc_H        \n", fil);
+    if(alarm_master_temp.bit.U_dc_L       ) f_puts("\t\tU_dc_L        \n", fil);
+
+    if(alarm_master_temp.bit.Not_enough_data_slave) f_puts("\t\tNot_enough_data_slave \n", fil);
+    if(alarm_master_temp.bit.CONV_SOFTSTART       ) f_puts("\t\tCONV_SOFTSTART \n", fil);
+    if(alarm_master_temp.bit.FUSE_BROKEN          ) f_puts("\t\tFUSE_BROKEN \n", fil);
+    if(alarm_master_temp.bit.FLT_SUPPLY_SLAVE     ) f_puts("\t\tFLT_SUPPLY_SLAVE \n", fil);
+    //
+    if(alarm_master_temp.bit.TZ_FPGA_FLT ) f_puts("\t\tTZ_FPGA_FLT \n", fil);
+    if(alarm_master_temp.bit.TZ_CLOCKFAIL) f_puts("\t\tTZ_CLOCKFAIL \n", fil);
+    if(alarm_master_temp.bit.TZ_EMUSTOP  ) f_puts("\t\tTZ_EMUSTOP \n", fil);
+    if(alarm_master_temp.bit.TZ          ) f_puts("\t\tTZ \n", fil);
+    //
+    if(alarm_master_temp.bit.U_dc_balance          ) f_puts("\t\tU_dc_balance \n", fil);
+
+    if(alarm_master_temp.bit.lopri_timeout          ) f_puts("\t\tlopri_timeout \n", fil);
+    if(alarm_master_temp.bit.lopri_error            ) f_puts("\t\tlopri_error \n", fil);
+    if(alarm_master_temp.bit.msg2_error             ) f_puts("\t\tmsg2_error \n", fil);
+    if(alarm_master_temp.bit.msg0_error             ) f_puts("\t\tmsg0_error \n", fil);
+
+
     snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX}\n", alarm_master_temp.all);
-    f_puts(working_buffer, fil);
-}
-
-void SD_card_class::save_single_state_slave(FIL *fil, union ALARM_slave alarm_slave_temp)
-{
-    if(alarm_slave_temp.bit.I_conv_a_H) f_puts("\t\tI_conv_a_H \n", fil);
-    if(alarm_slave_temp.bit.I_conv_a_L) f_puts("\t\tI_conv_a_L \n", fil);
-    if(alarm_slave_temp.bit.I_conv_b_H) f_puts("\t\tI_conv_b_H \n", fil);
-    if(alarm_slave_temp.bit.I_conv_b_L) f_puts("\t\tI_conv_b_L \n", fil);
-    if(alarm_slave_temp.bit.I_conv_c_H) f_puts("\t\tI_conv_c_H \n", fil);
-    if(alarm_slave_temp.bit.I_conv_c_L) f_puts("\t\tI_conv_c_L \n", fil);
-    if(alarm_slave_temp.bit.I_conv_n_H) f_puts("\t\tI_conv_n_H \n", fil);
-    if(alarm_slave_temp.bit.I_conv_n_L) f_puts("\t\tI_conv_n_L \n", fil);
-    //
-    if(alarm_slave_temp.bit.Driver_FLT_a_A) f_puts("\tDriver_FLT_a_A \n", fil);
-    if(alarm_slave_temp.bit.Driver_FLT_a_B) f_puts("\tDriver_FLT_a_B \n", fil);
-    if(alarm_slave_temp.bit.Driver_FLT_b_A) f_puts("\tDriver_FLT_b_A \n", fil);
-    if(alarm_slave_temp.bit.Driver_FLT_b_B) f_puts("\tDriver_FLT_b_B \n", fil);
-    if(alarm_slave_temp.bit.Driver_FLT_c_A) f_puts("\tDriver_FLT_c_A \n", fil);
-    if(alarm_slave_temp.bit.Driver_FLT_c_B) f_puts("\tDriver_FLT_c_B \n", fil);
-    if(alarm_slave_temp.bit.Driver_FLT_n_A) f_puts("\tDriver_FLT_n_A \n", fil);
-    if(alarm_slave_temp.bit.Driver_FLT_n_B) f_puts("\tDriver_FLT_n_B \n", fil);
-    //
-    if(alarm_slave_temp.bit.Driver_nRDY_a_A) f_puts("\tDriver_nRDY_a_A \n", fil);
-    if(alarm_slave_temp.bit.Driver_nRDY_a_B) f_puts("\tDriver_nRDY_a_B \n", fil);
-    if(alarm_slave_temp.bit.Driver_nRDY_b_A) f_puts("\tDriver_nRDY_b_A \n", fil);
-    if(alarm_slave_temp.bit.Driver_nRDY_b_B) f_puts("\tDriver_nRDY_b_B \n", fil);
-    if(alarm_slave_temp.bit.Driver_nRDY_c_A) f_puts("\tDriver_nRDY_c_A \n", fil);
-    if(alarm_slave_temp.bit.Driver_nRDY_c_B) f_puts("\tDriver_nRDY_c_B \n", fil);
-    if(alarm_slave_temp.bit.Driver_nRDY_n_A) f_puts("\tDriver_nRDY_n_A \n", fil);
-    if(alarm_slave_temp.bit.Driver_nRDY_n_B) f_puts("\tDriver_nRDY_n_B \n", fil);
-    //
-    if(alarm_slave_temp.bit.I_conv_rms_a) f_puts("\t\tI_conv_rms_a  \n", fil);
-    if(alarm_slave_temp.bit.I_conv_rms_b) f_puts("\t\tI_conv_rms_b  \n", fil);
-    if(alarm_slave_temp.bit.I_conv_rms_c) f_puts("\t\tI_conv_rms_c  \n", fil);
-    if(alarm_slave_temp.bit.I_conv_rms_n) f_puts("\t\tI_conv_rms_n  \n", fil);
-    //
-    if(alarm_slave_temp.bit.Temperature_H) f_puts("\t\tTemperature_H \n", fil);
-    if(alarm_slave_temp.bit.Temperature_L) f_puts("\t\tTemperature_L \n", fil);
-    if(alarm_slave_temp.bit.U_dc_H       ) f_puts("\t\tU_dc_H        \n", fil);
-    if(alarm_slave_temp.bit.U_dc_L       ) f_puts("\t\tU_dc_L        \n", fil);
-
-    if(alarm_slave_temp.bit.Not_enough_data_slave) f_puts("\t\tNot_enough_data_slave \n", fil);
-    if(alarm_slave_temp.bit.CONV_SOFTSTART       ) f_puts("\t\tCONV_SOFTSTART \n", fil);
-    if(alarm_slave_temp.bit.FUSE_BROKEN          ) f_puts("\t\tFUSE_BROKEN \n", fil);
-    if(alarm_slave_temp.bit.FLT_SUPPLY_SLAVE     ) f_puts("\t\tFLT_SUPPLY_SLAVE \n", fil);
-    //
-    if(alarm_slave_temp.bit.TZ_FPGA_FLT ) f_puts("\t\tTZ_FPGA_FLT \n", fil);
-    if(alarm_slave_temp.bit.TZ_CLOCKFAIL) f_puts("\t\tTZ_CLOCKFAIL \n", fil);
-    if(alarm_slave_temp.bit.TZ_EMUSTOP  ) f_puts("\t\tTZ_EMUSTOP \n", fil);
-    if(alarm_slave_temp.bit.TZ          ) f_puts("\t\tTZ \n", fil);
-    //
-    if(alarm_slave_temp.bit.sync_error ) f_puts("\t\tsync_error \n", fil);
-
-    if(alarm_slave_temp.bit.rx1_crc_error    ) f_puts("\t\trx1_crc_error \n", fil);
-    if(alarm_slave_temp.bit.rx1_overrun_error) f_puts("\t\trx1_overrun_error \n", fil);
-    if(alarm_slave_temp.bit.rx1_frame_error  ) f_puts("\t\trx1_frame_error \n", fil);
-    if(alarm_slave_temp.bit.rx2_crc_error    ) f_puts("\t\trx2_crc_error \n", fil);
-    if(alarm_slave_temp.bit.rx2_overrun_error) f_puts("\t\trx2_overrun_error \n", fil);
-    if(alarm_slave_temp.bit.rx2_frame_error  ) f_puts("\t\trx2_frame_error \n", fil);
-    if(alarm_slave_temp.bit.rx1_port_nrdy    ) f_puts("\t\trx1_port_nrdy \n", fil);
-    if(alarm_slave_temp.bit.rx2_port_nrdy    ) f_puts("\t\trx2_port_nrdy \n", fil);
-    if(alarm_slave_temp.bit.sed_err          ) f_puts("\t\tsed_err \n", fil);
-
-    if(alarm_slave_temp.bit.U_dc_balance          ) f_puts("\t\tU_dc_balance \n", fil);
-
-    if(alarm_slave_temp.bit.lopri_timeout          ) f_puts("\t\tlopri_timeout \n", fil);
-    if(alarm_slave_temp.bit.lopri_error            ) f_puts("\t\tlopri_error \n", fil);
-    if(alarm_slave_temp.bit.msg2_error             ) f_puts("\t\tmsg2_error \n", fil);
-    if(alarm_slave_temp.bit.msg0_error             ) f_puts("\t\tmsg0_error \n", fil);
-
-    snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX, %08lX}\n", alarm_slave_temp.all[1], alarm_slave_temp.all[0]);
     f_puts(working_buffer, fil);
 }
 
@@ -609,30 +594,6 @@ void SD_card_class::save_text_message(FIL *fil)
     save_single_state_master(fil, alarm_master_snapshot);
     f_puts("\tList of all errors:\n", fil);
     save_single_state_master(fil, alarm_master);
-
-    f_puts("\nSlave 0 errors:\n", fil);
-    f_puts("\tList of snapshot errors:\n", fil);
-    save_single_state_slave(fil, alarm_slave_snapshot[0]);
-    f_puts("\tList of all errors:\n", fil);
-    save_single_state_slave(fil, alarm_slave[0]);
-
-//    f_puts("\nSlave 1 errors:\n", fil);
-//    f_puts("\tList of snapshot errors:\n", fil);
-//    save_single_state_slave(fil, alarm_slave_snapshot[1]);
-//    f_puts("\tList of all errors:\n", fil);
-//    save_single_state_slave(fil, alarm_slave[1]);
-//
-//    f_puts("\nSlave 2 errors:\n", fil);
-//    f_puts("\tList of snapshot errors:\n", fil);
-//    save_single_state_slave(fil, alarm_slave_snapshot[2]);
-//    f_puts("\tList of all errors:\n", fil);
-//    save_single_state_slave(fil, alarm_slave[2]);
-//
-//    f_puts("\nSlave 3 errors:\n", fil);
-//    f_puts("\tList of snapshot errors:\n", fil);
-//    save_single_state_slave(fil, alarm_slave_snapshot[3]);
-//    f_puts("\tList of all errors:\n", fil);
-//    save_single_state_slave(fil, alarm_slave[3]);
 }
 
 void SD_card_class::save_state_task()

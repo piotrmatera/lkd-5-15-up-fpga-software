@@ -24,31 +24,6 @@
 `define Y  380
 
 //CPU IO
-`define PWM1A 145
-`define PWM1B 146
-`define PWM2A 147
-`define PWM2B 148
-`define PWM3A 149
-`define PWM3B 150
-`define PWM4A 151
-`define PWM4B 152
-`define PWM5A 153
-`define PWM5B 154
-`define PWM6A 155
-`define PWM6B 156
-`define PWM7A 157
-`define PWM7B 158
-`define PWM8A 159
-`define PWM8B 160
-`define PWM9A 161
-`define PWM9B 162
-`define PWM10A 163
-`define PWM10B 164
-`define PWM11A 165
-`define PWM11B 166
-`define PWM12A 167
-`define PWM12B 168
-
 `define EM1D0   85
 `define EM1D1   83
 `define EM1D2   82
@@ -104,8 +79,6 @@
 `define EM1A13  86
 `define EM1A14  87
 `define EM1A15  88
-
-`define FPGA_SED  36
 
 //Comm defines
 `define K_28_0 9'h11C

@@ -16,7 +16,6 @@ struct Grid_analyzer_filter_struct Grid_filter;
 struct Timer_PWM_struct Timer_PWM;
 
 struct Measurements_master_struct Meas_master;
-struct Measurements_slave_struct Meas_slave;
 
 struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;

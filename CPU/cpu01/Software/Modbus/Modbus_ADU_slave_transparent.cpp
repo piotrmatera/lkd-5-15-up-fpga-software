@@ -396,12 +396,7 @@ Modbus_error_enum_t Modbus_ADU_slave_transparent::Fcn_before_processed()
             Modbus_Converter.input_registers.L_grid_previous[9] = L_grid_meas.L_grid_previous[9];
             Modbus_Converter.input_registers.RTC_current_time = RTC_current_time;
             Modbus_Converter.input_registers.rtu_port_id = this->RTU->get_sci_id();
-            Modbus_Converter.input_registers.alarm_slave = alarm_slave[0];
-            Modbus_Converter.input_registers.alarm_slave_snapshot = alarm_slave_snapshot[0];
-            Modbus_Converter.input_registers.status_slave = status_slave[0];
             Modbus_Converter.input_registers.Machine_state = Machine.state;
-            Modbus_Converter.input_registers.Temp1 = __fmax(log_slave[0].Temperature.a, log_slave[0].Temperature.b);
-            Modbus_Converter.input_registers.Temp2 = __fmax(log_slave[0].Temperature.c, log_slave[0].Temperature.n);
         }
         if(Mdb_slave_ADU.start_address < sizeof(Modbus_Converter.input_registers.FatFS_response))
         {

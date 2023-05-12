@@ -32,17 +32,6 @@ void Fiber_comm_master_class::idle()
         state_last = state;
     }
 
-    if(Machine.ONOFF)
-    {
-        control_slave[node_number].triggers.bit.ONOFF_set = 1;
-    }
-    else
-    {
-        control_slave[node_number].triggers.bit.ONOFF_reset = 1;
-    }
-
-    control_slave[node_number].flags.bit.enable = Conv.enable && !alarm_master.all;
-
     if(input_flags.send_modbus)
     {
         state = state_modbus_request_mosi;
@@ -210,15 +199,12 @@ void Fiber_comm_master_class::async_data_mosi()
 
     msg.async_master.code_version = SW_ID;
     msg.async_master.FatFS_time = *(Uint32 *)&FatFS_time;
-    msg.async_master.control_slave = control_slave[node_number];
     msg.async_master.w_filter = PLL.w_filter;
     msg.async_master.compensation2 = Conv.compensation2;
     msg.async_master.Meas_master_gain = Meas_master_gain;
     msg.async_master.Meas_master_offset = Meas_master_offset;
 
     Send(sizeof(msg.async_master), comm_func_async_data_mosi);
-
-    control_slave[node_number].triggers.all = 0;
 
     state = state_async_data_miso;
 }
@@ -235,20 +221,11 @@ void Fiber_comm_master_class::async_data_miso()
     {
         if(status_flags.wait_for_async_data) input_flags.read_async_data = 0;
 
-        log_slave[node_number] = msg.async_slave.log_slave;
-        Meas_slave_gain[node_number] = msg.async_slave.Meas_slave_gain;
-        Meas_slave_offset[node_number] = msg.async_slave.Meas_slave_offset;
-        alarm_slave[node_number] = msg.async_slave.alarm_slave;
-        status_slave[node_number] = msg.async_slave.status_slave;
         Conv.I_lim_slave[node_number] = msg.async_slave.I_lim;
         state = state_idle;
     }
     else if(result == result_error)
     {
-        memset(&log_slave[node_number], 0, sizeof(struct LOG_slave));
-        alarm_slave[node_number].all[0] =
-        alarm_slave[node_number].all[1] = 0;
-        *(Uint32 *)&status_slave[node_number] = 0;
         Conv.I_lim_slave[node_number] = 0;
 
         state = state_idle;

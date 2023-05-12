@@ -59,6 +59,7 @@ struct Measurements_alarm_struct
     float U_grid_abs;
     float U_grid_rms;
     float I_grid;
+    float Temp;
 };
 
 union FPGA_master_flags_union
@@ -66,14 +67,22 @@ union FPGA_master_flags_union
     Uint32 all;
     struct
     {
-        Uint16 Dipswitch1:1;
-        Uint16 Dipswitch2:1;
-        Uint16 Dipswitch3:1;
-        Uint16 Dipswitch4:1;
-        Uint16 Dipswitch5:1;
-        Uint16 Dipswitch6:1;
-        Uint16 Dipswitch7:1;
-        Uint16 Dipswitch8:1;
+        Uint16 FLT_H_L1:1;
+        Uint16 FLT_L_L1:1;
+        Uint16 FLT_H_L2:1;
+        Uint16 FLT_L_L2:1;
+        Uint16 FLT_H_L3:1;
+        Uint16 FLT_L_L3:1;
+        Uint16 FLT_H_N:1;
+        Uint16 FLT_L_N:1;
+        Uint16 RDY_H_L1:1;
+        Uint16 RDY_L_L1:1;
+        Uint16 RDY_H_L2:1;
+        Uint16 RDY_L_L2:1;
+        Uint16 RDY_H_L3:1;
+        Uint16 RDY_L_L3:1;
+        Uint16 RDY_H_N:1;
+        Uint16 RDY_L_N:1;
         Uint16 rx1_crc_error:1;
         Uint16 rx1_overrun_error:1;
         Uint16 rx1_frame_error:1;
@@ -83,8 +92,11 @@ union FPGA_master_flags_union
         Uint16 rx1_port_nrdy:1;
         Uint16 rx2_port_nrdy:1;
         Uint16 sed_err:1;
-        Uint16 fault_supply:1;
-        Uint16 rsvd:14;
+        Uint16 Resonant1_WIP:1;
+        Uint16 Resonant2_WIP:1;
+        Uint16 Kalman1_WIP:1;
+        Uint16 Kalman2_WIP:1;
+        Uint16 rsvd:3;
     }bit;
 };
 
@@ -134,6 +146,12 @@ union EMIF_union
         int16 I_grid_a;
         int16 I_grid_b;
         int16 I_grid_c;
+        int16 U_dc;
+        int16 U_dc_n;
+        int16 I_conv_a;
+        int16 I_conv_b;
+        int16 I_conv_c;
+        int16 I_conv_n_dummy;
         union FPGA_master_flags_union FPGA_flags;
         union FPGA_master_sync_flags_union Sync_flags;
         int16 clock_offsets[8];
@@ -146,7 +164,7 @@ union EMIF_union
         Uint32 Scope_width_mult;
         Uint32 Scope_rdy;
         Uint32 Scope_index_last;
-        Uint32 mux_rsvd[1024-23];
+        Uint32 mux_rsvd[1024-26];
         Uint32 rx1_lopri_msg[8][32];
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];
@@ -160,7 +178,10 @@ union EMIF_union
         Uint32 Scope_address;
         Uint32 Scope_acquire_before_trigger;
         Uint32 Scope_trigger;
-        Uint32 mux_rsvd[1024-6];
+        int16 duty[4];
+        Uint32 double_pulse;
+        Uint32 DSP_start;
+        Uint32 mux_rsvd[1024-10];
         Uint32 tx1_lopri_msg[8][32];
         Uint32 tx1_hipri_msg[8][32];
         Uint32 tx2_lopri_msg[8][32];
@@ -176,7 +197,12 @@ struct EMIF_CLA_struct
     int16 I_grid_a;
     int16 I_grid_b;
     int16 I_grid_c;
-    struct Slave_meas_struct slave_meas[8];
+    int16 U_dc;
+    int16 U_dc_n;
+    int16 I_conv_a;
+    int16 I_conv_b;
+    int16 I_conv_c;
+    int16 I_conv_n;
 };
 
 struct Energy_meter_upper_struct
@@ -242,14 +268,10 @@ extern struct CPU2toCPU1_struct CPU2toCPU1;
 extern struct CLA2toCLA1_struct CLA2toCLA1;
 
 extern struct Measurements_master_struct Meas_master;
-extern struct Measurements_slave_struct Meas_slave[4];
-extern struct Measurements_slave_struct Meas_slave_avg;
 extern struct Measurements_master_gain_offset_struct Meas_master_gain_error;
 extern struct Measurements_master_gain_offset_struct Meas_master_offset_error;
 extern struct Measurements_master_gain_offset_struct Meas_master_gain;
 extern struct Measurements_master_gain_offset_struct Meas_master_offset;
-extern struct Measurements_slave_gain_offset_struct Meas_slave_gain[4];
-extern struct Measurements_slave_gain_offset_struct Meas_slave_offset[4];
 extern struct Measurements_alarm_struct Meas_alarm_H;
 extern struct Measurements_alarm_struct Meas_alarm_L;
 
@@ -257,10 +279,6 @@ extern struct abc_struct U_x0, U_x1;
 extern float decimator;
 
 extern struct SCOPE_global scope_global;
-extern struct CONTROL_slave control_slave[4];
-extern struct STATUS_slave status_slave[4];
-extern union ALARM_slave alarm_slave_snapshot[4];
-extern union ALARM_slave alarm_slave[4];
 extern struct LOG_slave log_slave[4];
 
 extern union CONTROL_EXT_MODBUS control_ext_modbus;
