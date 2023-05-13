@@ -17,15 +17,17 @@ i2c_t::i2c_t(){
     this->slave_address = 0;
     this->state = I2C_STATUS_RESET;
     this->_buffer = NULL;
+    this->i2cregs = NULL;
+    static const struct i2c_clock_config_s cfg = I2C_100kHz_DUTY1_3;
+    this->i2c_clock_cfg = cfg;
+    this->error = status_ok;
 }
 
-const struct i2c_clock_config_s{
-    uint16_t psc;
-    uint16_t cl;
-    uint16_t ch;
-} i2c_clock_cfg = I2CPSC_CFG_VALUES;
 
-status_code_t i2c_t::init(void){
+status_code_t i2c_t::init( volatile struct I2C_REGS * i2cregs, const struct i2c_clock_config_s * psc_cfg ){
+    this->i2cregs = i2cregs;
+    this->i2c_clock_cfg = *psc_cfg;
+
     //inicjalizacja koncowek musi byc na zewnatrz - jest w klasie Init.GPIO
 #if I2C_USE_INTERRUPTS
     EALLOW;
@@ -34,39 +36,47 @@ status_code_t i2c_t::init(void){
 #endif
 
     EALLOW;
-    CpuSysRegs.PCLKCR9.bit.I2C_A = 1;
+    if( this->i2cregs == &I2caRegs){
+        CpuSysRegs.PCLKCR9.bit.I2C_A = 1;
+    }else if( this->i2cregs == &I2cbRegs ){
+        CpuSysRegs.PCLKCR9.bit.I2C_B = 1;
+    }else{
+        EDIS;
+        return err_invalid;
+        }
+
     EDIS;
 
-    I2caRegs.I2CMDR.bit.IRS = 0; //ustawienie i2c w reset na czas konfiguracji
+    i2cregs->I2CMDR.bit.IRS = 0; //ustawienie i2c w reset na czas konfiguracji
 
-    I2caRegs.I2CPSC.all = i2c_clock_cfg.psc;
-    I2caRegs.I2CCLKL = i2c_clock_cfg.cl;
-    I2caRegs.I2CCLKH = i2c_clock_cfg.ch;
+    i2cregs->I2CPSC.all = i2c_clock_cfg.psc;
+    i2cregs->I2CCLKL = i2c_clock_cfg.cl;
+    i2cregs->I2CCLKH = i2c_clock_cfg.ch;
 
-//    I2caRegs.I2CSAR.all = SLAVE_ADDRESS;
+//    i2cregs->I2CSAR.all = SLAVE_ADDRESS;
 
-    //I2caRegs.I2CMDR.bit.FREE = 1; usunieto, gdy =1 to i2c dziala przy pulapce dbg, =0 od razu wstrzymanie zegara
+    //i2cregs->I2CMDR.bit.FREE = 1; usunieto, gdy =1 to i2c dziala przy pulapce dbg, =0 od razu wstrzymanie zegara
     mode_init();
 
 #if I2C_USE_INTERRUPTS
     // Enable stop condition and register-access-ready interrupts
-    I2caRegs.I2CIER.bit.SCD = 1;
-    I2caRegs.I2CIER.bit.ARDY = 1;
+    i2cregs->I2CIER.bit.SCD = 1;
+    i2cregs->I2CIER.bit.ARDY = 1;
 #endif
 
     // FIFO configuration
-    I2caRegs.I2CFFTX.bit.I2CFFEN = 1;
-    I2caRegs.I2CFFTX.bit.TXFFRST = 1;
+    i2cregs->I2CFFTX.bit.I2CFFEN = 1;
+    i2cregs->I2CFFTX.bit.TXFFRST = 1;
 
-    //I2caRegs.I2CFFRX.bit.RXFFIENA = 1;// [PR] tego brakowalo w przykladzie TI
-    I2caRegs.I2CFFRX.bit.RXFFRST = 1;
+    //i2cregs->I2CFFRX.bit.RXFFIENA = 1;// [PR] tego brakowalo w przykladzie TI
+    i2cregs->I2CFFRX.bit.RXFFRST = 1;
 
 
     //skasowanie stanu przerwan od fifo
-    I2caRegs.I2CFFTX.bit.TXFFINTCLR = 1;
-    I2caRegs.I2CFFRX.bit.RXFFINTCLR = 1;
+    i2cregs->I2CFFTX.bit.TXFFINTCLR = 1;
+    i2cregs->I2CFFRX.bit.RXFFINTCLR = 1;
 
-    I2caRegs.I2CMDR.bit.IRS = 1; //wlaczenie modulu i2c
+    i2cregs->I2CMDR.bit.IRS = 1; //wlaczenie modulu i2c
 
 
 
@@ -98,11 +108,12 @@ status_code_t i2c_t::init(void){
 
 
 void i2c_t::mode_init(void){
-    I2caRegs.I2CMDR.all = I2CMDR_MST_MASK;
+    i2cregs->I2CMDR.all = I2CMDR_MST_MASK;
 }
 
 void i2c_t::mode_start_write(void){
-    I2caRegs.I2CMDR.all = I2CMDR_MST_MASK
+    this->error = status_ok;
+    i2cregs->I2CMDR.all = I2CMDR_MST_MASK
             | I2CMDR_IRS_MASK
             | I2CMDR_TRX_MASK
             | I2CMDR_STT_MASK
@@ -110,14 +121,15 @@ void i2c_t::mode_start_write(void){
 }
 
 void i2c_t::mode_start_write_nostop(void){
-    I2caRegs.I2CMDR.all = I2CMDR_MST_MASK
+    this->error = status_ok;
+    i2cregs->I2CMDR.all = I2CMDR_MST_MASK
                 | I2CMDR_IRS_MASK
                 | I2CMDR_TRX_MASK
                 | I2CMDR_STT_MASK;
 }
 
 void i2c_t::mode_start_read(void){
-    I2caRegs.I2CMDR.all = I2CMDR_MST_MASK
+    i2cregs->I2CMDR.all = I2CMDR_MST_MASK
             | I2CMDR_IRS_MASK
             | I2CMDR_STT_MASK
             | I2CMDR_STP_MASK;
@@ -126,7 +138,7 @@ void i2c_t::mode_start_read(void){
 
 status_code_t i2c_t::set_slave_address( uint16_t address ){
     this->slave_address = address;
-    I2caRegs.I2CSAR.all = address;
+    i2cregs->I2CSAR.all = address;
     return status_ok;
 }
 
@@ -135,7 +147,7 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
         uint16_t i;
         if( buffer == NULL )
             return err_invalid;
-        if( buffer->len > MAX_BUFFER_SIZE )
+        if( buffer->len > MAX_BUFFER_SIZE+1 )
             return err_invalid;
 
         // Wait until the STP bit is cleared from any previous master
@@ -143,15 +155,15 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
         // the SCD bit is set. If this bit is not checked prior to initiating a new
         // message, the I2C could get confused.
         //
-        if( I2caRegs.I2CMDR.bit.STP == 1 )
+        if( i2cregs->I2CMDR.bit.STP == 1 )
         {
             return err_stop_not_ready;
         }
 
-        I2caRegs.I2CSAR.all = this->slave_address;
+        i2cregs->I2CSAR.all = this->slave_address;
 
         // Check if bus busy
-        if( I2caRegs.I2CSTR.bit.BB == 1 )
+        if( i2cregs->I2CSTR.bit.BB == 1 )
         {
             return err_bus_busy;
         }
@@ -162,10 +174,10 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
 
         this->_buffer = buffer;
         this->_buffer->ready = 0;
-        I2caRegs.I2CCNT = this->_buffer->len;
+        i2cregs->I2CCNT = this->_buffer->len;
 
         for (i = 0; i < this->_buffer->len; i++) //zapisanie danych (wartosci do kolejnych rejestrow RTC)
-            I2caRegs.I2CDXR.all = this->_buffer->data[i];
+            i2cregs->I2CDXR.all = this->_buffer->data[i];
 
         // master send z STOP na koncu
         mode_start_write();
@@ -174,42 +186,51 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
         return status_ok;
 }
 
+#define RETURN_ERR( code ) \
+    do{\
+        dbg_marker('e');\
+        dbg_marker( code );\
+        dbg_marker(__LINE__ & 0xFF );\
+        return (code);\
+    }while(0)
+
 status_code_t i2c_t::write_nostop( msg_buffer * buffer, uint16_t timeout )
 {
        uint16_t i;
-       if( buffer == NULL )
-            return err_invalid;
-       if( buffer->len > MAX_BUFFER_SIZE )
-            return err_invalid;
+       if( buffer == NULL ){
+            RETURN_ERR( err_invalid );
+       }
+       if( buffer->len > MAX_BUFFER_SIZE+1 )
+           RETURN_ERR( err_invalid );
 
-       if( I2caRegs.I2CMDR.bit.STP == 1 )
+       if( i2cregs->I2CMDR.bit.STP == 1 )
        {
-           return err_stop_not_ready;
+           RETURN_ERR( err_stop_not_ready );
        }
        if( this->state != I2C_STATUS_INACTIVE ){
-           return err_busy;
+           RETURN_ERR( err_busy );
        }
 
-       if( I2caRegs.I2CSTR.bit.BB == 1 )
+       if( i2cregs->I2CSTR.bit.BB == 1 )
        {
-           return err_bus_busy;
+           RETURN_ERR( err_bus_busy );
        }
 
-       I2caRegs.I2CSAR.all = this->slave_address;
+       i2cregs->I2CSAR.all = this->slave_address;
 
        this->_buffer = buffer;
        this->_buffer->ready = 0;
-       I2caRegs.I2CCNT = this->_buffer->len;
+       i2cregs->I2CCNT = this->_buffer->len;
 
        for (i = 0; i < this->_buffer->len; i++) //zapisanie danych (wartosci do kolejnych rejestrow RTC)
-           I2caRegs.I2CDXR.all = this->_buffer->data[i];
+           i2cregs->I2CDXR.all = this->_buffer->data[i];
 
        //master send bez STOP
        mode_start_write_nostop();
 
        state = I2C_STATUS_SEND_NOSTOP_BUSY;
 
-
+       dbg_marker('o');
        return status_ok;
 }
 
@@ -217,7 +238,7 @@ status_code_t i2c_t::read( msg_buffer * buffer, uint16_t timeout )
 {
         if( buffer == NULL )
             return err_invalid;
-        if( buffer->len > MAX_BUFFER_SIZE )
+        if( buffer->len > MAX_BUFFER_SIZE+1 )
             return err_invalid;
 
     //
@@ -226,16 +247,16 @@ status_code_t i2c_t::read( msg_buffer * buffer, uint16_t timeout )
         // the SCD bit is set. If this bit is not checked prior to initiating a new
         // message, the I2C could get confused.
         //
-        if( I2caRegs.I2CMDR.bit.STP == 1 )
+        if( i2cregs->I2CMDR.bit.STP == 1 )
         {
             return err_stop_not_ready;
         }
 
         this->_buffer = buffer;
         this->_buffer->ready = 0;
-        I2caRegs.I2CCNT = this->_buffer->len;
+        i2cregs->I2CCNT = this->_buffer->len;
 
-        I2caRegs.I2CSAR.all = this->slave_address;
+        i2cregs->I2CSAR.all = this->slave_address;
 
         //master receive
         mode_start_read();
@@ -261,7 +282,7 @@ bool i2c_t::is_msg_finished_nostop(void){
 #if I2C_USE_INTERRUPTS
 __interrupt void i2cAISR(void)
 {
-    i2c_t::I2C_InterruptSource intSource = (i2c_t::I2C_InterruptSource)(I2caRegs.I2CISRC.bit.INTCODE & I2C_ISRC_INTCODE_M);
+    i2c_t::I2C_InterruptSource intSource = (i2c_t::I2C_InterruptSource)(i2cregs->I2CISRC.bit.INTCODE & I2C_ISRC_INTCODE_M);
 
     _i2c->interrupt_process( intSource );
     // Issue ACK to enable future group 8 interrupts
@@ -269,32 +290,44 @@ __interrupt void i2cAISR(void)
 }
 #endif
 
+#define I2CSTR_NACK_MASK (1<<1)
 #define I2CSTR_ARDY_MASK (1<<2)
 #define I2CSTR_SCD_MASK  (1<<5)
 
 #if !(I2C_USE_INTERRUPTS)
-void i2c_t::interrupt_process( void ){
+status_code_t i2c_t::interrupt_process( void ){
     i2c_t::I2C_InterruptSource intSource = I2C_INTSRC_NONE;
-    uint16_t i2cstreg = I2caRegs.I2CSTR.all;//zmieniony sposob odwolania do STR
+    uint16_t i2cstreg = i2cregs->I2CSTR.all;//zmieniony sposob odwolania do STR
     if( i2cstreg & I2CSTR_ARDY_MASK ){      // 1) jeden odczyt z rejestu zamiast 2ch
-        I2caRegs.I2CSTR.bit.ARDY = 1;       // 2) skasowanie jak najszybciej a nie po int_process()
+        i2cregs->I2CSTR.bit.ARDY = 1;       // 2) skasowanie jak najszybciej a nie po int_process()
         intSource = I2C_INTSRC_REG_ACCESS_RDY;
         dbg_marker('d');
     }else if( i2cstreg & I2CSTR_SCD_MASK ){
-        I2caRegs.I2CSTR.bit.SCD = 1;
+        i2cregs->I2CSTR.bit.SCD = 1;
         intSource = I2C_INTSRC_STOP_CONDITION;
         dbg_marker('g');
     }
 
-    if( intSource != I2C_INTSRC_NONE )
-        interrupt_process( intSource );
 
+    if( intSource != I2C_INTSRC_NONE )
+        interrupt_process( intSource, i2cstreg ); //trzeba przekazac stan i2cstreg bo odczyt juz skasowal flage NAK
+
+    /*wykrywanie przypadku, gdy uklad nie odpowiada
+     * wtedy po wyslaniu adresu jest juz NAK razem z ARDY.
+     * Nie mozna reagowac na samo NAK, bo czasem bylo zanim sie rozpoczelo nadawanie*/
+    if( (i2cstreg & (I2CSTR_NACK_MASK|I2CSTR_ARDY_MASK ))
+            == (I2CSTR_NACK_MASK|I2CSTR_ARDY_MASK) ){
+           dbg_marker('n');
+           return status_ok;//err_generic;
+    }
+
+    return status_ok;
 }
 
 #endif
 
 
-void i2c_t::interrupt_process( i2c_t::I2C_InterruptSource intSource ){
+void i2c_t::interrupt_process( i2c_t::I2C_InterruptSource intSource, uint16_t i2cstreg ){
 
     uint16_t i;
     //dbg_marker('%');
@@ -307,7 +340,8 @@ void i2c_t::interrupt_process( i2c_t::I2C_InterruptSource intSource ){
     {
         if( state == i2c_t::I2C_STATUS_WRITE_BUSY){
             // jesli wlasnie zakonczono wiadomosc wysylania polecenia
-            _buffer->ready = 1;
+            if( error == status_ok )
+                _buffer->ready = 1;
             state = i2c_t::I2C_STATUS_INACTIVE;
         }else if( state == i2c_t::I2C_STATUS_SEND_NOSTOP_BUSY){
             //state = i2c_t::MSG_STATUS_SEND_NOSTOP; //przygotowanie do ponownej proby, gdy brak bylo ACK
@@ -318,7 +352,7 @@ void i2c_t::interrupt_process( i2c_t::I2C_InterruptSource intSource ){
 
             for(i=0; i < _buffer->len; i++) {
                 if( i >= MAX_BUFFER_SIZE ) break;
-                _buffer->data[i] = I2caRegs.I2CDRR.bit.DATA;
+                _buffer->data[i] = i2cregs->I2CDRR.bit.DATA;
             }
             _buffer->ready = 1;
             state = i2c_t::I2C_STATUS_INACTIVE;
@@ -330,10 +364,14 @@ void i2c_t::interrupt_process( i2c_t::I2C_InterruptSource intSource ){
 
         // If a NACK is received, clear the NACK bit and command a stop.
         // Otherwise, move on to the read data portion of the communication.
-
-        if(( I2caRegs.I2CSTR.bit.NACK) != 0){
-            I2caRegs.I2CMDR.bit.STP = 1;
-            I2caRegs.I2CSTR.bit.NACK = 1;
+        if( i2cstreg & I2CSTR_NACK_MASK ){
+            i2cregs->I2CMDR.bit.STP = 1;
+            i2cregs->I2CSTR.bit.NACK = 1;
+            i2cregs->I2CFFTX.bit.TXFFRST = 0; //skasowanie fifo tx
+            i2cregs->I2CFFTX.bit.TXFFRST = 1; //skasowanie fifo tx
+            this->error = err_generic; //w tym momencie wiadomo ze jest blad (=NAK = brak potwierdzenia urzadzenia)
+                                //ale nie mozna jeszcze nic zrobic zanim nie wygeneruje sie i2c.STOP
+                                //chodzi o to aby utrzymac i2c w stanie, ktory pozwoli na ponowne uzycie po bledzie
 
         }else if( state == i2c_t::I2C_STATUS_SEND_NOSTOP_BUSY){
             state = i2c_t::I2C_STATUS_RESTART; //sygnalizuje ze mozna uruchamiac druga faze odczytu

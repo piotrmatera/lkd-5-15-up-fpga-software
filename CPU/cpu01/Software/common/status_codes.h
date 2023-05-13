@@ -13,6 +13,7 @@ typedef enum{
         status_ok = 0,
         status_inactive,
         status_terminated,
+        status_continue,
 
         err_generic = 0x80,
         err_timeout,

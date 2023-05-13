@@ -25,7 +25,12 @@ status_code_t Rtc::init()
     retc = i2c.set_slave_address( MCP7940N_ADDRESS );
     if( retc!=status_ok) return retc;
 
-    retc = i2c.init();
+    //wypelnienie 1/3
+    // Fmod_i2c = SYSCLK/(I2CPSC+1) = 7-12MHz
+    // MCP7940N Tccl_min = 0.6us, Tcch = 1.3us, f=400kHz
+
+    static const i2c_t::i2c_clock_config_s clk_cfg = I2C_220kHz_DUTY1_2;
+    retc = i2c.init(&I2caRegs, &clk_cfg);
     if( retc!=status_ok) return retc;
 
     state = state_idle;

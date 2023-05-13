@@ -19,28 +19,11 @@
 
 #define MAX_BUFFER_SIZE             14      // Max 16 bajtowe fifo w module i2c
 
-#define I2C_400kHz_DUTY1_3 1
-#define I2C_200kHz_DUTY1_3 2
-#define I2C_100kHz_DUTY1_3 3
-#define I2C_220kHz_DUTY1_2 4
+#define I2C_400kHz_DUTY1_3 {16, 13, 3}
+#define I2C_200kHz_DUTY1_3 {19, 25, 10}
+#define I2C_100kHz_DUTY1_3 {19, 60, 26}
+#define I2C_220kHz_DUTY1_2 {16, 20, 20}
 
-//#define I2C_CLOCK I2C_400kHz_DUTY1_3
-//#define I2C_CLOCK I2C_200kHz_DUTY1_3
-//#define I2C_CLOCK I2C_100kHz_DUTY1_3
-#define I2C_CLOCK I2C_220kHz_DUTY1_2
-
-//wypelnienie 1/3
-// Fmod_i2c = SYSCLK/(I2CPSC+1) = 7-12MHz
-// MCP7940N Tccl_min = 0.6us, Tcch = 1.3us, f=400kHz
-#if I2C_CLOCK == I2C_400kHz_DUTY1_3
-# define I2CPSC_CFG_VALUES {16, 13, 3}
-#elif I2C_CLOCK == I2C_200kHz_DUTY1_3
-# define I2CPSC_CFG_VALUES {19, 25, 10}
-#elif I2C_CLOCK == I2C_100kHz_DUTY1_3
-# define I2CPSC_CFG_VALUES {19, 60, 26}
-#elif I2C_CLOCK == I2C_220kHz_DUTY1_2
-# define I2CPSC_CFG_VALUES {16, 20, 20}
-#endif
 
 
 
@@ -48,12 +31,14 @@
 struct msg_buffer{
     uint16_t len;   //ile danych odebrac/wyslac
     volatile uint16_t ready; //do sygnalizacji zakonczenia tx/rx tej wiadomosci
-    uint16_t data[MAX_BUFFER_SIZE]; //dane do wyslania/ew. dane odebrane
+    uint16_t data[MAX_BUFFER_SIZE+2]; //dane do wyslania/ew. dane odebrane
+    //musi byc wiecej bo w tym buforze jest zapisywany tez adres rejestru
 };
 
 //klasa do komunikacji po i2c w trybie master
 class i2c_t{
     uint16_t slave_address;
+    volatile struct I2C_REGS * i2cregs;
 
 public:
 
@@ -82,6 +67,14 @@ public:
         I2C_INTSRC_ADDR_SLAVE           //!< Addressed as slave interrupt
     } I2C_InterruptSource;
 
+    struct i2c_clock_config_s{
+        uint16_t psc;
+        uint16_t cl;
+        uint16_t ch;
+    } i2c_clock_cfg;
+
+
+
     i2c_state_t state; //stan interfejsu
 
     msg_buffer * _buffer; //bufor do wymiany danych (podczpiany przy rozp. transakcji)
@@ -89,7 +82,7 @@ public:
     i2c_t();
 
     //inicjalizacja interfejsu
-    status_code_t init(void);
+    status_code_t init(volatile struct I2C_REGS * i2cregs, const struct i2c_clock_config_s * psc_cfg);
 
     //ustalenie adresu i2c urzadzenia slave
     status_code_t set_slave_address( uint16_t address );
@@ -129,8 +122,10 @@ public:
     bool is_msg_finished_nostop(void);
 
 #if !(I2C_USE_INTERRUPTS)
-    void interrupt_process(void); //gdy bez przerwan wywolywac cyklicznie
+    status_code_t interrupt_process(void); //gdy bez przerwan wywolywac cyklicznie
 #endif
+
+    status_code_t get_error(void){ return error;}
 
 private:
     void mode_init(void);
@@ -138,12 +133,13 @@ private:
     void mode_start_write_nostop(void);
     void mode_start_read(void);
 
+    status_code_t error;
 #if I2C_USE_INTERRUPTS
 public:
 #endif
     //musi byc public aby sie dostac do niej z ISR
     //nie uzywac samodzielnie, nie wywolywac
-    void interrupt_process( i2c_t::I2C_InterruptSource intSource );
+    void interrupt_process( i2c_t::I2C_InterruptSource intSource,uint16_t i2cstreg );
 
 
 };
