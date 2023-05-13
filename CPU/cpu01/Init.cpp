@@ -59,14 +59,22 @@ void Init_class::clear_alarms()
 
     if(alarm_master.bit.Not_enough_data_master)
     {
-        alarm_master_snapshot.all =
-        alarm_master.all = 0;
+        alarm_master_snapshot.all[0] =
+        alarm_master_snapshot.all[1] =
+        alarm_master_snapshot.all[2] =
+        alarm_master.all[0] =
+        alarm_master.all[1] =
+        alarm_master.all[2] = 0;
         alarm_master.bit.Not_enough_data_master = 1;
     }
     else
     {
-        alarm_master_snapshot.all =
-        alarm_master.all = 0;
+        alarm_master_snapshot.all[0] =
+        alarm_master_snapshot.all[1] =
+        alarm_master_snapshot.all[2] =
+        alarm_master.all[0] =
+        alarm_master.all[1] =
+        alarm_master.all[2] = 0;
     }
 }
 
@@ -211,45 +219,6 @@ void Init_class::Variables()
 
     Meas_alarm_L.U_grid_rms = 5.0f;
     Meas_alarm_H.U_grid_abs = 380.0f;
-
-    Conv.Id_prefilter.a.Ts_Ti =
-    Conv.Id_prefilter.b.Ts_Ti =
-    Conv.Id_prefilter.c.Ts_Ti =
-    Conv.Iq_prefilter.a.Ts_Ti =
-    Conv.Iq_prefilter.b.Ts_Ti =
-    Conv.Iq_prefilter.c.Ts_Ti =
-    Conv.I_lim_slave_prefilter[0].Ts_Ti =
-    Conv.I_lim_slave_prefilter[1].Ts_Ti =
-    Conv.I_lim_slave_prefilter[2].Ts_Ti =
-    Conv.I_lim_slave_prefilter[3].Ts_Ti = Conv.Ts / 0.001f;
-    Conv.version_Q_comp_local_prefilter.a.Ts_Ti =
-    Conv.version_Q_comp_local_prefilter.b.Ts_Ti =
-    Conv.version_Q_comp_local_prefilter.c.Ts_Ti =
-    Conv.enable_Q_comp_local_prefilter.a.Ts_Ti =
-    Conv.enable_Q_comp_local_prefilter.b.Ts_Ti =
-    Conv.enable_Q_comp_local_prefilter.c.Ts_Ti =
-    Conv.Q_set_local_prefilter.a.Ts_Ti =
-    Conv.Q_set_local_prefilter.b.Ts_Ti =
-    Conv.Q_set_local_prefilter.c.Ts_Ti =
-    Conv.enable_P_sym_local_prefilter.Ts_Ti =
-    Conv.version_P_sym_local_prefilter.Ts_Ti =
-    Conv.tangens_range_local_prefilter[0].a.Ts_Ti =
-    Conv.tangens_range_local_prefilter[0].b.Ts_Ti =
-    Conv.tangens_range_local_prefilter[0].c.Ts_Ti =
-    Conv.tangens_range_local_prefilter[1].a.Ts_Ti =
-    Conv.tangens_range_local_prefilter[1].b.Ts_Ti =
-    Conv.tangens_range_local_prefilter[1].c.Ts_Ti = Conv.Ts / 0.02f;
-
-    ///////////////////////////////////////////////////////////////////
-
-    Conv.PI_Iq[0].Ts_Ti = Conv.Ts / 0.011f;
-    Conv.PI_Iq[0].Kp = 0.5f;
-
-    Conv.PI_Id[0] =
-    Conv.PI_Id[1] =
-    Conv.PI_Id[2] =
-    Conv.PI_Iq[1] =
-    Conv.PI_Iq[2] = Conv.PI_Iq[0];
 
     ///////////////////////////////////////////////////////////////////
 

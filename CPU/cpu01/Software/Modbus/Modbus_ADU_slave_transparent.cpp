@@ -434,17 +434,6 @@ void Modbus_ADU_slave_transparent::Fcn_after_processed()
         {
             Machine.save_to_RTC = 1;
         }
-
-        DINT;
-        Conv.Id.a = Modbus_Converter.holding_registers.Id.a;
-        Conv.Id.b = Modbus_Converter.holding_registers.Id.b;
-        Conv.Id.c = Modbus_Converter.holding_registers.Id.c;
-        Conv.Iq.a = Modbus_Converter.holding_registers.Iq.a;
-        Conv.Iq.b = Modbus_Converter.holding_registers.Iq.b;
-        Conv.Iq.c = Modbus_Converter.holding_registers.Iq.c;
-        EINT;
-        Conv.control_type = Modbus_Converter.holding_registers.control_type;
-        Conv.C_conv = Modbus_Converter.holding_registers.C_conv;
     }
 
     if(Mdb_slave_ADU.function == Read_Input_Registers)

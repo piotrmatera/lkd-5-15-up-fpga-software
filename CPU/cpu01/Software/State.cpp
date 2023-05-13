@@ -237,7 +237,7 @@ void Blink()
             }
             else Blink_LED1.update_pattern(false);
 
-            if(alarm_master.all)
+            if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2])
             {
                 Blink_LED2.update_pattern(false);
                 Blink_LED3.update_pattern(0.67f, 0.5f);
@@ -963,7 +963,6 @@ void Machine_class::idle()
     static float delay = 0.0f;
     if(Machine.state_last != Machine.state)
     {
-        Conv.operational_var = 0;
         delay_timer = ReadIpcTimer();
         Machine.state_last = Machine.state;
         Machine.look_for_errors = 0;
@@ -972,10 +971,10 @@ void Machine_class::idle()
 
     if(ReadIpcTimer() < 2000000000ULL)//10s
     {
-        if(alarm_master.bit.rx1_port_nrdy ||
-            alarm_master.bit.rx1_overrun_error ||
-            alarm_master.bit.rx1_frame_error ||
-            alarm_master.bit.rx1_crc_error)
+        if(alarm_master.bit.FPGA_errors.bit.rx1_port_nrdy ||
+            alarm_master.bit.FPGA_errors.bit.rx1_overrun_error ||
+            alarm_master.bit.FPGA_errors.bit.rx1_frame_error ||
+            alarm_master.bit.FPGA_errors.bit.rx1_crc_error)
             Init.clear_alarms();
     }
 
@@ -1232,44 +1231,9 @@ void Machine_class::start()
 
         Machine.look_for_errors = 1;
 
-        Conv.Id.a =
-        Conv.Id.b =
-        Conv.Id.c =
-        Conv.Iq.a =
-        Conv.Iq.b =
-        Conv.Iq.c =
-        Conv.Id_prefilter.a.out =
-        Conv.Id_prefilter.b.out =
-        Conv.Id_prefilter.c.out =
-        Conv.Iq_prefilter.a.out =
-        Conv.Iq_prefilter.b.out =
-        Conv.Iq_prefilter.c.out =
-        Modbus_Converter.holding_registers.Id.a =
-        Modbus_Converter.holding_registers.Id.b =
-        Modbus_Converter.holding_registers.Id.c =
-        Modbus_Converter.holding_registers.Iq.a =
-        Modbus_Converter.holding_registers.Iq.b =
-        Modbus_Converter.holding_registers.Iq.c =
         Conv.Q_set_local.a =
         Conv.Q_set_local.b =
         Conv.Q_set_local.c =
-        Conv.tangens_range_local_prefilter[0].a.out =
-        Conv.tangens_range_local_prefilter[0].b.out =
-        Conv.tangens_range_local_prefilter[0].c.out =
-        Conv.tangens_range_local_prefilter[1].a.out =
-        Conv.tangens_range_local_prefilter[1].b.out =
-        Conv.tangens_range_local_prefilter[1].c.out =
-        Conv.Q_set_local_prefilter.a.out =
-        Conv.Q_set_local_prefilter.b.out =
-        Conv.Q_set_local_prefilter.c.out =
-        Conv.version_P_sym_local_prefilter.out =
-        Conv.version_Q_comp_local_prefilter.a.out =
-        Conv.version_Q_comp_local_prefilter.b.out =
-        Conv.version_Q_comp_local_prefilter.c.out =
-        Conv.enable_P_sym_local_prefilter.out =
-        Conv.enable_Q_comp_local_prefilter.a.out =
-        Conv.enable_Q_comp_local_prefilter.b.out =
-        Conv.enable_Q_comp_local_prefilter.c.out =
         Conv.enable_Q_comp_local.a =
         Conv.enable_Q_comp_local.b =
         Conv.enable_Q_comp_local.c =
@@ -1285,18 +1249,15 @@ void Machine_class::start()
         Conv.enable = 1;
     }
 
-    if(Conv.I_lim_avg && Conv.I_lim_avg == Conv.I_lim_avg_prefilter)
-    {
-        if(status_master.CT_connection_a != 1 || status_master.CT_connection_b != 2 || status_master.CT_connection_c != 3)
-            Machine.state = state_CT_test;
-        else if(status_master.L_grid_measured)
-            Machine.state = state_operational;
-        else
-            Machine.state = state_Lgrid_meas;
-    }
+    if(status_master.CT_connection_a != 1 || status_master.CT_connection_b != 2 || status_master.CT_connection_c != 3)
+        Machine.state = state_CT_test;
+    else if(status_master.L_grid_measured)
+        Machine.state = state_operational;
+    else
+        Machine.state = state_Lgrid_meas;
 
-    if(!Machine.ONOFF || !status_master.slave_any_sync) Machine.state = state_idle;
-    if(alarm_master.all) Machine.state = state_cleanup;
+    if(!Machine.ONOFF) Machine.state = state_idle;
+    if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) Machine.state = state_cleanup;
 }
 
 void Machine_class::CT_test()
@@ -1475,14 +1436,8 @@ void Machine_class::CT_test()
 
     timer_update(&Timer_total, 1);
 
-    if(!Conv.I_lim_avg || !Machine.ONOFF)
-    {
-        if(Machine.error_retry) Machine.error_retry--;
-        status_master.error_retry = Machine.error_retry;
-        error_retry_FLASH.save();
-        Machine.state = state_idle;
-    }
-    if(alarm_master.all) Machine.state = state_cleanup;
+    if(!Machine.ONOFF) Machine.state = state_idle;
+    if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) Machine.state = state_cleanup;
 }
 
 void Machine_class::Lgrid_meas()
@@ -1652,19 +1607,12 @@ void Machine_class::Lgrid_meas()
 
     timer_update(&Timer_total, 1);
 
-    if(!Conv.I_lim_avg || !Machine.ONOFF)
-    {
-        if(Machine.error_retry) Machine.error_retry--;
-        status_master.error_retry = Machine.error_retry;
-        error_retry_FLASH.save();
-        Machine.state = state_idle;
-    }
-    if(alarm_master.all) Machine.state = state_cleanup;
+    if(!Machine.ONOFF) Machine.state = state_idle;
+    if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) Machine.state = state_cleanup;
 }
 
 void Machine_class::operational()
 {
-    Conv.operational_var = __fmin(Conv.operational_var+0.01f, 1.0f);
     static struct test_CT_struct
     {
         Uint16 state, state_last;
@@ -1885,7 +1833,7 @@ void Machine_class::operational()
             CT_test_online.Q_grid_last.b = CLA2toCLA1.Grid.Q_grid_1h.b;
             CT_test_online.Q_grid_last.c = CLA2toCLA1.Grid.Q_grid_1h.c;
 
-            step = fminf(2.0f * CT_test_online.I_grid_val, Conv.I_lim_avg_prefilter);
+            step = fminf(2.0f * CT_test_online.I_grid_val, Conv.I_lim);
             CT_test_online.Q_conv_step.a = CLA2toCLA1.Grid.U_grid_1h.a * step;
             CT_test_online.Q_conv_step.b = CLA2toCLA1.Grid.U_grid_1h.b * step;
             CT_test_online.Q_conv_step.c = CLA2toCLA1.Grid.U_grid_1h.c * step;
@@ -2004,14 +1952,8 @@ void Machine_class::operational()
 
     timer_update(&Timer_total, 1);
 
-    if(!Conv.I_lim_avg || !Machine.ONOFF)
-    {
-        if(Machine.error_retry) Machine.error_retry--;
-        status_master.error_retry = Machine.error_retry;
-        error_retry_FLASH.save();
-        Machine.state = state_idle;
-    }
-    if(alarm_master.all) Machine.state = state_cleanup;
+    if(!Machine.ONOFF) Machine.state = state_idle;
+    if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) Machine.state = state_cleanup;
 }
 
 void Machine_class::cleanup()

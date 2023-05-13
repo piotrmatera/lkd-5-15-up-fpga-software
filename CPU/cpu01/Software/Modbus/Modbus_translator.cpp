@@ -108,7 +108,7 @@ Uint16 Modbus_translator::operator[]( size_t index ){
         case translator_map::spec_get_ilim:
         {
             extern SD_card_class SD_card;
-            float f = Conv.I_lim_avg_prefilter;
+            float f = Conv.I_lim;
             Uint16 x = (int)(f+0.5f);
             return x;
         }

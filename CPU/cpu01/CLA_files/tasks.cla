@@ -1,7 +1,5 @@
 #include "stdafx.h"
 
-extern void ePWM_leg(volatile struct EPWM_REGS *EPwmRegT1T2, float duty, float deadtime);
-
 #define Efficient_conditioning(input, input_gain, output, output_avg, next_offset)\
     SD_dat1 = (float)input;\
     SD_dat1 -= offset, gain = input_gain;\
@@ -20,23 +18,22 @@ interrupt void Cla1Task1 ( void )
     register float SD_dat2;
 
     SD_dat2 = 0.5f;
-    offset = Meas_master_offset.U_dc;
-    Efficient_conditioning(EMIF_CLA.U_dc,     Meas_master_gain.U_dc,     Meas_master.U_dc,     Meas_master.U_dc_avg,     Meas_master_offset.U_dc_n);
-    Efficient_conditioning(EMIF_CLA.U_dc_n,   Meas_master_gain.U_dc_n,   Meas_master.U_dc_n,   Meas_master.U_dc_n_avg,   Meas_master_offset.I_conv.a);
-    Efficient_conditioning(EMIF_CLA.I_conv_a, Meas_master_gain.I_conv.a, Meas_master.I_conv.a, Meas_master.I_conv_avg.a, Meas_master_offset.I_conv.b);
-    Efficient_conditioning(EMIF_CLA.I_conv_b, Meas_master_gain.I_conv.b, Meas_master.I_conv.b, Meas_master.I_conv_avg.b, Meas_master_offset.I_conv.c);
-    Efficient_conditioning(EMIF_CLA.I_conv_c, Meas_master_gain.I_conv.c, Meas_master.I_conv.c, Meas_master.I_conv_avg.c, Meas_master_offset.I_conv.n);
-    Efficient_conditioning(EMIF_CLA.I_conv_n, Meas_master_gain.I_conv.n, Meas_master.I_conv.n, Meas_master.I_conv_avg.n, Meas_master_offset.U_dc);
-
-    Cla1SoftIntRegs.SOFTINTFRC.all =
-    Cla1SoftIntRegs.SOFTINTEN.all = 1;
-
+    offset = Meas_master_offset.U_grid.a;
     Efficient_conditioning(EMIF_CLA.U_grid_a, Meas_master_gain.U_grid.a, Meas_master.U_grid.a, Meas_master.U_grid_avg.a, Meas_master_offset.U_grid.b);
     Efficient_conditioning(EMIF_CLA.U_grid_b, Meas_master_gain.U_grid.b, Meas_master.U_grid.b, Meas_master.U_grid_avg.b, Meas_master_offset.U_grid.c);
     Efficient_conditioning(EMIF_CLA.U_grid_c, Meas_master_gain.U_grid.c, Meas_master.U_grid.c, Meas_master.U_grid_avg.c, Meas_master_offset.I_grid.a);
     Efficient_conditioning(EMIF_CLA.I_grid_a, Meas_master_gain.I_grid.a, Meas_master.I_grid.a, Meas_master.I_grid_avg.a, Meas_master_offset.I_grid.b);
     Efficient_conditioning(EMIF_CLA.I_grid_b, Meas_master_gain.I_grid.b, Meas_master.I_grid.b, Meas_master.I_grid_avg.b, Meas_master_offset.I_grid.c);
-    Efficient_conditioning(EMIF_CLA.I_grid_c, Meas_master_gain.I_grid.c, Meas_master.I_grid.c, Meas_master.I_grid_avg.c, Meas_master_offset.I_grid.a);
+    Efficient_conditioning(EMIF_CLA.I_grid_c, Meas_master_gain.I_grid.c, Meas_master.I_grid.c, Meas_master.I_grid_avg.c, Meas_master_offset.U_dc);
+    Efficient_conditioning(EMIF_CLA.U_dc,     Meas_master_gain.U_dc,     Meas_master.U_dc,     Meas_master.U_dc_avg,     Meas_master_offset.U_dc_n);
+    Efficient_conditioning(EMIF_CLA.U_dc_n,   Meas_master_gain.U_dc_n,   Meas_master.U_dc_n,   Meas_master.U_dc_n_avg,   Meas_master_offset.I_conv.a);
+    Efficient_conditioning(EMIF_CLA.I_conv_a, Meas_master_gain.I_conv.a, Meas_master.I_conv.a, Meas_master.I_conv_avg.a, Meas_master_offset.I_conv.b);
+    Efficient_conditioning(EMIF_CLA.I_conv_b, Meas_master_gain.I_conv.b, Meas_master.I_conv.b, Meas_master.I_conv_avg.b, Meas_master_offset.I_conv.c);
+    Efficient_conditioning(EMIF_CLA.I_conv_c, Meas_master_gain.I_conv.c, Meas_master.I_conv.c, Meas_master.I_conv_avg.c, Meas_master_offset.I_conv.n);
+    Efficient_conditioning(EMIF_CLA.I_conv_n, Meas_master_gain.I_conv.n, Meas_master.I_conv.n, Meas_master.I_conv_avg.n, Meas_master_offset.I_conv.n);
+
+    Cla1SoftIntRegs.SOFTINTFRC.all =
+    Cla1SoftIntRegs.SOFTINTEN.all = 1;
 
     Timer_PWM.CLA_MEAS_TASK1 = TIMESTAMP_PWM;
 
@@ -44,105 +41,9 @@ interrupt void Cla1Task1 ( void )
 
     Timer_PWM.CLA_PLL_TASK1 = TIMESTAMP_PWM;
 
-//    static float set_current_gain;
-//    register float set_current_gain_temp = 32.0f * Conv.operational_var;
-//    Conv.PI_Id[0].out = set_current_gain_temp * 0.0f;
-//    Conv.PI_Id[1].out = -set_current_gain_temp * MATH_SQRT3_2;
-//    Conv.PI_Id[2].out = set_current_gain_temp * MATH_SQRT3_2;
-//
-//    Conv.PI_Iq[0].out = PLL.sign * set_current_gain_temp;
-//    Conv.PI_Iq[1].out = PLL.sign * set_current_gain_temp * 0.5f;
-//    Conv.PI_Iq[2].out = PLL.sign * set_current_gain_temp * 0.5f;
-
-//    Conv.I_ref.a = (Conv.id_lim.a * PLL.trig_table[0].cosine + Conv.iq_lim.a * PLL.trig_table[0].sine * PLL.sign) * MATH_SQRT2;
-//    Conv.I_ref.b = (Conv.id_lim.b * PLL.trig_table[1].cosine + Conv.iq_lim.b * PLL.trig_table[1].sine * PLL.sign) * MATH_SQRT2;
-//    Conv.I_ref.c = (Conv.id_lim.c * PLL.trig_table[2].cosine + Conv.iq_lim.c * PLL.trig_table[2].sine * PLL.sign) * MATH_SQRT2;
-//    Conv.I_ref.a = (Conv.PI_Id[0].out * PLL.trig_table[0].cosine + Conv.PI_Iq[0].out * PLL.trig_table[0].sine * PLL.sign) * MATH_SQRT2;
-//    Conv.I_ref.b = (Conv.PI_Id[1].out * PLL.trig_table[1].cosine + Conv.PI_Iq[1].out * PLL.trig_table[1].sine * PLL.sign) * MATH_SQRT2;
-//    Conv.I_ref.c = (Conv.PI_Id[2].out * PLL.trig_table[2].cosine + Conv.PI_Iq[2].out * PLL.trig_table[2].sine * PLL.sign) * MATH_SQRT2;
-
-    struct trigonometric_struct U_rot;
-    static volatile float rot_val;
-    rot_val = 4.5f;
-    float rotation = PLL.w_filter * PLL.Ts * (decimator + rot_val);
-
-    U_rot.cosine = cosf(rotation);
-    U_rot.sine = sinf(rotation);
-
-    static volatile struct abc_struct Ud, Uq, U, div_U;
-    U.a = sqrtf(U_x0.a * U_x0.a + U_x1.a * U_x1.a);
-    U.b = sqrtf(U_x0.b * U_x0.b + U_x1.b * U_x1.b);
-    U.c = sqrtf(U_x0.c * U_x0.c + U_x1.c * U_x1.c);
-    div_U.a = 1.0f / fmaxf(1.0f, U.a);
-    div_U.b = 1.0f / fmaxf(1.0f, U.b);
-    div_U.c = 1.0f / fmaxf(1.0f, U.c);
-
-    register float div_U_temp;
-    div_U_temp = div_U.a;
-    Ud.a = (U_rot.cosine * U_x0.a - U_rot.sine * U_x1.a) * div_U_temp;
-    Uq.a = (U_rot.sine * U_x0.a + U_rot.cosine * U_x1.a) * div_U_temp;
-    div_U_temp = div_U.b;
-    Ud.b = (U_rot.cosine * U_x0.b - U_rot.sine * U_x1.b) * div_U_temp;
-    Uq.b = (U_rot.sine * U_x0.b + U_rot.cosine * U_x1.b) * div_U_temp;
-    div_U_temp = div_U.c;
-    Ud.c = (U_rot.cosine * U_x0.c - U_rot.sine * U_x1.c) * div_U_temp;
-    Uq.c = (U_rot.sine * U_x0.c + U_rot.cosine * U_x1.c) * div_U_temp;
-
-    static volatile struct abc_struct I_cap;
-    if(Conv.control_type)
-    {
-        register float coeff = - PLL.w_filter * Conv.C_conv * MATH_1_SQRT2;
-        I_cap.a = U.a * coeff;
-        I_cap.b = U.b * coeff;
-        I_cap.c = U.c * coeff;
-        PLL.trig_table[0].cosine = Ud.a;
-        PLL.trig_table[1].cosine = Ud.b;
-        PLL.trig_table[2].cosine = Ud.c;
-        PLL.trig_table[0].sine = Uq.a;
-        PLL.trig_table[1].sine = Uq.b;
-        PLL.trig_table[2].sine = Uq.c;
-        PLL.sign = 1.0f;
-    }
-    else
-    {
-        register float coeff = - PLL.w_filter * Conv.C_conv;
-        I_cap.a = CLA2toCLA1.Grid.U_grid_1h.a * coeff;
-        I_cap.b = CLA2toCLA1.Grid.U_grid_1h.b * coeff;
-        I_cap.c = CLA2toCLA1.Grid.U_grid_1h.c * coeff;
-    }
-
-    Conv.I_ref.a = (Conv.Id_prefilter.a.out * PLL.trig_table[0].cosine + Conv.Iq_prefilter.a.out * PLL.trig_table[0].sine * PLL.sign) * MATH_SQRT2;
-    Conv.I_ref.b = (Conv.Id_prefilter.b.out * PLL.trig_table[1].cosine + Conv.Iq_prefilter.b.out * PLL.trig_table[1].sine * PLL.sign) * MATH_SQRT2;
-    Conv.I_ref.c = (Conv.Id_prefilter.c.out * PLL.trig_table[2].cosine + Conv.Iq_prefilter.c.out * PLL.trig_table[2].sine * PLL.sign) * MATH_SQRT2;
-    if(Conv.control_type == 2.0f)
-    {
-        register float coeff2 = MATH_SQRT2 * 230.0f;
-        Conv.I_ref.a *= coeff2 * div_U.a;
-        Conv.I_ref.b *= coeff2 * div_U.b;
-        Conv.I_ref.c *= coeff2 * div_U.c;
-    }
-    Conv.I_ref.a += I_cap.a * PLL.trig_table[0].sine * PLL.sign * MATH_SQRT2;
-    Conv.I_ref.b += I_cap.b * PLL.trig_table[1].sine * PLL.sign * MATH_SQRT2;
-    Conv.I_ref.c += I_cap.c * PLL.trig_table[2].sine * PLL.sign * MATH_SQRT2;
-
-//    register float wL = PLL.CIC_w.out * MATH_SQRT2;
-//    Conv.U_coupl.a = wL * (Conv.iq_lim.a * PLL.trig_table[0].cosine + Conv.id_lim.a * PLL.trig_table[0].sine * PLL.sign);
-//    Conv.U_coupl.b = wL * (Conv.iq_lim.b * PLL.trig_table[1].cosine + Conv.id_lim.b * PLL.trig_table[1].sine * PLL.sign);
-//    Conv.U_coupl.c = wL * (Conv.iq_lim.c * PLL.trig_table[2].cosine + Conv.id_lim.c * PLL.trig_table[2].sine * PLL.sign);
-//    Conv.U_coupl.a = wL * (Conv.PI_Iq[0].out * PLL.trig_table[0].cosine + Conv.PI_Id[0].out * PLL.trig_table[0].sine * PLL.sign);//sprawdzic kolejnosc faz
-//    Conv.U_coupl.b = wL * (Conv.PI_Iq[1].out * PLL.trig_table[1].cosine + Conv.PI_Id[1].out * PLL.trig_table[1].sine * PLL.sign);
-//    Conv.U_coupl.c = wL * (Conv.PI_Iq[2].out * PLL.trig_table[2].cosine + Conv.PI_Id[2].out * PLL.trig_table[2].sine * PLL.sign);
+    Converter_calc();
 
     Timer_PWM.CLA_CONV_TASK1 = TIMESTAMP_PWM;
-
-    Filter1_calc_CLAasm(&Conv.Id_prefilter.a, Conv.Id.a);
-    Filter1_calc_CLAasm(&Conv.Id_prefilter.b, Conv.Id.b);
-    Filter1_calc_CLAasm(&Conv.Id_prefilter.c, Conv.Id.c);
-    Filter1_calc_CLAasm(&Conv.Iq_prefilter.a, Conv.Iq.a);
-    Filter1_calc_CLAasm(&Conv.Iq_prefilter.b, Conv.Iq.b);
-    Filter1_calc_CLAasm(&Conv.Iq_prefilter.c, Conv.Iq.c);
-
-    Converter_calc();
 
     CIC2_filter_CLAasm(&CIC2_calibration, *CIC2_calibration_input.ptr);
 

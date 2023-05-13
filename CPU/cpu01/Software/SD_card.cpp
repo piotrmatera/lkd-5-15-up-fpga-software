@@ -476,15 +476,15 @@ Uint16 SD_card_class::log_data()
 
 void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_master_temp)
 {
-    if(alarm_master_temp.bit.rx1_crc_error    ) f_puts("\t\trx1_crc_error \n", fil);
-    if(alarm_master_temp.bit.rx1_overrun_error) f_puts("\t\trx1_overrun_error \n", fil);
-    if(alarm_master_temp.bit.rx1_frame_error  ) f_puts("\t\trx1_frame_error \n", fil);
-    if(alarm_master_temp.bit.rx2_crc_error    ) f_puts("\t\trx2_crc_error \n", fil);
-    if(alarm_master_temp.bit.rx2_overrun_error) f_puts("\t\trx2_overrun_error \n", fil);
-    if(alarm_master_temp.bit.rx2_frame_error  ) f_puts("\t\trx2_frame_error \n", fil);
-    if(alarm_master_temp.bit.rx1_port_nrdy    ) f_puts("\t\trx1_port_nrdy \n", fil);
-    if(alarm_master_temp.bit.rx2_port_nrdy    ) f_puts("\t\trx2_port_nrdy \n", fil);
-    if(alarm_master_temp.bit.sed_err          ) f_puts("\t\tsed_err \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_crc_error    ) f_puts("\t\trx1_crc_error \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_overrun_error) f_puts("\t\trx1_overrun_error \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_frame_error  ) f_puts("\t\trx1_frame_error \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_crc_error    ) f_puts("\t\trx2_crc_error \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_overrun_error) f_puts("\t\trx2_overrun_error \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_frame_error  ) f_puts("\t\trx2_frame_error \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_port_nrdy    ) f_puts("\t\trx1_port_nrdy \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_port_nrdy    ) f_puts("\t\trx2_port_nrdy \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.sed_err          ) f_puts("\t\tsed_err \n", fil);
 
     if(alarm_master_temp.bit.Not_enough_data_master) f_puts("\t\tNot_enough_data_master \n", fil);
     if(alarm_master_temp.bit.CT_char_error         ) f_puts("\t\tCT_char_error \n", fil);
@@ -499,8 +499,6 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
     if(alarm_master_temp.bit.U_grid_abs_b_H) f_puts("\t\tU_grid_abs_b_H \n", fil);
     if(alarm_master_temp.bit.U_grid_abs_c_H) f_puts("\t\tU_grid_abs_c_H \n", fil);
 
-    if(alarm_master_temp.bit.no_sync) f_puts("\t\tno_sync \n", fil);
-
     ///////////////////////////////////////////
 
     if(alarm_master_temp.bit.I_conv_a_H) f_puts("\t\tI_conv_a_H \n", fil);
@@ -512,23 +510,22 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
     if(alarm_master_temp.bit.I_conv_n_H) f_puts("\t\tI_conv_n_H \n", fil);
     if(alarm_master_temp.bit.I_conv_n_L) f_puts("\t\tI_conv_n_L \n", fil);
     //
-    if(alarm_master_temp.bit.Driver_FLT_a_A) f_puts("\tDriver_FLT_a_A \n", fil);
-    if(alarm_master_temp.bit.Driver_FLT_a_B) f_puts("\tDriver_FLT_a_B \n", fil);
-    if(alarm_master_temp.bit.Driver_FLT_b_A) f_puts("\tDriver_FLT_b_A \n", fil);
-    if(alarm_master_temp.bit.Driver_FLT_b_B) f_puts("\tDriver_FLT_b_B \n", fil);
-    if(alarm_master_temp.bit.Driver_FLT_c_A) f_puts("\tDriver_FLT_c_A \n", fil);
-    if(alarm_master_temp.bit.Driver_FLT_c_B) f_puts("\tDriver_FLT_c_B \n", fil);
-    if(alarm_master_temp.bit.Driver_FLT_n_A) f_puts("\tDriver_FLT_n_A \n", fil);
-    if(alarm_master_temp.bit.Driver_FLT_n_B) f_puts("\tDriver_FLT_n_B \n", fil);
-    //
-    if(alarm_master_temp.bit.Driver_nRDY_a_A) f_puts("\tDriver_nRDY_a_A \n", fil);
-    if(alarm_master_temp.bit.Driver_nRDY_a_B) f_puts("\tDriver_nRDY_a_B \n", fil);
-    if(alarm_master_temp.bit.Driver_nRDY_b_A) f_puts("\tDriver_nRDY_b_A \n", fil);
-    if(alarm_master_temp.bit.Driver_nRDY_b_B) f_puts("\tDriver_nRDY_b_B \n", fil);
-    if(alarm_master_temp.bit.Driver_nRDY_c_A) f_puts("\tDriver_nRDY_c_A \n", fil);
-    if(alarm_master_temp.bit.Driver_nRDY_c_B) f_puts("\tDriver_nRDY_c_B \n", fil);
-    if(alarm_master_temp.bit.Driver_nRDY_n_A) f_puts("\tDriver_nRDY_n_A \n", fil);
-    if(alarm_master_temp.bit.Driver_nRDY_n_B) f_puts("\tDriver_nRDY_n_B \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_H_L1) f_puts("\t\tFLT_H_L1 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_L_L1) f_puts("\t\tFLT_L_L1 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_H_L2) f_puts("\t\tFLT_H_L2 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_L_L2) f_puts("\t\tFLT_L_L2 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_H_L3) f_puts("\t\tFLT_H_L3 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_L_L3) f_puts("\t\tFLT_L_L3 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_H_N ) f_puts("\t\tFLT_H_N  \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_L_N ) f_puts("\t\tFLT_L_N  \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_H_L1) f_puts("\t\tRDY_H_L1 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_L_L1) f_puts("\t\tRDY_L_L1 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_H_L2) f_puts("\t\tRDY_H_L2 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_L_L2) f_puts("\t\tRDY_L_L2 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_H_L3) f_puts("\t\tRDY_H_L3 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_L_L3) f_puts("\t\tRDY_L_L3 \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_H_N ) f_puts("\t\tRDY_H_N  \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_L_N ) f_puts("\t\tRDY_L_N  \n", fil);
     //
     if(alarm_master_temp.bit.I_conv_rms_a) f_puts("\t\tI_conv_rms_a  \n", fil);
     if(alarm_master_temp.bit.I_conv_rms_b) f_puts("\t\tI_conv_rms_b  \n", fil);
@@ -540,12 +537,9 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
     if(alarm_master_temp.bit.U_dc_H       ) f_puts("\t\tU_dc_H        \n", fil);
     if(alarm_master_temp.bit.U_dc_L       ) f_puts("\t\tU_dc_L        \n", fil);
 
-    if(alarm_master_temp.bit.Not_enough_data_slave) f_puts("\t\tNot_enough_data_slave \n", fil);
     if(alarm_master_temp.bit.CONV_SOFTSTART       ) f_puts("\t\tCONV_SOFTSTART \n", fil);
-    if(alarm_master_temp.bit.FUSE_BROKEN          ) f_puts("\t\tFUSE_BROKEN \n", fil);
     if(alarm_master_temp.bit.FLT_SUPPLY_SLAVE     ) f_puts("\t\tFLT_SUPPLY_SLAVE \n", fil);
     //
-    if(alarm_master_temp.bit.TZ_FPGA_FLT ) f_puts("\t\tTZ_FPGA_FLT \n", fil);
     if(alarm_master_temp.bit.TZ_CLOCKFAIL) f_puts("\t\tTZ_CLOCKFAIL \n", fil);
     if(alarm_master_temp.bit.TZ_EMUSTOP  ) f_puts("\t\tTZ_EMUSTOP \n", fil);
     if(alarm_master_temp.bit.TZ          ) f_puts("\t\tTZ \n", fil);
@@ -554,9 +548,6 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
 
     if(alarm_master_temp.bit.lopri_timeout          ) f_puts("\t\tlopri_timeout \n", fil);
     if(alarm_master_temp.bit.lopri_error            ) f_puts("\t\tlopri_error \n", fil);
-    if(alarm_master_temp.bit.msg2_error             ) f_puts("\t\tmsg2_error \n", fil);
-    if(alarm_master_temp.bit.msg0_error             ) f_puts("\t\tmsg0_error \n", fil);
-
 
     snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX}\n", alarm_master_temp.all);
     f_puts(working_buffer, fil);

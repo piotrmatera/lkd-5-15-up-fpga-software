@@ -220,14 +220,10 @@ void Fiber_comm_master_class::async_data_miso()
     if(result == result_rdy)
     {
         if(status_flags.wait_for_async_data) input_flags.read_async_data = 0;
-
-        Conv.I_lim_slave[node_number] = msg.async_slave.I_lim;
         state = state_idle;
     }
     else if(result == result_error)
     {
-        Conv.I_lim_slave[node_number] = 0;
-
         state = state_idle;
     }
     status_flags.wait_for_async_data = 0;

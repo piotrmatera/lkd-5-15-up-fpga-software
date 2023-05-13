@@ -17,8 +17,6 @@
 
 union FPGA_master_sync_flags_union Sync_flags;
 union COMM_flags_union Comm_flags;
-union FPGA_master_flags_union FPGA_flags;
-Uint32 zeroes[3] = {0,0,0};
 
 #pragma CODE_SECTION(".TI.ramfunc");
 interrupt void SD_INT()
@@ -31,11 +29,14 @@ interrupt void SD_INT()
     register Uint32 *src;
     register Uint32 *dest;
 
-    Cla1ForceTask1();
-
     src = (Uint32 *)&EMIF_mem.read.U_grid_a;
     dest = (Uint32 *)&EMIF_CLA.U_grid_a;
 
+    Cla1ForceTask1();
+
+    *dest++ = *src++;
+    *dest++ = *src++;
+    *dest++ = *src++;
     *dest++ = *src++;
     *dest++ = *src++;
     *dest++ = *src++;
@@ -57,7 +58,7 @@ interrupt void SD_INT()
         decimator_cpu2 = 0;
 
         CPU1toCPU2.CLA1toCLA2.w_filter = PLL.w_filter;
-        CPU1toCPU2.CLA1toCLA2.I_lim = Conv.I_lim_avg_prefilter;
+        CPU1toCPU2.CLA1toCLA2.I_lim = Conv.I_lim;
 
         while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
         PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
@@ -65,15 +66,6 @@ interrupt void SD_INT()
         IpcRegs.IPCSET.bit.IPC3 = 1;
         IpcRegs.IPCCLR.bit.IPC3 = 1;
 
-        static volatile Uint32 loop_count = 23;
-        Uint32 loop_counter = loop_count;
-        while(loop_counter--) asm(" NOP");
-
-        Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
-    }
-    else
-    {
-        //copying last grid measurements to compensate for slave measurements delay
         src = (Uint32 *)&Meas_master.U_grid_avg;
         dest = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.Meas_master.U_grid_avg;
 
@@ -84,6 +76,10 @@ interrupt void SD_INT()
         *dest++ = *src++;
         *dest++ = *src++;
 
+        Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
+    }
+    else
+    {
         Energy_meter_CPUasm();
 
         Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
@@ -107,24 +103,13 @@ interrupt void SD_INT()
     {
         ONOFF_switch_interrupt();
 
-        if(Conv.enable && !status_master.slave_any_sync) alarm_master.bit.no_sync = 1;
-
         status_master.PLL_sync = PLL.RDY;
         float compare_U_rms = Meas_alarm_L.U_grid_rms + 10.0f;
         if(CLA2toCLA1.Grid_filter.U_grid_1h.a > compare_U_rms && CLA2toCLA1.Grid_filter.U_grid_1h.b > compare_U_rms && CLA2toCLA1.Grid_filter.U_grid_1h.c > compare_U_rms)
             status_master.Grid_present = 1;
         else status_master.Grid_present = 0;
 
-        FPGA_flags.all = EMIF_mem.read.FPGA_flags.all;
-        if(FPGA_flags.bit.rx1_crc_error) alarm_master.bit.rx1_crc_error = 1;
-        if(FPGA_flags.bit.rx1_overrun_error) alarm_master.bit.rx1_overrun_error = 1;
-        if(FPGA_flags.bit.rx1_frame_error) alarm_master.bit.rx1_frame_error = 1;
-//        if(FPGA_flags.bit.rx2_crc_error) alarm_master.bit.rx2_crc_error = 1;
-//        if(FPGA_flags.bit.rx2_overrun_error) alarm_master.bit.rx2_overrun_error = 1;
-//        if(FPGA_flags.bit.rx2_frame_error) alarm_master.bit.rx2_frame_error = 1;
-        if(FPGA_flags.bit.rx1_port_nrdy) alarm_master.bit.rx1_port_nrdy = 1;
-//        if(FPGA_flags.bit.rx2_port_nrdy) alarm_master.bit.rx2_port_nrdy = 1;
-        if(FPGA_flags.bit.sed_err) alarm_master.bit.sed_err = 1;
+        alarm_master.bit.FPGA_errors.all = EMIF_mem.read.FPGA_flags.all;
 //        if(FPGA_flags.bit.fault_supply) alarm_master.bit.FLT_SUPPLY_MASTER = 1;
 
         if(Conv.enable)
@@ -140,10 +125,12 @@ interrupt void SD_INT()
             if(fabs(Meas_master.U_grid_avg.c) > Meas_alarm_H.U_grid_abs) alarm_master.bit.U_grid_abs_c_H = 1;
         }
 
-        if(alarm_master.all && !alarm_master_snapshot.all)
+        if((alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) && !(alarm_master_snapshot.all[0] | alarm_master_snapshot.all[1] | alarm_master_snapshot.all[2]))
         {
             if(Machine.look_for_errors) status_master.scope_trigger_request = 1;
-            alarm_master_snapshot = alarm_master;
+            alarm_master_snapshot.all[0] = alarm_master.all[0];
+            alarm_master_snapshot.all[1] = alarm_master.all[1];
+            alarm_master_snapshot.all[2] = alarm_master.all[2];
         }
     }
 
@@ -175,6 +162,12 @@ interrupt void SD_INT()
             Scope.data_in[3] = &Meas_master.I_grid.a;
             Scope.data_in[4] = &Meas_master.I_grid.b;
             Scope.data_in[5] = &Meas_master.I_grid.c;
+            Scope.data_in[6] = &Meas_master.U_dc;
+            Scope.data_in[7] = &Meas_master.U_dc_n;
+            Scope.data_in[8] = &Meas_master.I_conv.a;
+            Scope.data_in[9] = &Meas_master.I_conv.b;
+            Scope.data_in[10] = &Meas_master.I_conv.c;
+            Scope.data_in[11] = &Meas_master.I_conv.n;
             Scope.acquire_counter = -1;
 
             trigger_last = *trigger_pointer;
@@ -192,7 +185,7 @@ interrupt void SD_INT()
         if(SD_card.Scope_snapshot_state == 1 && Scope_trigger(Kalman_U_grid[0].states[2], &SD_card.Scope_input_last, 0.0f, 1))
             scope_global.scope_trigger = 1;
 
-        if((Sync_flags.bit.scope_trigger_request || status_master.scope_trigger_request) && !scope_global.scope_trigger)
+        if(status_master.scope_trigger_request && !scope_global.scope_trigger)
         {
             SD_card_class::save_error_state = 1;
             scope_global.scope_trigger = 1;

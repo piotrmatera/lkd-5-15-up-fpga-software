@@ -1,8 +1,8 @@
 #ifndef _CLA_SHARED_H_
 #define _CLA_SHARED_H_
 
-#define SCOPE_BUFFER 2500
-#define SCOPE_CHANNEL 6
+#define SCOPE_BUFFER 1250
+#define SCOPE_CHANNEL 12
 typedef float scope_data_type;
 
 #define SINCOS_HARMONICS 50
@@ -62,44 +62,6 @@ struct Measurements_alarm_struct
     float Temp;
 };
 
-union FPGA_master_flags_union
-{
-    Uint32 all;
-    struct
-    {
-        Uint16 FLT_H_L1:1;
-        Uint16 FLT_L_L1:1;
-        Uint16 FLT_H_L2:1;
-        Uint16 FLT_L_L2:1;
-        Uint16 FLT_H_L3:1;
-        Uint16 FLT_L_L3:1;
-        Uint16 FLT_H_N:1;
-        Uint16 FLT_L_N:1;
-        Uint16 RDY_H_L1:1;
-        Uint16 RDY_L_L1:1;
-        Uint16 RDY_H_L2:1;
-        Uint16 RDY_L_L2:1;
-        Uint16 RDY_H_L3:1;
-        Uint16 RDY_L_L3:1;
-        Uint16 RDY_H_N:1;
-        Uint16 RDY_L_N:1;
-        Uint16 rx1_crc_error:1;
-        Uint16 rx1_overrun_error:1;
-        Uint16 rx1_frame_error:1;
-        Uint16 rx2_crc_error:1;
-        Uint16 rx2_overrun_error:1;
-        Uint16 rx2_frame_error:1;
-        Uint16 rx1_port_nrdy:1;
-        Uint16 rx2_port_nrdy:1;
-        Uint16 sed_err:1;
-        Uint16 Resonant1_WIP:1;
-        Uint16 Resonant2_WIP:1;
-        Uint16 Kalman1_WIP:1;
-        Uint16 Kalman2_WIP:1;
-        Uint16 rsvd:3;
-    }bit;
-};
-
 union FPGA_master_sync_flags_union
 {
     Uint32 all;
@@ -129,8 +91,7 @@ union FPGA_master_sync_flags_union
         Uint16 slave_rdy_5:1;
         Uint16 slave_rdy_6:1;
         Uint16 slave_rdy_7:1;
-        Uint16 scope_trigger_request:1;
-        Uint16 rsvd:7;
+        Uint16 rsvd:8;
     }bit;
 };
 
@@ -279,7 +240,6 @@ extern struct abc_struct U_x0, U_x1;
 extern float decimator;
 
 extern struct SCOPE_global scope_global;
-extern struct LOG_slave log_slave[4];
 
 extern union CONTROL_EXT_MODBUS control_ext_modbus;
 

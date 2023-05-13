@@ -47,11 +47,27 @@ struct harmonic_even_struct
     Uint32 rsvd1:30;
 };
 
-union ALARM_master
+union FPGA_master_flags_union
 {
     Uint32 all;
     struct
     {
+        Uint16 FLT_H_L1:1;
+        Uint16 FLT_L_L1:1;
+        Uint16 FLT_H_L2:1;
+        Uint16 FLT_L_L2:1;
+        Uint16 FLT_H_L3:1;
+        Uint16 FLT_L_L3:1;
+        Uint16 FLT_H_N:1;
+        Uint16 FLT_L_N:1;
+        Uint16 RDY_H_L1:1;
+        Uint16 RDY_L_L1:1;
+        Uint16 RDY_H_L2:1;
+        Uint16 RDY_L_L2:1;
+        Uint16 RDY_H_L3:1;
+        Uint16 RDY_L_L3:1;
+        Uint16 RDY_H_N:1;
+        Uint16 RDY_L_N:1;
         Uint16 rx1_crc_error:1;
         Uint16 rx1_overrun_error:1;
         Uint16 rx1_frame_error:1;
@@ -60,44 +76,18 @@ union ALARM_master
         Uint16 rx2_frame_error:1;
         Uint16 rx1_port_nrdy:1;
         Uint16 rx2_port_nrdy:1;
-
-        Uint16 Not_enough_data_master : 1;
-        Uint16 CT_char_error : 1;
-        Uint16 PLL_UNSYNC : 1;
-        Uint16 FLT_SUPPLY_MASTER:1;
-
         Uint16 sed_err:1;
-        Uint16 no_sync:1;
-        Uint16 U_grid_rms_a_L:1;
-        Uint16 U_grid_rms_b_L:1;
-        Uint16 U_grid_rms_c_L:1;
+        Uint16 rsvd:7;
+    }bit;
+};
 
-        Uint16 U_grid_abs_a_H:1;
-        Uint16 U_grid_abs_b_H:1;
-        Uint16 U_grid_abs_c_H:1;
-
-        Uint16 rsvd1:12;
-
-        Uint16 Driver_FLT_a_A : 1;
-        Uint16 Driver_FLT_a_B : 1;
-        Uint16 Driver_FLT_b_A : 1;
-        Uint16 Driver_FLT_b_B : 1;
-
-        Uint16 Driver_FLT_c_A : 1;
-        Uint16 Driver_FLT_c_B : 1;
-        Uint16 Driver_FLT_n_A : 1;
-        Uint16 Driver_FLT_n_B : 1;
-
-        Uint16 Driver_nRDY_a_A : 1;
-        Uint16 Driver_nRDY_a_B : 1;
-        Uint16 Driver_nRDY_b_A : 1;
-        Uint16 Driver_nRDY_b_B : 1;
-
-        Uint16 Driver_nRDY_c_A : 1;
-        Uint16 Driver_nRDY_c_B : 1;
-        Uint16 Driver_nRDY_n_A : 1;
-        Uint16 Driver_nRDY_n_B : 1;
-        //16bits
+union ALARM_master
+{
+    Uint32 all[3];
+    struct
+    {
+        union FPGA_master_flags_union FPGA_errors;
+        //32bits
         Uint16 I_conv_a_H:1;
         Uint16 I_conv_a_L:1;
         Uint16 I_conv_b_H:1;
@@ -117,25 +107,34 @@ union ALARM_master
         Uint16 U_dc_L:1;
         Uint16 Temperature_H:1;
         Uint16 Temperature_L:1;
-        //32bits
-        Uint16 Not_enough_data_slave : 1;
+        //48bits
+        Uint16 U_grid_rms_a_L:1;
+        Uint16 U_grid_rms_b_L:1;
+        Uint16 U_grid_rms_c_L:1;
+
+        Uint16 U_grid_abs_a_H:1;
+        Uint16 U_grid_abs_b_H:1;
+        Uint16 U_grid_abs_c_H:1;
+
+        Uint16 U_dc_balance:1;
+        Uint16 FLT_SUPPLY_MASTER:1;
         Uint16 CONV_SOFTSTART : 1;
-        Uint16 FUSE_BROKEN : 1;
         Uint16 FLT_SUPPLY_SLAVE : 1;
 
-        Uint16 TZ_FPGA_FLT : 1;
         Uint16 TZ_CLOCKFAIL : 1;
         Uint16 TZ_EMUSTOP : 1;
         Uint16 TZ : 1;
+        Uint16 PLL_UNSYNC : 1;
 
-        //48bits
+        Uint16 Not_enough_data_master : 1;
+        Uint16 CT_char_error : 1;
+        //64bits
 
-        Uint16 U_dc_balance:1;
         Uint16 lopri_timeout:1;
         Uint16 lopri_error:1;
-        Uint16 msg2_error:1;
-        Uint16 msg0_error:1;
-        Uint16 rsvd2:9;
+
+        Uint16 rsvd1:14;
+        Uint16 rsvd2:16;
     }bit;
 };
 
@@ -245,15 +244,16 @@ struct Measurements_master_struct
 {
     struct abc_struct U_grid_avg;
     struct abc_struct I_grid_avg;
-    struct abc_struct U_grid;
-    struct abc_struct I_grid;
-
     float U_dc_avg;
     float U_dc_n_avg;
     struct abcn_struct I_conv_avg;
+
+    struct abc_struct U_grid;
+    struct abc_struct I_grid;
     float U_dc;
     float U_dc_n;
     struct abcn_struct I_conv;
+
     struct abcn_struct Temperature;
     struct abc_struct ExTemperature;
 };
