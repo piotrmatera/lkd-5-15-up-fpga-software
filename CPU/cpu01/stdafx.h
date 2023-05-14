@@ -142,7 +142,8 @@ union EMIF_union
         int16 duty[4];
         Uint32 double_pulse;
         Uint32 DSP_start;
-        Uint32 mux_rsvd[1024-10];
+        Uint32 PWM_control;
+        Uint32 mux_rsvd[1024-11];
         Uint32 tx1_lopri_msg[8][32];
         Uint32 tx1_hipri_msg[8][32];
         Uint32 tx2_lopri_msg[8][32];

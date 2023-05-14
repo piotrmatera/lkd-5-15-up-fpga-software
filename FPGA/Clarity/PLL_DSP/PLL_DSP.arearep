@@ -6,4 +6,5 @@ I/O cells:      0
                                cell     count   Res Usage(%)
                             EHXPLLL         1          100.0
                                 GSR         1          100.0
-                              TOTAL         2
+                        VERIFIC_PWR         1          100.0
+                              TOTAL         3

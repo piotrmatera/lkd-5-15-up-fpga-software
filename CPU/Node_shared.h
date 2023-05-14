@@ -130,10 +130,8 @@ union ALARM_master
         Uint16 CT_char_error : 1;
         //64bits
 
-        Uint16 lopri_timeout:1;
-        Uint16 lopri_error:1;
 
-        Uint16 rsvd1:14;
+        Uint16 rsvd1:16;
         Uint16 rsvd2:16;
     }bit;
 };

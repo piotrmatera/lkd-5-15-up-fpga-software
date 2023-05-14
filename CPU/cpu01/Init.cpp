@@ -518,6 +518,7 @@ const struct GPIO_struct GPIOreg[169] =
 [LED5_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 
 //[DClink_DSCH_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+//[SS_DClink_CM  ] = {LOW, MUX6, CPU1_IO, OUTPUT, PUSHPULL},
 [SS_DClink_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [C_SS_RLY_L1_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [GR_RLY_L1_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
@@ -540,6 +541,8 @@ const struct GPIO_struct GPIOreg[169] =
 
 [I2CA_SDA_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC|PULLUP},
 [I2CA_SCL_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC|PULLUP},
+[I2CB_SDA_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC|PULLUP},
+[I2CB_SCL_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC|PULLUP},
 
 [EM1D0 ] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 [EM1D1 ] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
@@ -613,15 +616,17 @@ void Init_class::GPIO()
 
 //    GPIO_Setup(DClink_DSCH_CM);
     GPIO_Setup(SS_DClink_CM  );
-    GPIO_Setup(C_SS_RLY_L1_CM);
-    GPIO_Setup(GR_RLY_L1_CM  );
-    GPIO_Setup(C_SS_RLY_L2_CM);
-    GPIO_Setup(GR_RLY_L2_CM  );
-    GPIO_Setup(C_SS_RLY_L3_CM);
-    GPIO_Setup(GR_RLY_L3_CM  );
-    GPIO_Setup(C_SS_RLY_N_CM );
-    GPIO_Setup(GR_RLY_N_CM   );
+//    GPIO_Setup(C_SS_RLY_L1_CM);
+//    GPIO_Setup(GR_RLY_L1_CM  );
+//    GPIO_Setup(C_SS_RLY_L2_CM);
+//    GPIO_Setup(GR_RLY_L2_CM  );
+//    GPIO_Setup(C_SS_RLY_L3_CM);
+//    GPIO_Setup(GR_RLY_L3_CM  );
+//    GPIO_Setup(C_SS_RLY_N_CM );
+//    GPIO_Setup(GR_RLY_N_CM   );
 
     GPIO_Setup(I2CA_SDA_PIN);
     GPIO_Setup(I2CA_SCL_PIN);
+    GPIO_Setup(I2CB_SDA_PIN);
+    GPIO_Setup(I2CB_SCL_PIN);
 }

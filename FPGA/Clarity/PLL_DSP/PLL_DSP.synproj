@@ -24,8 +24,8 @@
 
 -lpf 1
 -p C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Clarity/PLL_DSP
--ver "C:/lscc/diamond/3.11_x64/cae_library/synthesis/verilog/ecp5u.v"
-"C:/lscc/diamond/3.11_x64/cae_library/synthesis/verilog/pmi_def.v"
+-ver "C:/lscc/diamond/3.12/cae_library/synthesis/verilog/ecp5u.v"
+"C:/lscc/diamond/3.12/cae_library/synthesis/verilog/pmi_def.v"
 "C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Clarity/PLL_DSP/PLL_DSP.v"
 -top PLL_DSP
 -ngo "C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Clarity/PLL_DSP/PLL_DSP.ngo"

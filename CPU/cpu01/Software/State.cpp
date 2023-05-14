@@ -24,6 +24,9 @@
 
 #include "Fiber_comm_master.h"
 
+#include "Software/driver_mosfet/MosfetDriver.h"
+#include "MosfetCtrlApp.h"
+
 extern Rtc rtc;
 
 struct time_BCD_struct RTC_current_time;
@@ -915,6 +918,23 @@ void Machine_class::init()
 
         if(IpcRegs.IPCCOUNTERL - delay_timer > 200000000) break;
     }
+
+
+    GPIO_SET(RST_CM);
+    EMIF_mem.write.PWM_control = 0xFF00;
+
+    mosfet_ctrl_app.process_event( MosfetCtrlApp::event_configure );
+    MosfetCtrlApp::state_t mosfet_state;
+
+    do{
+        mosfet_ctrl_app.process();
+        mosfet_state = mosfet_ctrl_app.getState();
+
+    }while( mosfet_state != MosfetCtrlApp::state_idle
+            && mosfet_state != MosfetCtrlApp::state_error );
+
+    EMIF_mem.write.PWM_control = 0x0000;
+    GPIO_CLEAR(RST_CM);
 
     EALLOW;
     Cla1Regs.MIER.bit.INT2 =

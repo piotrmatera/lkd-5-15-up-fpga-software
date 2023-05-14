@@ -91,8 +91,15 @@ GPIO_SetupPinOptions(i, GPIOreg[i].dir, GPIOreg[i].options)
 #define SD_SPICLK_PIN 26
 #define SD_SPISTE_PIN 27
 
+#define FPGA_FLASH_SPI_IO0 16
+#define FPGA_FLASH_SPI_IO1 17
+#define FPGA_FLASH_SPI_SCK 18
+#define FPGA_FLASH_SPI_CS  19
+
 #define I2CA_SDA_PIN 42
 #define I2CA_SCL_PIN 43
+#define I2CB_SDA_PIN 34
+#define I2CB_SCL_PIN 35
 
 #define EM1D0   85
 #define EM1D1   83

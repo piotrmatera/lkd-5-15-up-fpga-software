@@ -1,8 +1,8 @@
 <top name = "PLL_DSP"  library = "work"  arch = ""  entry = "Verilog">
 
 <clocks>
-    <clockitem name = "CLKI"  type = "port" />
     <clockitem name = "CLKOP"  type = "net" />
+    <clockitem name = "CLKI"  type = "port" />
 </clocks>
 
 <!--
@@ -20,12 +20,13 @@
 <unit name = "PLL_DSP">
 
     <!--
-        Top Level Pins: 2
+        Top Level Pins: 3
     -->
 
     <pins>
         <pitem  name = "CLKI"  direction = "in"  />
         <pitem  name = "CLKOP"  direction = "out"  />
+        <pitem  name = "CLKOS"  direction = "out"  />
     </pins>
 
     <!--
@@ -67,12 +68,14 @@
         <pitem  name = "ENCLKOS2"  direction = "in"  />
         <pitem  name = "ENCLKOS3"  direction = "in"  />
         <pitem  name = "CLKOP"  direction = "out"  />
+        <pitem  name = "CLKOS"  direction = "out"  />
         </pins>
 
         <nets>
         <nitem  name = "CLKI"  />
         <nitem  name = "CLKOP"  />
         <nitem  name = "scuba_vlo"  />
+        <nitem  name = "CLKOS"  />
         </nets>
     </instance>
 

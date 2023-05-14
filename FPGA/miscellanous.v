@@ -42,6 +42,30 @@ module Sync_latch_input(clk_i, in, out, reset_i, set_i);
 	end 
 endmodule 
 
+module CLK_supply(clk_i, clk_o); 
+ 	parameter[63:0] SUPPLY_PERIOD = 20e6/50e3;
+	localparam SUPPLY_WIDTH = $clog2(SUPPLY_PERIOD);
+	parameter SUPPLY_RATE = 4;
+	
+	input clk_i;
+	output reg clk_o;
+	
+	reg[SUPPLY_WIDTH-1:0] supply_counter;
+	reg[SUPPLY_WIDTH+SUPPLY_RATE-1:0] supply_duty;
+	
+	always @(posedge clk_i) begin
+		supply_counter <= supply_counter + 1'b1;
+		clk_o <= supply_duty[SUPPLY_RATE +: SUPPLY_WIDTH] > supply_counter;
+
+		if(supply_counter >= SUPPLY_PERIOD - 1'b1) begin
+			supply_counter <= {SUPPLY_WIDTH{1'b0}};
+
+		if(supply_duty[SUPPLY_RATE +: SUPPLY_WIDTH] < (SUPPLY_PERIOD>>1))
+			supply_duty <= supply_duty + 1'b1;
+		end
+	end
+endmodule
+
 module Multiplier_signed(clk_i, start_i, A_i, B_i, Y_o, rdy_o); 
 	parameter WIDTH_A = 4; 
 	parameter WIDTH_B = 4;

@@ -1080,8 +1080,8 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	//Parametry pamieci
 	pmi_ram_dp #(.pmi_wr_addr_depth(M0_ADDR_NUM), .pmi_wr_addr_width(M0_ADDR_WIDTH), .pmi_wr_data_width(36),
 	.pmi_rd_addr_depth(M0_ADDR_NUM), .pmi_rd_addr_width(M0_ADDR_WIDTH), .pmi_rd_data_width(36), .pmi_regmode("reg"), 
-	.pmi_gsr("disable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), 
-	.pmi_init_file(/*"../Mem0.mem"*/), .pmi_init_file_format(/*"hex"*/), .pmi_family()
+	.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U"),
+	.pmi_init_file(/*"../Mem0.mem"*/), .pmi_init_file_format(/*"hex"*/)
 	)
 	Mem0(.Data(Mem0_data_i), .WrAddress(Mem0_addrw_pip), .RdAddress({series_cnt, addrr_M0_out}), .WrClock(clk_i),
 	.RdClock(clk_i), .WrClockEn(1'b1), .RdClockEn(1'b1), .WE(Mem0_we_pip), .Reset(1'b0), 
@@ -1089,8 +1089,8 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	
 	pmi_ram_dp #(.pmi_wr_addr_depth(M1_ADDR_NUM), .pmi_wr_addr_width(M1_ADDR_WIDTH), .pmi_wr_data_width(36),
 	.pmi_rd_addr_depth(M1_ADDR_NUM), .pmi_rd_addr_width(M1_ADDR_WIDTH), .pmi_rd_data_width(36), .pmi_regmode("reg"), 
-	.pmi_gsr("disable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), 
-	.pmi_init_file("../Mem1_R.mem"), .pmi_init_file_format("hex"), .pmi_family()
+	.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U"),
+	.pmi_init_file("../Mem1_R.mem"), .pmi_init_file_format("hex")
 	)
 	Mem1(.Data({Mem1_data_i[31:0], 4'd0}), .WrAddress(Mem1_addrw_i), .RdAddress(addrr_M1_out), .WrClock(Mem1_clk_w),
 	.RdClock(clk_i), .WrClockEn(Mem1_clk_en_w), .RdClockEn(1'b1), .WE(Mem1_we_i), .Reset(1'b0), 

@@ -101,11 +101,14 @@ status_code_t MosfetCtrlApp::process_event( event_t event, void * xdata ){
         memcpy( this->buffer, driver_mosfet_cfg, CHIP1ED389_CONFIG_REGS_COUNT );
         error_state[ logpoint_precfg ] = 0; //tu zbierany stan wykonania dla poszczegolnych ukladow (bity = uklady)
 
+
+        mosfet_driver.set_i2c_device_address( CHIP1ED389_ADDRESS_INIT );
         //petla po wszystkich ukladach - ustawienie adresow i2c
         // (obecnie takie same ale manipulujac sygnalem na wejsciach driver.IN (=PWMup)
         // mozna zrobic aby kazdy uklad uzyskal inny adres i2c )
         for( loop_cnt = 0; loop_cnt< MAX_MOS_DRIVERS; loop_cnt++ ){
-            I2cMuxAddress( loop_cnt ); //wybranie ukladu
+            EMIF_mem.write.PWM_control = 0xFF00 | (1UL << loop_cnt);
+            this->buffer[0] = driver_mosfet_cfg[0] + loop_cnt;
 
             mosfet_driver.process_event(MosfetDriver::event_restart, NULL );
 
@@ -118,7 +121,7 @@ status_code_t MosfetCtrlApp::process_event( event_t event, void * xdata ){
             }
 
         }
-
+        EMIF_mem.write.PWM_control = 0xFF00;
 
         //powyzsze moze sie nie udac gdy adres juz ustawiony
         // rozstrzygnac czy zapisuje sie trwale w ukladzie:
@@ -126,14 +129,11 @@ status_code_t MosfetCtrlApp::process_event( event_t event, void * xdata ){
         // soft-reset nie kasuje adresow i2c
 
         error_state[ logpoint_softreset ] = 0;
-        //przestawienie na nowy adres i2c
-        mosfet_driver.set_i2c_device_address( CHIP1ED389_ADDRESS_CHIP );
 
         //Odblokowanie dostepu do rejestrow
         //musi byc przed soft-reset i nie moga byc razem w jednej transakcji i2c
         for( loop_cnt = 0; loop_cnt< MAX_MOS_DRIVERS; loop_cnt++ ){
-            I2cMuxAddress( loop_cnt ); //wybranie ukladu
-
+            mosfet_driver.set_i2c_device_address( CHIP1ED389_ADDRESS_CHIP + loop_cnt);
             mosfet_driver.process_event(MosfetDriver::event_restart, NULL );
             this->values[0] = 0; //CFGOK.USER_OK=0
             MosfetDriver_WriteRegs( CHIP1ED389_CFGOK, 1, this->values );
@@ -153,8 +153,7 @@ status_code_t MosfetCtrlApp::process_event( event_t event, void * xdata ){
 
         //petla po wszystkich ukladach - wykonanie soft_reset (moga byc w stanie FAULT)
         for( loop_cnt = 0; loop_cnt< MAX_MOS_DRIVERS; loop_cnt++ ){
-            I2cMuxAddress( loop_cnt ); //wybranie ukladu
-
+            mosfet_driver.set_i2c_device_address( CHIP1ED389_ADDRESS_CHIP + loop_cnt);
             mosfet_driver.process_event(MosfetDriver::event_restart, NULL );
             this->values[0] = CHIP1ED389_CLEARREG__SOFT_RST;//CLEARREG.SOFT_RESET = 1
             MosfetDriver_WriteRegs( CHIP1ED389_CLEARREG, 1, this->values );
@@ -181,13 +180,8 @@ status_code_t MosfetCtrlApp::process_event( event_t event, void * xdata ){
         // TODO byloby dobrze miec jedna magistrale i2c bez multiplekserow
         //wtedy latwiej grupowo ustawiac parametry i sterowac lacznie wszystkimi ukladami
 
-        //przestawienie na nowy adres i2c
-        mosfet_driver.set_i2c_device_address( CHIP1ED389_ADDRESS_CHIP );
-
         //petla po wszystkich ukladach
         for( loop_cnt = 0; loop_cnt< MAX_MOS_DRIVERS; loop_cnt++ ){
-            I2cMuxAddress( loop_cnt ); //wybranie ukladu
-
             //odblokwoanie dostepu do rejestrow (gdy uklad jest juz zaprorgamwoany i byl reset cpu
             // jest juz wczesniej przed SOFT-RESET
 
@@ -195,6 +189,7 @@ status_code_t MosfetCtrlApp::process_event( event_t event, void * xdata ){
             //skasowanie licznikow
             //po resecie cpu i konfigruacji wystepowaly zdarzenia bledow kom. i UVcc2
             //czy to moglo byc spowodowane przez RDYC=0?
+            mosfet_driver.set_i2c_device_address( CHIP1ED389_ADDRESS_CHIP + loop_cnt);
             this->values[0] = CHIP1ED389_CLEARREG__D2E_CL
                         | CHIP1ED389_CLEARREG__UV2F_CL
                         | CHIP1ED389_CLEARREG__UV1F_CL
@@ -247,13 +242,10 @@ status_code_t MosfetCtrlApp::process_event( event_t event, void * xdata ){
 
         error_state[1] = 0; //tu zbierany stan wykonania dla poszczegolnych ukladow (bity = uklady)
         memset( buffer_in, 0, sizeof(buffer_in)); //[MAX_MOS_DRIVERS][ CHIP1ED389_STATUS_REGS_COUNT ];
-       //przestawienie na nowy adres i2c
-        mosfet_driver.set_i2c_device_address( CHIP1ED389_ADDRESS_CHIP );
 
        //petla po wszystkich ukladach
        for( loop_cnt = 0; loop_cnt< MAX_MOS_DRIVERS; loop_cnt++ ){
-           I2cMuxAddress( loop_cnt ); //wybranie ukladu
-
+           mosfet_driver.set_i2c_device_address( CHIP1ED389_ADDRESS_CHIP + loop_cnt);
            mosfet_driver.process_event(MosfetDriver::event_restart, NULL );
 
            //I. odczyt 1. czesci rejestrow
@@ -380,48 +372,4 @@ void MosfetCtrlApp::change_state_to( state_t new_state ){
 
 MosfetCtrlApp::state_t MosfetCtrlApp::getState(){
        return this->state;
-}
-
-
-const GPIO_struct GPIO_DEF__DRV_EN = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL};
-const GPIO_struct GPIO_DEF__PWM = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL};
-
-uint16_t pwm_pins[] = {PWM1A, PWM1B, PWM2A, PWM2B, PWM3A, PWM3B, PWM4A, PWM4B};
-#define PWM_PINS 8
-
-status_code_t MosfetCtrlApp::configure_gpio(void){
-    //nalezy wysterowac koncowki ukladow RDYC=0
-    //oraz IN =1 aby mozna bylo sie z nimi komunikowac
-
-    GPIO_CLEAR( RST_DRV ); //=(RDYC=0)
-
-    //przedefiniowanie koncowki DRV_EN aby mozna bylo sterowac recznie
-    GPIO_Setup_Def( DRV_EN, &GPIO_DEF__DRV_EN );
-
-    //przedefiniowanie koncowek PWM aby mozna bylo sterowac recznie
-    for(int i=0; i< PWM_PINS; i++)
-        GPIO_Setup_Def( pwm_pins[i], &GPIO_DEF__PWM );
-
-    for(int i=0; i< PWM_PINS; i++)
-        GPIO_SET( pwm_pins[i] ); //ustawienie 1-nek na wyjsciach procesora
-    //w ten sposob mozna indywidualnie dostac sie do kazdego ukladu i ustawic adres
-
-    GPIO_CLEAR( DRV_EN ); //otwarcie bramek 244 - polaczneie wyjsc procesora i wejsc IN ukladow
-
-    return status_ok;
-}
-
-
-status_code_t MosfetCtrlApp::restore_gpio_configuration(void){
-
-    GPIO_SET( DRV_EN ); //rozlaczenie bramek 244 - polaczenia wyjsc procesora i wejsc ukladow (IN)
-
-    for(int i=0; i< PWM_PINS; i++)
-         GPIO_Setup( pwm_pins[i] );
-
-    GPIO_Setup( DRV_EN );
-
-    GPIO_SET( RST_DRV ); //=(RDYC=1)
-
-    return status_ok;
 }

@@ -1,0 +1,103 @@
+<Project ModBy="Inserter" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-05-14">
+    <Core Name="SerDes_master_LA0">
+        <Setting>
+            <Capture SamplesPerTrig="512" NumTrigsCap="1"/>
+            <Event EventCnt="0" CntEnableRun="0"/>
+            <TrigSetting PreTrgSamples="" AND_ALL="0" PostTrgSamples="" TURadix="0"/>
+        </Setting>
+        <Dataset Name="Base">
+            <Trace>
+                <Bus Name="EMIF_data_i2" Radix="0">
+                    <Sig Name="EMIF_data_i2:0"/>
+                    <Sig Name="EMIF_data_i2:1"/>
+                    <Sig Name="EMIF_data_i2:2"/>
+                    <Sig Name="EMIF_data_i2:3"/>
+                    <Sig Name="EMIF_data_i2:4"/>
+                    <Sig Name="EMIF_data_i2:5"/>
+                    <Sig Name="EMIF_data_i2:6"/>
+                    <Sig Name="EMIF_data_i2:7"/>
+                    <Sig Name="EMIF_data_i2:8"/>
+                    <Sig Name="EMIF_data_i2:9"/>
+                    <Sig Name="EMIF_data_i2:10"/>
+                    <Sig Name="EMIF_data_i2:11"/>
+                    <Sig Name="EMIF_data_i2:12"/>
+                    <Sig Name="EMIF_data_i2:13"/>
+                    <Sig Name="EMIF_data_i2:14"/>
+                    <Sig Name="EMIF_data_i2:15"/>
+                    <Sig Name="EMIF_data_i2:16"/>
+                    <Sig Name="EMIF_data_i2:17"/>
+                    <Sig Name="EMIF_data_i2:18"/>
+                    <Sig Name="EMIF_data_i2:19"/>
+                    <Sig Name="EMIF_data_i2:20"/>
+                    <Sig Name="EMIF_data_i2:21"/>
+                    <Sig Name="EMIF_data_i2:22"/>
+                    <Sig Name="EMIF_data_i2:23"/>
+                    <Sig Name="EMIF_data_i2:24"/>
+                    <Sig Name="EMIF_data_i2:25"/>
+                    <Sig Name="EMIF_data_i2:26"/>
+                    <Sig Name="EMIF_data_i2:27"/>
+                    <Sig Name="EMIF_data_i2:28"/>
+                    <Sig Name="EMIF_data_i2:29"/>
+                    <Sig Name="EMIF_data_i2:30"/>
+                    <Sig Name="EMIF_data_i2:31"/>
+                </Bus>
+                <Sig Name="EMIF_oe_i2"/>
+                <Sig Name="EMIF_we_i2"/>
+                <Bus Name="EMIF_address_i2" Radix="0">
+                    <Sig Name="EMIF_address_i2:0"/>
+                    <Sig Name="EMIF_address_i2:1"/>
+                    <Sig Name="EMIF_address_i2:2"/>
+                    <Sig Name="EMIF_address_i2:3"/>
+                    <Sig Name="EMIF_address_i2:4"/>
+                    <Sig Name="EMIF_address_i2:5"/>
+                    <Sig Name="EMIF_address_i2:6"/>
+                    <Sig Name="EMIF_address_i2:7"/>
+                    <Sig Name="EMIF_address_i2:8"/>
+                    <Sig Name="EMIF_address_i2:9"/>
+                    <Sig Name="EMIF_address_i2:10"/>
+                    <Sig Name="EMIF_address_i2:11"/>
+                </Bus>
+                <Bus Name="EMIF_data_o" Radix="0">
+                    <Sig Name="EMIF_data_o:0"/>
+                    <Sig Name="EMIF_data_o:1"/>
+                    <Sig Name="EMIF_data_o:2"/>
+                    <Sig Name="EMIF_data_o:3"/>
+                    <Sig Name="EMIF_data_o:4"/>
+                    <Sig Name="EMIF_data_o:5"/>
+                    <Sig Name="EMIF_data_o:6"/>
+                    <Sig Name="EMIF_data_o:7"/>
+                    <Sig Name="EMIF_data_o:8"/>
+                    <Sig Name="EMIF_data_o:9"/>
+                    <Sig Name="EMIF_data_o:10"/>
+                    <Sig Name="EMIF_data_o:11"/>
+                    <Sig Name="EMIF_data_o:12"/>
+                    <Sig Name="EMIF_data_o:13"/>
+                    <Sig Name="EMIF_data_o:14"/>
+                    <Sig Name="EMIF_data_o:15"/>
+                    <Sig Name="EMIF_data_o:16"/>
+                    <Sig Name="EMIF_data_o:17"/>
+                    <Sig Name="EMIF_data_o:18"/>
+                    <Sig Name="EMIF_data_o:19"/>
+                    <Sig Name="EMIF_data_o:20"/>
+                    <Sig Name="EMIF_data_o:21"/>
+                    <Sig Name="EMIF_data_o:22"/>
+                    <Sig Name="EMIF_data_o:23"/>
+                    <Sig Name="EMIF_data_o:24"/>
+                    <Sig Name="EMIF_data_o:25"/>
+                    <Sig Name="EMIF_data_o:26"/>
+                    <Sig Name="EMIF_data_o:27"/>
+                    <Sig Name="EMIF_data_o:28"/>
+                    <Sig Name="EMIF_data_o:29"/>
+                    <Sig Name="EMIF_data_o:30"/>
+                    <Sig Name="EMIF_data_o:31"/>
+                </Bus>
+            </Trace>
+            <Trigger>
+                <TU Operator="7" Name="TU1" ID="1" Value="1" Radix="0"/>
+                <TU Operator="7" Name="TU2" ID="2" Value="1" Radix="0"/>
+                <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
+                <TE Enable="1" Expression="TU2" Name="TE2" ID="2"/>
+            </Trigger>
+        </Dataset>
+    </Core>
+</Project>

@@ -10,9 +10,13 @@
 #include "ff.h"
 #include "Rtc.h"
 #include "diskio.h"
+#include "Software/driver_mosfet/MosfetDriver.h"
+#include "MosfetCtrlApp.h"
 
 Rtc rtc;
 FATFS fs;           /* Filesystem object */
+MosfetCtrlApp mosfet_ctrl_app;
+int32 SD_phase = 1500;
 
 #pragma CODE_SECTION(".TI.ramfunc");
 interrupt void NMI_INT()
@@ -38,6 +42,12 @@ void main()
     IFR = 0x0000;
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;
 
+//    EALLOW;
+//    InputXbarRegs.INPUT6SELECT = EM1A2;
+//    OutputXbarRegs.OUTPUT4MUX0TO15CFG.bit.MUX11 = 1;
+//    OutputXbarRegs.OUTPUT4MUXENABLE.bit.MUX11 = 1;
+//    EDIS;
+
     EALLOW;
     InputXbarRegs.INPUT4SELECT = SD_NEW_CM;
     XintRegs.XINT1CR.bit.POLARITY = 0;
@@ -46,6 +56,7 @@ void main()
     EDIS;
     PieCtrlRegs.PIEIER1.bit.INTx4 = 1;
     IER |= M_INT1;
+
 
     EALLOW;
     PieVectTable.NMI_INT = &NMI_INT;
@@ -92,11 +103,20 @@ void main()
 
     f_mount(&fs, "", 1);
 
+    mosfet_ctrl_app.init();
+
     Machine.state = Machine_class::state_init;
     while(1)
     {
         Machine.Main();
         Machine.Background();
+
+        int32 max_period = 1999;//(int32)EMIF_mem.read.cycle_period - 1L;
+        int32 SD_phase_temp = SD_phase;
+        if(SD_phase < 0) SD_phase_temp = max_period + SD_phase;
+        if(SD_phase_temp < 0) SD_phase_temp = 0;
+        if(SD_phase_temp > max_period) SD_phase_temp = max_period;
+        *(Uint32 *)&EMIF_mem.write.SD_sync_val = *(Uint32 *)&SD_phase_temp;
 
         static Uint64 benchmark_timer;
         static volatile float benchmark;

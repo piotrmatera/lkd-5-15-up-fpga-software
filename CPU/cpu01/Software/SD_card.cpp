@@ -546,9 +546,6 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
     //
     if(alarm_master_temp.bit.U_dc_balance          ) f_puts("\t\tU_dc_balance \n", fil);
 
-    if(alarm_master_temp.bit.lopri_timeout          ) f_puts("\t\tlopri_timeout \n", fil);
-    if(alarm_master_temp.bit.lopri_error            ) f_puts("\t\tlopri_error \n", fil);
-
     snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX}\n", alarm_master_temp.all);
     f_puts(working_buffer, fil);
 }

@@ -10,8 +10,8 @@
 
 
 #define CHIP1ED389_ADDRESS_INIT  (0x1a>>1)
-#define CHIP1ED389_ADDRESS_CHIP  (0x18>>1)
-#define CHIP1ED389_ADDRESS_GROUP (0x1c>>1)
+#define CHIP1ED389_ADDRESS_CHIP  (0x1c>>1)
+#define CHIP1ED389_ADDRESS_GROUP (0x2c>>1)
 
 
 #define CHIP1ED389_I2CADD   0x00 // 44 I2C address of gate driver

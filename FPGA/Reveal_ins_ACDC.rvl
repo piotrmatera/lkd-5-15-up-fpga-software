@@ -1,0 +1,108 @@
+<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-05-14">
+    <IP Version="1_6_042617"/>
+    <Design DesignEntry="Schematic/Verilog HDL" Synthesis="lse" DeviceFamily="ECP5U" DesignName="SKJEE"/>
+    <Core InsertDataset="0" Insert="1" Reveal_sig="492623812" Name="SerDes_master_LA0" ID="0">
+        <Setting>
+            <Clock SampleClk="clk_EMIF" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
+            <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="512"/>
+            <Capture Mode="0" MinSamplesPerTrig="8"/>
+            <Event CntEnable="0" MaxEventCnt="8"/>
+            <TrigOut Polarity="0" MinPulseWidth="0" TrigOutNetType="1" EnableTrigOut="0" TrigOutNet="reveal_debug_SerDes_master_LA0_net"/>
+            <DistRAM Disable="1"/>
+        </Setting>
+        <Dataset Name="Base">
+            <Trace>
+                <Bus Name="EMIF_data_i2">
+                    <Sig Type="SIG" Name="EMIF_data_i2:0"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:1"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:2"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:3"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:4"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:5"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:6"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:7"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:8"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:9"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:10"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:11"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:12"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:13"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:14"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:15"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:16"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:17"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:18"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:19"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:20"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:21"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:22"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:23"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:24"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:25"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:26"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:27"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:28"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:29"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:30"/>
+                    <Sig Type="SIG" Name="EMIF_data_i2:31"/>
+                </Bus>
+                <Sig Type="SIG" Name="EMIF_oe_i2"/>
+                <Sig Type="SIG" Name="EMIF_we_i2"/>
+                <Bus Name="EMIF_address_i2">
+                    <Sig Type="SIG" Name="EMIF_address_i2:0"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:1"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:2"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:3"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:4"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:5"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:6"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:7"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:8"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:9"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:10"/>
+                    <Sig Type="SIG" Name="EMIF_address_i2:11"/>
+                </Bus>
+                <Bus Name="EMIF_data_o">
+                    <Sig Type="SIG" Name="EMIF_data_o:0"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:1"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:2"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:3"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:4"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:5"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:6"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:7"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:8"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:9"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:10"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:11"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:12"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:13"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:14"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:15"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:16"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:17"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:18"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:19"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:20"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:21"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:22"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:23"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:24"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:25"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:26"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:27"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:28"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:29"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:30"/>
+                    <Sig Type="SIG" Name="EMIF_data_o:31"/>
+                </Bus>
+            </Trace>
+            <Trigger>
+                <TU Serialbits="0" Type="0" ID="1" Sig="EMIF_oe_i2,"/>
+                <TU Serialbits="0" Type="0" ID="2" Sig="EMIF_we_i2,"/>
+                <TE MaxSequence="2" MaxEvnCnt="1" ID="1" Resource="1"/>
+                <TE MaxSequence="2" MaxEvnCnt="1" ID="2" Resource="1"/>
+            </Trigger>
+        </Dataset>
+    </Core>
+</Project>

@@ -219,10 +219,10 @@ interrupt void SD_INT()
     GPIO_SET(TRIGGER0_CM);
 
     Timer_PWM.CPU_TX_MSG2 = TIMESTAMP_PWM;
-
-    Modbus_slave_LCD.RTU->interrupt_task();
-    Modbus_slave_LCD_OLD.RTU->interrupt_task();
-    Modbus_slave_EXT.RTU->interrupt_task();
+//
+//    Modbus_slave_LCD.RTU->interrupt_task();
+//    Modbus_slave_LCD_OLD.RTU->interrupt_task();
+//    Modbus_slave_EXT.RTU->interrupt_task();
 
     Timer_PWM.CPU_COMM = TIMESTAMP_PWM;
 
