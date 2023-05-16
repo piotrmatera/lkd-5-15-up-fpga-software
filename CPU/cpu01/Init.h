@@ -19,6 +19,7 @@ public:
     void Variables();
     void EMIF();
     void PWMs();
+    void ADC();
     void Fan_speed();
     void PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg);
     void EPwm_TZclear(volatile struct EPWM_REGS *EPwmReg);

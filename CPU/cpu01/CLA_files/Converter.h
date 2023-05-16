@@ -28,7 +28,10 @@ struct Converter_struct
 
     float compensation2;
     float Ts;
+    float I_lim_nominal;
     float I_lim;
+    float C_dc;
+    float L_conv;
 
     float C_conv;
     float RDY;

@@ -79,6 +79,8 @@ void main()
 
     Init.EMIF();
 
+    Init.ADC();
+
     rtc.init();
     rtc.process_event(Rtc::event_init);
     RTC_new_time.second = 0;

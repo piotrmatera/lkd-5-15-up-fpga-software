@@ -252,8 +252,10 @@ struct Measurements_master_struct
     float U_dc_n;
     struct abcn_struct I_conv;
 
-    struct abcn_struct Temperature;
-    struct abc_struct ExTemperature;
+    float Temperature1;
+    float Temperature2;
+    float Temperature3;
+    float Supply_24V;
 };
 
 struct Measurements_master_gain_offset_struct
@@ -263,6 +265,8 @@ struct Measurements_master_gain_offset_struct
     float U_dc;
     float U_dc_n;
     struct abcn_struct I_conv;
+    float def_osr;
+    float sd_shift;
 };
 
 struct timestamp_struct

@@ -1,10 +1,9 @@
-;Tomasz Œwiêchowicz swiechowicz.tomasz@gmail.com
+;Tomasz ï¿½wiï¿½chowicz swiechowicz.tomasz@gmail.com
 
 ; C prototype:
 ; extern float Resonant_calc_CLAasm(volatile struct Resonant_struct *Resonant, float error);
 ; argument 1 = *Resonant : structure of internal variables [MAR0]
 ; argument 2 = error : input error [MR0]
-; argument 3 = gain : input controller gain [MR1]
 ; 18 instructions without pre-jump
 
 		.cdecls   C,LIST,"Controllers.h"

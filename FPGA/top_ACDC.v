@@ -22,7 +22,7 @@
 `define RX_Mod_CM  13
 `define EN_Mod_CM  14
 
-//`define SS_DClink_CM  15
+`define SS_DClink_CM  15
 `define DClink_DSCH_CM  x
 
 `define C_SS_RLY_L1_CM  16
@@ -152,7 +152,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	reg[31:0] EMIF_data_o; 
 	wire[EMIF_MEMORY_WIDTH-1:0] EMIF_address_i; 
  
-	localparam EMIF_MUX_NUMBER = 26;
+	localparam EMIF_MUX_NUMBER = 29;
 	localparam EMIF_REG_NUMBER = 11;
 	localparam EMIF_MUX_WIDTH = $clog2(EMIF_MUX_NUMBER);
 	localparam EMIF_REG_WIDTH = $clog2(EMIF_REG_NUMBER);
@@ -495,12 +495,14 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire [53:0] Dummy1_CO;
 	wire Dummy1_SIGNEDCIN;
 	wire Dummy1_SIGNEDCO;
-	Dummy_slice Dummy1_slice (.CLK0(clk_DSP), .CE0(1'b1), .RST0(1'b0), .AA( ), .AB( ), .BA( ), 
-    .BB( ), .C( ), .AMuxsel( ), .BMuxsel( ), .CMuxsel(3'b101), .Opcode( ), 
+	Dummy_slice Dummy1_slice (.CLK0(clk_DSP), .CE0(1'b1), .RST0(1'b0), .AA(18'b0), .AB(18'b0), .BA(18'b0), 
+    .BB(18'b0), .C(54'b0), .AMuxsel(2'b0), .BMuxsel(2'b0), .CMuxsel(3'b101), .Opcode(4'b0), 
     .Cin(Dummy1_CIN), .SignCin(Dummy1_SIGNEDCIN), .Result(Dummy1_CO), .SignR(Dummy1_SIGNEDCO), .EQZ( ), .EQZM( ), 
     .EQOM( ), .EQPAT( ), .EQPATB( ), .OVER( ), .UNDER( ), .SROA( ), 
     .SROB( ));
 	
+	assign Dummy1_CIN = 0;
+	assign Dummy1_SIGNEDCIN = 0;	
 	assign Resonant1_CIN = Dummy1_CO;
 	assign Resonant1_SIGNEDCIN = Dummy1_SIGNEDCO;
 	assign Resonant2_CIN = Resonant1_CO;
@@ -514,7 +516,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	
 ///////////////////////////////////////////////////////////////////// 
  
-	localparam OSR = 320; 
+	localparam OSR = `DEF_OSR; 
 	localparam SD_WIDTH = 16; 
 	localparam SD_NUMBER = 11; 
 	wire[1:0] decimator_pulse; 
@@ -535,7 +537,18 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire[SD_WIDTH*SD_NUMBER-1:0] SD_dat; 
 	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i(SD_DAT_IDDR), 
 	.clk_i(XTAL_20MHz_i), .decimator_pulse_i(decimator_pulse), .select_i(select_SD), .data_o(SD_dat)); 
- 
+	
+	reg new_value_r;
+	reg[SD_WIDTH*SD_NUMBER-1:0] SD_dat_last;
+	reg[SD_WIDTH*SD_NUMBER-1:0] SD_dat_avg;
+	always@(posedge XTAL_20MHz_i) begin
+		new_value_r <= new_value;
+		if(new_value)
+			SD_dat_last <= SD_dat;
+		for (i = 0; i < SD_NUMBER; i = i + 1)
+			if(new_value_r)
+				SD_dat_avg[i*16 +: 16] = ({SD_dat_last[i*16], SD_dat_last[i*16 +: 16]} + {SD_dat[i*16], SD_dat[i*16 +: 16]}) >> 1;
+	end
 ///////////////////////////////////////////////////////////////////// 
 	
 	wire SED_enable;
@@ -559,10 +572,10 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign FLT_bus[24] = !sed_err;
  
  	wire rst_faults;
-	FD1P3BX FLT_ff[FAULT_NUMBER-1:0](.D(1'b0), .SP(rst_faults), .CK(clk_5x), .PD(~FLT_bus[FAULT_NUMBER-1:0]), .Q(FLT_REG_O[FAULT_NUMBER-1:0])); 
+	FD1P3BX FLT_ff[FAULT_NUMBER-1:0](.D(1'b0), .SP(rst_faults), .CK(clk_5x), .PD(~FLT_bus), .Q(FLT_REG_O)); 
 
 	wire TZ_FPGA;
-	assign TZ_FPGA = !(FLT_REG_O[24] | |FLT_REG_O[15:0]);
+	assign TZ_FPGA = !(|FLT_REG_O);
 	
 /////////////////////////////////////////////////////////////////////  
 	 	
@@ -576,7 +589,8 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire[15:0] current_period;
 	wire[15:0] next_period;
 	wire sync_phase;
-	Local_counter Local_counter(.clk_i(clk_5x), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase), 
+	wire sync;
+	Local_counter Local_counter(.clk_i(clk_5x), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase), .sync_o(sync),
 	.snapshot_start_i({timestamp_code_rx2, timestamp_code_tx2, timestamp_code_rx1, timestamp_code_tx1}), .snapshot_value_o(snapshot_value)); 
 	assign next_period = `CYCLE_PERIOD - 16'd1;
 	
@@ -705,7 +719,7 @@ module SerDes_master(CPU_io, FPGA_io);
 			Scope_index <= Scope_index + 1'b1;
 			case(Scope_state)
 				Scope_0 : begin
-					Scope_acquire_counter <= DEB_WADDR_DEPTH - Scope_acquire_before_trigger;
+					Scope_acquire_counter <= DEB_WADDR_DEPTH[DEB_WADDR_WIDTH-1:0] - Scope_acquire_before_trigger;
 					if(Scope_trigger_r)
 						Scope_state <= Scope_1;
 				end
@@ -778,18 +792,33 @@ module SerDes_master(CPU_io, FPGA_io);
 			7 : EMIF_data_o = Kalman2_data_o;
 		endcase
 	end
-	//assign EMIF_data_o = EMIF_address_i[EMIF_MEMORY_WIDTH-1] ? (EMIF_address_i[EMIF_MEMORY_WIDTH-2] ? COMM_RX_MEM2_data_o : COMM_RX_MEM1_data_o) : EMIF_TX_mux[EMIF_address_i[EMIF_MUX_WIDTH-1:0]]; 
 	//assign EMIF_data_o = EMIF_TX_mux[EMIF_address_i[EMIF_MUX_WIDTH-1:0]]; 
- 
+ 	
+	localparam[15:0] OVERSAMPLE = `OVERSAMPLE;
+	localparam[15:0] CYCLE_PERIOD = `CYCLE_PERIOD;
+	localparam[15:0] DEF_OSR = `DEF_OSR;
+	localparam WIDTH = $clog2((DEF_OSR**2)+1)+1;
+	localparam OUTPUT_SHIFT_BIT = (WIDTH - SD_WIDTH > 0) ? WIDTH - SD_WIDTH : 0;
+	localparam[15:0] OUTPUT_SHIFT = 2**OUTPUT_SHIFT_BIT;
+		
 	assign EMIF_TX_mux[0] = {tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}; 
 	assign EMIF_TX_mux[1] = {rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}; 
-	assign EMIF_TX_mux[2] = SD_dat[0*32 +: 32]; 
-	assign EMIF_TX_mux[3] = SD_dat[1*32 +: 32]; 
-	assign EMIF_TX_mux[4] = SD_dat[2*32 +: 32]; 
-	assign EMIF_TX_mux[5] = SD_dat[3*32 +: 32]; 
-	assign EMIF_TX_mux[6] = SD_dat[4*32 +: 32]; 
-	assign EMIF_TX_mux[7] = SD_dat[5*32 +: 16]; 
-	assign EMIF_TX_mux[8] = {{32-4-FAULT_NUMBER{1'b0}},{Kalman2_WIP, Kalman1_WIP, Resonant2_WIP, Resonant1_WIP} , FLT_REG_O}; 
+	if(`OVERSAMPLE) begin
+		assign EMIF_TX_mux[2] = SD_dat[0*32 +: 32]; 
+		assign EMIF_TX_mux[3] = SD_dat[1*32 +: 32]; 
+		assign EMIF_TX_mux[4] = SD_dat[2*32 +: 32]; 
+		assign EMIF_TX_mux[5] = SD_dat[3*32 +: 32]; 
+		assign EMIF_TX_mux[6] = SD_dat[4*32 +: 32]; 
+		assign EMIF_TX_mux[7] = SD_dat[5*32 +: 16]; 
+	end else begin
+		assign EMIF_TX_mux[2] = SD_dat_avg[0*32 +: 32]; 
+		assign EMIF_TX_mux[3] = SD_dat_avg[1*32 +: 32]; 
+		assign EMIF_TX_mux[4] = SD_dat_avg[2*32 +: 32]; 
+		assign EMIF_TX_mux[5] = SD_dat_avg[3*32 +: 32]; 
+		assign EMIF_TX_mux[6] = SD_dat_avg[4*32 +: 32]; 
+		assign EMIF_TX_mux[7] = SD_dat_avg[5*32 +: 16]; 
+	end	
+	assign EMIF_TX_mux[8] = {{32-FAULT_NUMBER{1'b0}}, FLT_REG_O}; 
 	assign EMIF_TX_mux[9] = {8'b0, slave_rdy, sync_ok, rx_ok}; 
 	assign EMIF_TX_mux[10] = clock_offsets[0*32 +: 32]; 
 	assign EMIF_TX_mux[11] = clock_offsets[1*32 +: 32]; 
@@ -807,6 +836,9 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign EMIF_TX_mux[23] = DEB_WRITE_WIDTH_MULTIPLY;
 	assign EMIF_TX_mux[24] = Scope_state[1];
 	assign EMIF_TX_mux[25] = Scope_index_last;
+	assign EMIF_TX_mux[26] = {OVERSAMPLE, CYCLE_PERIOD}; 
+	assign EMIF_TX_mux[27] = {OUTPUT_SHIFT, DEF_OSR}; 
+	assign EMIF_TX_mux[28] = {Kalman2_WIP, Kalman1_WIP, Resonant2_WIP, Resonant1_WIP, sync_phase}; 
 	
  	FD1P3DX EMIF_RX_reg_0[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 0), .CK(EMIF_we_i), .CD({tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}), .Q(EMIF_RX_reg[0]));
  	FD1P3DX EMIF_RX_reg_1[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 1), .CK(EMIF_we_i), .CD(~{rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}), .Q(EMIF_RX_reg[1]));
@@ -878,9 +910,15 @@ module SerDes_master(CPU_io, FPGA_io);
 
 
 	BB BB_RST(.I(1'b0), .T(1'b1), .O(rst_faults), .B(CPU_io[`RST_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
-	BB BB_SD_NEW(.I(new_value), .T(1'b0), .O(), .B(CPU_io[`SD_NEW_CM]))/*synthesis IO_TYPE="LVCMOS33"*/; 
-	BB BB_SYNC_PWM(.I(sync_phase), .T(1'b0), .O(), .B(CPU_io[`SYNC_PWM_CM]))/*synthesis IO_TYPE="LVCMOS33"*/; 
 
+	if(`OVERSAMPLE) begin
+		BB BB_SD_NEW(.I(new_value), .T(1'b0), .O(), .B(CPU_io[`SD_NEW_CM]))/*synthesis IO_TYPE="LVCMOS33"*/; 
+		BB BB_SYNC_PWM(.I(sync), .T(1'b0), .O(), .B(CPU_io[`SYNC_PWM_CM]))/*synthesis IO_TYPE="LVCMOS33"*/;
+	end else begin
+		BB BB_SD_NEW(.I(new_value & !sync_phase), .T(1'b0), .O(), .B(CPU_io[`SD_NEW_CM]))/*synthesis IO_TYPE="LVCMOS33"*/;
+		BB BB_SYNC_PWM(.I(sync_phase), .T(1'b0), .O(), .B(CPU_io[`SYNC_PWM_CM]))/*synthesis IO_TYPE="LVCMOS33"*/;
+	end	
+	
 	BB BB_SD_CLK0(.I(SD_CLK[0]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_UDC_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_SD_CLK1(.I(SD_CLK[1]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_I_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_SD_CLK2(.I(SD_CLK[2]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
@@ -955,17 +993,15 @@ module SerDes_master(CPU_io, FPGA_io);
  	assign TZ_CLR = !(TZ_EN & PWM_EN & TZ_FPGA);
 	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg[1] ^ sync_reg[0]), .CK(clk_5x), .CD(TZ_CLR), .Q(PWM_EN_r)); 
  
-	Symmetrical_PWM #(.DEADTIME(65))
-	Symmetrical_PWM[3:0](.clk_i(clk_5x), .enable_output_i(PWM_EN_r), .override_i(EMIF_RX_reg[10][7:0]), .duty_i({EMIF_RX_reg[7], EMIF_RX_reg[6]}),
-	.next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
-  
-/*
+	//Symmetrical_PWM #(.DEADTIME(65))
+	//Symmetrical_PWM[3:0](.clk_i(clk_5x), .enable_output_i(PWM_EN_r), .override_i(EMIF_RX_reg[10][7:0]), .duty_i({EMIF_RX_reg[7], EMIF_RX_reg[6]}),
+	//.next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
+
 	wire PWM_dp; 
 	wire[7:0] PWM_dp_dt; 
 	double_pulse double_pulse(.clk_i(XTAL_20MHz_i), .start_i(PWM_EN_r), .length0_i(EMIF_RX_reg[8][15:0]), .length1_i(EMIF_RX_reg[8][31:16]), .PWM_o(PWM_dp)); 
-	deadtime deadtime(.clk_i(XTAL_20MHz_i), .deadtime_i(5'd5), .PWM_i({4{PWM_dp}}), .PWM_o(PWM_dp_dt)); 
-	assign PWM_o = PWM_EN_r ? {PWM_dp_dt[0], PWM_dp_dt[1], 6'b0} : 8'b0;  
-*/
+	deadtime deadtime[3:0](.clk_i(XTAL_20MHz_i), .PWM_i({4{PWM_dp}}), .enable_i({PWM_EN_r, 3'b0}), .override_i(EMIF_RX_reg[10][7:0]), .PWM_o(PWM_o)); 
+
 
 	wire[8:0] REL_i; 
 	wire[8:0] REL_o; 
@@ -978,7 +1014,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_REL_CPU5(.I(1'b0), .T(1'b1), .O(REL_i[5]), .B(CPU_io[`GR_RLY_L3_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	//BB BB_REL_CPU6(.I(1'b0), .T(1'b1), .O(REL_i[6]), .B(CPU_io[`DClink_DSCH_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU7(.I(1'b0), .T(1'b1), .O(REL_i[7]), .B(CPU_io[`GR_RLY_N_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
-	//BB BB_REL_CPU8(.I(1'b0), .T(1'b1), .O(REL_i[8]), .B(CPU_io[`SS_DClink_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
+	BB BB_REL_CPU8(.I(1'b0), .T(1'b1), .O(REL_i[8]), .B(CPU_io[`SS_DClink_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
  
 	BB BB_REL_FPGA0(.I(REL_o[0]), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_REL_FPGA1(.I(REL_o[1]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
@@ -988,7 +1024,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_REL_FPGA5(.I(REL_o[5]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	//BB BB_REL_FPGA6(.I(REL_o[6]), .T(1'b0), .O(), .B(FPGA_io[`DClink_DSCH_CM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_REL_FPGA7(.I(REL_o[7]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	//BB BB_REL_FPGA8(.I(REL_o[8]), .T(1'b0), .O(), .B(FPGA_io[`SS_DClink_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA8(.I(REL_o[8]), .T(1'b0), .O(), .B(FPGA_io[`SS_DClink_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
  
 	wire[5:1] LED_BUS; 
 	BB BB_LED_CPU1(.I(1'b0), .T(1'b1), .O(LED_BUS[1]), .B(CPU_io[`LED1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
@@ -1000,7 +1036,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_LED_FPGA1(.I(LED_BUS[1]), .T(1'b0), .O(), .B(FPGA_io[`LED1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_LED_FPGA2(.I(LED_BUS[2]), .T(1'b0), .O(), .B(FPGA_io[`LED2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_LED_FPGA3(.I(LED_BUS[3]), .T(1'b0), .O(), .B(FPGA_io[`LED3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_LED_FPGA4(.I(sync_ok[0]), .T(1'b0), .O(), .B(FPGA_io[`LED4_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_LED_FPGA4(.I(LED_BUS[4]), .T(1'b0), .O(), .B(FPGA_io[`LED4_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_LED_FPGA5(.I(LED_BUS[5]), .T(1'b0), .O(), .B(FPGA_io[`LED5_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 
 	BB BB_SED_ENABLE_FPGA(.I(1'b0), .T(1'b1), .O(SED_enable), .B(CPU_io[`FPGA_SED]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 

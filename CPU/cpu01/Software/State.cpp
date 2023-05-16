@@ -226,6 +226,17 @@ void Blink()
             break;
         }
 
+        case Machine_class::state_calibrate_DC_voltage_gain:
+        {
+            Blink_LED1.update_pattern(true);
+
+            static const float pattern[] = {0.1f, -0.2f, 0.3f, -0.4f, 0.5f, -0.6f, 0.7f, -1.7f, -1.7f};
+            static const float period = 1.5f;
+            Blink_LED2.update_pattern(period, (float *)pattern);
+
+            Blink_LED3.update_pattern((bool)status_master.calibration_procedure_error);
+            break;
+        }
         default:
         {
             if(Machine.ONOFF)
@@ -525,7 +536,7 @@ void Machine_class::Background()
     Fiber_comm[1].Main();
     Fiber_comm[2].Main();
     Fiber_comm[3].Main();
-//    status_master.in_limit_H = status_slave[0].in_limit_H | status_slave[1].in_limit_H | status_slave[2].in_limit_H | status_slave[3].in_limit_H;
+//    status_master.in_limit_H = status_master[0].in_limit_H | status_master[1].in_limit_H | status_master[2].in_limit_H | status_master[3].in_limit_H;
 
     SD_card.save_state_task();
     SD_card.Scope_snapshot_task();
@@ -772,21 +783,26 @@ void Machine_class::init()
     if(status_master.SD_card_not_enough_data)
     {
         alarm_master.bit.Not_enough_data_master = 1;
-        //Divider:
-        //240/(680k*3 + 240)
-        //Gain error R3/Rin = 1 + (240*2)/4.9k
-        //*0.064V
-        //1/(320*320)
+
+        Meas_master_gain.def_osr = EMIF_mem.read.def_osr;
+        Meas_master_gain.sd_shift = EMIF_mem.read.sd_shift;
+
         Meas_master_gain.U_grid.a =
         Meas_master_gain.U_grid.b =
-        Meas_master_gain.U_grid.c = 0.064f*(680.0*3.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9))/(320.0*320.0)*4.0f;
+        Meas_master_gain.U_grid.c = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*3.0 + 0.27)/(0.27)*(1.0 + (0.54/4.9));
 
-        //1/(320*320)
-        //*0.064V
-        ///0.005Ohm
         Meas_master_gain.I_grid.a =
         Meas_master_gain.I_grid.b =
-        Meas_master_gain.I_grid.c = +0.064/(320.0*320.0)/0.005*4.0f;
+        Meas_master_gain.I_grid.c = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift/0.005;
+
+        Meas_master_gain.U_dc = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*6.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
+
+        Meas_master_gain.U_dc_n = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*3.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
+
+        Meas_master_gain.I_conv.a =
+        Meas_master_gain.I_conv.b =
+        Meas_master_gain.I_conv.c =
+        Meas_master_gain.I_conv.n = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift/0.001;
 
         CPU1toCPU2.CT_ratio[0] =
         CPU1toCPU2.CT_ratio[1] =
@@ -794,6 +810,11 @@ void Machine_class::init()
 
         control_ext_modbus.fields.baudrate = 1152;
         control_ext_modbus.fields.ext_server_id = 1;
+
+        SD_card.settings.C_dc = 1e-3;
+        SD_card.settings.L_conv = 200e-6;
+        SD_card.settings.I_lim = 24.0f;
+        SD_card.settings.number_of_slaves = 1.0f;
     }
     else
     {
@@ -811,6 +832,9 @@ void Machine_class::init()
         control_master.tangens_range[1] = SD_card.settings.control.tangens_range[1];
         control_ext_modbus.fields.baudrate = SD_card.settings.Baudrate/100;
         control_ext_modbus.fields.ext_server_id = SD_card.settings.modbus_ext_server_id;
+        Conv.C_dc = SD_card.settings.C_dc;
+        Conv.L_conv = SD_card.settings.L_conv;
+        Conv.I_lim_nominal = SD_card.settings.I_lim;
 
         memcpy(on_off_odd_a, SD_card.harmonics.on_off_odd_a, sizeof(on_off_odd_a));
         memcpy(on_off_odd_b, SD_card.harmonics.on_off_odd_b, sizeof(on_off_odd_b));
@@ -820,8 +844,37 @@ void Machine_class::init()
         memcpy(on_off_even_c, SD_card.harmonics.on_off_even_c, sizeof(on_off_even_c));
         memcpy(&CT_char_vars.CT_char, &SD_card.CT_char, sizeof(CT_char_vars.CT_char));
         memcpy(&CT_char_vars.calibration, &SD_card.calibration, sizeof(CT_char_vars.calibration));
+
         Meas_master_gain = SD_card.calibration.Meas_master_gain;
         Meas_master_offset = SD_card.calibration.Meas_master_offset;
+        register float ratio_SD = (SD_card.calibration.Meas_master_gain.def_osr * SD_card.calibration.Meas_master_gain.def_osr) / ((float)EMIF_mem.read.def_osr * (float)EMIF_mem.read.def_osr);
+        ratio_SD *= (float)EMIF_mem.read.sd_shift / SD_card.calibration.Meas_master_gain.sd_shift;
+        Meas_master_gain.U_grid.a *= ratio_SD;
+        Meas_master_gain.U_grid.b *= ratio_SD;
+        Meas_master_gain.U_grid.c *= ratio_SD;
+        Meas_master_gain.U_dc     *= ratio_SD;
+        Meas_master_gain.U_dc_n   *= ratio_SD;
+        Meas_master_gain.I_conv.a *= ratio_SD;
+        Meas_master_gain.I_conv.b *= ratio_SD;
+        Meas_master_gain.I_conv.c *= ratio_SD;
+        Meas_master_gain.I_conv.n *= ratio_SD;
+        Meas_master_gain.I_grid.a *= ratio_SD;
+        Meas_master_gain.I_grid.b *= ratio_SD;
+        Meas_master_gain.I_grid.c *= ratio_SD;
+
+        Meas_master_offset.U_grid.a *= ratio_SD;
+        Meas_master_offset.U_grid.b *= ratio_SD;
+        Meas_master_offset.U_grid.c *= ratio_SD;
+        Meas_master_offset.U_dc     *= ratio_SD;
+        Meas_master_offset.U_dc_n   *= ratio_SD;
+        Meas_master_offset.I_conv.a *= ratio_SD;
+        Meas_master_offset.I_conv.b *= ratio_SD;
+        Meas_master_offset.I_conv.c *= ratio_SD;
+        Meas_master_offset.I_conv.n *= ratio_SD;
+        Meas_master_offset.I_grid.a *= ratio_SD;
+        Meas_master_offset.I_grid.b *= ratio_SD;
+        Meas_master_offset.I_grid.c *= ratio_SD;
+
 
         status_master.expected_number_of_slaves = SD_card.settings.number_of_slaves;
 
@@ -921,6 +974,7 @@ void Machine_class::init()
 
 
     GPIO_SET(RST_CM);
+
     EMIF_mem.write.PWM_control = 0xFF00;
 
     mosfet_ctrl_app.process_event( MosfetCtrlApp::event_configure );
@@ -934,6 +988,9 @@ void Machine_class::init()
             && mosfet_state != MosfetCtrlApp::state_error );
 
     EMIF_mem.write.PWM_control = 0x0000;
+
+    DELAY_US(1000);
+
     GPIO_CLEAR(RST_CM);
 
     EALLOW;
@@ -1077,6 +1134,38 @@ void Machine_class::calibrate_offsets()
         DELAY_US(100000);
         Meas_master_offset.U_grid.c += CIC2_calibration.out / Meas_master_gain.U_grid.c;
 
+        CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.a;
+        DELAY_US(100000);
+        Meas_master_offset.I_conv.a += CIC2_calibration.out / Meas_master_gain.I_conv.a;
+
+        CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.b;
+        DELAY_US(100000);
+        Meas_master_offset.I_conv.b += CIC2_calibration.out / Meas_master_gain.I_conv.b;
+
+        CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.c;
+        DELAY_US(100000);
+        Meas_master_offset.I_conv.c += CIC2_calibration.out / Meas_master_gain.I_conv.c;
+
+        CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.n;
+        DELAY_US(100000);
+        Meas_master_offset.I_conv.n += CIC2_calibration.out / Meas_master_gain.I_conv.n;
+
+        CIC2_calibration_input.ptr = &Meas_master.U_dc_avg;
+        DELAY_US(100000);
+        Meas_master_offset.U_dc += CIC2_calibration.out / Meas_master_gain.U_dc;
+
+        CIC2_calibration_input.ptr = &Meas_master.U_dc_n_avg;
+        DELAY_US(100000);
+        Meas_master_offset.U_dc_n += CIC2_calibration.out / Meas_master_gain.U_dc_n;
+
+        Meas_master_offset_error.I_conv.a = fabsf(Meas_master_offset.I_conv.a * Meas_master_gain.I_conv.a);
+        Meas_master_offset_error.I_conv.b = fabsf(Meas_master_offset.I_conv.b * Meas_master_gain.I_conv.b);
+        Meas_master_offset_error.I_conv.c = fabsf(Meas_master_offset.I_conv.c * Meas_master_gain.I_conv.c);
+        Meas_master_offset_error.I_conv.n = fabsf(Meas_master_offset.I_conv.n * Meas_master_gain.I_conv.n);
+        Meas_master_offset_error.U_dc_n = fabsf(Meas_master_offset.U_dc_n * Meas_master_gain.U_dc_n);
+        Meas_master_offset_error.U_dc = fabsf(Meas_master_offset.U_dc * Meas_master_gain.U_dc);
+
+
         Meas_master_offset_error.I_grid.a = fabsf(Meas_master_offset.I_grid.a * Meas_master_gain.I_grid.a);
         Meas_master_offset_error.I_grid.b = fabsf(Meas_master_offset.I_grid.b * Meas_master_gain.I_grid.b);
         Meas_master_offset_error.I_grid.c = fabsf(Meas_master_offset.I_grid.c * Meas_master_gain.I_grid.c);
@@ -1089,7 +1178,13 @@ void Machine_class::calibrate_offsets()
             Meas_master_offset_error.I_grid.c > 0.05f ||
             Meas_master_offset_error.U_grid.a > 2.0f ||
             Meas_master_offset_error.U_grid.b > 2.0f ||
-            Meas_master_offset_error.U_grid.c > 2.0f)
+            Meas_master_offset_error.U_grid.c > 2.0f ||
+            Meas_master_offset_error.I_conv.a > 0.1f ||
+            Meas_master_offset_error.I_conv.b > 0.1f ||
+            Meas_master_offset_error.I_conv.c > 0.1f ||
+            Meas_master_offset_error.I_conv.n > 0.1f ||
+            Meas_master_offset_error.U_dc_n > 1.0f ||
+            Meas_master_offset_error.U_dc > 1.0f)
         {
             status_master.calibration_procedure_error = 1;
         }
@@ -1138,6 +1233,34 @@ void Machine_class::calibrate_curent_gain()
             Meas_master_gain.I_grid.c = fabs(Meas_master_gain.I_grid.c * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<2;
         }
+        if(fabsf(Meas_master.I_conv_avg.a) > I_cal)
+        {
+            CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.a;
+            DELAY_US(100000);
+            Meas_master_gain.I_conv.a = -fabsf(Meas_master_gain.I_conv.a * 5.0f / CIC2_calibration.out);
+            calib_rdy |= 1<<3;
+        }
+        if(fabsf(Meas_master.I_conv_avg.b) > I_cal)
+        {
+            CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.b;
+            DELAY_US(100000);
+            Meas_master_gain.I_conv.b = -fabsf(Meas_master_gain.I_conv.b * 5.0f / CIC2_calibration.out);
+            calib_rdy |= 1<<4;
+        }
+        if(fabsf(Meas_master.I_conv_avg.c) > I_cal)
+        {
+            CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.c;
+            DELAY_US(100000);
+            Meas_master_gain.I_conv.c = -fabsf(Meas_master_gain.I_conv.c * 5.0f / CIC2_calibration.out);
+            calib_rdy |= 1<<5;
+        }
+//        if(fabsf(Meas_master.I_conv_avg.n) > I_cal)
+//        {
+//            CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.n;
+//            DELAY_US(100000);
+//            Meas_master_gain.I_conv.n = -fabsf(Meas_master_gain.I_conv.n * 5.0f / CIC2_calibration.out);
+//            calib_rdy |= 1<<6;
+//        }
 
         if(calib_rdy == calib_rdy_last)
         {
@@ -1145,15 +1268,25 @@ void Machine_class::calibrate_curent_gain()
         }
         calib_rdy_last = calib_rdy;
 
-        if(calib_rdy == 7)
+        if(calib_rdy == 0x3F)
         {
             Meas_master_gain_error.I_grid.a = fabsf((Meas_master_gain.I_grid.a/SD_card.calibration.Meas_master_gain.I_grid.a) - 1.0f);
             Meas_master_gain_error.I_grid.b = fabsf((Meas_master_gain.I_grid.b/SD_card.calibration.Meas_master_gain.I_grid.b) - 1.0f);
             Meas_master_gain_error.I_grid.c = fabsf((Meas_master_gain.I_grid.c/SD_card.calibration.Meas_master_gain.I_grid.c) - 1.0f);
 
+            float mean_gain_meas = (Meas_master_gain.I_conv.a + Meas_master_gain.I_conv.b + Meas_master_gain.I_conv.c) / 3.0f;
+            Meas_master_gain_error.I_conv.a = fabsf((Meas_master_gain.I_conv.a/mean_gain_meas) - 1.0f);
+            Meas_master_gain_error.I_conv.b = fabsf((Meas_master_gain.I_conv.b/mean_gain_meas) - 1.0f);
+            Meas_master_gain_error.I_conv.c = fabsf((Meas_master_gain.I_conv.c/mean_gain_meas) - 1.0f);
+//            Meas_master_gain_error.I_conv.n = fabsf((Meas_master_gain.I_conv.n/mean_gain_meas) - 1.0f);
+
             if (Meas_master_gain_error.I_grid.a > 0.03f ||
                 Meas_master_gain_error.I_grid.b > 0.03f ||
-                Meas_master_gain_error.I_grid.c > 0.03f)
+                Meas_master_gain_error.I_grid.c > 0.03f ||
+                Meas_master_gain_error.I_conv.a > 0.03f ||
+                Meas_master_gain_error.I_conv.b > 0.03f ||
+                Meas_master_gain_error.I_conv.c > 0.03f ||
+                Meas_master_gain_error.I_conv.n > 0.03f)
             {
                 status_master.calibration_procedure_error = 1;
             }
@@ -1225,6 +1358,63 @@ void Machine_class::calibrate_AC_voltage_gain()
             else
             {
                 status_master.calibration_procedure_error = 0;
+                Machine.state = state_calibrate_DC_voltage_gain;
+            }
+        }
+    }
+}
+
+void Machine_class::calibrate_DC_voltage_gain()
+{
+    static Uint16 calib_rdy;
+    static Uint16 calib_rdy_last;
+    if(Machine.state_last != Machine.state)
+    {
+        Machine.state_last = Machine.state;
+        calib_rdy = 0;
+        calib_rdy_last = 0;
+    }
+
+    if(Machine.ONOFF_last != Machine.ONOFF)
+    {
+        GPIO_SET(LED2_CM);
+        float U_cal = 28.0f;
+
+        if(fabsf(Meas_master.U_dc_avg) > U_cal)
+        {
+            CIC2_calibration_input.ptr = &Meas_master.U_dc_avg;
+            DELAY_US(100000);
+            Meas_master_gain.U_dc = fabsf(Meas_master_gain.U_dc * 30.0f / CIC2_calibration.out);
+            calib_rdy |= 1<<0;
+        }
+
+        if(fabsf(Meas_master.U_dc_n_avg) > U_cal)
+        {
+            CIC2_calibration_input.ptr = &Meas_master.U_dc_n_avg;
+            DELAY_US(100000);
+            Meas_master_gain.U_dc_n = fabsf(Meas_master_gain.U_dc_n * 30.0f / CIC2_calibration.out);
+            calib_rdy |= 1<<1;
+        }
+
+        if(calib_rdy == calib_rdy_last)
+        {
+            status_master.calibration_procedure_error = 1;
+        }
+        calib_rdy_last = calib_rdy;
+
+        if(calib_rdy == 3)
+        {
+            Meas_master_gain_error.U_dc = fabsf((Meas_master_gain.U_dc/SD_card.calibration.Meas_master_gain.U_dc) - 1.0f);
+            Meas_master_gain_error.U_dc_n = fabsf((Meas_master_gain.U_dc_n/SD_card.calibration.Meas_master_gain.U_dc_n) - 1.0f);
+
+            if (Meas_master_gain_error.U_dc_n > 0.03f ||
+                Meas_master_gain_error.U_dc > 0.03f)
+            {
+                status_master.calibration_procedure_error = 1;
+            }
+            else
+            {
+                status_master.calibration_procedure_error = 0;
                 memcpy(&SD_card.calibration.Meas_master_gain, &Meas_master_gain, sizeof(Meas_master_gain));
                 memcpy(&SD_card.calibration.Meas_master_offset, &Meas_master_offset, sizeof(Meas_master_offset));
                 SD_card.save_calibration_data();
@@ -1232,7 +1422,12 @@ void Machine_class::calibrate_AC_voltage_gain()
                 control_master.triggers.bit.CPU_reset = 1;
             }
         }
+        else
+        {
+            status_master.calibration_procedure_error = 1;
+        }
     }
+
 }
 
 void Machine_class::start()
@@ -1983,6 +2178,15 @@ void Machine_class::cleanup()
         Machine.state_last = Machine.state;
         Conv.enable = 0;
     }
+    if(mosfet_ctrl_app.getState() == MosfetCtrlApp::state_error)
+    {
+        //gdy wystapil jakis blad to proba zrestartowania maszyn stanowych
+        mosfet_ctrl_app.process_event(MosfetCtrlApp::event_restart, NULL);
+    }
+    mosfet_ctrl_app.process_event( MosfetCtrlApp::event_get_status );
+
+//        if(Scope.finished_sorting && !status.bit.Scope_snapshot_pending && !control.fields.control_bits.Scope_snapshot
+//                && mosfet_ctrl_app.finished());
 
     if(!SD_card_class::save_error_state) Machine.state = state_idle;
 }

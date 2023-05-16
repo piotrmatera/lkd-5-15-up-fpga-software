@@ -103,14 +103,11 @@ interrupt void SD_INT()
     {
         ONOFF_switch_interrupt();
 
-        status_master.PLL_sync = PLL.RDY;
-        float compare_U_rms = Meas_alarm_L.U_grid_rms + 10.0f;
-        if(CLA2toCLA1.Grid_filter.U_grid_1h.a > compare_U_rms && CLA2toCLA1.Grid_filter.U_grid_1h.b > compare_U_rms && CLA2toCLA1.Grid_filter.U_grid_1h.c > compare_U_rms)
-            status_master.Grid_present = 1;
-        else status_master.Grid_present = 0;
+        if(EPwm4Regs.TZFLG.bit.OST) alarm_master.bit.TZ = 1;
+        if(EPwm4Regs.TZOSTFLG.bit.OST5) alarm_master.bit.TZ_CLOCKFAIL = 1;
+        if(EPwm4Regs.TZOSTFLG.bit.OST6) alarm_master.bit.TZ_EMUSTOP = 1;
 
         alarm_master.bit.FPGA_errors.all = EMIF_mem.read.FPGA_flags.all;
-//        if(FPGA_flags.bit.fault_supply) alarm_master.bit.FLT_SUPPLY_MASTER = 1;
 
         if(Conv.enable)
         {
@@ -125,8 +122,42 @@ interrupt void SD_INT()
             if(fabs(Meas_master.U_grid_avg.c) > Meas_alarm_H.U_grid_abs) alarm_master.bit.U_grid_abs_c_H = 1;
         }
 
+        status_master.PLL_sync = PLL.RDY;
+        float compare_U_rms = Meas_alarm_L.U_grid_rms + 10.0f;
+        if(CLA2toCLA1.Grid_filter.U_grid_1h.a > compare_U_rms && CLA2toCLA1.Grid_filter.U_grid_1h.b > compare_U_rms && CLA2toCLA1.Grid_filter.U_grid_1h.c > compare_U_rms)
+            status_master.Grid_present = 1;
+        else status_master.Grid_present = 0;
+
+        if(Meas_master.Supply_24V < 22.0) alarm_master.bit.FLT_SUPPLY_MASTER = 1;
+
+        if(Meas_master.U_dc_avg < Meas_alarm_L.U_dc) alarm_master.bit.U_dc_L = 1;
+        if(Meas_master.U_dc_avg > Meas_alarm_H.U_dc) alarm_master.bit.U_dc_H = 1;
+        if(fabsf(Meas_master.U_dc_avg - 2.0f * Meas_master.U_dc_n_avg) > Meas_alarm_H.U_dc_balance) alarm_master.bit.U_dc_balance = 1;
+
+        if(CLA2toCLA1.Grid.I_conv.a > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_a = 1;
+        if(CLA2toCLA1.Grid.I_conv.b > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_b = 1;
+        if(CLA2toCLA1.Grid.I_conv.c > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_c = 1;
+        if(CLA2toCLA1.Grid.I_conv.n > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_n = 1;
+
+        if(Meas_master.I_conv.a < Meas_alarm_L.I_conv) alarm_master.bit.I_conv_a_L = 1;
+        if(Meas_master.I_conv.a > Meas_alarm_H.I_conv) alarm_master.bit.I_conv_a_H = 1;
+        if(Meas_master.I_conv.b < Meas_alarm_L.I_conv) alarm_master.bit.I_conv_b_L = 1;
+        if(Meas_master.I_conv.b > Meas_alarm_H.I_conv) alarm_master.bit.I_conv_b_H = 1;
+        if(Meas_master.I_conv.c < Meas_alarm_L.I_conv) alarm_master.bit.I_conv_c_L = 1;
+        if(Meas_master.I_conv.c > Meas_alarm_H.I_conv) alarm_master.bit.I_conv_c_H = 1;
+        if(Meas_master.I_conv.n < Meas_alarm_L.I_conv) alarm_master.bit.I_conv_n_L = 1;
+        if(Meas_master.I_conv.n > Meas_alarm_H.I_conv) alarm_master.bit.I_conv_n_H = 1;
+
+        static volatile float Temp_max = 0;
+        Temp_max = fmaxf(Meas_master.Temperature1, fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
+        if(Temp_max > Meas_alarm_H.Temp) alarm_master.bit.Temperature_H = 1;
+        if(Temp_max < Meas_alarm_L.Temp) alarm_master.bit.Temperature_L = 1;
+
         if((alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) && !(alarm_master_snapshot.all[0] | alarm_master_snapshot.all[1] | alarm_master_snapshot.all[2]))
         {
+            EALLOW;
+            EPwm4Regs.TZFRC.bit.OST = 1;
+            EDIS;
             if(Machine.look_for_errors) status_master.scope_trigger_request = 1;
             alarm_master_snapshot.all[0] = alarm_master.all[0];
             alarm_master_snapshot.all[1] = alarm_master.all[1];
@@ -227,6 +258,25 @@ interrupt void SD_INT()
     Timer_PWM.CPU_COMM = TIMESTAMP_PWM;
 
     Fast_copy21_CPUasm();
+
+    static volatile union double_pulse_union
+    {
+       Uint32 u32;
+       Uint16 u16[2];
+    }double_pulse = {.u16 = {400, 15}};
+    EMIF_mem.write.double_pulse = double_pulse.u32;
+
+    static volatile float counter = 0;
+    if(Machine.ONOFF != Machine.ONOFF_last)
+    {
+       counter = 0;
+       GPIO_SET(PWM_EN_CM);
+    }
+    counter += Conv.Ts;
+    if(counter >= 1.0f)
+    {
+       GPIO_CLEAR(PWM_EN_CM);
+    }
 
     GPIO_CLEAR(TRIGGER0_CM);
 

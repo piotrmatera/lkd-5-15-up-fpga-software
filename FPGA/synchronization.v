@@ -66,13 +66,14 @@ module Node_number_eval(clk_1x_i, fifo_clk_i, fifo_we_i, fifo_i, node_number_o, 
 	end
 endmodule
 
-module Local_counter(clk_i, next_period_i, current_period_o, local_counter_o, sync_phase_o, snapshot_start_i, snapshot_value_o); 
+module Local_counter(clk_i, next_period_i, current_period_o, local_counter_o, sync_phase_o, sync_o, snapshot_start_i, snapshot_value_o); 
 	parameter INITIAL_PHASE = 0;
 	input clk_i; 
 	input[15:0] next_period_i; 
 	output reg[15:0] current_period_o; 
 	output reg[15:0] local_counter_o; 
 	output reg sync_phase_o;
+	output reg sync_o;
 	input[3:0] snapshot_start_i; 
 	output[63:0] snapshot_value_o; 
 	
@@ -90,10 +91,14 @@ module Local_counter(clk_i, next_period_i, current_period_o, local_counter_o, sy
 		if(snapshot_start_r[2]) snapshot_value_r[2] <= local_counter_o; 
 		if(snapshot_start_r[1]) snapshot_value_r[1] <= local_counter_o; 
 		if(snapshot_start_r[0]) snapshot_value_r[0] <= local_counter_o; 
- 
+  
+ 		if(local_counter_o == `CYCLE_PERIOD/2)
+			sync_o <= 1'b0;
+			
 		if(local_counter_o == current_period_o) begin
 			current_period_o <= next_period_i;			
 			sync_phase_o <= ~sync_phase_o;
+			sync_o <= 1'b1;
 			local_counter_o <= 0; 
 		end
 		else 
@@ -102,6 +107,7 @@ module Local_counter(clk_i, next_period_i, current_period_o, local_counter_o, sy
  
 	initial begin 
 		sync_phase_o = INITIAL_PHASE;
+		sync_o = 0;
 		current_period_o = `CYCLE_PERIOD - 16'd1; 
 		local_counter_o = 0; 
 		snapshot_value_r[3] = 0; 
@@ -164,7 +170,7 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 		for(i = 0; i < `HIPRI_MAILBOXES_NUMBER*4; i = i + 1) begin 
 			if(rx_addrw_i == ((i%4 << 1) + 4 + (i>>2)*`HIPRI_MSG_LENGTH + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)) begin 
 				if(rx_we_i) begin 
-					if(i == 0) 
+					if(i < 4) 
 						rx_rdy1_w = rx_rdy1_r | (1'b1 << (i>>2)); 
 					else if(rx_rdy1_r[(i>>2)-1] && rx_rdy2_r[(i>>2)-1]) 
 						rx_rdy1_w = rx_rdy1_r | (1'b1 << (i>>2)); 
@@ -176,7 +182,7 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 			if(rx_addrw_i == ((i%4 << 1) + 5 + (i>>2)*`HIPRI_MSG_LENGTH + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)) begin 
 				if(rx_we_i) begin 
 					if(rx_rdy1_r[(i>>2)]) begin 
-						if(i == 0)
+						if(i < 4)
 							rx_rdy2_w = rx_rdy2_r | (1'b1 << (i>>2));
 						else if(rx_rdy1_r[(i>>2)-1] && rx_rdy2_r[(i>>2)-1])
 							rx_rdy2_w = rx_rdy2_r | (1'b1 << (i>>2)); 
@@ -428,7 +434,7 @@ module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_nu
 			
 			if($signed(Kalman_offset_o) < $signed(65536.0*1.2) && $signed(Kalman_offset_o) > $signed(-65536.0*1.2) && 
 			   node_number_rdy_i && comm_last) begin
-				if(sync_counter >= `FREQUENCY)
+				if(sync_counter >= `CONV_FREQUENCY)
 					sync_rdy_o <= 1'b1;
 				else
 					sync_counter <= sync_counter + 1'b1;
@@ -491,7 +497,7 @@ module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_nu
 			end
 			S_SS_3 : begin 
 				A_r <= Kalman_rate_o;
-				B_r <= (2.0**32.0)*`SAMPLING_TIME*6.0;
+				B_r <= (2.0**32.0)*`KALMAN_TIME*6.0;
 				start_r <= 1'b1;
 				state_reg <= S_SS_4;
 			end
@@ -503,7 +509,7 @@ module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_nu
 			end
 			S_SS_5 : begin 
 				A_r <= Kalman_rate_o;
-				B_r <= (2.0**32.0)*`SAMPLING_TIME;
+				B_r <= (2.0**32.0)*`KALMAN_TIME;
 				start_r <= 1'b1;
 				state_reg <= S_SS_6;
 			end

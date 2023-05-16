@@ -47,6 +47,9 @@ struct settings_struct
     float modbus_ext_server_id;
     float wifi_on;
     float number_of_slaves;
+    float C_dc;
+    float L_conv;
+    float I_lim;
 };
 
 struct meter_struct
@@ -122,6 +125,7 @@ class Machine_class
         state_calibrate_offsets,
         state_calibrate_curent_gain,
         state_calibrate_AC_voltage_gain,
+        state_calibrate_DC_voltage_gain,
         state_start,
         state_CT_test,
         state_Lgrid_meas,
@@ -143,6 +147,7 @@ class Machine_class
         state_pointers[state_calibrate_offsets] = &Machine_class::calibrate_offsets;
         state_pointers[state_calibrate_curent_gain] = &Machine_class::calibrate_curent_gain;
         state_pointers[state_calibrate_AC_voltage_gain] = &Machine_class::calibrate_AC_voltage_gain;
+        state_pointers[state_calibrate_DC_voltage_gain] = &Machine_class::calibrate_DC_voltage_gain;
         state_pointers[state_start] = &Machine_class::start;
         state_pointers[state_CT_test] = &Machine_class::CT_test;
         state_pointers[state_Lgrid_meas] = &Machine_class::Lgrid_meas;
@@ -159,6 +164,7 @@ class Machine_class
     static void calibrate_offsets();
     static void calibrate_curent_gain();
     static void calibrate_AC_voltage_gain();
+    static void calibrate_DC_voltage_gain();
     static void start();
     static void CT_test();
     static void Lgrid_meas();

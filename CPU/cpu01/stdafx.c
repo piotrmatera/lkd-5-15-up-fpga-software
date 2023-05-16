@@ -12,6 +12,7 @@
 struct PLL_struct PLL;
 struct Converter_struct Conv;
 struct CLA2toCLA1_struct CLA2toCLA1;
+struct Thermistor_struct Therm;
 
 struct SCOPE_global scope_global;
 
@@ -40,10 +41,10 @@ struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 struct abc_struct U_x0, U_x1;
 float decimator;
 
-struct EMIF_CLA_struct EMIF_CLA;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma SET_DATA_SECTION("CPUTOCLA")
+struct EMIF_CLA_struct EMIF_CLA;
 
 #pragma SET_DATA_SECTION("CPU1TOCPU2")
 

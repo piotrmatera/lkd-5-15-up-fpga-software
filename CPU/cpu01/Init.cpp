@@ -52,7 +52,15 @@ void Init_class::IPCBootCPU2_flash()
 void Init_class::clear_alarms()
 {
     GPIO_SET(RST_CM);
-    DELAY_US(1000);
+
+    EMIF_mem.write.PWM_control = 0xFF00;
+
+    DELAY_US(10000);
+
+    EMIF_mem.write.PWM_control = 0x0000;
+
+    DELAY_US(10000);
+
     GPIO_CLEAR(RST_CM);
 
     Init.EPwm_TZclear(&EPwm4Regs);
@@ -76,6 +84,89 @@ void Init_class::clear_alarms()
         alarm_master.all[1] =
         alarm_master.all[2] = 0;
     }
+}
+
+void Init_class::ADC()
+{
+    Uint16 acqps = 100;//14;
+
+    EALLOW;
+    CpuSysRegs.PCLKCR13.bit.ADC_A = 1;
+    CpuSysRegs.PCLKCR13.bit.ADC_B = 1;
+    CpuSysRegs.PCLKCR13.bit.ADC_C = 1;
+    CpuSysRegs.PCLKCR13.bit.ADC_D = 1;
+
+    //
+    // Check if device is trimmed
+    //
+    if(*((Uint16 *)0x5D1B6) == 0x0000){
+        //
+        // Device is not trimmed--apply static calibration values
+        //
+        AnalogSubsysRegs.ANAREFTRIMA.all = 31709;
+        AnalogSubsysRegs.ANAREFTRIMB.all = 31709;
+        AnalogSubsysRegs.ANAREFTRIMC.all = 31709;
+        AnalogSubsysRegs.ANAREFTRIMD.all = 31709;
+    }
+
+    AdcaRegs.ADCCTL2.bit.PRESCALE = 6; //set ADCCLK divider to /4
+    AdcbRegs.ADCCTL2.bit.PRESCALE = 6; //set ADCCLK divider to /4
+    AdccRegs.ADCCTL2.bit.PRESCALE = 6; //set ADCCLK divider to /4
+    AdcdRegs.ADCCTL2.bit.PRESCALE = 6; //set ADCCLK divider to /4
+    EDIS;
+
+    EALLOW;
+    AdcSetMode(ADC_ADCA, ADC_RESOLUTION_12BIT, ADC_SIGNALMODE_SINGLE);
+    AdcSetMode(ADC_ADCB, ADC_RESOLUTION_12BIT, ADC_SIGNALMODE_SINGLE);
+    AdcSetMode(ADC_ADCC, ADC_RESOLUTION_12BIT, ADC_SIGNALMODE_SINGLE);
+    AdcSetMode(ADC_ADCD, ADC_RESOLUTION_12BIT, ADC_SIGNALMODE_SINGLE);
+//    (*Device_cal)();
+    EDIS;
+
+    EALLOW;
+    AdcaRegs.ADCCTL1.bit.INTPULSEPOS = 1;
+    AdcbRegs.ADCCTL1.bit.INTPULSEPOS = 1;
+    AdccRegs.ADCCTL1.bit.INTPULSEPOS = 1;
+    AdcdRegs.ADCCTL1.bit.INTPULSEPOS = 1;
+
+    AdcaRegs.ADCCTL1.bit.ADCPWDNZ = 1;
+    AdcbRegs.ADCCTL1.bit.ADCPWDNZ = 1;
+    AdccRegs.ADCCTL1.bit.ADCPWDNZ = 1;
+    AdcdRegs.ADCCTL1.bit.ADCPWDNZ = 1;
+    EDIS;
+//
+//delay for 1ms to allow ADC time to power up
+//
+    DELAY_US(1000);
+
+    EALLOW;
+
+    AdcdRegs.ADCSOC0CTL.bit.CHSEL  = 0;
+    AdcdRegs.ADCSOC0CTL.bit.ACQPS  = acqps;
+    AdcdRegs.ADCSOC0CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
+    AdcdRegs.ADCSOC1CTL.all = AdcdRegs.ADCSOC0CTL.all;
+
+    AdcdRegs.ADCSOC2CTL.bit.CHSEL  = 1;
+    AdcdRegs.ADCSOC2CTL.bit.ACQPS  = acqps;
+    AdcdRegs.ADCSOC2CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
+    AdcdRegs.ADCSOC3CTL.all = AdcdRegs.ADCSOC2CTL.all;
+
+    AdcdRegs.ADCSOC4CTL.bit.CHSEL  = 2;
+    AdcdRegs.ADCSOC4CTL.bit.ACQPS  = acqps;
+    AdcdRegs.ADCSOC4CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
+    AdcdRegs.ADCSOC5CTL.all = AdcdRegs.ADCSOC4CTL.all;
+
+    AdcdRegs.ADCSOC6CTL.bit.CHSEL  = 3;
+    AdcdRegs.ADCSOC6CTL.bit.ACQPS  = acqps;
+    AdcdRegs.ADCSOC6CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
+    AdcdRegs.ADCSOC7CTL.all = AdcdRegs.ADCSOC6CTL.all;
+
+    AdcdRegs.ADCSOC8CTL.bit.CHSEL  = 4;
+    AdcdRegs.ADCSOC8CTL.bit.ACQPS  = acqps;
+    AdcdRegs.ADCSOC8CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
+    AdcdRegs.ADCSOC9CTL.all = AdcdRegs.ADCSOC8CTL.all;
+
+    EDIS;
 }
 
 void Init_class::CPUS()
@@ -214,11 +305,23 @@ void Init_class::CIC1_adaptive_filter(struct CIC1_adaptive_struct *CIC, float ma
 
 void Init_class::Variables()
 {
-    Conv.Ts = 32e-6 * 0.5f;
+    Conv.Ts = (float)EMIF_mem.read.cycle_period * 8e-9 * (2.0f - (float)EMIF_mem.read.oversample);
     Conv.compensation2 = 2.0f;
 
     Meas_alarm_L.U_grid_rms = 5.0f;
     Meas_alarm_H.U_grid_abs = 380.0f;
+
+    Meas_alarm_H.Temp = 95.0f;
+    Meas_alarm_L.Temp = 0.0f;
+
+    Meas_alarm_H.U_dc = 750.0f;
+    Meas_alarm_L.U_dc = -5.0f;
+    Meas_alarm_H.U_dc_balance = 30.0f;
+
+    Meas_alarm_H.I_conv_rms = Conv.I_lim_nominal * 1.1f;
+    float min_Current = fabsf(Meas_master_gain.def_osr * Meas_master_gain.def_osr / Meas_master_gain.sd_shift * fminf(Meas_master_gain.I_conv.a, fminf(Meas_master_gain.I_conv.b, fminf(Meas_master_gain.I_conv.c, Meas_master_gain.I_conv.n))));
+    Meas_alarm_H.I_conv = fminf(min_Current - 10.0f, Conv.I_lim_nominal * 2.0f);
+    Meas_alarm_L.I_conv = -Meas_alarm_H.I_conv;
 
     ///////////////////////////////////////////////////////////////////
 
@@ -251,6 +354,15 @@ void Init_class::Variables()
     FAN.on_temp = Meas_alarm_H.Temp - 35.0f;
     FAN.full_temp = Meas_alarm_H.Temp - 5.0f;
     FAN.slope = (1.0f - FAN.on_duty)/(FAN.full_temp - FAN.on_temp);
+
+    ///////////////////////////////////////////////////////////////////
+
+    Therm.Divider_supply = 3.3f;
+    Therm.R_divider = 4700.0f;
+    Therm.B = 3984.0f;
+    Therm.T_0 = 273.15f;
+    Therm.R25 = 4700.0f;
+    Therm.DIV_Rinf = expf(Therm.B/(Therm.T_0+25.0f))/Therm.R25;
 }
 
 void Init_class::PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg)
@@ -274,6 +386,14 @@ void Init_class::PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg)
 
     EPwmReg->AQCTLA.bit.ZRO = AQ_SET;
     EPwmReg->AQCTLA.bit.PRD = AQ_SET;
+
+    //Configure ADCSoC pulse
+    EPwmReg->ETSEL.bit.SOCASELCMP = 1;
+    EPwmReg->ETSEL.bit.SOCASEL = 4; //4 counting up CMPC, 5 counting down
+    EPwmReg->ETSEL.bit.SOCAEN = 1;
+    EPwmReg->ETPS.bit.SOCAPRD = 1;
+
+    EPwmReg->CMPC = 100;
 
     //Configure trip-zone
     EPwmReg->TZCTL.bit.TZA = TZ_FORCE_LO;
@@ -317,7 +437,7 @@ void Init_class::PWMs()
 void Init_class::Fan_speed()
 {
     static volatile float Temp_fan = 0;
-    Temp_fan = fmaxf(Meas_master.Temperature.a, fmaxf(Meas_master.Temperature.b,  fmaxf(Meas_master.Temperature.c, Meas_master.Temperature.n)));
+    Temp_fan = fmaxf(Meas_master.Temperature1,  fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
     static volatile float duty_f;
     duty_f = fminf(fmaxf((Temp_fan - FAN.on_temp) * FAN.slope + FAN.on_duty, 0.0f), 1.0f);
     static volatile float duty_f2;
@@ -508,7 +628,7 @@ const struct GPIO_struct GPIOreg[169] =
 [ON_OFF_CM] = {LOW, MUX0, CPU1_IO, INPUT, QUAL6 | PULLUP},
 
 [TZ_EN_CM] = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
-[PWM_EN_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[PWM_EN_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [FAN_CM]  = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
 
 [LED1_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},

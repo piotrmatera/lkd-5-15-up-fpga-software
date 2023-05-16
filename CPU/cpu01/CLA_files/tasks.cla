@@ -47,6 +47,21 @@ interrupt void Cla1Task1 ( void )
 
     CIC2_filter_CLAasm(&CIC2_calibration, *CIC2_calibration_input.ptr);
 
+    {
+        Therm.Divider_supply += 0.001*( ((float)AdcdResultRegs.ADCRESULT0 + (float)AdcdResultRegs.ADCRESULT1)*(2e3/1e3)*(3.3/4096.0/2.0) - Therm.Divider_supply);
+        Meas_master.Supply_24V = ((float)AdcdResultRegs.ADCRESULT8 + (float)AdcdResultRegs.ADCRESULT9)*(11e3/1e3)*(3.3/4096.0/2.0);
+
+        static float index;
+        register float Thermistor;
+        register Uint16 *adcresult = (Uint16 *)&AdcdResultRegs.ADCRESULT2 + (Uint16)(0x2*index);
+        Thermistor = ( (float)*adcresult + (float)*(adcresult + 1) )*(3.3/256.0/16.0/2.0);
+        Thermistor = (Therm.R_divider * Thermistor) / (3.3 - Thermistor);
+        Thermistor = Therm.B/logf(Thermistor * Therm.DIV_Rinf) - Therm.T_0;
+        register float *Temperature = &Meas_master.Temperature1 + (Uint16)index;
+        *Temperature += 0.02*(Thermistor - *Temperature);
+        if(++index >= 3.0f) index = 0;
+    }
+
     Timer_PWM.CLA_END_TASK1 = TIMESTAMP_PWM;
 }
 

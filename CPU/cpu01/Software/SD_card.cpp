@@ -855,6 +855,16 @@ Uint16 SD_card_class::read_settings()
 
         if(!strncmp(working_buffer, "NUMBER OF SLAVES", sizeof("NUMBER OF SLAVES")-1))
             settings.number_of_slaves = value;
+
+        if(!strncmp(working_buffer, "C", sizeof("C")-1))
+            settings.C_dc = value;
+
+        if(!strncmp(working_buffer, "L", sizeof("L")-1))
+            settings.L_conv = value;
+
+        if(!strncmp(working_buffer, "I", sizeof("I")-1))
+            settings.I_lim = value;
+
     }
     if(fresult = f_close(&fil)) return fresult;
 
@@ -867,7 +877,9 @@ Uint16 SD_card_class::read_settings()
     if(settings.control.tangens_range[1].a < -1.0f || settings.control.tangens_range[1].a > 1.0f) return fresult;
     if(settings.control.tangens_range[1].b < -1.0f || settings.control.tangens_range[1].b > 1.0f) return fresult;
     if(settings.control.tangens_range[1].c < -1.0f || settings.control.tangens_range[1].c > 1.0f) return fresult;
-
+    if(settings.C_dc < 0.3e-3 || settings.C_dc > 5e-3) return fresult;
+    if(settings.L_conv < 100e-6 || settings.L_conv > 2.5e-3) return fresult;
+    if(settings.I_lim < 8.0f || settings.I_lim > 40.0f) return fresult;
 
     settings.available = 1;
 
@@ -978,6 +990,20 @@ Uint16 SD_card_class::save_settings()
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
 
+    f_puts("C;", &fil);
+    snprintf(working_buffer, WBUF_SIZE, "%g", settings.C_dc);
+    f_puts(working_buffer, &fil);
+    f_putc('\n', &fil);
+
+    f_puts("L;", &fil);
+    snprintf(working_buffer, WBUF_SIZE, "%g", settings.L_conv);
+    f_puts(working_buffer, &fil);
+    f_putc('\n', &fil);
+
+    f_puts("I;", &fil);
+    snprintf(working_buffer, WBUF_SIZE, "%g", settings.I_lim);
+    f_puts(working_buffer, &fil);
+    f_putc('\n', &fil);
     fresult = f_close(&fil);
     return fresult;
 }

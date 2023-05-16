@@ -81,6 +81,7 @@
 `define EM1A15  88
 
 //Comm defines
+
 `define K_28_0 9'h11C
 `define K_28_1 9'h13C //comma
 `define K_28_2 9'h15C
@@ -105,8 +106,19 @@
 `define K_Idle `K_28_5
 `define K_Error 9'h1EE
 
-`define SAMPLING_TIME 16e-6
-`define FREQUENCY 16'd62500
+/////////////////////////////////////////////////////////////////////
+
+`define PWM_CLOCK 125000000
+`define SD_CLOCK 20000000
+`define CONV_FREQUENCY 31250
+`define OVERSAMPLE 1
+
+`define CYCLE_PERIOD (`PWM_CLOCK/`CONV_FREQUENCY/2)
+`define DEF_OSR (`SD_CLOCK/`CONV_FREQUENCY/2)
+
+/////////////////////////////////////////////////////////////////////
+
+`define KALMAN_TIME (0.5/`CONV_FREQUENCY)
 `define KALMAN_GAIN 0.005
 
 `define HIPRI_MAILBOXES_NUMBER 8
@@ -122,5 +134,3 @@
 `define POINTER_WIDTH $clog2(`HIPRI_MAILBOXES_NUMBER*`HIPRI_MSG_LENGTH+`LOPRI_MAILBOXES_NUMBER*`LOPRI_MSG_LENGTH)
 
 `define COMM_MEMORY_EMIF_WIDTH (`POINTER_WIDTH-2)
-
-`define CYCLE_PERIOD 16'd2000

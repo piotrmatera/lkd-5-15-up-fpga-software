@@ -54,12 +54,25 @@ extern struct Timer_PWM_struct Timer_PWM;
 
 #define TIMESTAMP_PWM EPwm4Regs.TBCTR
 
+struct Thermistor_struct
+{
+    float Divider_supply;
+    float R_divider;
+    float B;
+    float T_0;
+    float R25;
+    float DIV_Rinf;
+};
+
 struct Measurements_alarm_struct
 {
     float U_grid_abs;
     float U_grid_rms;
-    float I_grid;
     float Temp;
+    float I_conv;
+    float I_conv_rms;
+    float U_dc;
+    float U_dc_balance;
 };
 
 union FPGA_master_sync_flags_union
@@ -125,7 +138,13 @@ union EMIF_union
         Uint32 Scope_width_mult;
         Uint32 Scope_rdy;
         Uint32 Scope_index_last;
-        Uint32 mux_rsvd[1024-26];
+        Uint16 cycle_period;
+        Uint16 oversample;
+        Uint16 def_osr;
+        Uint16 sd_shift;
+        Uint16 sync_phase;
+        Uint16 dummy;
+        Uint32 mux_rsvd[1024-29];
         Uint32 rx1_lopri_msg[8][32];
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];
@@ -228,6 +247,8 @@ extern struct Energy_meter_struct Energy_meter;
 extern struct CPU1toCPU2_struct CPU1toCPU2;
 extern struct CPU2toCPU1_struct CPU2toCPU1;
 extern struct CLA2toCLA1_struct CLA2toCLA1;
+
+extern struct Thermistor_struct Therm;
 
 extern struct Measurements_master_struct Meas_master;
 extern struct Measurements_master_gain_offset_struct Meas_master_gain_error;

@@ -98,6 +98,23 @@ status_code_t MosfetCtrlApp::process_event( event_t event, void * xdata ){
         return status_ok;
 //---------------------------------------------------------------------
     case state_configuring:
+//        error_state[ logpoint_precfg ] = 0;
+//        for( loop_cnt = 0; loop_cnt< MAX_MOS_DRIVERS; loop_cnt++ )
+//        {
+//            mosfet_driver.set_i2c_device_address( CHIP1ED389_ADDRESS_CHIP + loop_cnt);
+//            mosfet_driver.process_event(MosfetDriver::event_restart, NULL );
+//            this->buffer[0] = 0;
+//            MosfetDriver_WriteRegs( CHIP1ED389_CFGOK, 1, this->buffer );
+//            MosfetDriver_WriteRegs( CHIP1ED389_I2CCFGOK, 1, this->buffer );
+//            this->buffer[0] = CHIP1ED389_ADDRESS_INIT;
+//            this->buffer[1] = CHIP1ED389_ADDRESS_INIT;
+//            MosfetDriver_WriteRegs( CHIP1ED389_I2CADD, 2, this->buffer );
+//            while( MosfetDriver_Status(loop_cnt, &error_state[ logpoint_precfg ]) == status_continue )
+//            {
+//               SM_YIELD();
+//            }
+//        }
+
         memcpy( this->buffer, driver_mosfet_cfg, CHIP1ED389_CONFIG_REGS_COUNT );
         error_state[ logpoint_precfg ] = 0; //tu zbierany stan wykonania dla poszczegolnych ukladow (bity = uklady)
 
