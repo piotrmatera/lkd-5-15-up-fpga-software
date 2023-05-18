@@ -1,4 +1,4 @@
-rvl_alias "clk_EMIF" "clk_EMIF";
+rvl_alias "clk_DSP" "Kalman1/clk_i";
 BLOCK RESETPATHS ;
 BLOCK ASYNCPATHS ;
 BLOCK JTAGPATHS ;

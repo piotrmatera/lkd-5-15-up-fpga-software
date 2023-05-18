@@ -1,10 +1,9 @@
 `timescale 1ns/1ps
-// T=(21*h+8)*s
-module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_clk_en_w, enable_i, Mem2_addrw_o, Mem2_we_o, Mem2_data_o, WIP_flag_o, CIN, SIGNEDCIN, CO, SIGNEDCO);
+
+module Kalman2(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_clk_en_w, enable_i, Mem0_addrw_o, Mem0_we_o, Mem0_data_io, WIP_flag_o, CIN, SIGNEDCIN, CO, SIGNEDCO);
 	GSR GSR_INST (.GSR (1'b1));
 	PUR PUR_INST (.PUR (1'b0));
-	
-	parameter K_ROT_EN = 0;
+
 	parameter HARMONICS_NUM = 20;
 	parameter IN_SERIES_NUM = 4;
 	
@@ -20,14 +19,12 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	localparam M1_ADDR_NUM = 2**M1_ADDR_WIDTH;
 	localparam M1_COS = 0;
 	localparam M1_SIN = 1;
-	localparam M1_COS_C = 2;
-	localparam M1_SIN_C = 3;
-	localparam M1_COS_B = 4;
-	localparam M1_SIN_B = 5;
+	localparam M1_K1 = 2;
+	localparam M1_K2 = 3;
 	localparam M1_INPUT = M1_ADDR_NUM-IN_SERIES_NUM;
 	localparam SEL_STATES = 0;
 	localparam SEL_COMMON = 1;
-	
+
 	localparam OPCODE_WIDTH = 4;
 	localparam OPCODE_SUM_A_B_C = 4'b0100;
 	localparam OPCODE_SUM_A_NB_C = 4'b0101; 
@@ -89,17 +86,16 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	localparam CMEM_WIDTH = 1; 
 	localparam CMEM_M0 = 1'b0; 
 	localparam CMEM_M1 = 1'b1; 
-	
 	input clk_i;
 	input [31:0] Mem1_data_i;
-	input Mem1_we_i;
 	input [M1_ADDR_WIDTH-1:0] Mem1_addrw_i;
+	input Mem1_we_i;
 	input Mem1_clk_w;
 	input Mem1_clk_en_w;
 	input enable_i;
-	output [M0_ADDR_WIDTH-1:0] Mem2_addrw_o;
-	output Mem2_we_o;
-	output [35:0] Mem2_data_o;
+	output [M0_ADDR_WIDTH-1:0] Mem0_addrw_o;
+	output Mem0_we_o;
+	output [35:0] Mem0_data_io;
 	output WIP_flag_o;
 	input wire [53:0] CIN;
 	input wire SIGNEDCIN;
@@ -127,8 +123,9 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	wire[CMEM_WIDTH-1:0]CMemsel_pip;
 	
 	reg [4:0] cnt;
-    reg [SERIES_CNT_WIDTH-1:0] series_cnt;
 	
+	reg [SERIES_CNT_WIDTH-1:0] series_cnt;
+
 	wire [35:0] Mem0_data_i;
 	wire [31:0] Mem1_data_i;
 	wire [35:0] Mem0_data_o;
@@ -138,6 +135,7 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	wire [M0_ADDR_WIDTH-1:0] Mem0_addrw_pip;
 	reg Mem0_we;
 	wire Mem0_we_pip;
+	
 	
 	reg [35:0] error;
 	
@@ -170,9 +168,10 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	reg addrr_M1_sel;
 	reg addrr_M1_inc;
 	reg addrr_M1_rst;
-	reg [2:0] addrr_M1_off;
+	reg [1:0] addrr_M1_off;
 	wire [M1_ADDR_WIDTH-1:0] addrr_M1_out;
 	
+    //Inicjalizacja wartosci sygnalow i rejestrow w celu przeprowadzenia testow
 	initial begin
 		cnt = 0;
 		Opcode = OPCODE_SUM_A_B_C;
@@ -188,7 +187,7 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 		SignAB = 0;
 		SignBA = 0;
 		SignBB = 0;	
-		harmonics_cnt = 0;
+		harmonics_cnt = 1;
 		CE1 = 0;
 		addrr_M0_sel = 0;
 		addrr_M0_inc = 0;
@@ -206,19 +205,20 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 		error = 0;
 		series_cnt = 0;
         $dumpfile("dump.vcd");
-		$dumpvars(2,Res_ctrl);
+		$dumpvars(2,Kalman2);
 	end
 
+	//Maszyna stanow odpowiedzialna za wykonanie operacji aryrmetycznych
 	always @(posedge clk_i) begin
 		if(wip_flag) begin
 			cnt <= cnt + 1'b1;
 		end
 		case(cnt[4:0])
-            0: begin 
-                addrr_M0_sel <= SEL_STATES;
+			0: begin
+				addrr_M0_sel <= SEL_STATES;
 				addrr_M0_inc <= 0;
 				addrr_M0_rst <= 0;
-				addrr_M0_off <= 0;
+				addrr_M0_off <= M0_X1;
 				
 				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
@@ -245,99 +245,36 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				
 				AMuxsel <= AMUX_GND;
 				BMuxsel <= BMUX_GND;
-				CMuxsel <= CMUX_GND;
+				CMuxsel <= CMUX_C_ALU;
 				
 				Opcode <= OPCODE_SUM_A_B_C;
 				CE1 <= 1'b1;
-            end
+			end 
 			1: begin
-				addrr_M0_sel <= SEL_STATES;
-				addrr_M0_inc <= 0;
-				addrr_M0_rst <= 0;
-				addrr_M0_off <= M0_X2;
-				
-				addrr_M1_sel <= SEL_STATES;
-				addrr_M1_inc <= 0;
-				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_SIN;
-				
-				addrw_M0_sel <= SEL_STATES;
-				addrw_M0_inc <= 0;
-				addrw_M0_rst <= 0;
-				addrw_M0_off <= 0;
-
 				Mem0_we <= 1'b0;
-								
-				AAMemsel <= AAMEM_M0L;
-				ABMemsel <= ABMEM_M1H;
-				BAMemsel <= BAMEM_M0H;
-				BBMemsel <= BBMEM_M1H;
-				CMemsel <= CMEM_M0;
-				
-				SignAA <= 1'b0;
-				SignAB <= 1'b0;
-				SignBA <= 1'b1;
-				SignBB <= 1'b0;
-				
-				AMuxsel <= AMUX_MULTA;
-				BMuxsel <= BMUX_MULTB_L18;
-				CMuxsel <= CMUX_GND;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
-				CE1 <= 1'b1;
 			end
 			2: begin
-				addrr_M0_sel <= SEL_STATES;
-				addrr_M0_inc <= 0;
-				addrr_M0_rst <= 0;
-				addrr_M0_off <= M0_X2;
-				
-				addrr_M1_sel <= SEL_STATES;
-				addrr_M1_inc <= 0;
-				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_SIN;
-				
+				addrr_M0_inc <= 1'b1;
+				addrr_M1_inc <= 1'b1;
 				addrw_M0_sel <= SEL_STATES;
-				addrw_M0_inc <= 0;
-				addrw_M0_rst <= 0;
-				addrw_M0_off <= 0;
-
-				Mem0_we <= 1'b0;
-								
-				AAMemsel <= AAMEM_M0L;
-				ABMemsel <= ABMEM_M0L;
-				BAMemsel <= BAMEM_M0H;
-				BBMemsel <= BBMEM_M1L;
-				CMemsel <= CMEM_M0;
-				
-				SignAA <= 1'b0;
-				SignAB <= 1'b0;
-				SignBA <= 1'b1;
-				SignBB <= 1'b0;
-				
-				AMuxsel <= AMUX_GND;
-				BMuxsel <= BMUX_MULTB;
-				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
-				CE1 <= 1'b1;
+				addrw_M0_inc <= 1'b1;
 			end
 			3: begin
 				addrr_M0_sel <= SEL_STATES;
 				addrr_M0_inc <= 0;
 				addrr_M0_rst <= 0;
-				addrr_M0_off <= M0_X1;
+				addrr_M0_off <= M0_X2;
 				
 				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_COS;
+				addrr_M1_off <= M1_SIN;
 				
 				addrw_M0_sel <= SEL_STATES;
 				addrw_M0_inc <= 0;
 				addrw_M0_rst <= 0;
 				addrw_M0_off <= 0;
-
+				
 				Mem0_we <= 1'b0;
 								
 				AAMemsel <= AAMEM_M0L;
@@ -353,29 +290,29 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
-				CMuxsel <= CMUX_ALU_FB;
+				CMuxsel <= CMUX_GND;
 				
-				Opcode <= OPCODE_SUM_A_B_NC;
+				Opcode <= OPCODE_SUM_A_B_C;
 				CE1 <= 1'b1;
 			end
 			4: begin
 				addrr_M0_sel <= SEL_STATES;
 				addrr_M0_inc <= 0;
 				addrr_M0_rst <= 0;
-				addrr_M0_off <= M0_X1;
+				addrr_M0_off <= M0_X2;
 				
 				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_COS;
+				addrr_M1_off <= M1_SIN;
 				
 				addrw_M0_sel <= SEL_STATES;
 				addrw_M0_inc <= 0;
 				addrw_M0_rst <= 0;
 				addrw_M0_off <= 0;
-
+				
 				Mem0_we <= 1'b0;
-								
+				
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M0L;
 				BAMemsel <= BAMEM_M0H;
@@ -395,15 +332,15 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				CE1 <= 1'b1;
 			end
 			5: begin
-				addrr_M0_sel <= SEL_COMMON;
+				addrr_M0_sel <= SEL_STATES;
 				addrr_M0_inc <= 0;
 				addrr_M0_rst <= 0;
-				addrr_M0_off <= 1'b1;
+				addrr_M0_off <= M0_X1;
 				
 				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_SIN_B;
+				addrr_M1_off <= M1_COS;
 				
 				addrw_M0_sel <= SEL_STATES;
 				addrw_M0_inc <= 0;
@@ -411,7 +348,7 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				addrw_M0_off <= 0;
 
 				Mem0_we <= 1'b0;
-								
+				
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M1H;
 				BAMemsel <= BAMEM_M0H;
@@ -419,27 +356,27 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				CMemsel <= CMEM_M0;
 				
 				SignAA <= 1'b0;
-				SignAB <= 1'b1;
+				SignAB <= 1'b0;
 				SignBA <= 1'b1;
-				SignBB <= 1'b1;
+				SignBB <= 1'b0;
 				
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
 				CMuxsel <= CMUX_ALU_FB;
 				
-				Opcode <= OPCODE_SUM_A_B_C;
+				Opcode <= OPCODE_SUM_A_B_NC;
 				CE1 <= 1'b1;
 			end
 			6: begin
-				addrr_M0_sel <= SEL_COMMON;
+				addrr_M0_sel <= SEL_STATES;
 				addrr_M0_inc <= 0;
 				addrr_M0_rst <= 0;
-				addrr_M0_off <= 1'b1;
+				addrr_M0_off <= M0_X1;
 				
 				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_SIN_B;
+				addrr_M1_off <= M1_COS;
 				
 				addrw_M0_sel <= SEL_STATES;
 				addrw_M0_inc <= 0;
@@ -447,7 +384,7 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				addrw_M0_off <= M0_X1;
 
 				Mem0_we <= 1'b1;
-								
+				
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M0L;
 				BAMemsel <= BAMEM_M0H;
@@ -467,37 +404,37 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				CE1 <= 1'b1;
 			end
 			7: begin
-				addrr_M0_sel <= SEL_STATES;
+				addrr_M0_sel <= SEL_COMMON;
 				addrr_M0_inc <= 0;
 				addrr_M0_rst <= 0;
-				addrr_M0_off <= M0_X1;
+				addrr_M0_off <= 0;
 				
 				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_SIN;
+				addrr_M1_off <= 0;
 				
-				addrw_M0_sel <= SEL_STATES;
+				addrw_M0_sel <= SEL_COMMON;
 				addrw_M0_inc <= 0;
 				addrw_M0_rst <= 0;
 				addrw_M0_off <= 0;
 
-				Mem0_we <= 1'b0;
-								
+				Mem0_we <= 1'b1;
+				
 				AAMemsel <= AAMEM_M0L;
-				ABMemsel <= ABMEM_M1H;
-				BAMemsel <= BAMEM_M0H;
-				BBMemsel <= BBMEM_M1H;
+				ABMemsel <= ABMEM_M0L;
+				BAMemsel <= BAMEM_M0L;
+				BBMemsel <= BBMEM_M0L;
 				CMemsel <= CMEM_M0;
 				
 				SignAA <= 1'b0;
 				SignAB <= 1'b0;
-				SignBA <= 1'b1;
+				SignBA <= 1'b0;
 				SignBB <= 1'b0;
 				
-				AMuxsel <= AMUX_MULTA;
-				BMuxsel <= BMUX_MULTB_L18;
-				CMuxsel <= CMUX_GND;
+				AMuxsel <= AMUX_ALU_FB;
+				BMuxsel <= BMUX_GND;
+				CMuxsel <= CMUX_C_ALU;
 				
 				Opcode <= OPCODE_SUM_A_B_C;
 				CE1 <= 1'b1;
@@ -519,7 +456,43 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				addrw_M0_off <= 0;
 
 				Mem0_we <= 1'b0;
-								
+				
+				AAMemsel <= AAMEM_M0L;
+				ABMemsel <= ABMEM_M1H;
+				BAMemsel <= BAMEM_M0H;
+				BBMemsel <= BBMEM_M1H;
+				CMemsel <= CMEM_M0;
+				
+				SignAA <= 1'b0;
+				SignAB <= 1'b0;
+				SignBA <= 1'b1;
+				SignBB <= 1'b0;
+				
+				AMuxsel <= AMUX_MULTA;
+				BMuxsel <= BMUX_MULTB_L18;
+				CMuxsel <= CMUX_GND;
+			
+				Opcode <= OPCODE_SUM_A_B_C;
+				CE1 <= 1'b1;
+			end
+			9: begin
+				addrr_M0_sel <= SEL_STATES;
+				addrr_M0_inc <= 0;
+				addrr_M0_rst <= 0;
+				addrr_M0_off <= M0_X1;
+				
+				addrr_M1_sel <= SEL_STATES;
+				addrr_M1_inc <= 0;
+				addrr_M1_rst <= 0;
+				addrr_M1_off <= M1_SIN;
+				
+				addrw_M0_sel <= SEL_STATES;
+				addrw_M0_inc <= 0;
+				addrw_M0_rst <= 0;
+				addrw_M0_off <= 0;
+
+				Mem0_we <= 1'b0;
+				
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M0L;
 				BAMemsel <= BAMEM_M0H;
@@ -537,43 +510,7 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				
 				Opcode <= OPCODE_SUM_A_B_C;
 				CE1 <= 1'b1;
-			end
-			9: begin
-				addrr_M0_sel <= SEL_STATES;
-				addrr_M0_inc <= 0;
-				addrr_M0_rst <= 0;
-				addrr_M0_off <= M0_X2;
-				
-				addrr_M1_sel <= SEL_STATES;
-				addrr_M1_inc <= 0;
-				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_COS;
-				
-				addrw_M0_sel <= SEL_STATES;
-				addrw_M0_inc <= 0;
-				addrw_M0_rst <= 0;
-				addrw_M0_off <= 0;
-
-				Mem0_we <= 1'b0;
-								
-				AAMemsel <= AAMEM_M0L;
-				ABMemsel <= ABMEM_M1H;
-				BAMemsel <= BAMEM_M0H;
-				BBMemsel <= BBMEM_M1H;
-				CMemsel <= CMEM_M0;
-				
-				SignAA <= 1'b0;
-				SignAB <= 1'b0;
-				SignBA <= 1'b1;
-				SignBB <= 1'b0;
-				
-				AMuxsel <= AMUX_MULTA;
-				BMuxsel <= BMUX_MULTB_L18;
-				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
-				CE1 <= 1'b1;
-			end
+			end 
 			10: begin
 				addrr_M0_sel <= SEL_STATES;
 				addrr_M0_inc <= 0;
@@ -589,45 +526,9 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				addrw_M0_inc <= 0;
 				addrw_M0_rst <= 0;
 				addrw_M0_off <= 0;
-
+				
 				Mem0_we <= 1'b0;
-								
-				AAMemsel <= AAMEM_M0L;
-				ABMemsel <= ABMEM_M0L;
-				BAMemsel <= BAMEM_M0H;
-				BBMemsel <= BBMEM_M1L;
-				CMemsel <= CMEM_M0;
 				
-				SignAA <= 1'b0;
-				SignAB <= 1'b0;
-				SignBA <= 1'b1;
-				SignBB <= 1'b0;
-				
-				AMuxsel <= AMUX_GND;
-				BMuxsel <= BMUX_MULTB;
-				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
-				CE1 <= 1'b1;
-			end
-			11: begin
-				addrr_M0_sel <= SEL_COMMON;
-				addrr_M0_inc <= 0;
-				addrr_M0_rst <= 0;
-				addrr_M0_off <= 1'b1;
-				
-				addrr_M1_sel <= SEL_STATES;
-				addrr_M1_inc <= 0;
-				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_COS_B;
-				
-				addrw_M0_sel <= SEL_STATES;
-				addrw_M0_inc <= 0;
-				addrw_M0_rst <= 0;
-				addrw_M0_off <= 0;
-
-				Mem0_we <= 1'b0;
-								
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M1H;
 				BAMemsel <= BAMEM_M0H;
@@ -635,9 +536,9 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				CMemsel <= CMEM_M0;
 				
 				SignAA <= 1'b0;
-				SignAB <= 1'b1;
+				SignAB <= 1'b0;
 				SignBA <= 1'b1;
-				SignBB <= 1'b1;
+				SignBB <= 1'b0;
 				
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
@@ -646,16 +547,16 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				Opcode <= OPCODE_SUM_A_B_C;
 				CE1 <= 1'b1;
 			end
-			12: begin
-				addrr_M0_sel <= SEL_COMMON;
+			11: begin
+				addrr_M0_sel <= SEL_STATES;
 				addrr_M0_inc <= 0;
 				addrr_M0_rst <= 0;
-				addrr_M0_off <= 1'b1;
+				addrr_M0_off <= M0_X2;
 				
 				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_COS_B;
+				addrr_M1_off <= M1_COS;
 				
 				addrw_M0_sel <= SEL_STATES;
 				addrw_M0_inc <= 0;
@@ -663,7 +564,7 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				addrw_M0_off <= M0_X2;
 
 				Mem0_we <= 1'b1;
-								
+				
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M0L;
 				BAMemsel <= BAMEM_M0H;
@@ -681,15 +582,13 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				
 				Opcode <= OPCODE_SUM_A_B_C;
 				CE1 <= 1'b1;
-			end
-			13: begin
-                addrr_M0_sel <= SEL_STATES;
-				if(harmonics_cnt < HARMONICS_NUM-1) begin
+				
+				if(harmonics_cnt < HARMONICS_NUM) begin
 					addrr_M0_inc <= 1'b1;
 					addrr_M1_inc <= 1'b1;
 					addrw_M0_inc <= 1'b1;
 					
-					cnt <= 5'd1;
+					cnt <= 5'd3;
 					harmonics_cnt <= harmonics_cnt + 1'b1;
 				end
 				else begin
@@ -697,39 +596,11 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 					addrr_M1_rst <= 1'b1;
 					addrw_M0_rst <= 1'b1;
 					
-					harmonics_cnt <= 5'd0;
+					harmonics_cnt <= 0;
 				end
-				Mem0_we <= 1'b0;
-								
-				AAMemsel <= AAMEM_M0L;
-				ABMemsel <= ABMEM_M0L;
-				BAMemsel <= BAMEM_M0L;
-				BBMemsel <= BBMEM_M0L;
-				CMemsel <= CMEM_M0;
-				
-				SignAA <= 1'b0;
-				SignAB <= 1'b0;
-				SignBA <= 1'b0;
-				SignBB <= 1'b0;
-				
-				AMuxsel <= AMUX_GND;
-				BMuxsel <= BMUX_GND;
-				CMuxsel <= CMUX_GND;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
-				CE1 <= 1'b1;
 			end
-			14: begin
-				addrr_M0_inc <= 0;
-				addrr_M0_rst <= 0;
-				
-				addrr_M1_inc <= 0;
-				addrr_M1_rst <= 0;
-				
-				addrw_M0_inc <= 0;
-				addrw_M0_rst <= 0;
-			end
-			15: begin
+//-------------------------------------------------
+			12: begin
 				addrr_M0_sel <= SEL_STATES;
 				addrr_M0_inc <= 0;
 				addrr_M0_rst <= 0;
@@ -741,12 +612,12 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				addrr_M1_off <= 0;
 				
 				addrw_M0_sel <= SEL_COMMON;
-				addrw_M0_inc <= 0;
+				addrw_M0_inc <= 1'b1;
 				addrw_M0_rst <= 0;
-				addrw_M0_off <= 1'b1;
+				addrw_M0_off <= 0;
 
-				Mem0_we <= 1'b1;
-								
+				Mem0_we <= 1'b0;
+				
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M0L;
 				BAMemsel <= BAMEM_M0L;
@@ -765,24 +636,24 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				Opcode <= OPCODE_SUM_A_B_C;
 				CE1 <= 1'b1;
 			end
-			16: begin
+			13: begin
 				addrr_M0_sel <= SEL_COMMON;
 				addrr_M0_inc <= 0;
-				addrr_M0_rst <= 0;
+				addrr_M0_rst <= 1'b1;
 				addrr_M0_off <= 0;
 				
-				addrr_M1_sel <= SEL_COMMON;
+				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
 				addrr_M1_off <= 0;
 				
-				addrw_M0_sel <= SEL_STATES;
+				addrw_M0_sel <= SEL_COMMON;
 				addrw_M0_inc <= 0;
 				addrw_M0_rst <= 0;
 				addrw_M0_off <= 0;
 
-				Mem0_we <= 1'b0;
-								
+				Mem0_we <= 1'b1;
+				
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M0L;
 				BAMemsel <= BAMEM_M0L;
@@ -794,33 +665,48 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				SignBA <= 1'b0;
 				SignBB <= 1'b0;
 				
-				AMuxsel <= AMUX_GND;
+				AMuxsel <= AMUX_ALU_FB;
 				BMuxsel <= BMUX_GND;
-				CMuxsel <= CMUX_GND;
+				CMuxsel <= CMUX_C_ALU;
 				
-				Opcode <= OPCODE_SUM_A_B_C;
+				Opcode <= OPCODE_SUM_A_B_NC;
 				CE1 <= 1'b1;
 			end
+			14: begin
+				addrr_M0_rst <= 0;
+				addrr_M1_rst <= 0;
+				addrw_M0_rst <= 0;
+			    AMuxsel <= AMUX_GND;
+				BMuxsel <= BMUX_GND;
+				CMuxsel <= CMUX_GND;
+				Mem0_we <= 1'b0;
+			end
+			15: begin
+			end
+			16: begin
+			end
 			17: begin
-				addrr_M0_inc <= 0;
-                addrw_M0_inc <= 0;
-                addrr_M1_inc <= 0;
 			end
 			18: begin
-                addrr_M0_inc <= 0;
-                addrw_M0_inc <= 0;
-                addrr_M1_inc <= 0;
 			end
-			19: begin
-				addrr_M0_sel <= SEL_STATES;
+            19: begin
+                error <= Mem0_data_i;
+				addrr_M0_sel <= SEL_COMMON;
+				addrr_M0_inc <= 1'b1;
+				addrr_M0_rst <= 0;
+				addrr_M0_off <= 0;
+            end
+//-------------------------------------------------
+			20: begin
+				addrr_M0_sel <= SEL_COMMON;
 				addrr_M0_inc <= 0;
 				addrr_M0_rst <= 0;
-				addrr_M0_off <= M0_X2;
+				addrr_M0_off <= 0;
 				
 				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_SIN_C;
+				addrr_M1_off <= M1_K1;
 				
 				addrw_M0_sel <= SEL_STATES;
 				addrw_M0_inc <= 0;
@@ -828,7 +714,7 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				addrw_M0_off <= 0;
 
 				Mem0_we <= 1'b0;
-								
+				
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M1H;
 				BAMemsel <= BAMEM_M0H;
@@ -836,64 +722,16 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				CMemsel <= CMEM_M0;
 				
 				SignAA <= 1'b0;
-				SignAB <= 1'b0;
+				SignAB <= 1'b1;
 				SignBA <= 1'b1;
-				SignBB <= 1'b0;
+				SignBB <= 1'b1;
 				
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
 				CMuxsel <= CMUX_GND;
-			
-				Opcode <= OPCODE_SUM_A_B_C;
-				CE1 <= 1'b1;
-				if(!K_ROT_EN)begin
-					addrr_M1_off <= 0;
-					AMuxsel <= AMUX_GND;
-					BMuxsel <= BMUX_GND;
-					CMuxsel <= CMUX_GND;
-				end
-			end
-			20: begin
-				addrr_M0_sel <= SEL_STATES;
-				addrr_M0_inc <= 0;
-				addrr_M0_rst <= 0;
-				addrr_M0_off <= M0_X2;
-				
-				addrr_M1_sel <= SEL_STATES;
-				addrr_M1_inc <= 0;
-				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_SIN_C;
-				
-				addrw_M0_sel <= SEL_STATES;
-				addrw_M0_inc <= 0;
-				addrw_M0_rst <= 0;
-				addrw_M0_off <= 0;
-
-				Mem0_we <= 1'b0;
-								
-				AAMemsel <= AAMEM_M0L;
-				ABMemsel <= ABMEM_M0L;
-				BAMemsel <= BAMEM_M0H;
-				BBMemsel <= BBMEM_M1L;
-				CMemsel <= CMEM_M0;
-				
-				SignAA <= 1'b0;
-				SignAB <= 1'b0;
-				SignBA <= 1'b1;
-				SignBB <= 1'b0;
-				
-				AMuxsel <= AMUX_GND;
-				BMuxsel <= BMUX_MULTB;
-				CMuxsel <= CMUX_ALU_FB;
 				
 				Opcode <= OPCODE_SUM_A_B_C;
 				CE1 <= 1'b1;
-				if(!K_ROT_EN)begin
-					addrr_M1_off <= 0;
-					AMuxsel <= AMUX_GND;
-					BMuxsel <= BMUX_GND;
-					CMuxsel <= CMUX_GND;
-				end
 			end
 			21: begin
 				addrr_M0_sel <= SEL_STATES;
@@ -904,59 +742,15 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				addrr_M1_sel <= SEL_STATES;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_COS_C;
+				addrr_M1_off <= M1_K1;
 				
 				addrw_M0_sel <= SEL_STATES;
 				addrw_M0_inc <= 0;
 				addrw_M0_rst <= 0;
-				addrw_M0_off <= 0;
-
-				Mem0_we <= 1'b0;
-								
-				AAMemsel <= AAMEM_M0L;
-				ABMemsel <= ABMEM_M1H;
-				BAMemsel <= BAMEM_M0H;
-				BBMemsel <= BBMEM_M1H;
-				CMemsel <= CMEM_M0;
-				
-				SignAA <= 1'b0;
-				SignAB <= 1'b0;
-				SignBA <= 1'b1;
-				SignBB <= 1'b0;
-				
-				AMuxsel <= AMUX_MULTA;
-				BMuxsel <= BMUX_MULTB_L18;
-				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_NC;
-				CE1 <= 1'b1;
-				if(!K_ROT_EN)begin
-					addrr_M1_off <= 0;
-					AMuxsel <= AMUX_GND;
-					BMuxsel <= BMUX_GND;
-					CMuxsel <= CMUX_C_ALU;
-					
-					Opcode <= OPCODE_SUM_A_B_C;
-				end
-			end
-			22: begin
-				addrr_M0_sel <= SEL_COMMON;
-				addrr_M0_inc <= 0;
-				addrr_M0_rst <= 0;
-				addrr_M0_off <= 0;
-				
-				addrr_M1_sel <= SEL_STATES;
-				addrr_M1_inc <= 0;
-				addrr_M1_rst <= 0;
-				addrr_M1_off <= M1_COS_C;
-				
-				addrw_M0_sel <= SEL_COMMON;
-				addrw_M0_inc <= 0;
-				addrw_M0_rst <= 0;
-				addrw_M0_off <= 0;
+				addrw_M0_off <= M0_X1;
 
 				Mem0_we <= 1'b1;
-								
+				
 				AAMemsel <= AAMEM_M0L;
 				ABMemsel <= ABMEM_M0L;
 				BAMemsel <= BAMEM_M0H;
@@ -974,24 +768,84 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				
 				Opcode <= OPCODE_SUM_A_B_C;
 				CE1 <= 1'b0;
-				if(!K_ROT_EN)begin
-					AMuxsel <= AMUX_ALU_FB;
-					BMuxsel <= BMUX_GND;
-					CMuxsel <= CMUX_C_ALU;
-				end
+			end
+			22: begin
+				addrr_M0_sel <= SEL_COMMON;
+				addrr_M0_inc <= 0;
+				addrr_M0_rst <= 0;
+				addrr_M0_off <= 0;
+				
+				addrr_M1_sel <= SEL_STATES;
+				addrr_M1_inc <= 0;
+				addrr_M1_rst <= 0;
+				addrr_M1_off <= M1_K2;
+				
+				addrw_M0_sel <= SEL_STATES;
+				addrw_M0_inc <= 0;
+				addrw_M0_rst <= 0;
+				addrw_M0_off <= 0;
+
+				Mem0_we <= 1'b0;
+				
+				AAMemsel <= AAMEM_M0L;
+				ABMemsel <= ABMEM_M1H;
+				BAMemsel <= BAMEM_M0H;
+				BBMemsel <= BBMEM_M1H;
+				CMemsel <= CMEM_M0;
+				
+				SignAA <= 1'b0;
+				SignAB <= 1'b1;
+				SignBA <= 1'b1;
+				SignBB <= 1'b1;
+				
+				AMuxsel <= AMUX_MULTA;
+				BMuxsel <= BMUX_MULTB_L18;
+				CMuxsel <= CMUX_GND;
+				
+				Opcode <= OPCODE_SUM_A_B_C;
+				CE1 <= 1'b1;
 			end
 			23: begin
 				addrr_M0_sel <= SEL_STATES;
-
+				addrr_M0_inc <= 0;
+				addrr_M0_rst <= 0;
+				addrr_M0_off <= M0_X2;
+				
 				addrr_M1_sel <= SEL_STATES;
+				addrr_M1_inc <= 0;
+				addrr_M1_rst <= 0;
+				addrr_M1_off <= M1_K2;
 				
 				addrw_M0_sel <= SEL_STATES;
-				if(harmonics_cnt < HARMONICS_NUM-1) begin
+				addrw_M0_inc <= 0;
+				addrw_M0_rst <= 0;
+				addrw_M0_off <= M0_X2;
+
+				Mem0_we <= 1'b1;
+				
+				AAMemsel <= AAMEM_M0L;
+				ABMemsel <= ABMEM_M0L;
+				BAMemsel <= BAMEM_M0H;
+				BBMemsel <= BBMEM_M1L;
+				CMemsel <= CMEM_M0;
+				
+				SignAA <= 1'b0;
+				SignAB <= 1'b0;
+				SignBA <= 1'b1;
+				SignBB <= 1'b0;
+				
+				AMuxsel <= AMUX_ALU_FB;
+				BMuxsel <= BMUX_MULTB;
+				CMuxsel <= CMUX_C_ALU;
+				
+				Opcode <= OPCODE_SUM_A_B_C;
+				CE1 <= 1'b0;
+				if(harmonics_cnt < HARMONICS_NUM) begin
 					addrr_M0_inc <= 1'b1;
 					addrr_M1_inc <= 1'b1;
 					addrw_M0_inc <= 1'b1;
 					
-					cnt <= 5'd17;
+					cnt <= 5'd20;
 					harmonics_cnt <= harmonics_cnt + 1'b1;
 				end
 				else begin
@@ -1002,65 +856,53 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 					addrw_M0_rst <= 1'b1;
 					addrw_M0_inc <= 0;
 					
-					harmonics_cnt <= 5'd0;
+					harmonics_cnt <= 6'd1;
 				end
-				
-				Mem0_we <= 1'b0;
-								
-				AAMemsel <= AAMEM_M0L;
-				ABMemsel <= ABMEM_M0L;
-				BAMemsel <= BAMEM_M0L;
-				BBMemsel <= BBMEM_M0L;
-				CMemsel <= CMEM_M0;
-				
-				SignAA <= 1'b0;
-				SignAB <= 1'b0;
-				SignBA <= 1'b0;
-				SignBB <= 1'b0;
-				
-				AMuxsel <= AMUX_GND;
-				BMuxsel <= BMUX_GND;
-				CMuxsel <= CMUX_GND;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
-				CE1 <= 1'b1;
 			end
 			24: begin
+				addrr_M0_sel <= SEL_COMMON;
 				addrr_M0_inc <= 0;
-				addrr_M0_rst <= 0;
+				addrr_M0_rst <= 1'b1;
+				addrr_M0_off <= 0;
 				
+				addrr_M1_sel <= SEL_COMMON;
 				addrr_M1_inc <= 0;
 				addrr_M1_rst <= 0;
+				addrr_M1_off <= 0;
 				
+				addrw_M0_sel <= SEL_COMMON;
 				addrw_M0_inc <= 0;
-				addrw_M0_rst <= 0;
-               
+				addrw_M0_rst <= 1'b1;
+				addrw_M0_off <= 0;
+				
+				Mem0_we <= 1'b0;
 			end
 			25: begin
-
+				addrr_M0_rst <= 0;
+				addrr_M1_rst <= 0;
+				addrw_M0_rst <= 0;
 			end
 			26: begin
                 addrr_M1_sel <= SEL_COMMON;
-			     if(series_cnt<IN_SERIES_NUM-1) begin
-                       addrr_M1_inc <= 1'b1;
-                       series_cnt <= series_cnt + 1'b1;
-                       cnt <= 5'd30;
-               end
-			   else begin
-                    addrr_M1_rst <= 1'b1;
-                    series_cnt <= 0;
-               end
+                if(series_cnt<IN_SERIES_NUM-1) begin
+                        addrr_M1_inc <= 1'b1;
+                        series_cnt <= series_cnt + 1'b1;
+                        cnt <= 5'd30;
+                end
+				else begin
+                        addrr_M1_rst <= 1'b1;
+                        series_cnt <= 0;
+                end
 			end
 			27: begin
                 addrr_M1_rst <= 0;
 			end
 			28: begin
-			
 			end
-			29: begin
-				cnt <= 0;
+            29: begin
+                cnt <= 0;
 			end
-            30: begin
+			30: begin
                 addrr_M1_inc <= 0;
             end
             31: begin
@@ -1081,33 +923,33 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	pmi_ram_dp #(.pmi_wr_addr_depth(M0_ADDR_NUM), .pmi_wr_addr_width(M0_ADDR_WIDTH), .pmi_wr_data_width(36),
 	.pmi_rd_addr_depth(M0_ADDR_NUM), .pmi_rd_addr_width(M0_ADDR_WIDTH), .pmi_rd_data_width(36), .pmi_regmode("reg"), 
 	.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U"),
-	.pmi_init_file(/*"../Mem0.mem"*/), .pmi_init_file_format(/*"hex"*/)
+	.pmi_init_file("../Mem0.mem"), .pmi_init_file_format("hex")
 	)
-	Mem0(.Data(Mem0_data_i), .WrAddress(Mem0_addrw_pip), .RdAddress({series_cnt, addrr_M0_out}), .WrClock(clk_i),
+	Mem0(.Data(Mem0_data_i), .WrAddress(Mem0_addrw_pip), .RdAddress({series_cnt,addrr_M0_out}), .WrClock(clk_i),
 	.RdClock(clk_i), .WrClockEn(1'b1), .RdClockEn(1'b1), .WE(Mem0_we_pip), .Reset(1'b0), 
 	.Q(Mem0_data_o));
 	
 	pmi_ram_dp #(.pmi_wr_addr_depth(M1_ADDR_NUM), .pmi_wr_addr_width(M1_ADDR_WIDTH), .pmi_wr_data_width(36),
 	.pmi_rd_addr_depth(M1_ADDR_NUM), .pmi_rd_addr_width(M1_ADDR_WIDTH), .pmi_rd_data_width(36), .pmi_regmode("reg"), 
 	.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U"),
-	.pmi_init_file("../Mem1_R.mem"), .pmi_init_file_format("hex")
+	.pmi_init_file("../Mem1_K.mem"), .pmi_init_file_format("hex")
 	)
-	Mem1(.Data({Mem1_data_i[31:0], 4'd0}), .WrAddress(Mem1_addrw_i), .RdAddress(addrr_M1_out), .WrClock(Mem1_clk_w),
+	Mem1(.Data({Mem1_data_i,4'd0}), .WrAddress(Mem1_addrw_i), .RdAddress(addrr_M1_out), .WrClock(Mem1_clk_w),
 	.RdClock(clk_i), .WrClockEn(Mem1_clk_en_w), .RdClockEn(1'b1), .WE(Mem1_we_i), .Reset(1'b0), 
 	.Q(Mem1_data_o));
 	
-	addr_gen_Res_ctrl #(.ADDR_NUM(2),.ADDR_START_STATES(0),.ADDR_START_COMMON(M0_SUM),.ADDR_INC_STATES(2'd2),
+	addr_gen_Kalman2 #(.ADDR_NUM(2),.ADDR_START_STATES(0),.ADDR_START_COMMON(M0_SUM),.ADDR_INC_STATES(2'd2),
 	.ADDR_INC_COMMON(1'b1),.OFFSET_WIDTH(2),.ADDR_WIDTH(7))
 	addrr_M0_gen (.clk(clk_i),.addr_sel(addrr_M0_sel),.addr_inc(addrr_M0_inc),.addr_rst(addrr_M0_rst),
 	.addr_off(addrr_M0_off),.addr_out(addrr_M0_out));
 	
-	addr_gen_Res_ctrl #(.ADDR_NUM(2),.ADDR_START_STATES(0),.ADDR_START_COMMON(M0_SUM),.ADDR_INC_STATES(2'd2),
+	addr_gen_Kalman2 #(.ADDR_NUM(2),.ADDR_START_STATES(0),.ADDR_START_COMMON(M0_SUM),.ADDR_INC_STATES(2'd2),
 	.ADDR_INC_COMMON(1'b1),.OFFSET_WIDTH(2),.ADDR_WIDTH(7))
 	addrw_M0_gen (.clk(clk_i),.addr_sel(addrw_M0_sel),.addr_inc(addrw_M0_inc),.addr_rst(addrw_M0_rst),
 	.addr_off(addrw_M0_off),.addr_out(addrw_M0_out));
 	
-	addr_gen_Res_ctrl #(.ADDR_NUM(2),.ADDR_START_STATES(0),.ADDR_START_COMMON(M1_INPUT),.ADDR_INC_STATES(3'd6),
-	.ADDR_INC_COMMON(1'b1),.OFFSET_WIDTH(3),.ADDR_WIDTH(M1_ADDR_WIDTH))
+	addr_gen_Kalman2 #(.ADDR_NUM(2),.ADDR_START_STATES(0),.ADDR_START_COMMON(M1_INPUT),.ADDR_INC_STATES(3'd4),
+	.ADDR_INC_COMMON(1'b1),.OFFSET_WIDTH(2),.ADDR_WIDTH(M1_ADDR_WIDTH))
 	addrr_M1_gen (.clk(clk_i),.addr_sel(addrr_M1_sel),.addr_inc(addrr_M1_inc),.addr_rst(addrr_M1_rst),
 	.addr_off(addrr_M1_off),.addr_out(addrr_M1_out));
 	
@@ -1115,7 +957,7 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	we_delay (.clk(clk_i), .in(Mem0_we), .out(Mem0_we_pip));
 	
 	pipeline_delay #(.WIDTH(9),.CYCLES(5),.SHIFT_MEM(0)) 
-	addrw_M0_delay (.clk(clk_i), .in({series_cnt, addrw_M0_out}), .out(Mem0_addrw_pip));
+	addrw_M0_delay (.clk(clk_i), .in({series_cnt,addrw_M0_out}), .out(Mem0_addrw_pip));
 
 	pipeline_delay #(.WIDTH(OPCODE_WIDTH),.CYCLES(2),.SHIFT_MEM(0)) 
 	opcode_delay (.clk(clk_i), .in(Opcode), .out(Opcode_pip));
@@ -1160,17 +1002,17 @@ module Res_ctrl(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	ce_delay (.clk(clk_i), .in(CE1), .out(CE1_pip));
 	
 	Sync_latch_input #(.OUT_POLARITY(1), .STEPS(2)) 
-	code_start(.clk_i(clk_i), .in(enable_i), .out(wip_flag), .reset_i(cnt == 28), 
+	code_start(.clk_i(clk_i), .in(enable_i), .out(wip_flag), .reset_i(cnt == 27), 
 	.set_i(1'b0));
 	
 	//Przypisanie rejestrow do wyjsc modulu
-    assign Mem2_data_o = Mem0_data_i;
-	assign Mem2_addrw_o = Mem0_addrw_pip;
-	assign Mem2_we_o = Mem0_we_pip;
+    assign Mem0_data_io = Mem0_data_i;
+	assign Mem0_addrw_o = Mem0_addrw_pip;
+	assign Mem0_we_o = Mem0_we_pip;
 	assign WIP_flag_o = wip_flag;
 endmodule
 
-module addr_gen_Res_ctrl(clk, addr_sel, addr_inc, addr_rst, addr_off, addr_out);
+module addr_gen_Kalman2(clk, addr_sel, addr_inc, addr_rst, addr_off, addr_out);
 	parameter ADDR_NUM = 2;
 	parameter ADDR_START_STATES = 9'd0;
 	parameter ADDR_START_COMMON = 9'd0;

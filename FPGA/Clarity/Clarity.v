@@ -17,9 +17,9 @@ module Clarity (Dummy_slice_AA, Dummy_slice_AB, Dummy_slice_AMuxsel, Dummy_slice
             Dummy_slice_RST0, Dummy_slice_SignCin, Dummy_slice_SignR, 
             Dummy_slice_UNDER, IDDR_alignwd, IDDR_clkin, IDDR_ready, 
             IDDR_sclk, IDDR_start, IDDR_sync_clk, IDDR_sync_reset, PLL_DSP_CLKI, 
-            PLL_DSP_CLKOP, PLL_DSP_CLKOS, PLL_SerDes_CLKI, PLL_SerDes_CLKOP, 
-            PLL_SerDes_CLKOS, PLL_SerDes_CLKOS2, PLL_SerDes_CLKOS3, PLL_SerDes_LOCK, 
-            PLL_SerDes_PHASEDIR, PLL_SerDes_PHASELOADREG, PLL_SerDes_PHASESTEP) /* synthesis sbp_module=true */ ;
+            PLL_DSP_CLKOP, PLL_SerDes_CLKI, PLL_SerDes_CLKOP, PLL_SerDes_CLKOS, 
+            PLL_SerDes_CLKOS2, PLL_SerDes_CLKOS3, PLL_SerDes_LOCK, PLL_SerDes_PHASEDIR, 
+            PLL_SerDes_PHASELOADREG, PLL_SerDes_PHASESTEP) /* synthesis sbp_module=true */ ;
     input [17:0]Dummy_slice_AA;
     input [17:0]Dummy_slice_AB;
     input [1:0]Dummy_slice_AMuxsel;
@@ -57,7 +57,6 @@ module Clarity (Dummy_slice_AA, Dummy_slice_AB, Dummy_slice_AMuxsel, Dummy_slice
     input IDDR_sync_reset;
     input PLL_DSP_CLKI;
     output PLL_DSP_CLKOP;
-    output PLL_DSP_CLKOS;
     input PLL_SerDes_CLKI;
     output PLL_SerDes_CLKOP;
     output PLL_SerDes_CLKOS;
@@ -81,7 +80,7 @@ module Clarity (Dummy_slice_AA, Dummy_slice_AB, Dummy_slice_AMuxsel, Dummy_slice
     IDDR IDDR_inst (.datain({IDDR_datain}), .q({IDDR_q}), .alignwd(IDDR_alignwd), 
          .clkin(IDDR_clkin), .ready(IDDR_ready), .sclk(IDDR_sclk), .start(IDDR_start), 
          .sync_clk(IDDR_sync_clk), .sync_reset(IDDR_sync_reset));
-    PLL_DSP PLL_DSP_inst (.CLKI(PLL_DSP_CLKI), .CLKOP(PLL_DSP_CLKOP), .CLKOS(PLL_DSP_CLKOS));
+    PLL_DSP PLL_DSP_inst (.CLKI(PLL_DSP_CLKI), .CLKOP(PLL_DSP_CLKOP));
     PLL_SerDes PLL_SerDes_inst (.PHASESEL({PLL_SerDes_PHASESEL}), .CLKI(PLL_SerDes_CLKI), 
             .CLKOP(PLL_SerDes_CLKOP), .CLKOS(PLL_SerDes_CLKOS), .CLKOS2(PLL_SerDes_CLKOS2), 
             .CLKOS3(PLL_SerDes_CLKOS3), .LOCK(PLL_SerDes_LOCK), .PHASEDIR(PLL_SerDes_PHASEDIR), 

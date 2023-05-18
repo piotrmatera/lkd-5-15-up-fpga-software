@@ -1,5 +1,5 @@
 // Verilog netlist produced by program LSE :  version Diamond (64-bit) 3.12.0.240.2
-// Netlist written on Sun May 14 12:14:49 2023
+// Netlist written on Thu May 18 09:04:53 2023
 //
 // Verilog Description of module PLL_DSP
 //
@@ -20,19 +20,19 @@ module PLL_DSP (CLKI, CLKOP, CLKOS) /* synthesis NGD_DRC_MASK=1, syn_module_defi
             .PHASELOADREG(scuba_vlo), .STDBY(scuba_vlo), .PLLWAKESYNC(scuba_vlo), 
             .RST(scuba_vlo), .ENCLKOP(scuba_vlo), .ENCLKOS(scuba_vlo), 
             .ENCLKOS2(scuba_vlo), .ENCLKOS3(scuba_vlo), .CLKOP(CLKOP), 
-            .CLKOS(CLKOS)) /* synthesis FREQUENCY_PIN_CLKOS="200.000000", FREQUENCY_PIN_CLKOP="100.000000", FREQUENCY_PIN_CLKI="20.000000", ICP_CURRENT="5", LPF_RESISTOR="16", syn_instantiated=1 */ ;
+            .CLKOS(CLKOS)) /* synthesis FREQUENCY_PIN_CLKOS="100.000000", FREQUENCY_PIN_CLKOP="200.000000", FREQUENCY_PIN_CLKI="20.000000", ICP_CURRENT="5", LPF_RESISTOR="16", syn_instantiated=1 */ ;
     defparam PLLInst_0.CLKI_DIV = 1;
-    defparam PLLInst_0.CLKFB_DIV = 5;
-    defparam PLLInst_0.CLKOP_DIV = 6;
-    defparam PLLInst_0.CLKOS_DIV = 3;
+    defparam PLLInst_0.CLKFB_DIV = 10;
+    defparam PLLInst_0.CLKOP_DIV = 3;
+    defparam PLLInst_0.CLKOS_DIV = 6;
     defparam PLLInst_0.CLKOS2_DIV = 1;
     defparam PLLInst_0.CLKOS3_DIV = 1;
     defparam PLLInst_0.CLKOP_ENABLE = "ENABLED";
     defparam PLLInst_0.CLKOS_ENABLE = "ENABLED";
     defparam PLLInst_0.CLKOS2_ENABLE = "DISABLED";
     defparam PLLInst_0.CLKOS3_ENABLE = "DISABLED";
-    defparam PLLInst_0.CLKOP_CPHASE = 5;
-    defparam PLLInst_0.CLKOS_CPHASE = 2;
+    defparam PLLInst_0.CLKOP_CPHASE = 2;
+    defparam PLLInst_0.CLKOS_CPHASE = 5;
     defparam PLLInst_0.CLKOS2_CPHASE = 0;
     defparam PLLInst_0.CLKOS3_CPHASE = 0;
     defparam PLLInst_0.CLKOP_FPHASE = 0;

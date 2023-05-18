@@ -18,93 +18,96 @@ module SerDes_tb;
 		forever begin
 			#20
 			i <= i+1;
-			if(i>=20000) $stop;
+			if(i>=4000) $stop;
 		end
 	end
 
-	wire[180:1] Master_FIO;
-	wire[180:1] Slave1_FIO;
-	wire[180:1] Slave2_FIO;
-	wire[180:1] Slave3_FIO;
-	wire[168:0] Master_CIO;
-	wire[168:0] Slave1_CIO;
-	wire[168:0] Slave2_CIO;
-	wire[168:0] Slave3_CIO;
-
-	assign Master_CIO[`SYNC_SD_CM] = Master_CIO[`SYNC_PWM_CM];
-
-	wire[1:0] Slave1_tx;
-	wire[1:0] Slave1_rx;
-	wire[1:0] Slave2_tx;
-	wire[1:0] Slave2_rx;
-	wire[1:0] Slave3_tx;
-	wire[1:0] Slave3_rx;
-	wire[1:0] Master_tx;
-	wire[1:0] Master_rx;
-
-	assign Slave3_tx = {Slave3_FIO[`TX2_FS], Slave3_FIO[`TX1_FS]};
-	assign {Slave3_FIO[`RX2_FS], Slave3_FIO[`RX1_FS]} = Slave3_rx;
-	assign Slave2_tx = {Slave2_FIO[`TX2_FS], Slave2_FIO[`TX1_FS]};
-	assign {Slave2_FIO[`RX2_FS], Slave2_FIO[`RX1_FS]} = Slave2_rx;
-	assign Slave1_tx = {Slave1_FIO[`TX2_FS], Slave1_FIO[`TX1_FS]};
-	assign {Slave1_FIO[`RX2_FS], Slave1_FIO[`RX1_FS]} = Slave1_rx;
-	assign Master_tx = {Master_FIO[`TX2_FM], Master_FIO[`TX1_FM]};
-	assign {Master_FIO[`RX2_FM], Master_FIO[`RX1_FM]} = Master_rx;
-
-	assign Master_rx[0] = ~Slave1_tx[0];
-	assign Master_rx[1] = ~1'b0;
-	
-	assign Slave1_rx[0] = ~Master_tx[0];
-	assign Slave1_rx[1] = ~Slave2_tx[0];
-	
-	assign Slave2_rx[0] = ~Slave1_tx[1];
-	assign Slave2_rx[1] = ~Slave3_tx[0];
-	
-	assign Slave3_rx[0] = ~Slave2_tx[1];
-	assign Slave3_rx[1] = ~1'b0;
-		
-	assign Master_FIO[`DATA_U1_FM] = 1'b1;
-/*
-	SerDes_master SerDes_master(.XTAL_20MHz_i(XTAL1_20MHz_i), .XTAL_25MHz_i(XTAL1_25MHz_i), .CPU_io(Master_CIO), .FPGA_conn_io(Master_FIO),
-	.rst_cpu_o(), .clk_cpu_o());
-
-	SerDes_slave SerDes_slave1(.XTAL_20MHz_i(XTAL1_20MHz_i), .XTAL_25MHz_i(XTAL2_25MHz_i), .CPU_io(Slave1_CIO), .FPGA_conn_io(Slave1_FIO),
-	.rst_cpu_o(), .clk_cpu_o());
-
-	SerDes_slave SerDes_slave2(.XTAL_20MHz_i(XTAL1_20MHz_i), .XTAL_25MHz_i(XTAL3_25MHz_i), .CPU_io(Slave2_CIO), .FPGA_conn_io(Slave2_FIO),
-	.rst_cpu_o(), .clk_cpu_o());
-
-	SerDes_slave SerDes_slave3(.XTAL_20MHz_i(XTAL1_20MHz_i), .XTAL_25MHz_i(XTAL1_25MHz_i), .CPU_io(Slave3_CIO), .FPGA_conn_io(Slave3_FIO),
-	.rst_cpu_o(), .clk_cpu_o());
-*/
-	wire[15:0] next_period;
-	assign next_period = `CYCLE_PERIOD-1;
-	wire[15:0] current_period;
-	wire[15:0] local_counter;
-	wire sync_phase;
-	Local_clock	#(.INITIAL_PHASE(0)) Local_clock(.clk_i(XTAL1_25MHz_i), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase),
-	.snapshot_start_i(4'b0), .snapshot_value_o()); 
+	//wire[15:0] next_period;
+	//assign next_period = `CYCLE_PERIOD-1;
+	//wire[15:0] current_period;
+	//wire[15:0] local_counter;
+	//wire sync_phase;
+	//Local_clock	#(.INITIAL_PHASE(0)) Local_clock(.clk_i(XTAL1_25MHz_i), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase),
+	//.snapshot_start_i(4'b0), .snapshot_value_o()); 
 	
 	
-	reg[15:0] duty_r; 
-	reg[1:0] sync_reg; 
-	always @(posedge XTAL1_25MHz_i) begin
-		sync_reg <= {sync_phase, sync_reg[1]};
-		if(sync_phase)
-			duty_r <= 16'd2024;
-		else
-			duty_r <= -16'd2023;
+	//reg[15:0] duty_r; 
+	//reg[1:0] sync_reg; 
+	//always @(posedge XTAL1_25MHz_i) begin
+		//sync_reg <= {sync_phase, sync_reg[1]};
+		//if(sync_phase)
+			//duty_r <= 16'd2024;
+		//else
+			//duty_r <= -16'd2023;
 			
-		duty_r <= 16'd0;
-	end
+		//duty_r <= 16'd0;
+	//end
 	
-	wire PWM_EN;
-	assign PWM_EN = 1'b1;
-	wire PWM_EN_r; 
-	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg[1] ^ sync_reg[0]), .CK(XTAL1_25MHz_i), .CD(!(TZ_EN & PWM_EN)), .Q(PWM_EN_r)); 
+	//wire PWM_EN;
+	//assign PWM_EN = 1'b1;
+	//wire PWM_EN_r; 
+	//FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg[1] ^ sync_reg[0]), .CK(XTAL1_25MHz_i), .CD(!(TZ_EN & PWM_EN)), .Q(PWM_EN_r)); 
 
-	Symmetrical_PWM Symmetrical_PWM(.clk_i(XTAL1_25MHz_i), .enable_output_i(PWM_EN_r), .duty_i(duty_r), .next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
+	//Symmetrical_PWM Symmetrical_PWM(.clk_i(XTAL1_25MHz_i), .enable_output_i(PWM_EN_r), .duty_i(duty_r), .next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
+	
+	localparam EMIF_MEMORY_WIDTH = `COMM_MEMORY_EMIF_WIDTH+3;//$clog2(2x COMM_MEMORY + MUX) = $clog2(3) = 2 
+	wire EMIF_oe_i; 
+	wire EMIF_we_i; 
+	wire EMIF_cs_i; 
+	wire[31:0] EMIF_data_i;
+	wire[EMIF_MEMORY_WIDTH-1:0] EMIF_address_i; 
+ 
+	assign clk_DSP = XTAL1_25MHz_i;
+	
+	wire Kalman1_WIP;
+	wire Kalman1_START;
+	
+	wire Kalman1_Mem2_we;
+	wire[8:0] Kalman1_Mem2_addrw;
+	wire[35:0] Kalman1_Mem2_data;
+	wire[31:0] Kalman1_data_o;
+	wire [53:0] Kalman1_CIN;
+	wire [53:0] Kalman1_CO;
+	wire Kalman1_SIGNEDCIN;
+	wire Kalman1_SIGNEDCO;
 
+	parameter Kalman1_Mem2_key = 3'd6;
+	Kalman Kalman1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Kalman1_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Kalman1_Mem2_key[0]),
+	.enable_i(Kalman1_START), .Mem2_addrw_o(Kalman1_Mem2_addrw), .Mem2_we_o(Kalman1_Mem2_we), .Mem2_data_o(Kalman1_Mem2_data), .WIP_flag_o(Kalman1_WIP),
+	.CIN(Kalman1_CIN), .SIGNEDCIN(Kalman1_SIGNEDCIN), .CO(Kalman1_CO), .SIGNEDCO(Kalman1_SIGNEDCO));
+
+	assign Kalman1_START = i[9];
+	assign Kalman1_SIGNEDCIN = 1;
+	assign Kalman1_CIN = 0;
+	
+	wire Kalman2_WIP;
+	wire Kalman2_START;
+	
+	wire Kalman2_Mem2_we;
+	wire[8:0] Kalman2_Mem2_addrw;
+	wire[35:0] Kalman2_Mem2_data;
+	wire[31:0] Kalman2_data_o;
+	wire [53:0] Kalman2_CIN;
+	wire [53:0] Kalman2_CO;
+	wire Kalman2_SIGNEDCIN;
+	wire Kalman2_SIGNEDCO;
+	
+	Kalman2 Kalman2(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Kalman1_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Kalman1_Mem2_key[0]),
+	.enable_i(Kalman2_START), .Mem0_addrw_o(Kalman2_Mem2_addrw), .Mem0_we_o(Kalman2_Mem2_we), .Mem0_data_io(Kalman2_Mem2_data), .WIP_flag_o(Kalman2_WIP),
+	.CIN(Kalman2_CIN), .SIGNEDCIN(Kalman2_SIGNEDCIN), .CO(Kalman2_CO), .SIGNEDCO(Kalman2_SIGNEDCO));
+
+	assign Kalman2_START = i[9];
+	assign Kalman2_SIGNEDCIN = 1;
+	assign Kalman2_CIN = 0;
+	
+	assign EMIF_oe_i = 1; 
+	assign EMIF_we_i = 1; 
+	assign EMIF_cs_i = 1; 
+	assign EMIF_data_i = 0;
+	assign EMIF_address_i = 0; 
+	
 	always begin
 		XTAL1_25MHz_i = 0;
 		forever

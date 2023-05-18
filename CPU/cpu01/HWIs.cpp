@@ -259,18 +259,43 @@ interrupt void SD_INT()
 
     Fast_copy21_CPUasm();
 
+    static volatile Uint32 Kalman_WIP;
+    Kalman_WIP = EMIF_mem.read.flags.Kalman1_WIP;
+
+//    static volatile struct
+//    {
+//        struct trigonometric_struct harmonic[FPGA_KALMAN_STATES];
+//        float estimate;
+//        float error;
+//    }Kalman_mem;
+//    int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman[0];
+//    float *pointer_dst = (float *)&Kalman_mem;
+//    for(int i=0; i<sizeof(Kalman_mem)>>1; i++)
+//    {
+//        *pointer_dst++ = (float)*pointer_src++;// / (float)(1UL<<31);
+//    }
+
+    static float angle = 0.0f;
+    angle += Conv.Ts * MATH_2PI * 100.0f;
+    angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
+    static volatile int32 zmienna;
+    zmienna = 0.02f * (float)(1UL<<31) * (1.0f + sinf(angle));
+//    zmienna = 0.002f;
+//    EMIF_mem.write.Kalman[0].input[0] = zmienna;
+    EMIF_mem.write.DSP_start = 4UL;
+
     static volatile union double_pulse_union
     {
        Uint32 u32;
        Uint16 u16[2];
-    }double_pulse = {.u16 = {400, 15}};
+    }double_pulse = {.u16 = {800, 15}};
     EMIF_mem.write.double_pulse = double_pulse.u32;
 
     static volatile float counter = 0;
     if(Machine.ONOFF != Machine.ONOFF_last)
     {
-       counter = 0;
-       GPIO_SET(PWM_EN_CM);
+        counter = 0;
+        GPIO_SET(PWM_EN_CM);
     }
     counter += Conv.Ts;
     if(counter >= 1.0f)
