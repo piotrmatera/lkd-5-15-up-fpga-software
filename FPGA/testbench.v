@@ -72,7 +72,7 @@ module SerDes_tb;
 	wire Kalman1_SIGNEDCO;
 
 	parameter Kalman1_Mem2_key = 3'd6;
-	Kalman Kalman1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Kalman #(.DEBUG(1)) Kalman1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Kalman1_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Kalman1_Mem2_key[0]),
 	.enable_i(Kalman1_START), .Mem2_addrw_o(Kalman1_Mem2_addrw), .Mem2_we_o(Kalman1_Mem2_we), .Mem2_data_o(Kalman1_Mem2_data), .WIP_flag_o(Kalman1_WIP),
 	.CIN(Kalman1_CIN), .SIGNEDCIN(Kalman1_SIGNEDCIN), .CO(Kalman1_CO), .SIGNEDCO(Kalman1_SIGNEDCO));

@@ -15,10 +15,10 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	input wire SignBB;
 	input wire [35:0] Mem0;
 	input wire [35:0] Mem1;
-	input wire [1:0] AAMemsel;
-	input wire [1:0] ABMemsel;
-	input wire [1:0] BAMemsel;
-	input wire [1:0] BBMemsel;
+	input wire [2:0] AAMemsel;
+	input wire [2:0] ABMemsel;
+	input wire [2:0] BAMemsel;
+	input wire [2:0] BBMemsel;
 	input wire CMemsel;
 	input wire [1:0] AMuxsel;
     input wire [1:0] BMuxsel;
@@ -50,32 +50,58 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	wire scuba_vhi;
     wire scuba_vlo;
 	
-	wire [17:0] DataAA [3:0];
+	reg [35:0] Mem0_r;
+	reg [35:0] Mem1_r;
+	
+	wire [17:0] DataAA [7:0];
 	assign DataAA[0] = Mem0[17:0];
 	assign DataAA[1] = Mem0[35:18];
 	assign DataAA[2] = Mem1[17:0];
 	assign DataAA[3] = Mem1[35:18];
-	wire [17:0] DataAB [3:0];
+	assign DataAA[4] = Mem0_r[17:0];
+	assign DataAA[5] = Mem0_r[35:18];
+	assign DataAA[6] = Mem1_r[17:0];
+	assign DataAA[7] = Mem1_r[35:18];
+	wire [17:0] DataAB [7:0];
 	assign DataAB[0] = Mem0[17:0];
 	assign DataAB[1] = Mem0[35:18];
 	assign DataAB[2] = Mem1[17:0];
 	assign DataAB[3] = Mem1[35:18];
-	wire [17:0] DataBA [3:0];
+	assign DataAB[4] = Mem0_r[17:0];
+	assign DataAB[5] = Mem0_r[35:18];
+	assign DataAB[6] = Mem1_r[17:0];
+	assign DataAB[7] = Mem1_r[35:18];
+	wire [17:0] DataBA [7:0];
 	assign DataBA[0] = Mem0[17:0];
 	assign DataBA[1] = Mem0[35:18];
 	assign DataBA[2] = Mem1[17:0];
 	assign DataBA[3] = Mem1[35:18];
-	wire [17:0] DataBB [3:0];
+	assign DataBA[4] = Mem0_r[17:0];
+	assign DataBA[5] = Mem0_r[35:18];
+	assign DataBA[6] = Mem1_r[17:0];
+	assign DataBA[7] = Mem1_r[35:18];
+	wire [17:0] DataBB [7:0];
 	assign DataBB[0] = Mem0[17:0];
 	assign DataBB[1] = Mem0[35:18];
 	assign DataBB[2] = Mem1[17:0];
 	assign DataBB[3] = Mem1[35:18];
+	assign DataBB[4] = Mem0_r[17:0];
+	assign DataBB[5] = Mem0_r[35:18];
+	assign DataBB[6] = Mem1_r[17:0];
+	assign DataBB[7] = Mem1_r[35:18];
+	wire [17:0] DataCA;
+	wire [17:0] DataCB;
+	assign DataCA = {18{scuba_vlo}};
+	assign DataCB = {18{scuba_vlo}};
+	
 	wire [35:0] DataC [1:0];
 	assign DataC[0] = Mem0;
 	assign DataC[1] = Mem1;
 	reg [35:0] DataC_r;
 	always @(posedge CLK0) begin
 		DataC_r <= DataC[CMemsel];
+		Mem0_r <= Mem0;
+		Mem1_r <= Mem1;
 	end
 	
 	defparam dsp_alu_0.CLK3_DIV = "ENABLED" ;
@@ -291,7 +317,7 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
     defparam dsp_mult_1.REG_INPUTB_CE = "CE0" ;
     defparam dsp_mult_1.REG_INPUTB_CLK = "CLK0" ;
     defparam dsp_mult_1.REG_INPUTA_RST = "RST0" ;
-    defparam dsp_mult_1.REG_INPUTA_CE = "CE1" ;
+    defparam dsp_mult_1.REG_INPUTA_CE = "CE0" ;
     defparam dsp_mult_1.REG_INPUTA_CLK = "CLK0" ;
     MULT18X18D dsp_mult_1 (.A17(DataAA[AAMemsel][17]), .A16(DataAA[AAMemsel][16]), 
 		.A15(DataAA[AAMemsel][15]), .A14(DataAA[AAMemsel][14]), .A13(DataAA[AAMemsel][13]),
@@ -305,12 +331,12 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 		.B9(DataAB[ABMemsel][9]), .B8(DataAB[ABMemsel][8]), .B7(DataAB[ABMemsel][7]), 
 		.B6(DataAB[ABMemsel][6]), .B5(DataAB[ABMemsel][5]), .B4(DataAB[ABMemsel][4]), 
 		.B3(DataAB[ABMemsel][3]), .B2(DataAB[ABMemsel][2]), .B1(DataAB[ABMemsel][1]), 
-		.B0(DataAB[ABMemsel][0]), .C17(scuba_vlo), 
-        .C16(scuba_vlo), .C15(scuba_vlo), .C14(scuba_vlo), .C13(scuba_vlo), 
-        .C12(scuba_vlo), .C11(scuba_vlo), .C10(scuba_vlo), .C9(scuba_vlo), 
-        .C8(scuba_vlo), .C7(scuba_vlo), .C6(scuba_vlo), .C5(scuba_vlo), 
-        .C4(scuba_vlo), .C3(scuba_vlo), .C2(scuba_vlo), .C1(scuba_vlo), 
-        .C0(scuba_vlo), .SIGNEDA(SignAA), .SIGNEDB(SignAB), .SOURCEA(scuba_vlo), 
+		.B0(DataAB[ABMemsel][0]), .C17(DataCA[17]), 
+        .C16(DataCA[16]), .C15(DataCA[15]), .C14(DataCA[14]), .C13(DataCA[13]), 
+        .C12(DataCA[12]), .C11(DataCA[11]), .C10(DataCA[10]), .C9(DataCA[9]), 
+        .C8(DataCA[8]), .C7(DataCA[7]), .C6(DataCA[6]), .C5(DataCA[5]), 
+        .C4(DataCA[4]), .C3(DataCA[3]), .C2(DataCA[2]), .C1(DataCA[1]), 
+        .C0(DataCA[0]), .SIGNEDA(SignAA), .SIGNEDB(SignAB), .SOURCEA(scuba_vlo), 
         .SOURCEB(scuba_vlo), .CE0(CE0), .CE1(CE1), .CE2(scuba_vhi), 
         .CE3(scuba_vhi), .CLK0(CLK0), .CLK1(scuba_vlo), .CLK2(scuba_vlo), 
         .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), .RST2(scuba_vlo), 
@@ -403,12 +429,12 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 		.B9(DataBB[BBMemsel][9]), .B8(DataBB[BBMemsel][8]), .B7(DataBB[BBMemsel][7]), 
 		.B6(DataBB[BBMemsel][6]), .B5(DataBB[BBMemsel][5]), .B4(DataBB[BBMemsel][4]), 
 		.B3(DataBB[BBMemsel][3]), .B2(DataBB[BBMemsel][2]), .B1(DataBB[BBMemsel][1]), 
-		.B0(DataBB[BBMemsel][0]), .C17(scuba_vlo), 
-        .C16(scuba_vlo), .C15(scuba_vlo), .C14(scuba_vlo), .C13(scuba_vlo), 
-        .C12(scuba_vlo), .C11(scuba_vlo), .C10(scuba_vlo), .C9(scuba_vlo), 
-        .C8(scuba_vlo), .C7(scuba_vlo), .C6(scuba_vlo), .C5(scuba_vlo), 
-        .C4(scuba_vlo), .C3(scuba_vlo), .C2(scuba_vlo), .C1(scuba_vlo),
-        .C0(scuba_vlo), .SIGNEDA(SignBA), .SIGNEDB(SignBB), .SOURCEA(scuba_vlo), 
+		.B0(DataBB[BBMemsel][0]), .C17(DataCB[17]), 
+        .C16(DataCB[16]), .C15(DataCB[15]), .C14(DataCB[14]), .C13(DataCB[13]), 
+        .C12(DataCB[12]), .C11(DataCB[11]), .C10(DataCB[10]), .C9(DataCB[9]), 
+        .C8(DataCB[8]), .C7(DataCB[7]), .C6(DataCB[6]), .C5(DataCB[5]), 
+        .C4(DataCB[4]), .C3(DataCB[3]), .C2(DataCB[2]), .C1(DataCB[1]),
+        .C0(DataCB[0]), .SIGNEDA(SignBA), .SIGNEDB(SignBB), .SOURCEA(scuba_vlo), 
         .SOURCEB(scuba_vlo), .CE0(CE0), .CE1(CE1), .CE2(scuba_vhi), 
         .CE3(scuba_vhi), .CLK0(CLK0), .CLK1(scuba_vlo), .CLK2(scuba_vlo), 
         .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), .RST2(scuba_vlo), 
