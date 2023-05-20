@@ -288,7 +288,7 @@ interrupt void SD_INT()
     {
        Uint32 u32;
        Uint16 u16[2];
-    }double_pulse = {.u16 = {800, 15}};
+    }double_pulse = {.u16 = {620, 15}};
     EMIF_mem.write.double_pulse = double_pulse.u32;
 
     static volatile float counter = 0;
@@ -302,6 +302,9 @@ interrupt void SD_INT()
     {
        GPIO_CLEAR(PWM_EN_CM);
     }
+
+//    GPIO_SET(RST_CM);
+//    EMIF_mem.write.PWM_control = 0xAA;
 
     GPIO_CLEAR(TRIGGER0_CM);
 

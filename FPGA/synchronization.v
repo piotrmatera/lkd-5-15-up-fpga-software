@@ -432,7 +432,7 @@ module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_nu
 			new_cycle_flag <= 1'b1;
 			comm_last <= 1'b0;
 			
-			if($signed(Kalman_offset_o) < $signed(65536.0*1.2) && $signed(Kalman_offset_o) > $signed(-65536.0*1.2) && 
+			if($signed(Kalman_offset_o) < (65536.0*1.2) && $signed(Kalman_offset_o) > (-65536.0*1.2) && 
 			   node_number_rdy_i && comm_last) begin
 				if(sync_counter >= `CONV_FREQUENCY)
 					sync_rdy_o <= 1'b1;

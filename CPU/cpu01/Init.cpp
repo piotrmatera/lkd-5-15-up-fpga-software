@@ -314,7 +314,7 @@ void Init_class::Variables()
     Meas_alarm_H.Temp = 95.0f;
     Meas_alarm_L.Temp = 0.0f;
 
-    Meas_alarm_H.U_dc = 750.0f;
+    Meas_alarm_H.U_dc = 760.0f;
     Meas_alarm_L.U_dc = -5.0f;
     Meas_alarm_H.U_dc_balance = 30.0f;
 

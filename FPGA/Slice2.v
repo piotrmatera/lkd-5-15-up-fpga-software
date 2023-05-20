@@ -38,15 +38,35 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	input wire SIGNEDCIN;
 	output wire [53:0] CO;
 
-    wire Slice_alu_output[53:0];
-    wire Slice_0_mult_out_rob_0[17:0];
-    wire Slice_0_mult_out_roa_0[17:0];
-    wire Slice_0_mult_out_p_0[35:0];
-    wire Slice_0_mult_out_signedp_0;
-    wire Slice_0_mult_out_rob_1[17:0];
-    wire Slice_0_mult_out_roa_1[17:0];
-    wire Slice_0_mult_out_p_1[35:0];
-    wire Slice_0_mult_out_signedp_1;
+    wire [53:0] ALU_O;
+    wire [17:0] ALU_A_H;
+    wire [17:0] ALU_A_L;
+	wire [17:0] ALU_B_H;
+    wire [17:0] ALU_B_L;
+    wire [53:0] ALU_C;
+	wire [35:0] ALU_MA;
+	wire [35:0] ALU_MB;
+	wire ALU_MA_SIGN;
+	wire ALU_MB_SIGN;
+    wire [53:0] ALU_CFB;
+    
+	
+    wire [17:0] MULTA_A;
+    wire [17:0] MULTA_B;
+	wire [17:0] MULTA_C;
+    wire [17:0] MULTA_ROB;
+    wire [17:0] MULTA_ROA;
+    wire [35:0] MULTA_P;
+    wire MULTA_P_SIGN;
+	
+	wire [17:0] MULTB_A;
+    wire [17:0] MULTB_B;
+	wire [17:0] MULTB_C;
+    wire [17:0] MULTB_ROB;
+    wire [17:0] MULTB_ROA;
+    wire [35:0] MULTB_P;
+    wire MULTB_P_SIGN;
+	
 	wire scuba_vhi;
     wire scuba_vlo;
 	
@@ -89,12 +109,9 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	assign DataBB[5] = Mem0_r[35:18];
 	assign DataBB[6] = Mem1_r[17:0];
 	assign DataBB[7] = Mem1_r[35:18];
-	wire [17:0] DataCA;
-	wire [17:0] DataCB;
-	assign DataCA = {18{scuba_vlo}};
-	assign DataCB = {18{scuba_vlo}};
-	
 	wire [35:0] DataC [1:0];
+	
+		
 	assign DataC[0] = Mem0;
 	assign DataC[1] = Mem1;
 	reg [35:0] DataC_r;
@@ -103,146 +120,167 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 		Mem0_r <= Mem0;
 		Mem1_r <= Mem1;
 	end
+		
+	assign ALU_A_H = MULTA_ROB;
+	assign ALU_A_L = MULTA_ROA;
+	assign ALU_B_H = MULTB_ROB;
+	assign ALU_B_L = MULTB_ROA;
+	assign ALU_C[53:18] = DataC_r;
+	assign ALU_C[17:0] = {18{DataC_r[35]}};
+	assign ALU_MA = MULTA_P;
+	assign ALU_MB = MULTB_P;
+	assign ALU_MA_SIGN = MULTA_P_SIGN;
+	assign ALU_MB_SIGN = MULTB_P_SIGN;
+	assign ALU_CFB = {54{scuba_vlo}};
 	
-	defparam dsp_alu_0.CLK3_DIV = "ENABLED" ;
-    defparam dsp_alu_0.CLK2_DIV = "ENABLED" ;
-    defparam dsp_alu_0.CLK1_DIV = "DISABLED" ;
-    defparam dsp_alu_0.CLK0_DIV = "ENABLED" ;
-    defparam dsp_alu_0.REG_INPUTCFB_RST = "RST0" ;
-    defparam dsp_alu_0.REG_INPUTCFB_CE = "CE0" ;
-    defparam dsp_alu_0.REG_INPUTCFB_CLK = "NONE" ;
-    defparam dsp_alu_0.REG_OPCODEIN_1_RST = "RST0" ;
-    defparam dsp_alu_0.REG_OPCODEIN_1_CE = "CE0" ;
-    defparam dsp_alu_0.REG_OPCODEIN_1_CLK = "CLK0" ;
-    defparam dsp_alu_0.REG_OPCODEIN_0_RST = "RST0" ;
-    defparam dsp_alu_0.REG_OPCODEIN_0_CE = "CE0" ;
-    defparam dsp_alu_0.REG_OPCODEIN_0_CLK = "CLK0" ;
-    defparam dsp_alu_0.REG_OPCODEOP1_1_CLK = "CLK0" ;
-    defparam dsp_alu_0.REG_OPCODEOP1_0_CLK = "CLK0" ;
-    defparam dsp_alu_0.REG_OPCODEOP0_1_RST = "RST0" ;
-    defparam dsp_alu_0.REG_OPCODEOP0_1_CE = "CE0" ;
-    defparam dsp_alu_0.REG_OPCODEOP0_1_CLK = "CLK0" ;
-    defparam dsp_alu_0.REG_OPCODEOP0_0_RST = "RST0" ;
-    defparam dsp_alu_0.REG_OPCODEOP0_0_CE = "CE0" ;
-    defparam dsp_alu_0.REG_OPCODEOP0_0_CLK = "CLK0" ;
-    defparam dsp_alu_0.REG_INPUTC1_RST = "RST0" ;
-    defparam dsp_alu_0.REG_INPUTC1_CE = "CE0" ;
-    defparam dsp_alu_0.REG_INPUTC1_CLK = "CLK1" ;
-    defparam dsp_alu_0.REG_INPUTC0_RST = "RST0" ;
-    defparam dsp_alu_0.REG_INPUTC0_CE = "CE0" ;
-    defparam dsp_alu_0.REG_INPUTC0_CLK = "CLK1" ;
-    defparam dsp_alu_0.LEGACY = "DISABLED" ;
-    defparam dsp_alu_0.REG_FLAG_RST = "RST0" ;
-    defparam dsp_alu_0.REG_FLAG_CE = "CE0" ;
-    defparam dsp_alu_0.REG_FLAG_CLK = "CLK0" ;
-    defparam dsp_alu_0.REG_OUTPUT1_RST = "RST0" ;
-    defparam dsp_alu_0.REG_OUTPUT1_CE = "CE0" ;
-    defparam dsp_alu_0.REG_OUTPUT1_CLK = "CLK0" ;
-    defparam dsp_alu_0.REG_OUTPUT0_RST = "RST0" ;
-    defparam dsp_alu_0.REG_OUTPUT0_CE = "CE0" ;
-    defparam dsp_alu_0.REG_OUTPUT0_CLK = "CLK0" ;
-    defparam dsp_alu_0.MULT9_MODE = "DISABLED" ;
-    defparam dsp_alu_0.RNDPAT = "0x00000000000000" ;
-    defparam dsp_alu_0.MASKPAT = "0x00000000000000" ;
-    defparam dsp_alu_0.MCPAT = "0x00000000000000" ;
-    defparam dsp_alu_0.MASK01 = "0x00000000000000" ;
-    defparam dsp_alu_0.MASKPAT_SOURCE = "STATIC" ;
-    defparam dsp_alu_0.MCPAT_SOURCE = "STATIC" ;
-    defparam dsp_alu_0.RESETMODE = "SYNC" ;
-    defparam dsp_alu_0.GSR = "ENABLED" ;
-    ALU54B dsp_alu_0 (.A35(Slice_0_mult_out_rob_0[17]), .A34(Slice_0_mult_out_rob_0[16]), 
-        .A33(Slice_0_mult_out_rob_0[15]), .A32(Slice_0_mult_out_rob_0[14]), 
-        .A31(Slice_0_mult_out_rob_0[13]), .A30(Slice_0_mult_out_rob_0[12]), 
-        .A29(Slice_0_mult_out_rob_0[11]), .A28(Slice_0_mult_out_rob_0[10]), 
-        .A27(Slice_0_mult_out_rob_0[9]), .A26(Slice_0_mult_out_rob_0[8]), 
-        .A25(Slice_0_mult_out_rob_0[7]), .A24(Slice_0_mult_out_rob_0[6]), 
-        .A23(Slice_0_mult_out_rob_0[5]), .A22(Slice_0_mult_out_rob_0[4]), 
-        .A21(Slice_0_mult_out_rob_0[3]), .A20(Slice_0_mult_out_rob_0[2]), 
-        .A19(Slice_0_mult_out_rob_0[1]), .A18(Slice_0_mult_out_rob_0[0]), 
-        .A17(Slice_0_mult_out_roa_0[17]), .A16(Slice_0_mult_out_roa_0[16]), 
-        .A15(Slice_0_mult_out_roa_0[15]), .A14(Slice_0_mult_out_roa_0[14]), 
-        .A13(Slice_0_mult_out_roa_0[13]), .A12(Slice_0_mult_out_roa_0[12]), 
-        .A11(Slice_0_mult_out_roa_0[11]), .A10(Slice_0_mult_out_roa_0[10]), 
-        .A9(Slice_0_mult_out_roa_0[9]), .A8(Slice_0_mult_out_roa_0[8]), .A7(Slice_0_mult_out_roa_0[7]), 
-        .A6(Slice_0_mult_out_roa_0[6]), .A5(Slice_0_mult_out_roa_0[5]), .A4(Slice_0_mult_out_roa_0[4]), 
-        .A3(Slice_0_mult_out_roa_0[3]), .A2(Slice_0_mult_out_roa_0[2]), .A1(Slice_0_mult_out_roa_0[1]), 
-        .A0(Slice_0_mult_out_roa_0[0]), .B35(Slice_0_mult_out_rob_1[17]), 
-        .B34(Slice_0_mult_out_rob_1[16]), .B33(Slice_0_mult_out_rob_1[15]), 
-        .B32(Slice_0_mult_out_rob_1[14]), .B31(Slice_0_mult_out_rob_1[13]), 
-        .B30(Slice_0_mult_out_rob_1[12]), .B29(Slice_0_mult_out_rob_1[11]), 
-        .B28(Slice_0_mult_out_rob_1[10]), .B27(Slice_0_mult_out_rob_1[9]), 
-        .B26(Slice_0_mult_out_rob_1[8]), .B25(Slice_0_mult_out_rob_1[7]), 
-        .B24(Slice_0_mult_out_rob_1[6]), .B23(Slice_0_mult_out_rob_1[5]), 
-        .B22(Slice_0_mult_out_rob_1[4]), .B21(Slice_0_mult_out_rob_1[3]), 
-        .B20(Slice_0_mult_out_rob_1[2]), .B19(Slice_0_mult_out_rob_1[1]), 
-        .B18(Slice_0_mult_out_rob_1[0]), .B17(Slice_0_mult_out_roa_1[17]), 
-        .B16(Slice_0_mult_out_roa_1[16]), .B15(Slice_0_mult_out_roa_1[15]), 
-        .B14(Slice_0_mult_out_roa_1[14]), .B13(Slice_0_mult_out_roa_1[13]), 
-        .B12(Slice_0_mult_out_roa_1[12]), .B11(Slice_0_mult_out_roa_1[11]), 
-        .B10(Slice_0_mult_out_roa_1[10]), .B9(Slice_0_mult_out_roa_1[9]), 
-        .B8(Slice_0_mult_out_roa_1[8]), .B7(Slice_0_mult_out_roa_1[7]), .B6(Slice_0_mult_out_roa_1[6]), 
-        .B5(Slice_0_mult_out_roa_1[5]), .B4(Slice_0_mult_out_roa_1[4]), .B3(Slice_0_mult_out_roa_1[3]), 
-        .B2(Slice_0_mult_out_roa_1[2]), .B1(Slice_0_mult_out_roa_1[1]), .B0(Slice_0_mult_out_roa_1[0]), 
-        .CFB53(scuba_vlo), .CFB52(scuba_vlo), .CFB51(scuba_vlo), .CFB50(scuba_vlo), 
-        .CFB49(scuba_vlo), .CFB48(scuba_vlo), .CFB47(scuba_vlo), .CFB46(scuba_vlo), 
-        .CFB45(scuba_vlo), .CFB44(scuba_vlo), .CFB43(scuba_vlo), .CFB42(scuba_vlo), 
-        .CFB41(scuba_vlo), .CFB40(scuba_vlo), .CFB39(scuba_vlo), .CFB38(scuba_vlo), 
-        .CFB37(scuba_vlo), .CFB36(scuba_vlo), .CFB35(scuba_vlo), .CFB34(scuba_vlo), 
-        .CFB33(scuba_vlo), .CFB32(scuba_vlo), .CFB31(scuba_vlo), .CFB30(scuba_vlo), 
-        .CFB29(scuba_vlo), .CFB28(scuba_vlo), .CFB27(scuba_vlo), .CFB26(scuba_vlo), 
-        .CFB25(scuba_vlo), .CFB24(scuba_vlo), .CFB23(scuba_vlo), .CFB22(scuba_vlo), 
-        .CFB21(scuba_vlo), .CFB20(scuba_vlo), .CFB19(scuba_vlo), .CFB18(scuba_vlo), 
-        .CFB17(scuba_vlo), .CFB16(scuba_vlo), .CFB15(scuba_vlo), .CFB14(scuba_vlo), 
-        .CFB13(scuba_vlo), .CFB12(scuba_vlo), .CFB11(scuba_vlo), .CFB10(scuba_vlo), 
-        .CFB9(scuba_vlo), .CFB8(scuba_vlo), .CFB7(scuba_vlo), .CFB6(scuba_vlo), 
-        .CFB5(scuba_vlo), .CFB4(scuba_vlo), .CFB3(scuba_vlo), .CFB2(scuba_vlo), 
-        .CFB1(scuba_vlo), .CFB0(scuba_vlo), .C53(DataC_r[35]), .C52(DataC_r[34]), .C51(DataC_r[33]), 
-        .C50(DataC_r[32]), .C49(DataC_r[31]), .C48(DataC_r[30]), .C47(DataC_r[29]), .C46(DataC_r[28]), 
-        .C45(DataC_r[27]), .C44(DataC_r[26]), .C43(DataC_r[25]), .C42(DataC_r[24]), .C41(DataC_r[23]), 
-        .C40(DataC_r[22]), .C39(DataC_r[21]), .C38(DataC_r[20]), .C37(DataC_r[19]), .C36(DataC_r[18]), 
-        .C35(DataC_r[17]), .C34(DataC_r[16]), .C33(DataC_r[15]), .C32(DataC_r[14]), .C31(DataC_r[13]), 
-        .C30(DataC_r[12]), .C29(DataC_r[11]), .C28(DataC_r[10]), .C27(DataC_r[9]), .C26(DataC_r[8]), 
-        .C25(DataC_r[7]), .C24(DataC_r[6]), .C23(DataC_r[5]), .C22(DataC_r[4]), .C21(DataC_r[32]), 
-        .C20(DataC_r[2]), .C19(DataC_r[1]), .C18(DataC_r[0]), .C17(scuba_vlo), .C16(scuba_vlo), 
-        .C15(scuba_vlo), .C14(scuba_vlo), .C13(scuba_vlo), .C12(scuba_vlo), .C11(scuba_vlo), 
-        .C10(scuba_vlo), .C9(scuba_vlo), .C8(scuba_vlo), .C7(scuba_vlo), .C6(scuba_vlo), .C5(scuba_vlo), 
-        .C4(scuba_vlo), .C3(scuba_vlo), .C2(scuba_vlo), .C1(scuba_vlo), .C0(scuba_vlo), .CE0(CE0), 
+	assign MULTA_A = DataAA[AAMemsel];
+	assign MULTA_B = DataAB[ABMemsel];
+	assign MULTA_C = {18{scuba_vlo}};//Any
+	
+	assign MULTB_A = DataBA[BAMemsel];
+	assign MULTB_B = DataBB[BBMemsel];
+	assign MULTB_C = {18{scuba_vlo}};//ALU_C[44:27];	
+
+	
+	defparam dsp_alu.CLK3_DIV = "ENABLED" ;
+    defparam dsp_alu.CLK2_DIV = "ENABLED" ;
+    defparam dsp_alu.CLK1_DIV = "DISABLED" ;
+    defparam dsp_alu.CLK0_DIV = "ENABLED" ;
+    defparam dsp_alu.REG_INPUTCFB_RST = "RST0" ;
+    defparam dsp_alu.REG_INPUTCFB_CE = "CE0" ;
+    defparam dsp_alu.REG_INPUTCFB_CLK = "NONE" ;
+    defparam dsp_alu.REG_OPCODEIN_1_RST = "RST0" ;
+    defparam dsp_alu.REG_OPCODEIN_1_CE = "CE0" ;
+    defparam dsp_alu.REG_OPCODEIN_1_CLK = "CLK0" ;
+    defparam dsp_alu.REG_OPCODEIN_0_RST = "RST0" ;
+    defparam dsp_alu.REG_OPCODEIN_0_CE = "CE0" ;
+    defparam dsp_alu.REG_OPCODEIN_0_CLK = "CLK0" ;
+    defparam dsp_alu.REG_OPCODEOP1_1_CLK = "CLK0" ;
+    defparam dsp_alu.REG_OPCODEOP1_0_CLK = "CLK0" ;
+    defparam dsp_alu.REG_OPCODEOP0_1_RST = "RST0" ;
+    defparam dsp_alu.REG_OPCODEOP0_1_CE = "CE0" ;
+    defparam dsp_alu.REG_OPCODEOP0_1_CLK = "CLK0" ;
+    defparam dsp_alu.REG_OPCODEOP0_0_RST = "RST0" ;
+    defparam dsp_alu.REG_OPCODEOP0_0_CE = "CE0" ;
+    defparam dsp_alu.REG_OPCODEOP0_0_CLK = "CLK0" ;
+    defparam dsp_alu.REG_INPUTC1_RST = "RST0" ;
+    defparam dsp_alu.REG_INPUTC1_CE = "CE0" ;
+    defparam dsp_alu.REG_INPUTC1_CLK = "CLK1" ;
+    defparam dsp_alu.REG_INPUTC0_RST = "RST0" ;
+    defparam dsp_alu.REG_INPUTC0_CE = "CE0" ;
+    defparam dsp_alu.REG_INPUTC0_CLK = "CLK1" ;
+    defparam dsp_alu.LEGACY = "DISABLED" ;
+    defparam dsp_alu.REG_FLAG_RST = "RST0" ;
+    defparam dsp_alu.REG_FLAG_CE = "CE0" ;
+    defparam dsp_alu.REG_FLAG_CLK = "CLK0" ;
+    defparam dsp_alu.REG_OUTPUT1_RST = "RST0" ;
+    defparam dsp_alu.REG_OUTPUT1_CE = "CE0" ;
+    defparam dsp_alu.REG_OUTPUT1_CLK = "CLK0" ;
+    defparam dsp_alu.REG_OUTPUT0_RST = "RST0" ;
+    defparam dsp_alu.REG_OUTPUT0_CE = "CE0" ;
+    defparam dsp_alu.REG_OUTPUT0_CLK = "CLK0" ;
+    defparam dsp_alu.MULT9_MODE = "DISABLED" ;
+    defparam dsp_alu.RNDPAT = "0x00000000000000" ;
+    defparam dsp_alu.MASKPAT = "0x00000000000000" ;
+    defparam dsp_alu.MCPAT = "0x00000000000000" ;
+    defparam dsp_alu.MASK01 = "0x00000000000000" ;
+    defparam dsp_alu.MASKPAT_SOURCE = "STATIC" ;
+    defparam dsp_alu.MCPAT_SOURCE = "STATIC" ;
+    defparam dsp_alu.RESETMODE = "SYNC" ;
+    defparam dsp_alu.GSR = "ENABLED" ;
+    ALU54B dsp_alu (.A35(ALU_A_H[17]), .A34(ALU_A_H[16]), 
+        .A33(ALU_A_H[15]), .A32(ALU_A_H[14]), 
+        .A31(ALU_A_H[13]), .A30(ALU_A_H[12]), 
+        .A29(ALU_A_H[11]), .A28(ALU_A_H[10]), 
+        .A27(ALU_A_H[9]), .A26(ALU_A_H[8]), 
+        .A25(ALU_A_H[7]), .A24(ALU_A_H[6]), 
+        .A23(ALU_A_H[5]), .A22(ALU_A_H[4]), 
+        .A21(ALU_A_H[3]), .A20(ALU_A_H[2]), 
+        .A19(ALU_A_H[1]), .A18(ALU_A_H[0]), 
+        .A17(ALU_A_L[17]), .A16(ALU_A_L[16]), 
+        .A15(ALU_A_L[15]), .A14(ALU_A_L[14]), 
+        .A13(ALU_A_L[13]), .A12(ALU_A_L[12]), 
+        .A11(ALU_A_L[11]), .A10(ALU_A_L[10]), 
+        .A9(ALU_A_L[9]), .A8(ALU_A_L[8]), .A7(ALU_A_L[7]), 
+        .A6(ALU_A_L[6]), .A5(ALU_A_L[5]), .A4(ALU_A_L[4]), 
+        .A3(ALU_A_L[3]), .A2(ALU_A_L[2]), .A1(ALU_A_L[1]), 
+        .A0(ALU_A_L[0]), .B35(ALU_B_H[17]), 
+        .B34(ALU_B_H[16]), .B33(ALU_B_H[15]), 
+        .B32(ALU_B_H[14]), .B31(ALU_B_H[13]), 
+        .B30(ALU_B_H[12]), .B29(ALU_B_H[11]), 
+        .B28(ALU_B_H[10]), .B27(ALU_B_H[9]), 
+        .B26(ALU_B_H[8]), .B25(ALU_B_H[7]), 
+        .B24(ALU_B_H[6]), .B23(ALU_B_H[5]), 
+        .B22(ALU_B_H[4]), .B21(ALU_B_H[3]), 
+        .B20(ALU_B_H[2]), .B19(ALU_B_H[1]), 
+        .B18(ALU_B_H[0]), .B17(ALU_B_L[17]), 
+        .B16(ALU_B_L[16]), .B15(ALU_B_L[15]), 
+        .B14(ALU_B_L[14]), .B13(ALU_B_L[13]), 
+        .B12(ALU_B_L[12]), .B11(ALU_B_L[11]), 
+        .B10(ALU_B_L[10]), .B9(ALU_B_L[9]), 
+        .B8(ALU_B_L[8]), .B7(ALU_B_L[7]), .B6(ALU_B_L[6]), 
+        .B5(ALU_B_L[5]), .B4(ALU_B_L[4]), .B3(ALU_B_L[3]), 
+        .B2(ALU_B_L[2]), .B1(ALU_B_L[1]), .B0(ALU_B_L[0]), 
+        .CFB53(ALU_CFB[53]), .CFB52(ALU_CFB[52]), .CFB51(ALU_CFB[51]), .CFB50(ALU_CFB[50]), 
+        .CFB49(ALU_CFB[49]), .CFB48(ALU_CFB[48]), .CFB47(ALU_CFB[47]), .CFB46(ALU_CFB[46]), 
+        .CFB45(ALU_CFB[45]), .CFB44(ALU_CFB[44]), .CFB43(ALU_CFB[43]), .CFB42(ALU_CFB[42]), 
+        .CFB41(ALU_CFB[41]), .CFB40(ALU_CFB[40]), .CFB39(ALU_CFB[39]), .CFB38(ALU_CFB[38]), 
+        .CFB37(ALU_CFB[37]), .CFB36(ALU_CFB[36]), .CFB35(ALU_CFB[35]), .CFB34(ALU_CFB[34]), 
+        .CFB33(ALU_CFB[33]), .CFB32(ALU_CFB[32]), .CFB31(ALU_CFB[31]), .CFB30(ALU_CFB[30]), 
+        .CFB29(ALU_CFB[29]), .CFB28(ALU_CFB[28]), .CFB27(ALU_CFB[27]), .CFB26(ALU_CFB[26]), 
+        .CFB25(ALU_CFB[25]), .CFB24(ALU_CFB[24]), .CFB23(ALU_CFB[23]), .CFB22(ALU_CFB[22]), 
+        .CFB21(ALU_CFB[21]), .CFB20(ALU_CFB[20]), .CFB19(ALU_CFB[19]), .CFB18(ALU_CFB[18]), 
+        .CFB17(ALU_CFB[17]), .CFB16(ALU_CFB[16]), .CFB15(ALU_CFB[15]), .CFB14(ALU_CFB[14]), 
+        .CFB13(ALU_CFB[13]), .CFB12(ALU_CFB[12]), .CFB11(ALU_CFB[11]), .CFB10(ALU_CFB[10]), 
+        .CFB9(ALU_CFB[9]), .CFB8(ALU_CFB[8]), .CFB7(ALU_CFB[7]), .CFB6(ALU_CFB[6]), 
+        .CFB5(ALU_CFB[5]), .CFB4(ALU_CFB[4]), .CFB3(ALU_CFB[3]), .CFB2(ALU_CFB[2]), 
+        .CFB1(ALU_CFB[1]), .CFB0(ALU_CFB[0]), .C53(ALU_C[53]), .C52(ALU_C[52]), .C51(ALU_C[51]), 
+        .C50(ALU_C[50]), .C49(ALU_C[49]), .C48(ALU_C[48]), .C47(ALU_C[47]), .C46(ALU_C[46]), 
+        .C45(ALU_C[45]), .C44(ALU_C[44]), .C43(ALU_C[43]), .C42(ALU_C[42]), .C41(ALU_C[41]), 
+        .C40(ALU_C[40]), .C39(ALU_C[39]), .C38(ALU_C[38]), .C37(ALU_C[37]), .C36(ALU_C[36]), 
+        .C35(ALU_C[35]), .C34(ALU_C[34]), .C33(ALU_C[33]), .C32(ALU_C[32]), .C31(ALU_C[31]), 
+        .C30(ALU_C[30]), .C29(ALU_C[29]), .C28(ALU_C[28]), .C27(ALU_C[27]), .C26(ALU_C[26]), 
+        .C25(ALU_C[25]), .C24(ALU_C[24]), .C23(ALU_C[23]), .C22(ALU_C[22]), .C21(ALU_C[21]), 
+        .C20(ALU_C[20]), .C19(ALU_C[19]), .C18(ALU_C[18]), .C17(ALU_C[17]), .C16(ALU_C[16]), 
+        .C15(ALU_C[15]), .C14(ALU_C[14]), .C13(ALU_C[13]), .C12(ALU_C[12]), .C11(ALU_C[11]), 
+        .C10(ALU_C[10]), .C9(ALU_C[9]), .C8(ALU_C[8]), .C7(ALU_C[7]), .C6(ALU_C[6]), .C5(ALU_C[5]), 
+        .C4(ALU_C[4]), .C3(ALU_C[3]), .C2(ALU_C[2]), .C1(ALU_C[1]), .C0(ALU_C[0]), .CE0(CE0), 
         .CE1(scuba_vhi), .CE2(scuba_vhi), .CE3(scuba_vhi), .CLK0(CLK0), 
         .CLK1(CLK0), .CLK2(scuba_vlo), .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), 
-        .RST2(scuba_vlo), .RST3(scuba_vlo), .SIGNEDIA(Slice_0_mult_out_signedp_0), 
-        .SIGNEDIB(Slice_0_mult_out_signedp_1), .SIGNEDCIN(SIGNEDCIN), .MA35(Slice_0_mult_out_p_0[35]), 
-        .MA34(Slice_0_mult_out_p_0[34]), .MA33(Slice_0_mult_out_p_0[33]), 
-        .MA32(Slice_0_mult_out_p_0[32]), .MA31(Slice_0_mult_out_p_0[31]), 
-        .MA30(Slice_0_mult_out_p_0[30]), .MA29(Slice_0_mult_out_p_0[29]), 
-        .MA28(Slice_0_mult_out_p_0[28]), .MA27(Slice_0_mult_out_p_0[27]), 
-        .MA26(Slice_0_mult_out_p_0[26]), .MA25(Slice_0_mult_out_p_0[25]), 
-        .MA24(Slice_0_mult_out_p_0[24]), .MA23(Slice_0_mult_out_p_0[23]), 
-        .MA22(Slice_0_mult_out_p_0[22]), .MA21(Slice_0_mult_out_p_0[21]), 
-        .MA20(Slice_0_mult_out_p_0[20]), .MA19(Slice_0_mult_out_p_0[19]), 
-        .MA18(Slice_0_mult_out_p_0[18]), .MA17(Slice_0_mult_out_p_0[17]), 
-        .MA16(Slice_0_mult_out_p_0[16]), .MA15(Slice_0_mult_out_p_0[15]), 
-        .MA14(Slice_0_mult_out_p_0[14]), .MA13(Slice_0_mult_out_p_0[13]), 
-        .MA12(Slice_0_mult_out_p_0[12]), .MA11(Slice_0_mult_out_p_0[11]), 
-        .MA10(Slice_0_mult_out_p_0[10]), .MA9(Slice_0_mult_out_p_0[9]), .MA8(Slice_0_mult_out_p_0[8]), 
-        .MA7(Slice_0_mult_out_p_0[7]), .MA6(Slice_0_mult_out_p_0[6]), .MA5(Slice_0_mult_out_p_0[5]), 
-        .MA4(Slice_0_mult_out_p_0[4]), .MA3(Slice_0_mult_out_p_0[3]), .MA2(Slice_0_mult_out_p_0[2]), 
-        .MA1(Slice_0_mult_out_p_0[1]), .MA0(Slice_0_mult_out_p_0[0]), .MB35(Slice_0_mult_out_p_1[35]), 
-        .MB34(Slice_0_mult_out_p_1[34]), .MB33(Slice_0_mult_out_p_1[33]), 
-        .MB32(Slice_0_mult_out_p_1[32]), .MB31(Slice_0_mult_out_p_1[31]), 
-        .MB30(Slice_0_mult_out_p_1[30]), .MB29(Slice_0_mult_out_p_1[29]), 
-        .MB28(Slice_0_mult_out_p_1[28]), .MB27(Slice_0_mult_out_p_1[27]), 
-        .MB26(Slice_0_mult_out_p_1[26]), .MB25(Slice_0_mult_out_p_1[25]), 
-        .MB24(Slice_0_mult_out_p_1[24]), .MB23(Slice_0_mult_out_p_1[23]), 
-        .MB22(Slice_0_mult_out_p_1[22]), .MB21(Slice_0_mult_out_p_1[21]), 
-        .MB20(Slice_0_mult_out_p_1[20]), .MB19(Slice_0_mult_out_p_1[19]), 
-        .MB18(Slice_0_mult_out_p_1[18]), .MB17(Slice_0_mult_out_p_1[17]), 
-        .MB16(Slice_0_mult_out_p_1[16]), .MB15(Slice_0_mult_out_p_1[15]), 
-        .MB14(Slice_0_mult_out_p_1[14]), .MB13(Slice_0_mult_out_p_1[13]), 
-        .MB12(Slice_0_mult_out_p_1[12]), .MB11(Slice_0_mult_out_p_1[11]), 
-        .MB10(Slice_0_mult_out_p_1[10]), .MB9(Slice_0_mult_out_p_1[9]), .MB8(Slice_0_mult_out_p_1[8]), 
-        .MB7(Slice_0_mult_out_p_1[7]), .MB6(Slice_0_mult_out_p_1[6]), .MB5(Slice_0_mult_out_p_1[5]), 
-        .MB4(Slice_0_mult_out_p_1[4]), .MB3(Slice_0_mult_out_p_1[3]), .MB2(Slice_0_mult_out_p_1[2]), 
-        .MB1(Slice_0_mult_out_p_1[1]), .MB0(Slice_0_mult_out_p_1[0]), .CIN53(CIN[53]), 
+        .RST2(scuba_vlo), .RST3(scuba_vlo), .SIGNEDIA(ALU_MA_SIGN), 
+        .SIGNEDIB(ALU_MB_SIGN), .SIGNEDCIN(SIGNEDCIN), .MA35(ALU_MA[35]), 
+        .MA34(ALU_MA[34]), .MA33(ALU_MA[33]), 
+        .MA32(ALU_MA[32]), .MA31(ALU_MA[31]), 
+        .MA30(ALU_MA[30]), .MA29(ALU_MA[29]), 
+        .MA28(ALU_MA[28]), .MA27(ALU_MA[27]), 
+        .MA26(ALU_MA[26]), .MA25(ALU_MA[25]), 
+        .MA24(ALU_MA[24]), .MA23(ALU_MA[23]), 
+        .MA22(ALU_MA[22]), .MA21(ALU_MA[21]), 
+        .MA20(ALU_MA[20]), .MA19(ALU_MA[19]), 
+        .MA18(ALU_MA[18]), .MA17(ALU_MA[17]), 
+        .MA16(ALU_MA[16]), .MA15(ALU_MA[15]), 
+        .MA14(ALU_MA[14]), .MA13(ALU_MA[13]), 
+        .MA12(ALU_MA[12]), .MA11(ALU_MA[11]), 
+        .MA10(ALU_MA[10]), .MA9(ALU_MA[9]), .MA8(ALU_MA[8]), 
+        .MA7(ALU_MA[7]), .MA6(ALU_MA[6]), .MA5(ALU_MA[5]), 
+        .MA4(ALU_MA[4]), .MA3(ALU_MA[3]), .MA2(ALU_MA[2]), 
+        .MA1(ALU_MA[1]), .MA0(ALU_MA[0]), .MB35(ALU_MB[35]), 
+        .MB34(ALU_MB[34]), .MB33(ALU_MB[33]), 
+        .MB32(ALU_MB[32]), .MB31(ALU_MB[31]), 
+        .MB30(ALU_MB[30]), .MB29(ALU_MB[29]), 
+        .MB28(ALU_MB[28]), .MB27(ALU_MB[27]), 
+        .MB26(ALU_MB[26]), .MB25(ALU_MB[25]), 
+        .MB24(ALU_MB[24]), .MB23(ALU_MB[23]), 
+        .MB22(ALU_MB[22]), .MB21(ALU_MB[21]), 
+        .MB20(ALU_MB[20]), .MB19(ALU_MB[19]), 
+        .MB18(ALU_MB[18]), .MB17(ALU_MB[17]), 
+        .MB16(ALU_MB[16]), .MB15(ALU_MB[15]), 
+        .MB14(ALU_MB[14]), .MB13(ALU_MB[13]), 
+        .MB12(ALU_MB[12]), .MB11(ALU_MB[11]), 
+        .MB10(ALU_MB[10]), .MB9(ALU_MB[9]), .MB8(ALU_MB[8]), 
+        .MB7(ALU_MB[7]), .MB6(ALU_MB[6]), .MB5(ALU_MB[5]), 
+        .MB4(ALU_MB[4]), .MB3(ALU_MB[3]), .MB2(ALU_MB[2]), 
+        .MB1(ALU_MB[1]), .MB0(ALU_MB[0]), .CIN53(CIN[53]), 
         .CIN52(CIN[52]), .CIN51(CIN[51]), .CIN50(CIN[50]), .CIN49(CIN[49]), 
         .CIN48(CIN[48]), .CIN47(CIN[47]), .CIN46(CIN[46]), .CIN45(CIN[45]), 
         .CIN44(CIN[44]), .CIN43(CIN[43]), .CIN42(CIN[42]), .CIN41(CIN[41]), 
@@ -258,32 +296,32 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .CIN3(CIN[3]), .CIN2(CIN[2]), .CIN1(CIN[1]), .CIN0(CIN[0]), .OP10(Opcode[3]), 
         .OP9(Opcode[2]), .OP8(Opcode[1]), .OP7(Opcode[0]), .OP6(CMuxsel[2]), 
         .OP5(CMuxsel[1]), .OP4(CMuxsel[0]), .OP3(BMuxsel[1]), .OP2(BMuxsel[0]), 
-        .OP1(AMuxsel[1]), .OP0(AMuxsel[0]), .R53(Slice_alu_output[53]), 
-        .R52(Slice_alu_output[52]), .R51(Slice_alu_output[51]), 
-        .R50(Slice_alu_output[50]), .R49(Slice_alu_output[49]), 
-        .R48(Slice_alu_output[48]), .R47(Slice_alu_output[47]), 
-        .R46(Slice_alu_output[46]), .R45(Slice_alu_output[45]), 
-        .R44(Slice_alu_output[44]), .R43(Slice_alu_output[43]), 
-        .R42(Slice_alu_output[42]), .R41(Slice_alu_output[41]), 
-        .R40(Slice_alu_output[40]), .R39(Slice_alu_output[39]), 
-        .R38(Slice_alu_output[38]), .R37(Slice_alu_output[37]), 
-        .R36(Slice_alu_output[36]), .R35(Slice_alu_output[35]), 
-        .R34(Slice_alu_output[34]), .R33(Slice_alu_output[33]), 
-        .R32(Slice_alu_output[32]), .R31(Slice_alu_output[31]), 
-        .R30(Slice_alu_output[30]), .R29(Slice_alu_output[29]), 
-        .R28(Slice_alu_output[28]), .R27(Slice_alu_output[27]), 
-        .R26(Slice_alu_output[26]), .R25(Slice_alu_output[25]), 
-        .R24(Slice_alu_output[24]), .R23(Slice_alu_output[23]), 
-        .R22(Slice_alu_output[22]), .R21(Slice_alu_output[21]), 
-        .R20(Slice_alu_output[20]), .R19(Slice_alu_output[19]), 
-        .R18(Slice_alu_output[18]), .R17(Slice_alu_output[17]), 
-        .R16(Slice_alu_output[16]), .R15(Slice_alu_output[15]), 
-        .R14(Slice_alu_output[14]), .R13(Slice_alu_output[13]), 
-        .R12(Slice_alu_output[12]), .R11(Slice_alu_output[11]), 
-        .R10(Slice_alu_output[10]), .R9(Slice_alu_output[9]), 
-        .R8(Slice_alu_output[8]), .R7(Slice_alu_output[7]), .R6(Slice_alu_output[6]), 
-        .R5(Slice_alu_output[5]), .R4(Slice_alu_output[4]), .R3(Slice_alu_output[3]), 
-        .R2(Slice_alu_output[2]), .R1(Slice_alu_output[1]), .R0(Slice_alu_output[0]), 
+        .OP1(AMuxsel[1]), .OP0(AMuxsel[0]), .R53(ALU_O[53]), 
+        .R52(ALU_O[52]), .R51(ALU_O[51]), 
+        .R50(ALU_O[50]), .R49(ALU_O[49]), 
+        .R48(ALU_O[48]), .R47(ALU_O[47]), 
+        .R46(ALU_O[46]), .R45(ALU_O[45]), 
+        .R44(ALU_O[44]), .R43(ALU_O[43]), 
+        .R42(ALU_O[42]), .R41(ALU_O[41]), 
+        .R40(ALU_O[40]), .R39(ALU_O[39]), 
+        .R38(ALU_O[38]), .R37(ALU_O[37]), 
+        .R36(ALU_O[36]), .R35(ALU_O[35]), 
+        .R34(ALU_O[34]), .R33(ALU_O[33]), 
+        .R32(ALU_O[32]), .R31(ALU_O[31]), 
+        .R30(ALU_O[30]), .R29(ALU_O[29]), 
+        .R28(ALU_O[28]), .R27(ALU_O[27]), 
+        .R26(ALU_O[26]), .R25(ALU_O[25]), 
+        .R24(ALU_O[24]), .R23(ALU_O[23]), 
+        .R22(ALU_O[22]), .R21(ALU_O[21]), 
+        .R20(ALU_O[20]), .R19(ALU_O[19]), 
+        .R18(ALU_O[18]), .R17(ALU_O[17]), 
+        .R16(ALU_O[16]), .R15(ALU_O[15]), 
+        .R14(ALU_O[14]), .R13(ALU_O[13]), 
+        .R12(ALU_O[12]), .R11(ALU_O[11]), 
+        .R10(ALU_O[10]), .R9(ALU_O[9]), 
+        .R8(ALU_O[8]), .R7(ALU_O[7]), .R6(ALU_O[6]), 
+        .R5(ALU_O[5]), .R4(ALU_O[4]), .R3(ALU_O[3]), 
+        .R2(ALU_O[2]), .R1(ALU_O[1]), .R0(ALU_O[0]), 
 		.CO53(CO[53]), .CO52(CO[52]), .CO51(CO[51]), .CO50(CO[50]), .CO49(CO[49]), .CO48(CO[48]), .CO47(CO[47]), .CO46(CO[46]),
 		.CO45(CO[45]), .CO44(CO[44]), .CO43(CO[43]), .CO42(CO[42]), .CO41(CO[41]), .CO40(CO[40]), .CO39(CO[39]), .CO38(CO[38]),
 		.CO37(CO[37]), .CO36(CO[36]), .CO35(CO[35]), .CO34(CO[34]), .CO33(CO[33]), .CO32(CO[32]), .CO31(CO[31]), .CO30(CO[30]),
@@ -294,49 +332,49 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .EQOM(EQOM), .EQPAT(EQPAT), .EQPATB(EQPATB), .OVER(OVER), .UNDER(UNDER), 
         .OVERUNDER(), .SIGNEDR(SIGNEDR));
 
-    defparam dsp_mult_1.CLK3_DIV = "ENABLED" ;
-    defparam dsp_mult_1.CLK2_DIV = "ENABLED" ;
-    defparam dsp_mult_1.CLK1_DIV = "DISABLED" ;
-    defparam dsp_mult_1.CLK0_DIV = "ENABLED" ;
-    defparam dsp_mult_1.HIGHSPEED_CLK = "NONE" ;
-    defparam dsp_mult_1.REG_INPUTC_RST = "RST0" ;
-    defparam dsp_mult_1.REG_INPUTC_CE = "CE0" ;
-    defparam dsp_mult_1.REG_INPUTC_CLK = "NONE" ;
-    defparam dsp_mult_1.SOURCEB_MODE = "B_SHIFT" ;
-    defparam dsp_mult_1.MULT_BYPASS = "DISABLED" ;
-    defparam dsp_mult_1.CAS_MATCH_REG = "FALSE" ;
-    defparam dsp_mult_1.RESETMODE = "SYNC" ;
-    defparam dsp_mult_1.GSR = "ENABLED" ;
-    defparam dsp_mult_1.REG_OUTPUT_RST = "RST0" ;
-    defparam dsp_mult_1.REG_OUTPUT_CE = "CE0" ;
-    defparam dsp_mult_1.REG_OUTPUT_CLK = "NONE" ;
-    defparam dsp_mult_1.REG_PIPELINE_RST = "RST0" ;
-    defparam dsp_mult_1.REG_PIPELINE_CE = "CE0" ;
-    defparam dsp_mult_1.REG_PIPELINE_CLK = "CLK0" ;
-    defparam dsp_mult_1.REG_INPUTB_RST = "RST0" ;
-    defparam dsp_mult_1.REG_INPUTB_CE = "CE0" ;
-    defparam dsp_mult_1.REG_INPUTB_CLK = "CLK0" ;
-    defparam dsp_mult_1.REG_INPUTA_RST = "RST0" ;
-    defparam dsp_mult_1.REG_INPUTA_CE = "CE0" ;
-    defparam dsp_mult_1.REG_INPUTA_CLK = "CLK0" ;
-    MULT18X18D dsp_mult_1 (.A17(DataAA[AAMemsel][17]), .A16(DataAA[AAMemsel][16]), 
-		.A15(DataAA[AAMemsel][15]), .A14(DataAA[AAMemsel][14]), .A13(DataAA[AAMemsel][13]),
-		.A12(DataAA[AAMemsel][12]), .A11(DataAA[AAMemsel][11]), .A10(DataAA[AAMemsel][10]), 
-		.A9(DataAA[AAMemsel][9]), .A8(DataAA[AAMemsel][8]), .A7(DataAA[AAMemsel][7]), 
-		.A6(DataAA[AAMemsel][6]), .A5(DataAA[AAMemsel][5]), .A4(DataAA[AAMemsel][4]), 
-		.A3(DataAA[AAMemsel][3]), .A2(DataAA[AAMemsel][2]), .A1(DataAA[AAMemsel][1]), 
-		.A0(DataAA[AAMemsel][0]), .B17(DataAB[ABMemsel][17]), .B16(DataAB[ABMemsel][16]), 
-		.B15(DataAB[ABMemsel][15]), .B14(DataAB[ABMemsel][14]), .B13(DataAB[ABMemsel][13]),
-		.B12(DataAB[ABMemsel][12]), .B11(DataAB[ABMemsel][11]), .B10(DataAB[ABMemsel][10]), 
-		.B9(DataAB[ABMemsel][9]), .B8(DataAB[ABMemsel][8]), .B7(DataAB[ABMemsel][7]), 
-		.B6(DataAB[ABMemsel][6]), .B5(DataAB[ABMemsel][5]), .B4(DataAB[ABMemsel][4]), 
-		.B3(DataAB[ABMemsel][3]), .B2(DataAB[ABMemsel][2]), .B1(DataAB[ABMemsel][1]), 
-		.B0(DataAB[ABMemsel][0]), .C17(DataCA[17]), 
-        .C16(DataCA[16]), .C15(DataCA[15]), .C14(DataCA[14]), .C13(DataCA[13]), 
-        .C12(DataCA[12]), .C11(DataCA[11]), .C10(DataCA[10]), .C9(DataCA[9]), 
-        .C8(DataCA[8]), .C7(DataCA[7]), .C6(DataCA[6]), .C5(DataCA[5]), 
-        .C4(DataCA[4]), .C3(DataCA[3]), .C2(DataCA[2]), .C1(DataCA[1]), 
-        .C0(DataCA[0]), .SIGNEDA(SignAA), .SIGNEDB(SignAB), .SOURCEA(scuba_vlo), 
+    defparam dsp_mult_A.CLK3_DIV = "ENABLED" ;
+    defparam dsp_mult_A.CLK2_DIV = "ENABLED" ;
+    defparam dsp_mult_A.CLK1_DIV = "DISABLED" ;
+    defparam dsp_mult_A.CLK0_DIV = "ENABLED" ;
+    defparam dsp_mult_A.HIGHSPEED_CLK = "NONE" ;
+    defparam dsp_mult_A.REG_INPUTC_RST = "RST0" ;
+    defparam dsp_mult_A.REG_INPUTC_CE = "CE0" ;
+    defparam dsp_mult_A.REG_INPUTC_CLK = "NONE" ;
+    defparam dsp_mult_A.SOURCEB_MODE = "B_SHIFT" ;
+    defparam dsp_mult_A.MULT_BYPASS = "DISABLED" ;
+    defparam dsp_mult_A.CAS_MATCH_REG = "FALSE" ;
+    defparam dsp_mult_A.RESETMODE = "SYNC" ;
+    defparam dsp_mult_A.GSR = "ENABLED" ;
+    defparam dsp_mult_A.REG_OUTPUT_RST = "RST0" ;
+    defparam dsp_mult_A.REG_OUTPUT_CE = "CE0" ;
+    defparam dsp_mult_A.REG_OUTPUT_CLK = "NONE" ;
+    defparam dsp_mult_A.REG_PIPELINE_RST = "RST0" ;
+    defparam dsp_mult_A.REG_PIPELINE_CE = "CE0" ;
+    defparam dsp_mult_A.REG_PIPELINE_CLK = "CLK0" ;
+    defparam dsp_mult_A.REG_INPUTB_RST = "RST0" ;
+    defparam dsp_mult_A.REG_INPUTB_CE = "CE0" ;
+    defparam dsp_mult_A.REG_INPUTB_CLK = "CLK0" ;
+    defparam dsp_mult_A.REG_INPUTA_RST = "RST0" ;
+    defparam dsp_mult_A.REG_INPUTA_CE = "CE0" ;
+    defparam dsp_mult_A.REG_INPUTA_CLK = "CLK0" ;
+    MULT18X18D dsp_mult_A (.A17(MULTA_A[17]), .A16(MULTA_A[16]), 
+		.A15(MULTA_A[15]), .A14(MULTA_A[14]), .A13(MULTA_A[13]),
+		.A12(MULTA_A[12]), .A11(MULTA_A[11]), .A10(MULTA_A[10]), 
+		.A9(MULTA_A[9]), .A8(MULTA_A[8]), .A7(MULTA_A[7]), 
+		.A6(MULTA_A[6]), .A5(MULTA_A[5]), .A4(MULTA_A[4]), 
+		.A3(MULTA_A[3]), .A2(MULTA_A[2]), .A1(MULTA_A[1]), 
+		.A0(MULTA_A[0]), .B17(MULTA_B[17]), .B16(MULTA_B[16]), 
+		.B15(MULTA_B[15]), .B14(MULTA_B[14]), .B13(MULTA_B[13]),
+		.B12(MULTA_B[12]), .B11(MULTA_B[11]), .B10(MULTA_B[10]), 
+		.B9(MULTA_B[9]), .B8(MULTA_B[8]), .B7(MULTA_B[7]), 
+		.B6(MULTA_B[6]), .B5(MULTA_B[5]), .B4(MULTA_B[4]), 
+		.B3(MULTA_B[3]), .B2(MULTA_B[2]), .B1(MULTA_B[1]), 
+		.B0(MULTA_B[0]), .C17(MULTA_C[17]), 
+        .C16(MULTA_C[16]), .C15(MULTA_C[15]), .C14(MULTA_C[14]), .C13(MULTA_C[13]), 
+        .C12(MULTA_C[12]), .C11(MULTA_C[11]), .C10(MULTA_C[10]), .C9(MULTA_C[9]), 
+        .C8(MULTA_C[8]), .C7(MULTA_C[7]), .C6(MULTA_C[6]), .C5(MULTA_C[5]), 
+        .C4(MULTA_C[4]), .C3(MULTA_C[3]), .C2(MULTA_C[2]), .C1(MULTA_C[1]), 
+        .C0(MULTA_C[0]), .SIGNEDA(SignAA), .SIGNEDB(SignAB), .SOURCEA(scuba_vlo), 
         .SOURCEB(scuba_vlo), .CE0(CE0), .CE1(CE1), .CE2(scuba_vhi), 
         .CE3(scuba_vhi), .CLK0(CLK0), .CLK1(scuba_vlo), .CLK2(scuba_vlo), 
         .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), .RST2(scuba_vlo), 
@@ -354,87 +392,87 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .SROA5(), .SROA4(), .SROA3(), .SROA2(), .SROA1(), .SROA0(), .SROB17(), 
         .SROB16(), .SROB15(), .SROB14(), .SROB13(), .SROB12(), .SROB11(), 
         .SROB10(), .SROB9(), .SROB8(), .SROB7(), .SROB6(), .SROB5(), .SROB4(), 
-        .SROB3(), .SROB2(), .SROB1(), .SROB0(), .ROA17(Slice_0_mult_out_roa_0[17]), 
-        .ROA16(Slice_0_mult_out_roa_0[16]), .ROA15(Slice_0_mult_out_roa_0[15]), 
-        .ROA14(Slice_0_mult_out_roa_0[14]), .ROA13(Slice_0_mult_out_roa_0[13]), 
-        .ROA12(Slice_0_mult_out_roa_0[12]), .ROA11(Slice_0_mult_out_roa_0[11]), 
-        .ROA10(Slice_0_mult_out_roa_0[10]), .ROA9(Slice_0_mult_out_roa_0[9]), 
-        .ROA8(Slice_0_mult_out_roa_0[8]), .ROA7(Slice_0_mult_out_roa_0[7]), 
-        .ROA6(Slice_0_mult_out_roa_0[6]), .ROA5(Slice_0_mult_out_roa_0[5]), 
-        .ROA4(Slice_0_mult_out_roa_0[4]), .ROA3(Slice_0_mult_out_roa_0[3]), 
-        .ROA2(Slice_0_mult_out_roa_0[2]), .ROA1(Slice_0_mult_out_roa_0[1]), 
-        .ROA0(Slice_0_mult_out_roa_0[0]), .ROB17(Slice_0_mult_out_rob_0[17]), 
-        .ROB16(Slice_0_mult_out_rob_0[16]), .ROB15(Slice_0_mult_out_rob_0[15]), 
-        .ROB14(Slice_0_mult_out_rob_0[14]), .ROB13(Slice_0_mult_out_rob_0[13]), 
-        .ROB12(Slice_0_mult_out_rob_0[12]), .ROB11(Slice_0_mult_out_rob_0[11]), 
-        .ROB10(Slice_0_mult_out_rob_0[10]), .ROB9(Slice_0_mult_out_rob_0[9]), 
-        .ROB8(Slice_0_mult_out_rob_0[8]), .ROB7(Slice_0_mult_out_rob_0[7]), 
-        .ROB6(Slice_0_mult_out_rob_0[6]), .ROB5(Slice_0_mult_out_rob_0[5]), 
-        .ROB4(Slice_0_mult_out_rob_0[4]), .ROB3(Slice_0_mult_out_rob_0[3]), 
-        .ROB2(Slice_0_mult_out_rob_0[2]), .ROB1(Slice_0_mult_out_rob_0[1]), 
-        .ROB0(Slice_0_mult_out_rob_0[0]), .ROC17(), .ROC16(), .ROC15(), .ROC14(), 
+        .SROB3(), .SROB2(), .SROB1(), .SROB0(), .ROA17(MULTA_ROA[17]), 
+        .ROA16(MULTA_ROA[16]), .ROA15(MULTA_ROA[15]), 
+        .ROA14(MULTA_ROA[14]), .ROA13(MULTA_ROA[13]), 
+        .ROA12(MULTA_ROA[12]), .ROA11(MULTA_ROA[11]), 
+        .ROA10(MULTA_ROA[10]), .ROA9(MULTA_ROA[9]), 
+        .ROA8(MULTA_ROA[8]), .ROA7(MULTA_ROA[7]), 
+        .ROA6(MULTA_ROA[6]), .ROA5(MULTA_ROA[5]), 
+        .ROA4(MULTA_ROA[4]), .ROA3(MULTA_ROA[3]), 
+        .ROA2(MULTA_ROA[2]), .ROA1(MULTA_ROA[1]), 
+        .ROA0(MULTA_ROA[0]), .ROB17(MULTA_ROB[17]), 
+        .ROB16(MULTA_ROB[16]), .ROB15(MULTA_ROB[15]), 
+        .ROB14(MULTA_ROB[14]), .ROB13(MULTA_ROB[13]), 
+        .ROB12(MULTA_ROB[12]), .ROB11(MULTA_ROB[11]), 
+        .ROB10(MULTA_ROB[10]), .ROB9(MULTA_ROB[9]), 
+        .ROB8(MULTA_ROB[8]), .ROB7(MULTA_ROB[7]), 
+        .ROB6(MULTA_ROB[6]), .ROB5(MULTA_ROB[5]), 
+        .ROB4(MULTA_ROB[4]), .ROB3(MULTA_ROB[3]), 
+        .ROB2(MULTA_ROB[2]), .ROB1(MULTA_ROB[1]), 
+        .ROB0(MULTA_ROB[0]), .ROC17(), .ROC16(), .ROC15(), .ROC14(), 
         .ROC13(), .ROC12(), .ROC11(), .ROC10(), .ROC9(), .ROC8(), .ROC7(), 
-        .ROC6(), .ROC5(), .ROC4(), .ROC3(), .ROC2(), .ROC1(), .ROC0(), .P35(Slice_0_mult_out_p_0[35]), 
-        .P34(Slice_0_mult_out_p_0[34]), .P33(Slice_0_mult_out_p_0[33]), .P32(Slice_0_mult_out_p_0[32]), 
-        .P31(Slice_0_mult_out_p_0[31]), .P30(Slice_0_mult_out_p_0[30]), .P29(Slice_0_mult_out_p_0[29]), 
-        .P28(Slice_0_mult_out_p_0[28]), .P27(Slice_0_mult_out_p_0[27]), .P26(Slice_0_mult_out_p_0[26]), 
-        .P25(Slice_0_mult_out_p_0[25]), .P24(Slice_0_mult_out_p_0[24]), .P23(Slice_0_mult_out_p_0[23]), 
-        .P22(Slice_0_mult_out_p_0[22]), .P21(Slice_0_mult_out_p_0[21]), .P20(Slice_0_mult_out_p_0[20]), 
-        .P19(Slice_0_mult_out_p_0[19]), .P18(Slice_0_mult_out_p_0[18]), .P17(Slice_0_mult_out_p_0[17]), 
-        .P16(Slice_0_mult_out_p_0[16]), .P15(Slice_0_mult_out_p_0[15]), .P14(Slice_0_mult_out_p_0[14]), 
-        .P13(Slice_0_mult_out_p_0[13]), .P12(Slice_0_mult_out_p_0[12]), .P11(Slice_0_mult_out_p_0[11]), 
-        .P10(Slice_0_mult_out_p_0[10]), .P9(Slice_0_mult_out_p_0[9]), .P8(Slice_0_mult_out_p_0[8]), 
-        .P7(Slice_0_mult_out_p_0[7]), .P6(Slice_0_mult_out_p_0[6]), .P5(Slice_0_mult_out_p_0[5]), 
-        .P4(Slice_0_mult_out_p_0[4]), .P3(Slice_0_mult_out_p_0[3]), .P2(Slice_0_mult_out_p_0[2]), 
-        .P1(Slice_0_mult_out_p_0[1]), .P0(Slice_0_mult_out_p_0[0]), .SIGNEDP(Slice_0_mult_out_signedp_0));
+        .ROC6(), .ROC5(), .ROC4(), .ROC3(), .ROC2(), .ROC1(), .ROC0(), .P35(MULTA_P[35]), 
+        .P34(MULTA_P[34]), .P33(MULTA_P[33]), .P32(MULTA_P[32]), 
+        .P31(MULTA_P[31]), .P30(MULTA_P[30]), .P29(MULTA_P[29]), 
+        .P28(MULTA_P[28]), .P27(MULTA_P[27]), .P26(MULTA_P[26]), 
+        .P25(MULTA_P[25]), .P24(MULTA_P[24]), .P23(MULTA_P[23]), 
+        .P22(MULTA_P[22]), .P21(MULTA_P[21]), .P20(MULTA_P[20]), 
+        .P19(MULTA_P[19]), .P18(MULTA_P[18]), .P17(MULTA_P[17]), 
+        .P16(MULTA_P[16]), .P15(MULTA_P[15]), .P14(MULTA_P[14]), 
+        .P13(MULTA_P[13]), .P12(MULTA_P[12]), .P11(MULTA_P[11]), 
+        .P10(MULTA_P[10]), .P9(MULTA_P[9]), .P8(MULTA_P[8]), 
+        .P7(MULTA_P[7]), .P6(MULTA_P[6]), .P5(MULTA_P[5]), 
+        .P4(MULTA_P[4]), .P3(MULTA_P[3]), .P2(MULTA_P[2]), 
+        .P1(MULTA_P[1]), .P0(MULTA_P[0]), .SIGNEDP(MULTA_P_SIGN));
 
     VHI scuba_vhi_inst (.Z(scuba_vhi));
 
     VLO scuba_vlo_inst (.Z(scuba_vlo));
 
-    defparam dsp_mult_0.CLK3_DIV = "ENABLED" ;
-    defparam dsp_mult_0.CLK2_DIV = "ENABLED" ;
-    defparam dsp_mult_0.CLK1_DIV = "DISABLED" ;
-    defparam dsp_mult_0.CLK0_DIV = "ENABLED" ;
-    defparam dsp_mult_0.HIGHSPEED_CLK = "NONE" ;
-    defparam dsp_mult_0.REG_INPUTC_RST = "RST0" ;
-    defparam dsp_mult_0.REG_INPUTC_CE = "CE0" ;
-    defparam dsp_mult_0.REG_INPUTC_CLK = "NONE" ;
-    defparam dsp_mult_0.SOURCEB_MODE = "B_SHIFT" ;
-    defparam dsp_mult_0.MULT_BYPASS = "DISABLED" ;
-    defparam dsp_mult_0.CAS_MATCH_REG = "FALSE" ;
-    defparam dsp_mult_0.RESETMODE = "SYNC" ;
-    defparam dsp_mult_0.GSR = "ENABLED" ;
-    defparam dsp_mult_0.REG_OUTPUT_RST = "RST0" ;
-    defparam dsp_mult_0.REG_OUTPUT_CE = "CE0" ;
-    defparam dsp_mult_0.REG_OUTPUT_CLK = "NONE" ;
-    defparam dsp_mult_0.REG_PIPELINE_RST = "RST0" ;
-    defparam dsp_mult_0.REG_PIPELINE_CE = "CE0" ;
-    defparam dsp_mult_0.REG_PIPELINE_CLK = "CLK0" ;
-    defparam dsp_mult_0.REG_INPUTB_RST = "RST0" ;
-    defparam dsp_mult_0.REG_INPUTB_CE = "CE0" ;
-    defparam dsp_mult_0.REG_INPUTB_CLK = "CLK0" ;
-    defparam dsp_mult_0.REG_INPUTA_RST = "RST0" ;
-    defparam dsp_mult_0.REG_INPUTA_CE = "CE1" ;
-    defparam dsp_mult_0.REG_INPUTA_CLK = "CLK0" ;
-    MULT18X18D dsp_mult_0 (.A17(DataBA[BAMemsel][17]), .A16(DataBA[BAMemsel][16]), 
-		.A15(DataBA[BAMemsel][15]), .A14(DataBA[BAMemsel][14]), .A13(DataBA[BAMemsel][13]),
-		.A12(DataBA[BAMemsel][12]), .A11(DataBA[BAMemsel][11]), .A10(DataBA[BAMemsel][10]), 
-		.A9(DataBA[BAMemsel][9]), .A8(DataBA[BAMemsel][8]), .A7(DataBA[BAMemsel][7]), 
-		.A6(DataBA[BAMemsel][6]), .A5(DataBA[BAMemsel][5]), .A4(DataBA[BAMemsel][4]), 
-		.A3(DataBA[BAMemsel][3]), .A2(DataBA[BAMemsel][2]), .A1(DataBA[BAMemsel][1]), 
-		.A0(DataBA[BAMemsel][0]), .B17(DataBB[BBMemsel][17]), .B16(DataBB[BBMemsel][16]), 
-		.B15(DataBB[BBMemsel][15]), .B14(DataBB[BBMemsel][14]), .B13(DataBB[BBMemsel][13]),
-		.B12(DataBB[BBMemsel][12]), .B11(DataBB[BBMemsel][11]), .B10(DataBB[BBMemsel][10]), 
-		.B9(DataBB[BBMemsel][9]), .B8(DataBB[BBMemsel][8]), .B7(DataBB[BBMemsel][7]), 
-		.B6(DataBB[BBMemsel][6]), .B5(DataBB[BBMemsel][5]), .B4(DataBB[BBMemsel][4]), 
-		.B3(DataBB[BBMemsel][3]), .B2(DataBB[BBMemsel][2]), .B1(DataBB[BBMemsel][1]), 
-		.B0(DataBB[BBMemsel][0]), .C17(DataCB[17]), 
-        .C16(DataCB[16]), .C15(DataCB[15]), .C14(DataCB[14]), .C13(DataCB[13]), 
-        .C12(DataCB[12]), .C11(DataCB[11]), .C10(DataCB[10]), .C9(DataCB[9]), 
-        .C8(DataCB[8]), .C7(DataCB[7]), .C6(DataCB[6]), .C5(DataCB[5]), 
-        .C4(DataCB[4]), .C3(DataCB[3]), .C2(DataCB[2]), .C1(DataCB[1]),
-        .C0(DataCB[0]), .SIGNEDA(SignBA), .SIGNEDB(SignBB), .SOURCEA(scuba_vlo), 
+    defparam dsp_mult_B.CLK3_DIV = "ENABLED" ;
+    defparam dsp_mult_B.CLK2_DIV = "ENABLED" ;
+    defparam dsp_mult_B.CLK1_DIV = "DISABLED" ;
+    defparam dsp_mult_B.CLK0_DIV = "ENABLED" ;
+    defparam dsp_mult_B.HIGHSPEED_CLK = "NONE" ;
+    defparam dsp_mult_B.REG_INPUTC_RST = "RST0" ;
+    defparam dsp_mult_B.REG_INPUTC_CE = "CE0" ;
+    defparam dsp_mult_B.REG_INPUTC_CLK = "NONE" ;
+    defparam dsp_mult_B.SOURCEB_MODE = "B_SHIFT" ;
+    defparam dsp_mult_B.MULT_BYPASS = "DISABLED" ;
+    defparam dsp_mult_B.CAS_MATCH_REG = "FALSE" ;
+    defparam dsp_mult_B.RESETMODE = "SYNC" ;
+    defparam dsp_mult_B.GSR = "ENABLED" ;
+    defparam dsp_mult_B.REG_OUTPUT_RST = "RST0" ;
+    defparam dsp_mult_B.REG_OUTPUT_CE = "CE0" ;
+    defparam dsp_mult_B.REG_OUTPUT_CLK = "NONE" ;
+    defparam dsp_mult_B.REG_PIPELINE_RST = "RST0" ;
+    defparam dsp_mult_B.REG_PIPELINE_CE = "CE0" ;
+    defparam dsp_mult_B.REG_PIPELINE_CLK = "CLK0" ;
+    defparam dsp_mult_B.REG_INPUTB_RST = "RST0" ;
+    defparam dsp_mult_B.REG_INPUTB_CE = "CE0" ;
+    defparam dsp_mult_B.REG_INPUTB_CLK = "CLK0" ;
+    defparam dsp_mult_B.REG_INPUTA_RST = "RST0" ;
+    defparam dsp_mult_B.REG_INPUTA_CE = "CE1" ;
+    defparam dsp_mult_B.REG_INPUTA_CLK = "CLK0" ;
+    MULT18X18D dsp_mult_B (.A17(MULTB_A[17]), .A16(MULTB_A[16]), 
+		.A15(MULTB_A[15]), .A14(MULTB_A[14]), .A13(MULTB_A[13]),
+		.A12(MULTB_A[12]), .A11(MULTB_A[11]), .A10(MULTB_A[10]), 
+		.A9(MULTB_A[9]), .A8(MULTB_A[8]), .A7(MULTB_A[7]), 
+		.A6(MULTB_A[6]), .A5(MULTB_A[5]), .A4(MULTB_A[4]), 
+		.A3(MULTB_A[3]), .A2(MULTB_A[2]), .A1(MULTB_A[1]), 
+		.A0(MULTB_A[0]), .B17(MULTB_B[17]), .B16(MULTB_B[16]), 
+		.B15(MULTB_B[15]), .B14(MULTB_B[14]), .B13(MULTB_B[13]),
+		.B12(MULTB_B[12]), .B11(MULTB_B[11]), .B10(MULTB_B[10]), 
+		.B9(MULTB_B[9]), .B8(MULTB_B[8]), .B7(MULTB_B[7]), 
+		.B6(MULTB_B[6]), .B5(MULTB_B[5]), .B4(MULTB_B[4]), 
+		.B3(MULTB_B[3]), .B2(MULTB_B[2]), .B1(MULTB_B[1]), 
+		.B0(MULTB_B[0]), .C17(MULTB_C[17]), 
+        .C16(MULTB_C[16]), .C15(MULTB_C[15]), .C14(MULTB_C[14]), .C13(MULTB_C[13]), 
+        .C12(MULTB_C[12]), .C11(MULTB_C[11]), .C10(MULTB_C[10]), .C9(MULTB_C[9]), 
+        .C8(MULTB_C[8]), .C7(MULTB_C[7]), .C6(MULTB_C[6]), .C5(MULTB_C[5]), 
+        .C4(MULTB_C[4]), .C3(MULTB_C[3]), .C2(MULTB_C[2]), .C1(MULTB_C[1]),
+        .C0(MULTB_C[0]), .SIGNEDA(SignBA), .SIGNEDB(SignBB), .SOURCEA(scuba_vlo), 
         .SOURCEB(scuba_vlo), .CE0(CE0), .CE1(CE1), .CE2(scuba_vhi), 
         .CE3(scuba_vhi), .CLK0(CLK0), .CLK1(scuba_vlo), .CLK2(scuba_vlo), 
         .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), .RST2(scuba_vlo), 
@@ -452,131 +490,40 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .SROA5(), .SROA4(), .SROA3(), .SROA2(), .SROA1(), .SROA0(), .SROB17(), 
         .SROB16(), .SROB15(), .SROB14(), .SROB13(), .SROB12(), .SROB11(), 
         .SROB10(), .SROB9(), .SROB8(), .SROB7(), .SROB6(), .SROB5(), .SROB4(), 
-        .SROB3(), .SROB2(), .SROB1(), .SROB0(), .ROA17(Slice_0_mult_out_roa_1[17]), 
-        .ROA16(Slice_0_mult_out_roa_1[16]), .ROA15(Slice_0_mult_out_roa_1[15]), 
-        .ROA14(Slice_0_mult_out_roa_1[14]), .ROA13(Slice_0_mult_out_roa_1[13]), 
-        .ROA12(Slice_0_mult_out_roa_1[12]), .ROA11(Slice_0_mult_out_roa_1[11]), 
-        .ROA10(Slice_0_mult_out_roa_1[10]), .ROA9(Slice_0_mult_out_roa_1[9]), 
-        .ROA8(Slice_0_mult_out_roa_1[8]), .ROA7(Slice_0_mult_out_roa_1[7]), 
-        .ROA6(Slice_0_mult_out_roa_1[6]), .ROA5(Slice_0_mult_out_roa_1[5]), 
-        .ROA4(Slice_0_mult_out_roa_1[4]), .ROA3(Slice_0_mult_out_roa_1[3]), 
-        .ROA2(Slice_0_mult_out_roa_1[2]), .ROA1(Slice_0_mult_out_roa_1[1]), 
-        .ROA0(Slice_0_mult_out_roa_1[0]), .ROB17(Slice_0_mult_out_rob_1[17]), 
-        .ROB16(Slice_0_mult_out_rob_1[16]), .ROB15(Slice_0_mult_out_rob_1[15]), 
-        .ROB14(Slice_0_mult_out_rob_1[14]), .ROB13(Slice_0_mult_out_rob_1[13]), 
-        .ROB12(Slice_0_mult_out_rob_1[12]), .ROB11(Slice_0_mult_out_rob_1[11]), 
-        .ROB10(Slice_0_mult_out_rob_1[10]), .ROB9(Slice_0_mult_out_rob_1[9]), 
-        .ROB8(Slice_0_mult_out_rob_1[8]), .ROB7(Slice_0_mult_out_rob_1[7]), 
-        .ROB6(Slice_0_mult_out_rob_1[6]), .ROB5(Slice_0_mult_out_rob_1[5]), 
-        .ROB4(Slice_0_mult_out_rob_1[4]), .ROB3(Slice_0_mult_out_rob_1[3]), 
-        .ROB2(Slice_0_mult_out_rob_1[2]), .ROB1(Slice_0_mult_out_rob_1[1]), 
-        .ROB0(Slice_0_mult_out_rob_1[0]), .ROC17(), .ROC16(), .ROC15(), .ROC14(), 
+        .SROB3(), .SROB2(), .SROB1(), .SROB0(), .ROA17(MULTB_ROA[17]), 
+        .ROA16(MULTB_ROA[16]), .ROA15(MULTB_ROA[15]), 
+        .ROA14(MULTB_ROA[14]), .ROA13(MULTB_ROA[13]), 
+        .ROA12(MULTB_ROA[12]), .ROA11(MULTB_ROA[11]), 
+        .ROA10(MULTB_ROA[10]), .ROA9(MULTB_ROA[9]), 
+        .ROA8(MULTB_ROA[8]), .ROA7(MULTB_ROA[7]), 
+        .ROA6(MULTB_ROA[6]), .ROA5(MULTB_ROA[5]), 
+        .ROA4(MULTB_ROA[4]), .ROA3(MULTB_ROA[3]), 
+        .ROA2(MULTB_ROA[2]), .ROA1(MULTB_ROA[1]), 
+        .ROA0(MULTB_ROA[0]), .ROB17(MULTB_ROB[17]), 
+        .ROB16(MULTB_ROB[16]), .ROB15(MULTB_ROB[15]), 
+        .ROB14(MULTB_ROB[14]), .ROB13(MULTB_ROB[13]), 
+        .ROB12(MULTB_ROB[12]), .ROB11(MULTB_ROB[11]), 
+        .ROB10(MULTB_ROB[10]), .ROB9(MULTB_ROB[9]), 
+        .ROB8(MULTB_ROB[8]), .ROB7(MULTB_ROB[7]), 
+        .ROB6(MULTB_ROB[6]), .ROB5(MULTB_ROB[5]), 
+        .ROB4(MULTB_ROB[4]), .ROB3(MULTB_ROB[3]), 
+        .ROB2(MULTB_ROB[2]), .ROB1(MULTB_ROB[1]), 
+        .ROB0(MULTB_ROB[0]), .ROC17(), .ROC16(), .ROC15(), .ROC14(), 
         .ROC13(), .ROC12(), .ROC11(), .ROC10(), .ROC9(), .ROC8(), .ROC7(), 
-        .ROC6(), .ROC5(), .ROC4(), .ROC3(), .ROC2(), .ROC1(), .ROC0(), .P35(Slice_0_mult_out_p_1[35]), 
-        .P34(Slice_0_mult_out_p_1[34]), .P33(Slice_0_mult_out_p_1[33]), .P32(Slice_0_mult_out_p_1[32]), 
-        .P31(Slice_0_mult_out_p_1[31]), .P30(Slice_0_mult_out_p_1[30]), .P29(Slice_0_mult_out_p_1[29]), 
-        .P28(Slice_0_mult_out_p_1[28]), .P27(Slice_0_mult_out_p_1[27]), .P26(Slice_0_mult_out_p_1[26]), 
-        .P25(Slice_0_mult_out_p_1[25]), .P24(Slice_0_mult_out_p_1[24]), .P23(Slice_0_mult_out_p_1[23]), 
-        .P22(Slice_0_mult_out_p_1[22]), .P21(Slice_0_mult_out_p_1[21]), .P20(Slice_0_mult_out_p_1[20]), 
-        .P19(Slice_0_mult_out_p_1[19]), .P18(Slice_0_mult_out_p_1[18]), .P17(Slice_0_mult_out_p_1[17]), 
-        .P16(Slice_0_mult_out_p_1[16]), .P15(Slice_0_mult_out_p_1[15]), .P14(Slice_0_mult_out_p_1[14]), 
-        .P13(Slice_0_mult_out_p_1[13]), .P12(Slice_0_mult_out_p_1[12]), .P11(Slice_0_mult_out_p_1[11]), 
-        .P10(Slice_0_mult_out_p_1[10]), .P9(Slice_0_mult_out_p_1[9]), .P8(Slice_0_mult_out_p_1[8]), 
-        .P7(Slice_0_mult_out_p_1[7]), .P6(Slice_0_mult_out_p_1[6]), .P5(Slice_0_mult_out_p_1[5]), 
-        .P4(Slice_0_mult_out_p_1[4]), .P3(Slice_0_mult_out_p_1[3]), .P2(Slice_0_mult_out_p_1[2]), 
-        .P1(Slice_0_mult_out_p_1[1]), .P0(Slice_0_mult_out_p_1[0]), .SIGNEDP(Slice_0_mult_out_signedp_1));
+        .ROC6(), .ROC5(), .ROC4(), .ROC3(), .ROC2(), .ROC1(), .ROC0(), .P35(MULTB_P[35]), 
+        .P34(MULTB_P[34]), .P33(MULTB_P[33]), .P32(MULTB_P[32]), 
+        .P31(MULTB_P[31]), .P30(MULTB_P[30]), .P29(MULTB_P[29]), 
+        .P28(MULTB_P[28]), .P27(MULTB_P[27]), .P26(MULTB_P[26]), 
+        .P25(MULTB_P[25]), .P24(MULTB_P[24]), .P23(MULTB_P[23]), 
+        .P22(MULTB_P[22]), .P21(MULTB_P[21]), .P20(MULTB_P[20]), 
+        .P19(MULTB_P[19]), .P18(MULTB_P[18]), .P17(MULTB_P[17]), 
+        .P16(MULTB_P[16]), .P15(MULTB_P[15]), .P14(MULTB_P[14]), 
+        .P13(MULTB_P[13]), .P12(MULTB_P[12]), .P11(MULTB_P[11]), 
+        .P10(MULTB_P[10]), .P9(MULTB_P[9]), .P8(MULTB_P[8]), 
+        .P7(MULTB_P[7]), .P6(MULTB_P[6]), .P5(MULTB_P[5]), 
+        .P4(MULTB_P[4]), .P3(MULTB_P[3]), .P2(MULTB_P[2]), 
+        .P1(MULTB_P[1]), .P0(MULTB_P[0]), .SIGNEDP(MULTB_P_SIGN));
 
-    assign Result[35] = Slice_alu_output[53];
-	assign Result[34] = Slice_alu_output[52];
-	assign Result[33] = Slice_alu_output[51];
-	assign Result[32] = Slice_alu_output[50];
-	assign Result[31] = Slice_alu_output[49];
-	assign Result[30] = Slice_alu_output[48];
-	assign Result[29] = Slice_alu_output[47];
-	assign Result[28] = Slice_alu_output[46];
-	assign Result[27] = Slice_alu_output[45];
-	assign Result[26] = Slice_alu_output[44];
-	assign Result[25] = Slice_alu_output[43];
-	assign Result[24] = Slice_alu_output[42];
-	assign Result[23] = Slice_alu_output[41];
-	assign Result[22] = Slice_alu_output[40];
-	assign Result[21] = Slice_alu_output[39];
-	assign Result[20] = Slice_alu_output[38];
-	assign Result[19] = Slice_alu_output[37];
-	assign Result[18] = Slice_alu_output[36];
-	assign Result[17] = Slice_alu_output[35];
-	assign Result[16] = Slice_alu_output[34];
-	assign Result[15] = Slice_alu_output[33];
-	assign Result[14] = Slice_alu_output[32];
-	assign Result[13] = Slice_alu_output[31];
-	assign Result[12] = Slice_alu_output[30];
-	assign Result[11] = Slice_alu_output[29];
-	assign Result[10] = Slice_alu_output[28];
-	assign Result[9] = Slice_alu_output[27];
-	assign Result[8] = Slice_alu_output[26];
-	assign Result[7] = Slice_alu_output[25];
-	assign Result[6] = Slice_alu_output[24];
-	assign Result[5] = Slice_alu_output[23];
-	assign Result[4] = Slice_alu_output[22];
-	assign Result[3] = Slice_alu_output[21];
-	assign Result[2] = Slice_alu_output[20];
-	assign Result[1] = Slice_alu_output[19];
-	assign Result[0] = Slice_alu_output[18];
-	
-	assign Result54[0] = Slice_alu_output[0];
-	assign Result54[1] = Slice_alu_output[1];
-	assign Result54[2] = Slice_alu_output[2];
-	assign Result54[3] = Slice_alu_output[3];
-	assign Result54[4] = Slice_alu_output[4];
-	assign Result54[5] = Slice_alu_output[5];
-	assign Result54[6] = Slice_alu_output[6];
-	assign Result54[7] = Slice_alu_output[7];
-	assign Result54[8] = Slice_alu_output[8];
-	assign Result54[9] = Slice_alu_output[9];
-	assign Result54[10] = Slice_alu_output[10];
-	assign Result54[11] = Slice_alu_output[11];
-	assign Result54[12] = Slice_alu_output[12];
-	assign Result54[13] = Slice_alu_output[13];
-	assign Result54[14] = Slice_alu_output[14];
-	assign Result54[15] = Slice_alu_output[15];
-	assign Result54[16] = Slice_alu_output[16];
-	assign Result54[17] = Slice_alu_output[17];
-	assign Result54[18] = Slice_alu_output[18];
-	assign Result54[19] = Slice_alu_output[19];
-	assign Result54[20] = Slice_alu_output[20];
-	assign Result54[21] = Slice_alu_output[21];
-	assign Result54[22] = Slice_alu_output[22];
-	assign Result54[23] = Slice_alu_output[23];
-	assign Result54[24] = Slice_alu_output[24];
-	assign Result54[25] = Slice_alu_output[25];
-	assign Result54[26] = Slice_alu_output[26];
-	assign Result54[27] = Slice_alu_output[27];
-	assign Result54[28] = Slice_alu_output[28];
-	assign Result54[29] = Slice_alu_output[29];
-	assign Result54[30] = Slice_alu_output[30];
-	assign Result54[31] = Slice_alu_output[31];
-	assign Result54[32] = Slice_alu_output[32];
-	assign Result54[33] = Slice_alu_output[33];
-	assign Result54[34] = Slice_alu_output[34];
-	assign Result54[35] = Slice_alu_output[35];
-	assign Result54[36] = Slice_alu_output[36];
-	assign Result54[37] = Slice_alu_output[37];
-	assign Result54[38] = Slice_alu_output[38];
-	assign Result54[39] = Slice_alu_output[39];
-	assign Result54[40] = Slice_alu_output[40];
-	assign Result54[41] = Slice_alu_output[41];
-	assign Result54[42] = Slice_alu_output[42];
-	assign Result54[43] = Slice_alu_output[43];
-	assign Result54[44] = Slice_alu_output[44];
-	assign Result54[45] = Slice_alu_output[45];
-	assign Result54[46] = Slice_alu_output[46];
-	assign Result54[47] = Slice_alu_output[47];
-	assign Result54[48] = Slice_alu_output[48];
-	assign Result54[49] = Slice_alu_output[49];
-	assign Result54[50] = Slice_alu_output[50];
-	assign Result54[51] = Slice_alu_output[51];
-	assign Result54[52] = Slice_alu_output[52];
-	assign Result54[53] = Slice_alu_output[53];
-
-
+    assign Result = ALU_O[53:18];	
+	assign Result54 = ALU_O;
 endmodule
