@@ -15,10 +15,10 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	input wire SignBB;
 	input wire [35:0] Mem0;
 	input wire [35:0] Mem1;
-	input wire [2:0] AAMemsel;
-	input wire [2:0] ABMemsel;
-	input wire [2:0] BAMemsel;
-	input wire [2:0] BBMemsel;
+	input wire [0:0] AAMemsel;
+	input wire [0:0] ABMemsel;
+	input wire [0:0] BAMemsel;
+	input wire [0:0] BBMemsel;
 	input wire CMemsel;
 	input wire [1:0] AMuxsel;
     input wire [1:0] BMuxsel;
@@ -38,6 +38,8 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	input wire SIGNEDCIN;
 	output wire [53:0] CO;
 
+	parameter QMATH_SHIFT = 2;
+	
     wire [53:0] ALU_O;
     wire [17:0] ALU_A_H;
     wire [17:0] ALU_A_L;
@@ -54,16 +56,24 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
     wire [17:0] MULTA_A;
     wire [17:0] MULTA_B;
 	wire [17:0] MULTA_C;
+    wire [17:0] MULTA_SRIA;
+    wire [17:0] MULTA_SRIB;
     wire [17:0] MULTA_ROB;
     wire [17:0] MULTA_ROA;
+    wire [17:0] MULTA_SROA;
+    wire [17:0] MULTA_SROB;
     wire [35:0] MULTA_P;
     wire MULTA_P_SIGN;
 	
 	wire [17:0] MULTB_A;
     wire [17:0] MULTB_B;
 	wire [17:0] MULTB_C;
+    wire [17:0] MULTB_SRIA;
+    wire [17:0] MULTB_SRIB;
     wire [17:0] MULTB_ROB;
     wire [17:0] MULTB_ROA;
+    wire [17:0] MULTB_SROA;
+    wire [17:0] MULTB_SROB;
     wire [35:0] MULTB_P;
     wire MULTB_P_SIGN;
 	
@@ -73,42 +83,18 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	reg [35:0] Mem0_r;
 	reg [35:0] Mem1_r;
 	
-	wire [17:0] DataAA [7:0];
+	wire [17:0] DataAA [1:0];
 	assign DataAA[0] = Mem0[17:0];
 	assign DataAA[1] = Mem0[35:18];
-	assign DataAA[2] = Mem1[17:0];
-	assign DataAA[3] = Mem1[35:18];
-	assign DataAA[4] = Mem0_r[17:0];
-	assign DataAA[5] = Mem0_r[35:18];
-	assign DataAA[6] = Mem1_r[17:0];
-	assign DataAA[7] = Mem1_r[35:18];
-	wire [17:0] DataAB [7:0];
-	assign DataAB[0] = Mem0[17:0];
-	assign DataAB[1] = Mem0[35:18];
-	assign DataAB[2] = Mem1[17:0];
-	assign DataAB[3] = Mem1[35:18];
-	assign DataAB[4] = Mem0_r[17:0];
-	assign DataAB[5] = Mem0_r[35:18];
-	assign DataAB[6] = Mem1_r[17:0];
-	assign DataAB[7] = Mem1_r[35:18];
-	wire [17:0] DataBA [7:0];
-	assign DataBA[0] = Mem0[17:0];
+	wire [17:0] DataAB [1:0];
+	assign DataAB[0] = Mem1[17:0];
+	assign DataAB[1] = Mem1[35:18];
+	wire [17:0] DataBA [1:0];
+	assign DataBA[0] = Mem0[35:18];
 	assign DataBA[1] = Mem0[35:18];
-	assign DataBA[2] = Mem1[17:0];
-	assign DataBA[3] = Mem1[35:18];
-	assign DataBA[4] = Mem0_r[17:0];
-	assign DataBA[5] = Mem0_r[35:18];
-	assign DataBA[6] = Mem1_r[17:0];
-	assign DataBA[7] = Mem1_r[35:18];
-	wire [17:0] DataBB [7:0];
-	assign DataBB[0] = Mem0[17:0];
-	assign DataBB[1] = Mem0[35:18];
-	assign DataBB[2] = Mem1[17:0];
-	assign DataBB[3] = Mem1[35:18];
-	assign DataBB[4] = Mem0_r[17:0];
-	assign DataBB[5] = Mem0_r[35:18];
-	assign DataBB[6] = Mem1_r[17:0];
-	assign DataBB[7] = Mem1_r[35:18];
+	wire [17:0] DataBB [1:0];	
+	assign DataBB[0] = Mem1_r[17:0];
+	assign DataBB[1] = Mem1[35:18];
 	wire [35:0] DataC [1:0];
 	
 		
@@ -125,8 +111,10 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	assign ALU_A_L = MULTA_ROA;
 	assign ALU_B_H = MULTB_ROB;
 	assign ALU_B_L = MULTB_ROA;
-	assign ALU_C[53:18] = DataC_r;
-	assign ALU_C[17:0] = {18{DataC_r[35]}};
+	if(QMATH_SHIFT)
+		assign ALU_C[54-QMATH_SHIFT +: QMATH_SHIFT] = {QMATH_SHIFT{DataC_r[35]}};
+	assign ALU_C[18-QMATH_SHIFT +: 36] = DataC_r;
+	assign ALU_C[17-QMATH_SHIFT:0] = {18-QMATH_SHIFT{DataC_r[35]}};
 	assign ALU_MA = MULTA_P;
 	assign ALU_MB = MULTB_P;
 	assign ALU_MA_SIGN = MULTA_P_SIGN;
@@ -140,7 +128,8 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	assign MULTB_A = DataBA[BAMemsel];
 	assign MULTB_B = DataBB[BBMemsel];
 	assign MULTB_C = {18{scuba_vlo}};//ALU_C[44:27];	
-
+	assign MULTA_SRIA = MULTB_SROA;
+	assign MULTA_SRIB = MULTB_SROB;
 	
 	defparam dsp_alu.CLK3_DIV = "ENABLED" ;
     defparam dsp_alu.CLK2_DIV = "ENABLED" ;
@@ -378,21 +367,21 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .SOURCEB(scuba_vlo), .CE0(CE0), .CE1(CE1), .CE2(scuba_vhi), 
         .CE3(scuba_vhi), .CLK0(CLK0), .CLK1(scuba_vlo), .CLK2(scuba_vlo), 
         .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), .RST2(scuba_vlo), 
-        .RST3(scuba_vlo), .SRIA17(scuba_vlo), .SRIA16(scuba_vlo), .SRIA15(scuba_vlo), 
-        .SRIA14(scuba_vlo), .SRIA13(scuba_vlo), .SRIA12(scuba_vlo), .SRIA11(scuba_vlo), 
-        .SRIA10(scuba_vlo), .SRIA9(scuba_vlo), .SRIA8(scuba_vlo), .SRIA7(scuba_vlo), 
-        .SRIA6(scuba_vlo), .SRIA5(scuba_vlo), .SRIA4(scuba_vlo), .SRIA3(scuba_vlo), 
-        .SRIA2(scuba_vlo), .SRIA1(scuba_vlo), .SRIA0(scuba_vlo), .SRIB17(scuba_vlo), 
-        .SRIB16(scuba_vlo), .SRIB15(scuba_vlo), .SRIB14(scuba_vlo), .SRIB13(scuba_vlo), 
-        .SRIB12(scuba_vlo), .SRIB11(scuba_vlo), .SRIB10(scuba_vlo), .SRIB9(scuba_vlo), 
-        .SRIB8(scuba_vlo), .SRIB7(scuba_vlo), .SRIB6(scuba_vlo), .SRIB5(scuba_vlo), 
-        .SRIB4(scuba_vlo), .SRIB3(scuba_vlo), .SRIB2(scuba_vlo), .SRIB1(scuba_vlo), 
-        .SRIB0(scuba_vlo), .SROA17(), .SROA16(), .SROA15(), .SROA14(), .SROA13(), 
-        .SROA12(), .SROA11(), .SROA10(), .SROA9(), .SROA8(), .SROA7(), .SROA6(), 
-        .SROA5(), .SROA4(), .SROA3(), .SROA2(), .SROA1(), .SROA0(), .SROB17(), 
-        .SROB16(), .SROB15(), .SROB14(), .SROB13(), .SROB12(), .SROB11(), 
-        .SROB10(), .SROB9(), .SROB8(), .SROB7(), .SROB6(), .SROB5(), .SROB4(), 
-        .SROB3(), .SROB2(), .SROB1(), .SROB0(), .ROA17(MULTA_ROA[17]), 
+        .RST3(scuba_vlo), .SRIA17(MULTA_SRIA[17]), .SRIA16(MULTA_SRIA[16]), .SRIA15(MULTA_SRIA[15]), 
+        .SRIA14(MULTA_SRIA[14]), .SRIA13(MULTA_SRIA[13]), .SRIA12(MULTA_SRIA[12]), .SRIA11(MULTA_SRIA[11]), 
+        .SRIA10(MULTA_SRIA[10]), .SRIA9(MULTA_SRIA[9]), .SRIA8(MULTA_SRIA[8]), .SRIA7(MULTA_SRIA[7]), 
+        .SRIA6(MULTA_SRIA[6]), .SRIA5(MULTA_SRIA[5]), .SRIA4(MULTA_SRIA[4]), .SRIA3(MULTA_SRIA[3]), 
+        .SRIA2(MULTA_SRIA[2]), .SRIA1(MULTA_SRIA[1]), .SRIA0(MULTA_SRIA[0]), .SRIB17(MULTA_SRIB[17]), 
+        .SRIB16(MULTA_SRIB[16]), .SRIB15(MULTA_SRIB[15]), .SRIB14(MULTA_SRIB[14]), .SRIB13(MULTA_SRIB[13]), 
+        .SRIB12(MULTA_SRIB[12]), .SRIB11(MULTA_SRIB[11]), .SRIB10(MULTA_SRIB[10]), .SRIB9(MULTA_SRIB[9]), 
+        .SRIB8(MULTA_SRIB[8]), .SRIB7(MULTA_SRIB[7]), .SRIB6(MULTA_SRIB[6]), .SRIB5(MULTA_SRIB[5]), 
+        .SRIB4(MULTA_SRIB[4]), .SRIB3(MULTA_SRIB[3]), .SRIB2(MULTA_SRIB[2]), .SRIB1(MULTA_SRIB[1]), 
+        .SRIB0(MULTA_SRIB[0]), .SROA17(MULTA_SROA[17]), .SROA16(MULTA_SROA[16]), .SROA15(MULTA_SROA[15]), .SROA14(MULTA_SROA[14]), .SROA13(MULTA_SROA[13]), 
+        .SROA12(MULTA_SROA[12]), .SROA11(MULTA_SROA[11]), .SROA10(MULTA_SROA[10]), .SROA9(MULTA_SROA[9]), .SROA8(MULTA_SROA[8]), .SROA7(MULTA_SROA[7]), .SROA6(MULTA_SROA[6]), 
+        .SROA5(MULTA_SROA[5]), .SROA4(MULTA_SROA[4]), .SROA3(MULTA_SROA[3]), .SROA2(MULTA_SROA[2]), .SROA1(MULTA_SROA[1]), .SROA0(MULTA_SROA[0]), .SROB17(MULTA_SROB[17]), 
+        .SROB16(MULTA_SROB[16]), .SROB15(MULTA_SROB[15]), .SROB14(MULTA_SROB[14]), .SROB13(MULTA_SROB[13]), .SROB12(MULTA_SROB[12]), .SROB11(MULTA_SROB[11]), 
+        .SROB10(MULTA_SROB[10]), .SROB9(MULTA_SROB[9]), .SROB8(MULTA_SROB[8]), .SROB7(MULTA_SROB[7]), .SROB6(MULTA_SROB[6]), .SROB5(MULTA_SROB[5]), .SROB4(MULTA_SROB[4]), 
+        .SROB3(MULTA_SROB[3]), .SROB2(MULTA_SROB[2]), .SROB1(MULTA_SROB[1]), .SROB0(MULTA_SROB[0]), .ROA17(MULTA_ROA[17]), 
         .ROA16(MULTA_ROA[16]), .ROA15(MULTA_ROA[15]), 
         .ROA14(MULTA_ROA[14]), .ROA13(MULTA_ROA[13]), 
         .ROA12(MULTA_ROA[12]), .ROA11(MULTA_ROA[11]), 
@@ -476,21 +465,21 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .SOURCEB(scuba_vlo), .CE0(CE0), .CE1(CE1), .CE2(scuba_vhi), 
         .CE3(scuba_vhi), .CLK0(CLK0), .CLK1(scuba_vlo), .CLK2(scuba_vlo), 
         .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), .RST2(scuba_vlo), 
-        .RST3(scuba_vlo), .SRIA17(scuba_vlo), .SRIA16(scuba_vlo), .SRIA15(scuba_vlo), 
-        .SRIA14(scuba_vlo), .SRIA13(scuba_vlo), .SRIA12(scuba_vlo), .SRIA11(scuba_vlo), 
-        .SRIA10(scuba_vlo), .SRIA9(scuba_vlo), .SRIA8(scuba_vlo), .SRIA7(scuba_vlo), 
-        .SRIA6(scuba_vlo), .SRIA5(scuba_vlo), .SRIA4(scuba_vlo), .SRIA3(scuba_vlo), 
-        .SRIA2(scuba_vlo), .SRIA1(scuba_vlo), .SRIA0(scuba_vlo), .SRIB17(scuba_vlo), 
-        .SRIB16(scuba_vlo), .SRIB15(scuba_vlo), .SRIB14(scuba_vlo), .SRIB13(scuba_vlo), 
-        .SRIB12(scuba_vlo), .SRIB11(scuba_vlo), .SRIB10(scuba_vlo), .SRIB9(scuba_vlo), 
-        .SRIB8(scuba_vlo), .SRIB7(scuba_vlo), .SRIB6(scuba_vlo), .SRIB5(scuba_vlo), 
-        .SRIB4(scuba_vlo), .SRIB3(scuba_vlo), .SRIB2(scuba_vlo), .SRIB1(scuba_vlo), 
-        .SRIB0(scuba_vlo), .SROA17(), .SROA16(), .SROA15(), .SROA14(), .SROA13(), 
-        .SROA12(), .SROA11(), .SROA10(), .SROA9(), .SROA8(), .SROA7(), .SROA6(), 
-        .SROA5(), .SROA4(), .SROA3(), .SROA2(), .SROA1(), .SROA0(), .SROB17(), 
-        .SROB16(), .SROB15(), .SROB14(), .SROB13(), .SROB12(), .SROB11(), 
-        .SROB10(), .SROB9(), .SROB8(), .SROB7(), .SROB6(), .SROB5(), .SROB4(), 
-        .SROB3(), .SROB2(), .SROB1(), .SROB0(), .ROA17(MULTB_ROA[17]), 
+        .RST3(scuba_vlo), .SRIA17(MULTB_SRIA[17]), .SRIA16(MULTB_SRIA[16]), .SRIA15(MULTB_SRIA[15]), 
+        .SRIA14(MULTB_SRIA[14]), .SRIA13(MULTB_SRIA[13]), .SRIA12(MULTB_SRIA[12]), .SRIA11(MULTB_SRIA[11]), 
+        .SRIA10(MULTB_SRIA[10]), .SRIA9(MULTB_SRIA[9]), .SRIA8(MULTB_SRIA[8]), .SRIA7(MULTB_SRIA[7]), 
+        .SRIA6(MULTB_SRIA[6]), .SRIA5(MULTB_SRIA[5]), .SRIA4(MULTB_SRIA[4]), .SRIA3(MULTB_SRIA[3]), 
+        .SRIA2(MULTB_SRIA[2]), .SRIA1(MULTB_SRIA[1]), .SRIA0(MULTB_SRIA[0]), .SRIB17(MULTB_SRIB[17]), 
+        .SRIB16(MULTB_SRIB[16]), .SRIB15(MULTB_SRIB[15]), .SRIB14(MULTB_SRIB[14]), .SRIB13(MULTB_SRIB[13]), 
+        .SRIB12(MULTB_SRIB[12]), .SRIB11(MULTB_SRIB[11]), .SRIB10(MULTB_SRIB[10]), .SRIB9(MULTB_SRIB[9]), 
+        .SRIB8(MULTB_SRIB[8]), .SRIB7(MULTB_SRIB[7]), .SRIB6(MULTB_SRIB[6]), .SRIB5(MULTB_SRIB[5]), 
+        .SRIB4(MULTB_SRIB[4]), .SRIB3(MULTB_SRIB[3]), .SRIB2(MULTB_SRIB[2]), .SRIB1(MULTB_SRIB[1]), 
+        .SRIB0(MULTB_SRIB[0]), .SROA17(MULTB_SROA[17]), .SROA16(MULTB_SROA[16]), .SROA15(MULTB_SROA[15]), .SROA14(MULTB_SROA[14]), .SROA13(MULTB_SROA[13]), 
+        .SROA12(MULTB_SROA[12]), .SROA11(MULTB_SROA[11]), .SROA10(MULTB_SROA[10]), .SROA9(MULTB_SROA[9]), .SROA8(MULTB_SROA[8]), .SROA7(MULTB_SROA[7]), .SROA6(MULTB_SROA[6]), 
+        .SROA5(MULTB_SROA[5]), .SROA4(MULTB_SROA[4]), .SROA3(MULTB_SROA[3]), .SROA2(MULTB_SROA[2]), .SROA1(MULTB_SROA[1]), .SROA0(MULTB_SROA[0]), .SROB17(MULTB_SROB[17]), 
+        .SROB16(MULTB_SROB[16]), .SROB15(MULTB_SROB[15]), .SROB14(MULTB_SROB[14]), .SROB13(MULTB_SROB[13]), .SROB12(MULTB_SROB[12]), .SROB11(MULTB_SROB[11]), 
+        .SROB10(MULTB_SROB[10]), .SROB9(MULTB_SROB[9]), .SROB8(MULTB_SROB[8]), .SROB7(MULTB_SROB[7]), .SROB6(MULTB_SROB[6]), .SROB5(MULTB_SROB[5]), .SROB4(MULTB_SROB[4]), 
+        .SROB3(MULTB_SROB[3]), .SROB2(MULTB_SROB[2]), .SROB1(MULTB_SROB[1]), .SROB0(MULTB_SROB[0]), .ROA17(MULTB_ROA[17]), 
         .ROA16(MULTB_ROA[16]), .ROA15(MULTB_ROA[15]), 
         .ROA14(MULTB_ROA[14]), .ROA13(MULTB_ROA[13]), 
         .ROA12(MULTB_ROA[12]), .ROA11(MULTB_ROA[11]), 
@@ -524,6 +513,6 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .P4(MULTB_P[4]), .P3(MULTB_P[3]), .P2(MULTB_P[2]), 
         .P1(MULTB_P[1]), .P0(MULTB_P[0]), .SIGNEDP(MULTB_P_SIGN));
 
-    assign Result = ALU_O[53:18];	
+    assign Result = ALU_O[18-QMATH_SHIFT +: 36];	
 	assign Result54 = ALU_O;
 endmodule

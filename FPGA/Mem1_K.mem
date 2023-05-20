@@ -1,87 +1,87 @@
-000000000 //cosine 0 harmonic 0.0 
-000000000 //sine 0 harmonic0.0 
-07AC5DFE9 //gain x1 0 harmonic
-000000000 //gain x2 0 harmonic
-FFFCB036E //cosine 1 harmonic 0.9999494680510518 
-0292D4215 //sine 1 harmonic0.010052927156730652 
-08802E69D //gain x1 1 harmonic
-F9413C953 //gain x2 1 harmonic
-FFF2C0F1A //cosine 2 harmonic 0.999797877311163 
-052597371 //sine 2 harmonic0.020104838325457577 
-02C7F81CB //gain x1 2 harmonic
-FB5753B19 //gain x2 2 harmonic
-FFE23271F //cosine 3 harmonic 0.9995452431006845 
-07B838360 //sine 3 harmonic0.030154717620856752 
-01A502B40 //gain x1 3 harmonic
-FCC73A931 //gain x2 3 harmonic
-FFCB05259 //cosine 4 harmonic 0.9991915909518144 
-0A4AA613C //sine 4 harmonic0.0402015493629532 
-013A9FA71 //gain x1 4 harmonic
-FD94D80AD //gain x2 4 harmonic
-FFAD39A5E //cosine 5 harmonic 0.9987369566060175 
-0CDCCFC76 //sine 5 harmonic0.05024431817976955 
-0105D2331 //gain x1 5 harmonic
-FE15F341D //gain x2 5 harmonic
-FF88D0B86 //cosine 6 harmonic 0.9981813860104127 
-0F6EA449A //sine 6 harmonic0.06028200910994352 
-00E5FD5A6 //gain x1 6 harmonic
-FE6E27C62 //gain x2 6 harmonic
-FF5DCB4E1 //cosine 7 harmonic 0.9975249353131302 
-120012958 //sine 7 harmonic0.0703136077053038 
-00D006CA4 //gain x1 7 harmonic
-FEAE07638 //gain x2 7 harmonic
-FF2C2A840 //cosine 8 harmonic 0.9967676708576361 
-149109A8B //sine 8 harmonic0.08033810013339422 
-00BF5DEDA //gain x1 8 harmonic
-FEDE3BED9 //gain x2 8 harmonic
-FEF3EFA2E //cosine 9 harmonic 0.995909669176028 
-17217883C //sine 9 harmonic0.09035447327993558 
-00B1DFD3B //gain x1 9 harmonic
-FF03BBDD0 //gain x2 9 harmonic
-FEB51C1F0 //cosine 10 harmonic 0.9949510169813002 
-19B14E2B0 //sine 10 harmonic0.10036171485121488 
-00A671926 //gain x1 10 harmonic
-FF21941EC //gain x2 10 harmonic
-FE6FB198B //cosine 11 harmonic 0.9938918111585803 
-1C4079A6B //sine 11 harmonic0.11035881347639176 
-009C73970 //gain x1 11 harmonic
-FF39BF935 //gain x2 11 harmonic
-FE23B1DB8 //cosine 12 harmonic 0.9927321587553374 
-1ECEEA035 //sine 12 harmonic0.12034475880971149 
-009384097 //gain x1 12 harmonic
-FF4D95347 //gain x2 12 harmonic
-FDD11EDEF //cosine 13 harmonic 0.9914721769705636 
-215C8E525 //sine 13 harmonic0.13031854163261453 
-008B6152A //gain x1 13 harmonic
-FF5E042DD //gain x2 13 harmonic
-FD77FAC5E //cosine 14 harmonic 0.9901119931429293 
-23E955AA8 //sine 14 harmonic0.14027915395573198 
-0083DA9DD //gain x1 14 harmonic
-FF6BB633E //gain x2 14 harmonic
-FD1847DEC //cosine 15 harmonic 0.9886517447379141 
-26752F284 //sine 15 harmonic0.15022558912075706 
-007CC6556 //gain x1 15 harmonic
-FF77235F2 //gain x2 15 harmonic
-FCB208A36 //cosine 16 harmonic 0.9870915793339134 
-290009EE3 //sine 16 harmonic0.1601568419021818 
-0075FA1D9 //gain x1 16 harmonic
-FF809C8E7 //gain x2 16 harmonic
-FC453FB8F //cosine 17 harmonic 0.9854316546073247 
-2B89D5257 //sine 17 harmonic0.17007190860888913 
-006F3F9AE //gain x1 17 harmonic
-FF884D0DE //gain x2 17 harmonic
-FBD1EFF00 //cosine 18 harmonic 0.9836721383166108 
-2E127FFE3 //sine 18 harmonic0.17996978718558979 
-00683AAD0 //gain x1 18 harmonic
-FF8E2D586 //gain x2 18 harmonic
-FB581C445 //cosine 19 harmonic 0.9818132082853466 
-3099F9B03 //sine 19 harmonic0.18984947731409388 
-00600F751 //gain x1 19 harmonic
-FF91C5598 //gain x2 19 harmonic
-FAD7C7DCC //cosine 20 harmonic 0.9798550523842469 
-3320317AF //sine 20 harmonic0.199709980514407 
-005327050 //gain x1 20 harmonic
-FF90BCC62 //gain x2 20 harmonic
+000000000 //cosine 0 harmonic [0.0] 
+000000000 //sine 0 harmonic [0.0] 
+00FDB570E //gain x1 0 harmonic [0.01548515] 
+000000000 //gain x2 0 harmonic [0.] 
+3FFFCB035 //cosine 1 harmonic [0.9999873669329657] 
+00525AC85 //sine 1 harmonic [0.005026527078818862] 
+01190BC2B //gain x1 1 harmonic [0.01715368] 
+FF20F4446 //gain x2 1 harmonic [-0.01361364] 
+3FFF2C0DB //cosine 2 harmonic [0.9999494680510518] 
+00A4B5085 //sine 2 harmonic [0.010052927156730652] 
+005BED68E //gain x1 2 harmonic [0.0056108] 
+FF65F185A //gain x2 2 harmonic [-0.00940287] 
+3FFE23202 //cosine 3 harmonic [0.9998863043118164] 
+00F70E379 //sine 3 harmonic [0.015079073236037119] 
+003658F7F //gain x1 3 harmonic [0.00331711] 
+FF95763CA //gain x2 3 harmonic [-0.00650257] 
+3FFCB03C6 //cosine 4 harmonic [0.999797877311163] 
+014965CDC //sine 4 harmonic [0.020104838325457577] 
+00289B6E3 //gain x1 4 harmonic [0.00247846] 
+FFB004ADF //gain x2 4 harmonic [-0.0048817] 
+3FFAD364D //cosine 5 harmonic [0.9996841892832999] 
+019BBB428 //sine 5 harmonic [0.025130095443337476] 
+0021C9AE9 //gain x1 5 harmonic [0.00206224] 
+FFC0B14AB //gain x2 5 harmonic [-0.00386398] 
+3FF88C9C7 //cosine 6 harmonic [0.9995452431006845] 
+01EE0E0D8 //sine 6 harmonic [0.030154717620856752] 
+001DAD5B1 //gain x1 6 harmonic [0.00181135] 
+FFCC157FF //gain x2 6 harmonic [-0.0031687] 
+3FF5DBE73 //cosine 7 harmonic [0.9993810422739492] 
+02405DA66 //sine 7 harmonic [0.035178577905237825] 
+001AD7545 //gain x1 7 harmonic [0.00163825] 
+FFD455326 //gain x2 7 harmonic [-0.00266523] 
+3FF2C1496 //cosine 8 harmonic [0.9991915909518144] 
+0292A984F //sine 8 harmonic [0.0402015493629532] 
+0018B0A98 //gain x1 8 harmonic [0.00150696] 
+FFDA8ED8D //gain x2 8 harmonic [-0.00228528] 
+3FEF3CC83 //cosine 9 harmonic [0.9989768939209825] 
+02E4F120D //sine 9 harmonic [0.04522350508293261] 
+0016F2B4E //gain x1 9 harmonic [0.00140064] 
+FFDF668C1 //gain x2 9 harmonic [-0.00198971] 
+3FEB4E697 //cosine 10 harmonic [0.9987369566060175] 
+033733F1D //sine 10 harmonic [0.05024431817976955] 
+001578EAE //gain x1 10 harmonic [0.00131057] 
+FFE341299 //gain x2 10 harmonic [-0.00175448] 
+3FE6F633B //cosine 11 harmonic [0.9984717850692078] 
+0389716FC //sine 11 harmonic [0.05526386179692719] 
+00142EAEB //gain x1 11 harmonic [0.00123183] 
+FFE66028F //gain x2 11 harmonic [-0.00156399] 
+3FE2342E1 //cosine 12 harmonic [0.9981813860104127] 
+03DBA9126 //sine 12 harmonic [0.06028200910994352] 
+0013075C9 //gain x1 12 harmonic [0.00116142] 
+FFE8EFD65 //gain x2 12 harmonic [-0.00140766] 
+3FDD08608 //cosine 13 harmonic [0.9978657667668942] 
+042DDA51A //sine 13 harmonic [0.06529863332963576] 
+0011FA7B3 //gain x1 13 harmonic [0.00109732] 
+FFEB0F15C //gain x2 13 harmonic [-0.00127814] 
+3FD772D38 //cosine 14 harmonic [0.9975249353131302] 
+048004A56 //sine 14 harmonic [0.0703136077053038] 
+001101BB8 //gain x1 14 harmonic [0.00103801] 
+FFECD3D25 //gain x2 14 harmonic [-0.0011702] 
+3FD173906 //cosine 15 harmonic [0.9971589002606139] 
+04D227859 //sine 15 harmonic [0.07532680552793272] 
+001017BDC //gain x1 15 harmonic [0.00098222] 
+FFEE4D8F6 //gain x2 15 harmonic [-0.00108014] 
+3FCB0AA10 //cosine 16 harmonic [0.9967676708576361] 
+0524426A2 //sine 16 harmonic [0.08033810013339422] 
+000F37082 //gain x1 16 harmonic [0.00092865] 
+FFEF86BFA //gain x2 16 harmonic [-0.00100547] 
+3FC438100 //cosine 17 harmonic [0.9963512569890512] 
+057654CB4 //sine 17 harmonic [0.08534736490564694] 
+000E58933 //gain x1 17 harmonic [0.00087561] 
+FFF084FC8 //gain x2 17 harmonic [-0.00094486] 
+3FBCFBE8B //cosine 18 harmonic [0.995909669176028] 
+05C85E20F //sine 18 harmonic [0.09035447327993558] 
+000D7074A //gain x1 18 harmonic [0.00082027] 
+FFF14751C //gain x2 18 harmonic [-0.00089852] 
+3FB556371 //cosine 19 harmonic [0.9954429185757832] 
+061A5DE35 //sine 19 harmonic [0.09535929874598863] 
+000C623BE //gain x1 19 harmonic [0.00075584] 
+FFF1BE490 //gain x2 19 harmonic [-0.00087016] 
+3FAD4707C //cosine 20 harmonic [0.9949510169813002] 
+066C538AC //sine 20 harmonic [0.10036171485121488] 
+000AB710A //gain x1 20 harmonic [0.000654] 
+FFF19C8EF //gain x2 20 harmonic [-0.0008782] 
 000000000
 000000000
 000000000
