@@ -81,26 +81,26 @@ module SerDes_tb;
 	assign Kalman1_SIGNEDCIN = 1;
 	assign Kalman1_CIN = 0;
 	
-	wire Kalman2_WIP;
-	wire Kalman2_START;
+	wire Res_ctrl1_WIP;
+	wire Res_ctrl1_START;
 	
-	wire Kalman2_Mem2_we;
-	wire[8:0] Kalman2_Mem2_addrw;
-	wire[35:0] Kalman2_Mem2_data;
-	wire[31:0] Kalman2_data_o;
-	wire [53:0] Kalman2_CIN;
-	wire [53:0] Kalman2_CO;
-	wire Kalman2_SIGNEDCIN;
-	wire Kalman2_SIGNEDCO;
+	wire Res_ctrl1_Mem2_we;
+	wire[8:0] Res_ctrl1_Mem2_addrw;
+	wire[35:0] Res_ctrl1_Mem2_data;
+	wire[31:0] Res_ctrl1_data_o;
+	wire [53:0] Res_ctrl1_CIN;
+	wire [53:0] Res_ctrl1_CO;
+	wire Res_ctrl1_SIGNEDCIN;
+	wire Res_ctrl1_SIGNEDCO;
 	
-	Kalman2 Kalman2(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Res_ctrl Res_ctrl1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Kalman1_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Kalman1_Mem2_key[0]),
-	.enable_i(Kalman2_START), .Mem0_addrw_o(Kalman2_Mem2_addrw), .Mem0_we_o(Kalman2_Mem2_we), .Mem0_data_io(Kalman2_Mem2_data), .WIP_flag_o(Kalman2_WIP),
-	.CIN(Kalman2_CIN), .SIGNEDCIN(Kalman2_SIGNEDCIN), .CO(Kalman2_CO), .SIGNEDCO(Kalman2_SIGNEDCO));
+	.enable_i(Res_ctrl1_START), .Mem2_addrw_o(Res_ctrl1_Mem2_addrw), .Mem2_we_o(Res_ctrl1_Mem2_we), .Mem2_data_o(Res_ctrl1_Mem2_data), .WIP_flag_o(Res_ctrl1_WIP),
+	.CIN(Res_ctrl1_CIN), .SIGNEDCIN(Res_ctrl1_SIGNEDCIN), .CO(Res_ctrl1_CO), .SIGNEDCO(Res_ctrl1_SIGNEDCO));
 
-	assign Kalman2_START = i[9];
-	assign Kalman2_SIGNEDCIN = 1;
-	assign Kalman2_CIN = 0;
+	assign Res_ctrl1_START = i[9];
+	assign Res_ctrl1_SIGNEDCIN = 1;
+	assign Res_ctrl1_CIN = 0;
 	
 	assign EMIF_oe_i = 1; 
 	assign EMIF_we_i = 1; 

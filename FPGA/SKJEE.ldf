@@ -51,9 +51,6 @@
         <Source name="Slice2.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="Kalman_old.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
         <Source name="ACDC/ACDC.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
