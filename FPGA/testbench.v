@@ -2,7 +2,7 @@
 
 module SerDes_tb;
 	reg XTAL1_25MHz_i, XTAL2_25MHz_i, XTAL3_25MHz_i;
-	reg XTAL1_20MHz_i;
+	reg XTAL1_200MHz_i;
 	reg TZ_EN;
 
 	GSR GSR_INST (.GSR (1'b1));
@@ -18,7 +18,7 @@ module SerDes_tb;
 		forever begin
 			#20
 			i <= i+1;
-			if(i>=4000) $stop;
+			if(i>=400) $stop;
 		end
 	end
 
@@ -57,7 +57,7 @@ module SerDes_tb;
 	wire[31:0] EMIF_data_i;
 	wire[EMIF_MEMORY_WIDTH-1:0] EMIF_address_i; 
  
-	assign clk_DSP = XTAL1_25MHz_i;
+	assign clk_DSP = XTAL1_200MHz_i;
 	
 	wire Kalman1_WIP;
 	wire Kalman1_START;
@@ -77,30 +77,30 @@ module SerDes_tb;
 	.enable_i(Kalman1_START), .Mem2_addrw_o(Kalman1_Mem2_addrw), .Mem2_we_o(Kalman1_Mem2_we), .Mem2_data_o(Kalman1_Mem2_data), .WIP_flag_o(Kalman1_WIP),
 	.CIN(Kalman1_CIN), .SIGNEDCIN(Kalman1_SIGNEDCIN), .CO(Kalman1_CO), .SIGNEDCO(Kalman1_SIGNEDCO));
 
-	assign Kalman1_START = i[9];
+	assign Kalman1_START = i[6];
 	assign Kalman1_SIGNEDCIN = 1;
 	assign Kalman1_CIN = 0;
 	
-	wire Res_ctrl1_WIP;
-	wire Res_ctrl1_START;
+	wire Resonant1_WIP;
+	wire Resonant1_START;
 	
-	wire Res_ctrl1_Mem2_we;
-	wire[8:0] Res_ctrl1_Mem2_addrw;
-	wire[35:0] Res_ctrl1_Mem2_data;
-	wire[31:0] Res_ctrl1_data_o;
-	wire [53:0] Res_ctrl1_CIN;
-	wire [53:0] Res_ctrl1_CO;
-	wire Res_ctrl1_SIGNEDCIN;
-	wire Res_ctrl1_SIGNEDCO;
+	wire Resonant1_Mem2_we;
+	wire[8:0] Resonant1_Mem2_addrw;
+	wire[35:0] Resonant1_Mem2_data;
+	wire[31:0] Resonant1_data_o;
+	wire [53:0] Resonant1_CIN;
+	wire [53:0] Resonant1_CO;
+	wire Resonant1_SIGNEDCIN;
+	wire Resonant1_SIGNEDCO;
 	
-	Res_ctrl Res_ctrl1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Resonant #(.DEBUG(1)) Resonant1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Kalman1_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Kalman1_Mem2_key[0]),
-	.enable_i(Res_ctrl1_START), .Mem2_addrw_o(Res_ctrl1_Mem2_addrw), .Mem2_we_o(Res_ctrl1_Mem2_we), .Mem2_data_o(Res_ctrl1_Mem2_data), .WIP_flag_o(Res_ctrl1_WIP),
-	.CIN(Res_ctrl1_CIN), .SIGNEDCIN(Res_ctrl1_SIGNEDCIN), .CO(Res_ctrl1_CO), .SIGNEDCO(Res_ctrl1_SIGNEDCO));
+	.enable_i(Resonant1_START), .Mem2_addrw_o(Resonant1_Mem2_addrw), .Mem2_we_o(Resonant1_Mem2_we), .Mem2_data_o(Resonant1_Mem2_data), .WIP_flag_o(Resonant1_WIP),
+	.CIN(Resonant1_CIN), .SIGNEDCIN(Resonant1_SIGNEDCIN), .CO(Resonant1_CO), .SIGNEDCO(Resonant1_SIGNEDCO));
 
-	assign Res_ctrl1_START = i[9];
-	assign Res_ctrl1_SIGNEDCIN = 1;
-	assign Res_ctrl1_CIN = 0;
+	assign Resonant1_START = i[6];
+	assign Resonant1_SIGNEDCIN = 1;
+	assign Resonant1_CIN = 0;
 	
 	assign EMIF_oe_i = 1; 
 	assign EMIF_we_i = 1; 
@@ -127,9 +127,9 @@ module SerDes_tb;
 	end
 
 	always begin
-		XTAL1_20MHz_i = 0;
+		XTAL1_200MHz_i = 0;
 		forever
-			#(25*(1+50e-6)) XTAL1_20MHz_i = !XTAL1_20MHz_i;
+			#(2.5*(1+0e-6)) XTAL1_200MHz_i = !XTAL1_200MHz_i;
 	end
 
 endmodule

@@ -45,10 +45,13 @@
         <Source name="Kalman.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="Resonant_controler.v" type="Verilog" type_short="Verilog">
+        <Source name="Slice2.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="Slice2.v" type="Verilog" type_short="Verilog">
+        <Source name="Resonant.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="DSP.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="ACDC/ACDC.xcf" type="Programming Project File" type_short="Programming">
@@ -64,6 +67,9 @@
             <Options/>
         </Source>
         <Source name="Mem1_R.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Power.pcf" type="Power Calculator" type_short="PCF" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="Reveal_ana_ACDC.rva" type="Reveal Analyzer Project File" type_short="RVA">
