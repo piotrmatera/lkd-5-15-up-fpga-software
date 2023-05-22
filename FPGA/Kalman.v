@@ -365,21 +365,23 @@ module Kalman(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_clk_
 			end
 //-------------------------------------------------
 			8: begin
-				addrr_M1_sel <= SEL_C_INC;
 				addrr_M1_ptr <= CM1_INP;
 				
 				CMemsel <= MEM_M1;
 				
+				AMuxsel <= AMUX_ALU_FB;
 				CMuxsel <= CMUX_C_ALU;
 				
 				Opcode <= OPCODE_SUM_A_B_NC;
+				
+				addrr_M1_sel <= SEL_C_INC;
 				
 				harmonics_rst <= 1'b1;
 			end
 			9: begin
 				addrr_M0_ptr <= CM0_SUM;
 
-				CMuxsel <= CMUX_C_ALU;
+				CMuxsel <= CMUX_ALU_FB;
 				
 				Opcode <= OPCODE_SUM_A_B_NC;
 				
@@ -532,15 +534,24 @@ module Kalman(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_clk_
 	.RdClock(clk_i), .WrClockEn(1'b1), .RdClockEn(1'b1), .WE(Mem0_we_pip), .Reset(1'b0), 
 	.Q(Mem0_data_o));
 	
-	pmi_ram_dp #(.pmi_wr_addr_depth(M1_ADDR_NUM), .pmi_wr_addr_width(M1_ADDR_WIDTH), .pmi_wr_data_width(36),
-	.pmi_rd_addr_depth(M1_ADDR_NUM), .pmi_rd_addr_width(M1_ADDR_WIDTH), .pmi_rd_data_width(36), .pmi_regmode("reg"), 
-	.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U"),
-	.pmi_init_file("../Mem1_K.mem"), .pmi_init_file_format("hex")
-	)
-	Mem1(.Data({Mem1_data_i,4'd0}), .WrAddress(Mem1_addrw_i), .RdAddress(addrr_M1_out), .WrClock(Mem1_clk_w),
-	.RdClock(clk_i), .WrClockEn(Mem1_clk_en_w), .RdClockEn(1'b1), .WE(Mem1_we_i), .Reset(1'b0), 
-	.Q(Mem1_data_o));
-	
+	if(DEBUG)
+		pmi_ram_dp #(.pmi_wr_addr_depth(M1_ADDR_NUM), .pmi_wr_addr_width(M1_ADDR_WIDTH), .pmi_wr_data_width(36),
+		.pmi_rd_addr_depth(M1_ADDR_NUM), .pmi_rd_addr_width(M1_ADDR_WIDTH), .pmi_rd_data_width(36), .pmi_regmode("reg"), 
+		.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U"),
+		.pmi_init_file("../Mem1_K.mem"), .pmi_init_file_format("hex")
+		)
+		Mem1(.Data({Mem1_data_i,4'd0}), .WrAddress(Mem1_addrw_i), .RdAddress(addrr_M1_out), .WrClock(Mem1_clk_w),
+		.RdClock(clk_i), .WrClockEn(Mem1_clk_en_w), .RdClockEn(1'b1), .WE(Mem1_we_i), .Reset(1'b0), 
+		.Q(Mem1_data_o));
+	else
+		pmi_ram_dp #(.pmi_wr_addr_depth(M1_ADDR_NUM), .pmi_wr_addr_width(M1_ADDR_WIDTH), .pmi_wr_data_width(36),
+		.pmi_rd_addr_depth(M1_ADDR_NUM), .pmi_rd_addr_width(M1_ADDR_WIDTH), .pmi_rd_data_width(36), .pmi_regmode("reg"), 
+		.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U")
+		)
+		Mem1(.Data({Mem1_data_i,4'd0}), .WrAddress(Mem1_addrw_i), .RdAddress(addrr_M1_out), .WrClock(Mem1_clk_w),
+		.RdClock(clk_i), .WrClockEn(Mem1_clk_en_w), .RdClockEn(1'b1), .WE(Mem1_we_i), .Reset(1'b0), 
+		.Q(Mem1_data_o));
+		
 	addr_gen_Kalman #(.ADDR_START_STATES(0), .ADDR_START_COMMON(M0_START_COMMON), .ADDR_INC_STATES(M0_STATES_OFFSET_NUMBER),
 	.ADDR_INC_COMMON(M0_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M0_ADDR_WIDTH))
 	addrr_M0_gen (.clk(clk_i), .addr_sel(addrr_M0_sel),

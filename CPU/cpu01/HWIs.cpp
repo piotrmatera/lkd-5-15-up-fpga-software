@@ -17,6 +17,8 @@
 
 union FPGA_master_sync_flags_union Sync_flags;
 union COMM_flags_union Comm_flags;
+int32 zmienna_int;
+float zmienna;
 
 #pragma CODE_SECTION(".TI.ramfunc");
 interrupt void SD_INT()
@@ -57,7 +59,7 @@ interrupt void SD_INT()
     {
         decimator_cpu2 = 0;
 
-        CPU1toCPU2.CLA1toCLA2.w_filter = PLL.w_filter;
+        CPU1toCPU2.CLA1toCLA2.w_filter = MATH_2PI * 50.0f;//PLL.w_filter;
         CPU1toCPU2.CLA1toCLA2.I_lim = Conv.I_lim;
 
         while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
@@ -69,7 +71,8 @@ interrupt void SD_INT()
         src = (Uint32 *)&Meas_master.U_grid_avg;
         dest = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.Meas_master.U_grid_avg;
 
-        *dest++ = *src++;
+        src++;
+        *dest++ = *(Uint32 *)&zmienna;
         *dest++ = *src++;
         *dest++ = *src++;
         *dest++ = *src++;
@@ -167,7 +170,7 @@ interrupt void SD_INT()
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Timer_PWM.CPU_ERROR = TIMESTAMP_PWM;
+    Timer_PWM.CPU_ERROR = TIMESTAMP_PWM;//3us
 
     {
         static Uint16 first = 0;
@@ -245,7 +248,7 @@ interrupt void SD_INT()
 
     }
 
-    Timer_PWM.CPU_SCOPE = TIMESTAMP_PWM;
+    Timer_PWM.CPU_SCOPE = TIMESTAMP_PWM;//4us
 
     GPIO_SET(TRIGGER0_CM);
 
@@ -255,34 +258,34 @@ interrupt void SD_INT()
 //    Modbus_slave_LCD_OLD.RTU->interrupt_task();
 //    Modbus_slave_EXT.RTU->interrupt_task();
 
-    Timer_PWM.CPU_COMM = TIMESTAMP_PWM;
-
     Fast_copy21_CPUasm();
+
+    Timer_PWM.CPU_COMM = TIMESTAMP_PWM;//1us
 
     static volatile Uint32 Kalman_WIP;
     Kalman_WIP = EMIF_mem.read.flags.Kalman1_WIP;
 
-//    static volatile struct
-//    {
-//        struct trigonometric_struct harmonic[FPGA_KALMAN_STATES];
-//        float estimate;
-//        float error;
-//    }Kalman_mem;
-//    int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman[0];
-//    float *pointer_dst = (float *)&Kalman_mem;
-//    for(int i=0; i<sizeof(Kalman_mem)>>1; i++)
-//    {
-//        *pointer_dst++ = (float)*pointer_src++;// / (float)(1UL<<31);
-//    }
+    static volatile struct
+    {
+        struct trigonometric_struct harmonic[FPGA_KALMAN_STATES];
+        float estimate;
+        float error;
+    }Kalman_mem;
+    int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman[0];
+    float *pointer_dst = (float *)&Kalman_mem;
+    for(int i=0; i<sizeof(Kalman_mem)>>1; i++)
+    {
+        *pointer_dst++ = (float)*pointer_src++ / (float)(1UL<<31);
+    }
 
     static float angle = 0.0f;
-    angle += Conv.Ts * MATH_2PI * 100.0f;
+    angle += Conv.Ts * MATH_2PI * 50.0f;
     angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
-    static volatile int32 zmienna;
-    zmienna = 0.02f * (float)(1UL<<31) * (1.0f + sinf(angle));
+    zmienna = 0.02f * (0.0f + sinf(angle));
+    zmienna_int = zmienna * (float)(1UL<<31);
 //    zmienna = 0.002f;
-//    EMIF_mem.write.Kalman[0].input[0] = zmienna;
-    EMIF_mem.write.DSP_start = 4UL;
+    EMIF_mem.write.Kalman[0].series[0].input = zmienna_int;
+    if(decimator_cpu2) EMIF_mem.write.DSP_start = 4UL;
 
     static volatile union double_pulse_union
     {

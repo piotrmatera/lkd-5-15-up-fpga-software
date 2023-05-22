@@ -128,8 +128,8 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	assign MULTB_A = DataBA[BAMemsel];
 	assign MULTB_B = DataBB[BBMemsel];
 	assign MULTB_C = {18{scuba_vlo}};//ALU_C[44:27];	
-	assign MULTA_SRIA = MULTB_SROA;
-	assign MULTA_SRIB = MULTB_SROB;
+	//assign MULTA_SRIA = MULTB_SROA;
+	//assign MULTA_SRIB = MULTB_SROB;
 	
 	defparam dsp_alu.CLK3_DIV = "ENABLED" ;
     defparam dsp_alu.CLK2_DIV = "ENABLED" ;
