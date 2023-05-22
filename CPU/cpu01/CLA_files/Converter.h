@@ -26,6 +26,8 @@ struct Converter_struct
     struct abc_struct I_ref;
     struct abc_struct U_coupl;
 
+    float w_filter;
+    float f_filter;
     float compensation2;
     float Ts;
     float I_lim_nominal;

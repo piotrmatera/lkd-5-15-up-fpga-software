@@ -31,62 +31,14 @@ interrupt void SD_INT()
     register Uint32 *src;
     register Uint32 *dest;
 
-    src = (Uint32 *)&EMIF_mem.read.U_grid_a;
-    dest = (Uint32 *)&EMIF_CLA.U_grid_a;
-
     Cla1ForceTask1();
-
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
 
     GPIO_SET(TRIGGER1_CM);
 
-    static Uint16 decimator_cpu2 = 0;
+    Energy_meter_CPUasm();
 
-    decimator = decimator_cpu2;
-    U_x0.a = Kalman_U_grid[0].states[2];
-    U_x0.b = Kalman_U_grid[1].states[2];
-    U_x0.c = Kalman_U_grid[2].states[2];
-    U_x1.a = Kalman_U_grid[0].states[3];
-    U_x1.b = Kalman_U_grid[1].states[3];
-    U_x1.c = Kalman_U_grid[2].states[3];
-
-    if(decimator_cpu2++)
-    {
-        decimator_cpu2 = 0;
-
-        CPU1toCPU2.CLA1toCLA2.w_filter = MATH_2PI * 50.0f;//PLL.w_filter;
-        CPU1toCPU2.CLA1toCLA2.I_lim = Conv.I_lim;
-
-        while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
-        PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
-
-        IpcRegs.IPCSET.bit.IPC3 = 1;
-        IpcRegs.IPCCLR.bit.IPC3 = 1;
-
-        src = (Uint32 *)&Meas_master.U_grid_avg;
-        dest = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.Meas_master.U_grid_avg;
-
-        src++;
-        *dest++ = *(Uint32 *)&zmienna;
-        *dest++ = *src++;
-        *dest++ = *src++;
-        *dest++ = *src++;
-        *dest++ = *src++;
-        *dest++ = *src++;
-
-        Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
-    }
-    else
-    {
-        Energy_meter_CPUasm();
-
-        Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
-    }
+    Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
+    Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
 
     GPIO_CLEAR(TRIGGER1_CM);
 
@@ -114,20 +66,20 @@ interrupt void SD_INT()
 
         if(Conv.enable)
         {
-            if(!PLL.RDY) alarm_master.bit.PLL_UNSYNC = 1;
+//            if(!PLL.RDY) alarm_master.bit.PLL_UNSYNC = 1;
 
-            if(CLA2toCLA1.Grid.U_grid.a < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_a_L = 1;
-            if(CLA2toCLA1.Grid.U_grid.b < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_b_L = 1;
-            if(CLA2toCLA1.Grid.U_grid.c < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_c_L = 1;
+            if(Grid.parameters.U_grid.a < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_a_L = 1;
+            if(Grid.parameters.U_grid.b < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_b_L = 1;
+            if(Grid.parameters.U_grid.c < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_c_L = 1;
 
             if(fabs(Meas_master.U_grid_avg.a) > Meas_alarm_H.U_grid_abs) alarm_master.bit.U_grid_abs_a_H = 1;
             if(fabs(Meas_master.U_grid_avg.b) > Meas_alarm_H.U_grid_abs) alarm_master.bit.U_grid_abs_b_H = 1;
             if(fabs(Meas_master.U_grid_avg.c) > Meas_alarm_H.U_grid_abs) alarm_master.bit.U_grid_abs_c_H = 1;
         }
 
-        status_master.PLL_sync = PLL.RDY;
+//        status_master.PLL_sync = PLL.RDY;
         float compare_U_rms = Meas_alarm_L.U_grid_rms + 10.0f;
-        if(CLA2toCLA1.Grid_filter.U_grid_1h.a > compare_U_rms && CLA2toCLA1.Grid_filter.U_grid_1h.b > compare_U_rms && CLA2toCLA1.Grid_filter.U_grid_1h.c > compare_U_rms)
+        if(Grid_filter.parameters.U_grid_1h.a > compare_U_rms && Grid_filter.parameters.U_grid_1h.b > compare_U_rms && Grid_filter.parameters.U_grid_1h.c > compare_U_rms)
             status_master.Grid_present = 1;
         else status_master.Grid_present = 0;
 
@@ -137,10 +89,10 @@ interrupt void SD_INT()
         if(Meas_master.U_dc_avg > Meas_alarm_H.U_dc) alarm_master.bit.U_dc_H = 1;
         if(fabsf(Meas_master.U_dc_avg - 2.0f * Meas_master.U_dc_n_avg) > Meas_alarm_H.U_dc_balance) alarm_master.bit.U_dc_balance = 1;
 
-        if(CLA2toCLA1.Grid.I_conv.a > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_a = 1;
-        if(CLA2toCLA1.Grid.I_conv.b > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_b = 1;
-        if(CLA2toCLA1.Grid.I_conv.c > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_c = 1;
-        if(CLA2toCLA1.Grid.I_conv.n > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_n = 1;
+        if(Grid.parameters.I_conv.a > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_a = 1;
+        if(Grid.parameters.I_conv.b > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_b = 1;
+        if(Grid.parameters.I_conv.c > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_c = 1;
+        if(Grid.parameters.I_conv.n > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_n = 1;
 
         if(Meas_master.I_conv.a < Meas_alarm_L.I_conv) alarm_master.bit.I_conv_a_L = 1;
         if(Meas_master.I_conv.a > Meas_alarm_H.I_conv) alarm_master.bit.I_conv_a_H = 1;
@@ -250,6 +202,13 @@ interrupt void SD_INT()
 
     Timer_PWM.CPU_SCOPE = TIMESTAMP_PWM;//4us
 
+//    Grid.parameters.parameters.THD_U_grid.a = Kalman_U_grid[0].THD_total;
+//    Grid.parameters.parameters.THD_U_grid.b = Kalman_U_grid[1].THD_total;
+//    Grid.parameters.parameters.THD_U_grid.c = Kalman_U_grid[2].THD_total;
+//    Grid.parameters.parameters.THD_I_grid.a = Kalman_I_grid[0].THD_total;
+//    Grid.parameters.parameters.THD_I_grid.b = Kalman_I_grid[1].THD_total;
+//    Grid.parameters.parameters.THD_I_grid.c = Kalman_I_grid[2].THD_total;
+
     GPIO_SET(TRIGGER0_CM);
 
     Timer_PWM.CPU_TX_MSG2 = TIMESTAMP_PWM;
@@ -257,8 +216,6 @@ interrupt void SD_INT()
 //    Modbus_slave_LCD.RTU->interrupt_task();
 //    Modbus_slave_LCD_OLD.RTU->interrupt_task();
 //    Modbus_slave_EXT.RTU->interrupt_task();
-
-    Fast_copy21_CPUasm();
 
     Timer_PWM.CPU_COMM = TIMESTAMP_PWM;//1us
 
@@ -285,7 +242,7 @@ interrupt void SD_INT()
     zmienna_int = zmienna * (float)(1UL<<31);
 //    zmienna = 0.002f;
     EMIF_mem.write.Kalman[0].series[0].input = zmienna_int;
-    if(decimator_cpu2) EMIF_mem.write.DSP_start = 4UL;
+    EMIF_mem.write.DSP_start = 4UL;
 
     static volatile union double_pulse_union
     {

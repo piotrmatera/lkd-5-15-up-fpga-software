@@ -103,11 +103,12 @@ SECTIONS
    .cio: 		>  RAMGS1,   PAGE = 0
 
    Scope: 		>  RAMGS5_12,   PAGE = 0
+   EMIF_mem: 	>> EMIF1_CS2n, PAGE = 0
+   CPUTOCLA: 	>> CLA1_MSGRAMHIGH, PAGE = 0
 
 ///////////////////////////////////////////////////////////////////////////////
 
     /* CLA specific sections */
-   KALMAN:	 	>> RAMGS15, PAGE = 0
    CLAData:  	>> RAMLS2_5, PAGE = 0
 
    Cla1Prog: 	   LOAD = FLASHE, PAGE = 0

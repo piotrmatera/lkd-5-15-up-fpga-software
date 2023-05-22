@@ -19,9 +19,9 @@ void main()
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;
 
     EALLOW;
-    PieVectTable.IPC3_INT = &IPC3_INT;
+    PieVectTable.XINT1_INT = &SD_FAST_INT;
     EDIS;
-    PieCtrlRegs.PIEIER1.bit.INTx16 = 1;
+    PieCtrlRegs.PIEIER1.bit.INTx4 = 1;
     IER |= M_INT1;
 
     Init.PWMs();
@@ -38,23 +38,6 @@ void main()
 
     while(1)
     {
-        if(IpcRegs.IPCSTS.bit.IPC4)
-        {
-            IpcRegs.IPCACK.bit.IPC4 = 1;
-
-            float rotation;
-            float wTs = CLA1toCLA2.w_filter * Grid.Ts;
-            rotation = CPU1toCPU2.CT_phase[0] * wTs;
-            Grid.I_grid_rot[0].sine = sinf(rotation);
-            Grid.I_grid_rot[0].cosine = cosf(rotation);
-            rotation = CPU1toCPU2.CT_phase[1] * wTs;
-            Grid.I_grid_rot[1].sine = sinf(rotation);
-            Grid.I_grid_rot[1].cosine = cosf(rotation);
-            rotation = CPU1toCPU2.CT_phase[2] * wTs;
-            Grid.I_grid_rot[2].sine = sinf(rotation);
-            Grid.I_grid_rot[2].cosine = cosf(rotation);
-        }
-
         static Uint32 timer_new = 0;
         static Uint32 timer_old = 0;
         timer_new = ReadIpcTimer();
@@ -62,8 +45,30 @@ void main()
         {
             timer_old = timer_new;
 
-            SINCOS_kalman_calc_CPUasm(sincos_kalman_table, CLA1toCLA2.w_filter * Grid.Ts);
-            SINCOS_calc_CPUasm(sincos_table, CLA1toCLA2.w_filter * Grid.Ts);
+            Conv.Kr_I = CPU1toCPU2.Kr_I;
+            Conv.Kp_I = CPU1toCPU2.Kp_I;
+            Conv.compensation2 = CPU1toCPU2.compensation2;
+            Conv.L_conv = CPU1toCPU2.L_conv;
+
+            SINCOS_calc_CPUasm(sincos_table, PLL.w_filter * PLL.Ts);
+            SINCOS_calc_CPUasm(sincos_table_comp, PLL.w_filter * PLL.Ts * Conv.compensation2);
+
+            for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
+            {
+                EMIF_mem.write.Resonant[0].harmonic[i].cosine_A = sincos_table[2 * i].cosine * Conv.range_modifier;
+                EMIF_mem.write.Resonant[0].harmonic[i].sine_A = sincos_table[2 * i].sine * Conv.range_modifier;
+                EMIF_mem.write.Resonant[0].harmonic[i].cosine_B = (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier;
+                EMIF_mem.write.Resonant[0].harmonic[i].sine_B = sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier;
+                EMIF_mem.write.Resonant[0].harmonic[i].cosine_C = sincos_table_comp[2 * i].cosine * Conv.range_modifier;
+                EMIF_mem.write.Resonant[0].harmonic[i].sine_C = sincos_table_comp[2 * i].sine * Conv.range_modifier;
+
+                EMIF_mem.write.Resonant[1].harmonic[i].cosine_A = sincos_table[2 * i + 1].cosine * Conv.range_modifier;
+                EMIF_mem.write.Resonant[1].harmonic[i].sine_A = sincos_table[2 * i + 1].sine * Conv.range_modifier;
+                EMIF_mem.write.Resonant[1].harmonic[i].cosine_B = (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier;
+                EMIF_mem.write.Resonant[1].harmonic[i].sine_B = sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier;
+                EMIF_mem.write.Resonant[1].harmonic[i].cosine_C = sincos_table_comp[2 * i + 1].cosine * Conv.range_modifier;
+                EMIF_mem.write.Resonant[1].harmonic[i].sine_C = sincos_table_comp[2 * i + 1].sine * Conv.range_modifier;
+            }
         }
     }
 }

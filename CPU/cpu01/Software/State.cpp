@@ -95,9 +95,9 @@ void CT_char_calc()
                 alarm_master.bit.CT_char_error = 1;
 
             struct abc_struct X_ratio;
-            X_ratio.a = (CLA2toCLA1.Grid.I_grid.a - X_point[0].a) / (X_point[1].a - X_point[0].a);
-            X_ratio.b = (CLA2toCLA1.Grid.I_grid.b - X_point[0].b) / (X_point[1].b - X_point[0].b);
-            X_ratio.c = (CLA2toCLA1.Grid.I_grid.c - X_point[0].c) / (X_point[1].c - X_point[0].c);
+            X_ratio.a = (Grid.parameters.I_grid.a - X_point[0].a) / (X_point[1].a - X_point[0].a);
+            X_ratio.b = (Grid.parameters.I_grid.b - X_point[0].b) / (X_point[1].b - X_point[0].b);
+            X_ratio.c = (Grid.parameters.I_grid.c - X_point[0].c) / (X_point[1].c - X_point[0].c);
 
             X_ratio.a = Saturation(X_ratio.a, 0.0f, 1.0f);
             X_ratio.b = Saturation(X_ratio.b, 0.0f, 1.0f);
@@ -153,11 +153,17 @@ void CT_char_calc()
         CT_char_vars.CT_phase[2] = 0.0f;
     }
 
-    CPU1toCPU2.CT_phase[0] = CT_char_vars.CT_phase[0];
-    CPU1toCPU2.CT_phase[1] = CT_char_vars.CT_phase[1];
-    CPU1toCPU2.CT_phase[2] = CT_char_vars.CT_phase[2];
-
-    IpcRegs.IPCSET.bit.IPC4 = 1;
+    float rotation;
+    float wTs = Conv.w_filter * Grid.Ts;
+    rotation = CT_char_vars.CT_phase[0] * wTs;
+    Grid.I_grid_rot[0].sine = sinf(rotation);
+    Grid.I_grid_rot[0].cosine = cosf(rotation);
+    rotation = CT_char_vars.CT_phase[1] * wTs;
+    Grid.I_grid_rot[1].sine = sinf(rotation);
+    Grid.I_grid_rot[1].cosine = cosf(rotation);
+    rotation = CT_char_vars.CT_phase[2] * wTs;
+    Grid.I_grid_rot[2].sine = sinf(rotation);
+    Grid.I_grid_rot[2].cosine = cosf(rotation);
 }
 
 void timer_update(struct timer_struct *Timer, Uint16 enable_counting)
@@ -630,7 +636,7 @@ void Machine_class::Background()
 
         ////////////////////////////////////////////////////////////////////////////////////////
 
-        SINCOS_calc_CPUasm(sincos_table, PLL.w_filter * Conv.Ts);
+        SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -730,7 +736,6 @@ void Machine_class::init()
     memset(&Modbus_Converter.holding_registers, 0, sizeof(Modbus_Converter.holding_registers));
     memset(&Modbus_Converter.input_registers, 0, sizeof(Modbus_Converter.input_registers));
     memset(&Machine, 0, sizeof(Machine));
-    memset(&PLL, 0, sizeof(PLL));
     memset(&Conv, 0, sizeof(Conv));
     memset(&Meas_master, 0, sizeof(Meas_master));
     memset(&Meas_master_offset, 0, sizeof(Meas_master_offset));
@@ -740,6 +745,8 @@ void Machine_class::init()
     memset(&CPU1toCPU2, 0, sizeof(CPU1toCPU2));
     memset(&CT_char_vars, 0, sizeof(CT_char_vars));
     memset(&Energy_meter, 0, sizeof(Energy_meter));
+    memset(&Grid, 0, sizeof(Grid));
+    memset(&Grid_filter, 0, sizeof(Grid_filter));
 
     memset(&scope_global, 0, sizeof(scope_global));
     memset(&control_master, 0, sizeof(control_master));
@@ -803,10 +810,6 @@ void Machine_class::init()
         Meas_master_gain.I_conv.b =
         Meas_master_gain.I_conv.c =
         Meas_master_gain.I_conv.n = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift/0.001;
-
-        CPU1toCPU2.CT_ratio[0] =
-        CPU1toCPU2.CT_ratio[1] =
-        CPU1toCPU2.CT_ratio[2] = 1.0f;
 
         control_ext_modbus.fields.baudrate = 1152;
         control_ext_modbus.fields.ext_server_id = 1;
@@ -877,10 +880,6 @@ void Machine_class::init()
 
 
         status_master.expected_number_of_slaves = SD_card.settings.number_of_slaves;
-
-        CPU1toCPU2.CT_ratio[0] = CT_char_vars.CT_char.CT_ratio_a[0];
-        CPU1toCPU2.CT_ratio[1] = CT_char_vars.CT_char.CT_ratio_b[0];
-        CPU1toCPU2.CT_ratio[2] = CT_char_vars.CT_char.CT_ratio_c[0];
     }
 
     Machine.harmonics_odd_last =
@@ -1518,9 +1517,9 @@ void Machine_class::CT_test()
         if(CT_test_state_last != CT_test_state)
         {
             CT_test_state_last = CT_test_state;
-            if(repeat_counter == 0) Conv.Q_set_local.a = CLA2toCLA1.Grid.U_grid_1h.a * 8.0f;
-            else if(repeat_counter == 1) Conv.Q_set_local.b = CLA2toCLA1.Grid.U_grid_1h.b * 8.0f;
-            else Conv.Q_set_local.c = CLA2toCLA1.Grid.U_grid_1h.c * 8.0f;
+            if(repeat_counter == 0) Conv.Q_set_local.a = Grid.parameters.U_grid_1h.a * 8.0f;
+            else if(repeat_counter == 1) Conv.Q_set_local.b = Grid.parameters.U_grid_1h.b * 8.0f;
+            else Conv.Q_set_local.c = Grid.parameters.U_grid_1h.c * 8.0f;
         }
 
         if(elapsed_time > 50000000ULL)
@@ -1542,9 +1541,9 @@ void Machine_class::CT_test()
         if(CT_test_state_last != CT_test_state)
         {
             CT_test_state_last = CT_test_state;
-            if(repeat_counter == 0) Conv.Q_set_local.a = CLA2toCLA1.Grid.U_grid_1h.a * -8.0f;
-            else if(repeat_counter == 1) Conv.Q_set_local.b = CLA2toCLA1.Grid.U_grid_1h.b * -8.0f;
-            else Conv.Q_set_local.c = CLA2toCLA1.Grid.U_grid_1h.c * -8.0f;
+            if(repeat_counter == 0) Conv.Q_set_local.a = Grid.parameters.U_grid_1h.a * -8.0f;
+            else if(repeat_counter == 1) Conv.Q_set_local.b = Grid.parameters.U_grid_1h.b * -8.0f;
+            else Conv.Q_set_local.c = Grid.parameters.U_grid_1h.c * -8.0f;
         }
 
         if(elapsed_time > 50000000ULL)
@@ -1688,9 +1687,9 @@ void Machine_class::Lgrid_meas()
         if(Lgrid_meas_state_last != Lgrid_meas_state)
         {
             Lgrid_meas_state_last = Lgrid_meas_state;
-            Conv.Q_set_local.a = CLA2toCLA1.Grid.U_grid_1h.a * 8.0f;
-            Conv.Q_set_local.b = CLA2toCLA1.Grid.U_grid_1h.b * 8.0f;
-            Conv.Q_set_local.c = CLA2toCLA1.Grid.U_grid_1h.c * 8.0f;
+            Conv.Q_set_local.a = Grid.parameters.U_grid_1h.a * 8.0f;
+            Conv.Q_set_local.b = Grid.parameters.U_grid_1h.b * 8.0f;
+            Conv.Q_set_local.c = Grid.parameters.U_grid_1h.c * 8.0f;
         }
 
         if(elapsed_time > 50000000ULL)
@@ -1698,9 +1697,9 @@ void Machine_class::Lgrid_meas()
             L_grid_meas.Iq_pos[repeat_counter].a = Conv.iq_load.a - Conv.iq_conv.a;
             L_grid_meas.Iq_pos[repeat_counter].b = Conv.iq_load.b - Conv.iq_conv.b;
             L_grid_meas.Iq_pos[repeat_counter].c = Conv.iq_load.c - Conv.iq_conv.c;
-            L_grid_meas.U_pos[repeat_counter].a = CLA2toCLA1.Grid.U_grid.a;
-            L_grid_meas.U_pos[repeat_counter].b = CLA2toCLA1.Grid.U_grid.b;
-            L_grid_meas.U_pos[repeat_counter].c = CLA2toCLA1.Grid.U_grid.c;
+            L_grid_meas.U_pos[repeat_counter].a = Grid.parameters.U_grid.a;
+            L_grid_meas.U_pos[repeat_counter].b = Grid.parameters.U_grid.b;
+            L_grid_meas.U_pos[repeat_counter].c = Grid.parameters.U_grid.c;
             Lgrid_meas_state++;
             timer_old = ReadIpcTimer();
         }
@@ -1712,9 +1711,9 @@ void Machine_class::Lgrid_meas()
         if(Lgrid_meas_state_last != Lgrid_meas_state)
         {
             Lgrid_meas_state_last = Lgrid_meas_state;
-            Conv.Q_set_local.a = CLA2toCLA1.Grid.U_grid_1h.a * -8.0f;
-            Conv.Q_set_local.b = CLA2toCLA1.Grid.U_grid_1h.b * -8.0f;
-            Conv.Q_set_local.c = CLA2toCLA1.Grid.U_grid_1h.c * -8.0f;
+            Conv.Q_set_local.a = Grid.parameters.U_grid_1h.a * -8.0f;
+            Conv.Q_set_local.b = Grid.parameters.U_grid_1h.b * -8.0f;
+            Conv.Q_set_local.c = Grid.parameters.U_grid_1h.c * -8.0f;
         }
 
         if(elapsed_time > 50000000ULL)
@@ -1722,9 +1721,9 @@ void Machine_class::Lgrid_meas()
             L_grid_meas.Iq_neg[repeat_counter].a = Conv.iq_load.a - Conv.iq_conv.a;
             L_grid_meas.Iq_neg[repeat_counter].b = Conv.iq_load.b - Conv.iq_conv.b;
             L_grid_meas.Iq_neg[repeat_counter].c = Conv.iq_load.c - Conv.iq_conv.c;
-            L_grid_meas.U_neg[repeat_counter].a = CLA2toCLA1.Grid.U_grid.a;
-            L_grid_meas.U_neg[repeat_counter].b = CLA2toCLA1.Grid.U_grid.b;
-            L_grid_meas.U_neg[repeat_counter].c = CLA2toCLA1.Grid.U_grid.c;
+            L_grid_meas.U_neg[repeat_counter].a = Grid.parameters.U_grid.a;
+            L_grid_meas.U_neg[repeat_counter].b = Grid.parameters.U_grid.b;
+            L_grid_meas.U_neg[repeat_counter].c = Grid.parameters.U_grid.c;
             if(++repeat_counter < 5) Lgrid_meas_state = 0;
             else Lgrid_meas_state++;
             timer_old = ReadIpcTimer();
@@ -1752,21 +1751,21 @@ void Machine_class::Lgrid_meas()
         L_grid_meas.Iq_diff_a[4] = L_grid_meas.Iq_pos[4].a - L_grid_meas.Iq_neg[4].a;
         L_grid_meas.Iq_diff_b[4] = L_grid_meas.Iq_pos[4].b - L_grid_meas.Iq_neg[4].b;
         L_grid_meas.Iq_diff_c[4] = L_grid_meas.Iq_pos[4].c - L_grid_meas.Iq_neg[4].c;
-        L_grid_meas.L_grid[0].a = (L_grid_meas.U_pos[0].a - L_grid_meas.U_neg[0].a) / (L_grid_meas.Iq_diff_a[0] * PLL.w_filter);
-        L_grid_meas.L_grid[0].b = (L_grid_meas.U_pos[0].b - L_grid_meas.U_neg[0].b) / (L_grid_meas.Iq_diff_b[0] * PLL.w_filter);
-        L_grid_meas.L_grid[0].c = (L_grid_meas.U_pos[0].c - L_grid_meas.U_neg[0].c) / (L_grid_meas.Iq_diff_c[0] * PLL.w_filter);
-        L_grid_meas.L_grid[1].a = (L_grid_meas.U_pos[1].a - L_grid_meas.U_neg[1].a) / (L_grid_meas.Iq_diff_a[1] * PLL.w_filter);
-        L_grid_meas.L_grid[1].b = (L_grid_meas.U_pos[1].b - L_grid_meas.U_neg[1].b) / (L_grid_meas.Iq_diff_b[1] * PLL.w_filter);
-        L_grid_meas.L_grid[1].c = (L_grid_meas.U_pos[1].c - L_grid_meas.U_neg[1].c) / (L_grid_meas.Iq_diff_c[1] * PLL.w_filter);
-        L_grid_meas.L_grid[2].a = (L_grid_meas.U_pos[2].a - L_grid_meas.U_neg[2].a) / (L_grid_meas.Iq_diff_a[2] * PLL.w_filter);
-        L_grid_meas.L_grid[2].b = (L_grid_meas.U_pos[2].b - L_grid_meas.U_neg[2].b) / (L_grid_meas.Iq_diff_b[2] * PLL.w_filter);
-        L_grid_meas.L_grid[2].c = (L_grid_meas.U_pos[2].c - L_grid_meas.U_neg[2].c) / (L_grid_meas.Iq_diff_c[2] * PLL.w_filter);
-        L_grid_meas.L_grid[3].a = (L_grid_meas.U_pos[3].a - L_grid_meas.U_neg[3].a) / (L_grid_meas.Iq_diff_a[3] * PLL.w_filter);
-        L_grid_meas.L_grid[3].b = (L_grid_meas.U_pos[3].b - L_grid_meas.U_neg[3].b) / (L_grid_meas.Iq_diff_b[3] * PLL.w_filter);
-        L_grid_meas.L_grid[3].c = (L_grid_meas.U_pos[3].c - L_grid_meas.U_neg[3].c) / (L_grid_meas.Iq_diff_c[3] * PLL.w_filter);
-        L_grid_meas.L_grid[4].a = (L_grid_meas.U_pos[4].a - L_grid_meas.U_neg[4].a) / (L_grid_meas.Iq_diff_a[4] * PLL.w_filter);
-        L_grid_meas.L_grid[4].b = (L_grid_meas.U_pos[4].b - L_grid_meas.U_neg[4].b) / (L_grid_meas.Iq_diff_b[4] * PLL.w_filter);
-        L_grid_meas.L_grid[4].c = (L_grid_meas.U_pos[4].c - L_grid_meas.U_neg[4].c) / (L_grid_meas.Iq_diff_c[4] * PLL.w_filter);
+        L_grid_meas.L_grid[0].a = (L_grid_meas.U_pos[0].a - L_grid_meas.U_neg[0].a) / (L_grid_meas.Iq_diff_a[0] * Conv.w_filter);
+        L_grid_meas.L_grid[0].b = (L_grid_meas.U_pos[0].b - L_grid_meas.U_neg[0].b) / (L_grid_meas.Iq_diff_b[0] * Conv.w_filter);
+        L_grid_meas.L_grid[0].c = (L_grid_meas.U_pos[0].c - L_grid_meas.U_neg[0].c) / (L_grid_meas.Iq_diff_c[0] * Conv.w_filter);
+        L_grid_meas.L_grid[1].a = (L_grid_meas.U_pos[1].a - L_grid_meas.U_neg[1].a) / (L_grid_meas.Iq_diff_a[1] * Conv.w_filter);
+        L_grid_meas.L_grid[1].b = (L_grid_meas.U_pos[1].b - L_grid_meas.U_neg[1].b) / (L_grid_meas.Iq_diff_b[1] * Conv.w_filter);
+        L_grid_meas.L_grid[1].c = (L_grid_meas.U_pos[1].c - L_grid_meas.U_neg[1].c) / (L_grid_meas.Iq_diff_c[1] * Conv.w_filter);
+        L_grid_meas.L_grid[2].a = (L_grid_meas.U_pos[2].a - L_grid_meas.U_neg[2].a) / (L_grid_meas.Iq_diff_a[2] * Conv.w_filter);
+        L_grid_meas.L_grid[2].b = (L_grid_meas.U_pos[2].b - L_grid_meas.U_neg[2].b) / (L_grid_meas.Iq_diff_b[2] * Conv.w_filter);
+        L_grid_meas.L_grid[2].c = (L_grid_meas.U_pos[2].c - L_grid_meas.U_neg[2].c) / (L_grid_meas.Iq_diff_c[2] * Conv.w_filter);
+        L_grid_meas.L_grid[3].a = (L_grid_meas.U_pos[3].a - L_grid_meas.U_neg[3].a) / (L_grid_meas.Iq_diff_a[3] * Conv.w_filter);
+        L_grid_meas.L_grid[3].b = (L_grid_meas.U_pos[3].b - L_grid_meas.U_neg[3].b) / (L_grid_meas.Iq_diff_b[3] * Conv.w_filter);
+        L_grid_meas.L_grid[3].c = (L_grid_meas.U_pos[3].c - L_grid_meas.U_neg[3].c) / (L_grid_meas.Iq_diff_c[3] * Conv.w_filter);
+        L_grid_meas.L_grid[4].a = (L_grid_meas.U_pos[4].a - L_grid_meas.U_neg[4].a) / (L_grid_meas.Iq_diff_a[4] * Conv.w_filter);
+        L_grid_meas.L_grid[4].b = (L_grid_meas.U_pos[4].b - L_grid_meas.U_neg[4].b) / (L_grid_meas.Iq_diff_b[4] * Conv.w_filter);
+        L_grid_meas.L_grid[4].c = (L_grid_meas.U_pos[4].c - L_grid_meas.U_neg[4].c) / (L_grid_meas.Iq_diff_c[4] * Conv.w_filter);
         memcpy(L_grid_meas.L_grid_sorted, L_grid_meas.L_grid, sizeof(L_grid_meas.L_grid_sorted));
         qsort(L_grid_meas.L_grid_sorted, 15, sizeof(float), compare_float);
         L_grid_meas.L_grid_new = fabs(L_grid_meas.L_grid_sorted[7]);
@@ -1908,28 +1907,28 @@ void Machine_class::operational()
         CT_test_online.test_delay_timer[3] = (timer_last = CT_test_online.test_delay_timer[3]) + (y = time_delay - CT_test_online.test_delay_timer_Kahan[3]);
         CT_test_online.test_delay_timer_Kahan[3] = (CT_test_online.test_delay_timer[3] - timer_last) - y;
 
-        if (CLA2toCLA1.Grid_filter.I_grid_1h.a < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[0] > CT_test_online.test_delay_timer_compare)
+        if (Grid_filter.parameters.I_grid_1h.a < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[0] > CT_test_online.test_delay_timer_compare)
             CT_test_online.test_request_integrator[0] += time_delay;
-        if (CLA2toCLA1.Grid_filter.I_grid_1h.b < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[1] > CT_test_online.test_delay_timer_compare)
+        if (Grid_filter.parameters.I_grid_1h.b < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[1] > CT_test_online.test_delay_timer_compare)
             CT_test_online.test_request_integrator[1] += time_delay;
-        if (CLA2toCLA1.Grid_filter.I_grid_1h.c < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[2] > CT_test_online.test_delay_timer_compare)
+        if (Grid_filter.parameters.I_grid_1h.c < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[2] > CT_test_online.test_delay_timer_compare)
             CT_test_online.test_request_integrator[2] += time_delay;
 
         Uint16 in_limit = status_master.in_limit_Q && (Conv.version_Q_comp_local.a + Conv.version_Q_comp_local.b + Conv.version_Q_comp_local.c < 3.0f);
         in_limit = in_limit || status_master.in_limit_H || status_master.in_limit_P;
         Uint16 test_val =
-                CLA2toCLA1.Grid_filter.I_grid_1h.a < CT_test_online.I_grid_val &&
-                CLA2toCLA1.Grid_filter.I_grid_1h.b < CT_test_online.I_grid_val &&
-                CLA2toCLA1.Grid_filter.I_grid_1h.c < CT_test_online.I_grid_val;
+                Grid_filter.parameters.I_grid_1h.a < CT_test_online.I_grid_val &&
+                Grid_filter.parameters.I_grid_1h.b < CT_test_online.I_grid_val &&
+                Grid_filter.parameters.I_grid_1h.c < CT_test_online.I_grid_val;
 
         if (test_val && in_limit && CT_test_online.test_delay_timer[3] > CT_test_online.test_delay_timer_compare)
             CT_test_online.test_request_integrator[3] += time_delay;
 
-        if (CLA2toCLA1.Grid_filter.I_grid_1h.a > CT_test_online.I_grid_val && status_master.no_CT_connected_a)
+        if (Grid_filter.parameters.I_grid_1h.a > CT_test_online.I_grid_val && status_master.no_CT_connected_a)
             CT_test_online.test_request_integrator[4] += time_delay;
-        if (CLA2toCLA1.Grid_filter.I_grid_1h.b > CT_test_online.I_grid_val && status_master.no_CT_connected_b)
+        if (Grid_filter.parameters.I_grid_1h.b > CT_test_online.I_grid_val && status_master.no_CT_connected_b)
             CT_test_online.test_request_integrator[5] += time_delay;
-        if (CLA2toCLA1.Grid_filter.I_grid_1h.c > CT_test_online.I_grid_val && status_master.no_CT_connected_c)
+        if (Grid_filter.parameters.I_grid_1h.c > CT_test_online.I_grid_val && status_master.no_CT_connected_c)
             CT_test_online.test_request_integrator[6] += time_delay;
 
         if(CT_test_online.test_request_period_counter > CT_test_online.test_request_period)
@@ -1985,7 +1984,7 @@ void Machine_class::operational()
 
         if(status_master.no_CT_connected_a)
         {
-            Conv.Q_set_local.a = Saturation(control_master.Q_set.a + CLA2toCLA1.Grid.U_grid_1h.a * CLA2toCLA1.Grid.U_grid_1h.a * PLL.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
+            Conv.Q_set_local.a = Saturation(control_master.Q_set.a + Grid.parameters.U_grid_1h.a * Grid.parameters.U_grid_1h.a * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
             Conv.version_Q_comp_local.a = 1.0f;
         }
         else
@@ -1996,7 +1995,7 @@ void Machine_class::operational()
 
         if(status_master.no_CT_connected_b)
         {
-            Conv.Q_set_local.b = Saturation(control_master.Q_set.b + CLA2toCLA1.Grid.U_grid_1h.b * CLA2toCLA1.Grid.U_grid_1h.b * PLL.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
+            Conv.Q_set_local.b = Saturation(control_master.Q_set.b + Grid.parameters.U_grid_1h.b * Grid.parameters.U_grid_1h.b * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
             Conv.version_Q_comp_local.b = 1.0f;
         }
         else
@@ -2007,7 +2006,7 @@ void Machine_class::operational()
 
         if(status_master.no_CT_connected_c)
         {
-            Conv.Q_set_local.c = Saturation(control_master.Q_set.c + CLA2toCLA1.Grid.U_grid_1h.c * CLA2toCLA1.Grid.U_grid_1h.c * PLL.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
+            Conv.Q_set_local.c = Saturation(control_master.Q_set.c + Grid.parameters.U_grid_1h.c * Grid.parameters.U_grid_1h.c * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
             Conv.version_Q_comp_local.c = 1.0f;
         }
         else
@@ -2040,25 +2039,25 @@ void Machine_class::operational()
 
             timer_last32 = timer_new32;
 
-            CT_test_online.I_grid_filter_last.a = CLA2toCLA1.Grid_filter.I_grid_1h.a;
-            CT_test_online.I_grid_filter_last.b = CLA2toCLA1.Grid_filter.I_grid_1h.b;
-            CT_test_online.I_grid_filter_last.c = CLA2toCLA1.Grid_filter.I_grid_1h.c;
+            CT_test_online.I_grid_filter_last.a = Grid_filter.parameters.I_grid_1h.a;
+            CT_test_online.I_grid_filter_last.b = Grid_filter.parameters.I_grid_1h.b;
+            CT_test_online.I_grid_filter_last.c = Grid_filter.parameters.I_grid_1h.c;
 
-            CT_test_online.Q_grid_last.a = CLA2toCLA1.Grid.Q_grid_1h.a;
-            CT_test_online.Q_grid_last.b = CLA2toCLA1.Grid.Q_grid_1h.b;
-            CT_test_online.Q_grid_last.c = CLA2toCLA1.Grid.Q_grid_1h.c;
+            CT_test_online.Q_grid_last.a = Grid.parameters.Q_grid_1h.a;
+            CT_test_online.Q_grid_last.b = Grid.parameters.Q_grid_1h.b;
+            CT_test_online.Q_grid_last.c = Grid.parameters.Q_grid_1h.c;
 
             step = fminf(2.0f * CT_test_online.I_grid_val, Conv.I_lim);
-            CT_test_online.Q_conv_step.a = CLA2toCLA1.Grid.U_grid_1h.a * step;
-            CT_test_online.Q_conv_step.b = CLA2toCLA1.Grid.U_grid_1h.b * step;
-            CT_test_online.Q_conv_step.c = CLA2toCLA1.Grid.U_grid_1h.c * step;
-            if (CLA2toCLA1.Grid.Q_conv_1h.a < 0.0f) CT_test_online.Q_conv_step.a = -CT_test_online.Q_conv_step.a;
-            if (CLA2toCLA1.Grid.Q_conv_1h.b < 0.0f) CT_test_online.Q_conv_step.b = -CT_test_online.Q_conv_step.b;
-            if (CLA2toCLA1.Grid.Q_conv_1h.c < 0.0f) CT_test_online.Q_conv_step.c = -CT_test_online.Q_conv_step.c;
+            CT_test_online.Q_conv_step.a = Grid.parameters.U_grid_1h.a * step;
+            CT_test_online.Q_conv_step.b = Grid.parameters.U_grid_1h.b * step;
+            CT_test_online.Q_conv_step.c = Grid.parameters.U_grid_1h.c * step;
+            if (Grid.parameters.Q_conv_1h.a < 0.0f) CT_test_online.Q_conv_step.a = -CT_test_online.Q_conv_step.a;
+            if (Grid.parameters.Q_conv_1h.b < 0.0f) CT_test_online.Q_conv_step.b = -CT_test_online.Q_conv_step.b;
+            if (Grid.parameters.Q_conv_1h.c < 0.0f) CT_test_online.Q_conv_step.c = -CT_test_online.Q_conv_step.c;
 
-            Conv.Q_set_local.a = CT_test_online.Q_conv_step.a - CLA2toCLA1.Grid.Q_conv_1h.a;
-            Conv.Q_set_local.b = CT_test_online.Q_conv_step.b - CLA2toCLA1.Grid.Q_conv_1h.b;
-            Conv.Q_set_local.c = CT_test_online.Q_conv_step.c - CLA2toCLA1.Grid.Q_conv_1h.c;
+            Conv.Q_set_local.a = CT_test_online.Q_conv_step.a - Grid.parameters.Q_conv_1h.a;
+            Conv.Q_set_local.b = CT_test_online.Q_conv_step.b - Grid.parameters.Q_conv_1h.b;
+            Conv.Q_set_local.c = CT_test_online.Q_conv_step.c - Grid.parameters.Q_conv_1h.c;
             Conv.enable_Q_comp_local.a =
             Conv.enable_Q_comp_local.b =
             Conv.enable_Q_comp_local.c =
@@ -2069,9 +2068,9 @@ void Machine_class::operational()
 
         if (timer_new32 - timer_last32 > 30000000UL)
         {
-            CT_test_online.tested_current.a = fabsf(CLA2toCLA1.Grid.Q_grid_1h.a - CT_test_online.Q_grid_last.a - CT_test_online.Q_conv_step.a) / CLA2toCLA1.Grid.U_grid_1h.a;
-            CT_test_online.tested_current.b = fabsf(CLA2toCLA1.Grid.Q_grid_1h.b - CT_test_online.Q_grid_last.b - CT_test_online.Q_conv_step.b) / CLA2toCLA1.Grid.U_grid_1h.b;
-            CT_test_online.tested_current.c = fabsf(CLA2toCLA1.Grid.Q_grid_1h.c - CT_test_online.Q_grid_last.c - CT_test_online.Q_conv_step.c) / CLA2toCLA1.Grid.U_grid_1h.c;
+            CT_test_online.tested_current.a = fabsf(Grid.parameters.Q_grid_1h.a - CT_test_online.Q_grid_last.a - CT_test_online.Q_conv_step.a) / Grid.parameters.U_grid_1h.a;
+            CT_test_online.tested_current.b = fabsf(Grid.parameters.Q_grid_1h.b - CT_test_online.Q_grid_last.b - CT_test_online.Q_conv_step.b) / Grid.parameters.U_grid_1h.b;
+            CT_test_online.tested_current.c = fabsf(Grid.parameters.Q_grid_1h.c - CT_test_online.Q_grid_last.c - CT_test_online.Q_conv_step.c) / Grid.parameters.U_grid_1h.c;
 
             Uint16 test_result[3];
             test_result[0] = CT_test_online.tested_current.a > step * 0.5f;

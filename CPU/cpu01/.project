@@ -43,11 +43,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/IO.h</locationURI>
 		</link>
 		<link>
-			<name>Kalman.h</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/cpu02/Software/Kalman.h</locationURI>
-		</link>
-		<link>
 			<name>Node_shared.h</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Node_shared.h</locationURI>

@@ -7,7 +7,7 @@ typedef float scope_data_type;
 
 #define SINCOS_HARMONICS 50
 #define CIC_upsample1 10
-#define CIC_upsample2 100
+#define CIC_upsample2 10
 
 //
 // Included Files
@@ -19,11 +19,11 @@ typedef float scope_data_type;
 #include <stdint.h>
 
 #include "Controllers.h"
-#include "PLL.h"
 #include "Converter.h"
 #include "CPU_shared.h"
 #include "Node_shared.h"
 #include "Kalman.h"
+#include "Grid_analyzer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,198 +73,6 @@ struct Measurements_alarm_struct
     float I_conv_rms;
     float U_dc;
     float U_dc_balance;
-};
-
-union FPGA_master_sync_flags_union
-{
-    Uint32 all;
-    struct
-    {
-        Uint16 rx_ok_0:1;
-        Uint16 rx_ok_1:1;
-        Uint16 rx_ok_2:1;
-        Uint16 rx_ok_3:1;
-        Uint16 rx_ok_4:1;
-        Uint16 rx_ok_5:1;
-        Uint16 rx_ok_6:1;
-        Uint16 rx_ok_7:1;
-        Uint16 sync_ok_0:1;
-        Uint16 sync_ok_1:1;
-        Uint16 sync_ok_2:1;
-        Uint16 sync_ok_3:1;
-        Uint16 sync_ok_4:1;
-        Uint16 sync_ok_5:1;
-        Uint16 sync_ok_6:1;
-        Uint16 sync_ok_7:1;
-        Uint16 slave_rdy_0:1;
-        Uint16 slave_rdy_1:1;
-        Uint16 slave_rdy_2:1;
-        Uint16 slave_rdy_3:1;
-        Uint16 slave_rdy_4:1;
-        Uint16 slave_rdy_5:1;
-        Uint16 slave_rdy_6:1;
-        Uint16 slave_rdy_7:1;
-        Uint16 rsvd:8;
-    }bit;
-};
-
-#define FPGA_RESONANT_STATES 25
-#define FPGA_RESONANT_SERIES 4
-
-struct FPGA_Resonant_M0_struct
-{
-    int32 x1;
-    int32 x2;
-};
-
-struct FPGA_Resonant_M1_struct
-{
-    int32 cosine;
-    int32 sine;
-    int32 cosine_C;
-    int32 sine_C;
-    int32 cosine_B;
-    int32 sine_B;
-};
-
-#define FPGA_KALMAN_STATES 26
-#define FPGA_KALMAN_SERIES 4
-
-struct FPGA_Kalman_M0_struct
-{
-    int32 x1;
-    int32 x2;
-};
-
-struct FPGA_Kalman_M1_struct
-{
-    int32 cosine;
-    int32 sine;
-    int32 Kalman_gain_1;
-    int32 Kalman_gain_2;
-};
-
-union EMIF_union
-{
-    struct
-    {
-        union COMM_flags_union tx_wip;
-        union COMM_flags_union rx_rdy;
-        int16 U_grid_a;
-        int16 U_grid_b;
-        int16 U_grid_c;
-        int16 I_grid_a;
-        int16 I_grid_b;
-        int16 I_grid_c;
-        int16 U_dc;
-        int16 U_dc_n;
-        int16 I_conv_a;
-        int16 I_conv_b;
-        int16 I_conv_c;
-        int16 I_conv_n_dummy;
-        union FPGA_master_flags_union FPGA_flags;
-        union FPGA_master_sync_flags_union Sync_flags;
-        int16 clock_offsets[8];
-        int16 comm_delays[8];
-        Uint32 SD_sync_val;
-        Uint32 dsc;
-        Uint32 Scope_data_out1;
-        Uint32 Scope_data_out2;
-        Uint32 Scope_depth;
-        Uint32 Scope_width_mult;
-        Uint32 Scope_rdy;
-        Uint32 Scope_index_last;
-        Uint16 cycle_period;
-        Uint16 oversample;
-        Uint16 def_osr;
-        Uint16 sd_shift;
-        struct
-        {
-            Uint32 sync_phase:1;
-            Uint32 Resonant1_WIP:1;
-            Uint32 Resonant2_WIP:1;
-            Uint32 Kalman1_WIP:1;
-            Uint32 Kalman2_WIP:1;
-        }flags;
-        Uint32 mux_rsvd[1024-29];
-        Uint32 rx1_lopri_msg[8][32];
-        Uint32 rx1_hipri_msg[8][32];
-        Uint32 rx2_lopri_msg[8][32];
-        Uint32 rx2_hipri_msg[8][32];
-        struct
-        {
-            struct
-            {
-                struct FPGA_Resonant_M0_struct harmonic[FPGA_RESONANT_STATES];
-                int32 error;
-                int32 sum;
-                Uint32 rsvd[512/FPGA_RESONANT_SERIES - 2 - FPGA_RESONANT_STATES*sizeof(struct FPGA_Resonant_M0_struct)/sizeof(Uint32)];
-            }series[FPGA_RESONANT_SERIES];
-        }Resonant[2];
-        struct
-        {
-            struct
-            {
-                struct FPGA_Kalman_M0_struct harmonic[FPGA_KALMAN_STATES];
-                int32 estimate;
-                int32 error;
-                Uint32 rsvd[512/FPGA_KALMAN_SERIES - 2 - FPGA_KALMAN_STATES*sizeof(struct FPGA_Kalman_M0_struct)/sizeof(Uint32)];
-            }series[FPGA_KALMAN_SERIES];
-        }Kalman[2];
-    }read;
-    struct
-    {
-        union COMM_flags_union tx_start;
-        union COMM_flags_union rx_ack;
-        Uint32 SD_sync_val;
-        Uint32 Scope_address;
-        Uint32 Scope_acquire_before_trigger;
-        Uint32 Scope_trigger;
-        int16 duty[4];
-        Uint32 double_pulse;
-        Uint32 DSP_start;
-        Uint32 PWM_control;
-        Uint32 mux_rsvd[1024-11];
-        Uint32 tx1_lopri_msg[8][32];
-        Uint32 tx1_hipri_msg[8][32];
-        Uint32 tx2_lopri_msg[8][32];
-        Uint32 tx2_hipri_msg[8][32];
-        struct
-        {
-            struct FPGA_Resonant_M1_struct harmonic[FPGA_RESONANT_STATES];
-            struct
-            {
-                int32 error;
-                int32 harmonics;
-            }series[FPGA_RESONANT_SERIES];
-            Uint32 rsvd[512 - FPGA_RESONANT_SERIES*2 - FPGA_RESONANT_STATES*sizeof(struct FPGA_Resonant_M1_struct)/sizeof(Uint32)];
-        }Resonant[2];
-        struct
-        {
-            struct FPGA_Kalman_M1_struct harmonic[FPGA_KALMAN_STATES];
-            struct
-            {
-                int32 input;
-            }series[FPGA_KALMAN_SERIES];
-            Uint32 rsvd[512 - FPGA_KALMAN_SERIES - FPGA_KALMAN_STATES*sizeof(struct FPGA_Kalman_M1_struct)/sizeof(Uint32)];
-        }Kalman[2];
-    }write;
-};
-
-struct EMIF_CLA_struct
-{
-    int16 U_grid_a;
-    int16 U_grid_b;
-    int16 U_grid_c;
-    int16 I_grid_a;
-    int16 I_grid_b;
-    int16 I_grid_c;
-    int16 U_dc;
-    int16 U_dc_n;
-    int16 I_conv_a;
-    int16 I_conv_b;
-    int16 I_conv_c;
-    int16 I_conv_n;
 };
 
 struct Energy_meter_upper_struct
@@ -352,19 +160,19 @@ extern union ALARM_master alarm_master;
 extern union ALARM_master alarm_master_snapshot;
 
 extern volatile union EMIF_union EMIF_mem;
-extern struct EMIF_CLA_struct EMIF_CLA;
 
 extern struct CIC2_struct CIC2_calibration;
 extern CLA_FPTR CIC2_calibration_input;
+extern struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
 
 extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 
 extern void Fast_copy_modbus_CPUasm();
-extern void Fast_copy21_CPUasm();
 extern void Energy_meter_CPUasm();
 extern void DINT_copy_CPUasm(Uint16 *dst, Uint16 *src, Uint16 size);
 extern void SINCOS_calc_CPUasm(struct trigonometric_struct *sincos_table, float angle);
-
+extern void SINCOS_kalman_calc_CPUasm(struct trigonometric_struct *sincos_table, float angle);
+extern void Kalman_THD_calc_CPUasm(struct Kalman_struct *Kalman);
 
 //
 //Task 2 (C) Variables

@@ -3,31 +3,6 @@
 #include <math.h>
 #include "stdafx.h" 
 
-void Kalman_calc(struct Kalman_struct *Kalman, float input)
-{
-    Uint16 i;
-
-    register float prediction = Kalman->states[0];
-    Kalman->states[1] = 0;
-    for (i = 1; i < KALMAN_HARMONICS; i++)
-    {
-        register float temp = sincos_table[i - 1].cosine * Kalman->states[2 * i] - sincos_table[i - 1].sine * Kalman->states[2 * i + 1];
-        Kalman->states[2 * i + 1] = sincos_table[i - 1].sine * Kalman->states[2 * i] + sincos_table[i - 1].cosine * Kalman->states[2 * i + 1];
-        Kalman->states[2 * i] = temp;
-        prediction += Kalman->states[2 * i];
-    }
-
-    register float error = input - prediction;
-    register float *gain = (float*)Kalman->gain.ptr;
-    for (i = 0; i < KALMAN_HARMONICS; i++)
-    {
-        Kalman->states[2 * i] += *gain++ * error;
-        Kalman->states[2 * i + 1] += *gain++ * error;
-        Kalman->rms_values[i] = sqrtf(Kalman->states[2 * i + 1] * Kalman->states[2 * i + 1] + Kalman->states[2 * i] * Kalman->states[2 * i]);
-    }
-}
-
-
 //R = 0.005/(Ts*Ts)
 const float Kalman_gain[2 * KALMAN_HARMONICS] =
 {

@@ -9,10 +9,11 @@
 
 #pragma SET_DATA_SECTION("CLAData")
 
-struct PLL_struct PLL;
 struct Converter_struct Conv;
 struct CLA2toCLA1_struct CLA2toCLA1;
 struct Thermistor_struct Therm;
+struct Grid_analyzer_struct Grid;
+struct Grid_analyzer_filter_struct Grid_filter;
 
 struct SCOPE_global scope_global;
 
@@ -27,6 +28,7 @@ struct Timer_PWM_struct Timer_PWM;
 
 struct CIC2_struct CIC2_calibration;
 CLA_FPTR CIC2_calibration_input;
+struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
 
 struct Measurements_master_struct Meas_master;
 struct Measurements_master_gain_offset_struct Meas_master_gain_error;
@@ -44,7 +46,6 @@ float decimator;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma SET_DATA_SECTION("CPUTOCLA")
-struct EMIF_CLA_struct EMIF_CLA;
 
 #pragma SET_DATA_SECTION("CPU1TOCPU2")
 

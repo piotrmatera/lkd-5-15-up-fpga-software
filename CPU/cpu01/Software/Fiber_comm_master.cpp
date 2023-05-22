@@ -199,7 +199,7 @@ void Fiber_comm_master_class::async_data_mosi()
 
     msg.async_master.code_version = SW_ID;
     msg.async_master.FatFS_time = *(Uint32 *)&FatFS_time;
-    msg.async_master.w_filter = PLL.w_filter;
+    msg.async_master.w_filter = Conv.w_filter;
     msg.async_master.compensation2 = Conv.compensation2;
     msg.async_master.Meas_master_gain = Meas_master_gain;
     msg.async_master.Meas_master_offset = Meas_master_offset;

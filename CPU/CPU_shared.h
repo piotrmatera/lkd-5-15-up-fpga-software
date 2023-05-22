@@ -11,76 +11,215 @@
 #include "IO.h"
 #include "Node_shared.h"
 
-struct Grid_parameters_struct
+union FPGA_master_sync_flags_union
 {
-    struct abc_struct I_grid_1h;
-    struct abc_struct U_grid_1h;
-    struct abc_struct P_grid_1h;
-    struct abc_struct P_load_1h;
-    struct abc_struct P_conv_1h;
-    struct abc_struct Q_grid_1h;
-    struct abc_struct Q_load_1h;
-    struct abc_struct Q_conv_1h;
-    struct abc_struct S_grid_1h;
-    struct abc_struct S_load_1h;
-    struct abc_struct S_conv_1h;
-    struct abc_struct PF_grid_1h;
-    struct abc_struct THD_I_grid;
-    struct abc_struct THD_U_grid;
-    struct abc_struct U_grid;
-    struct abc_struct I_grid;
-    struct abcn_struct I_conv;
-    struct abc_struct S_grid;
-    struct abc_struct S_conv;
-    struct abcn_struct Used_resources;
+    Uint32 all;
     struct
     {
-        float PF_grid_1h;
-        float P_load_1h;
-        float Q_load_1h;
-        float S_load_1h;
-        float P_grid_1h;
-        float Q_grid_1h;
-        float S_grid_1h;
-        float U_grid_1h;
-    }average;
+        Uint16 rx_ok_0:1;
+        Uint16 rx_ok_1:1;
+        Uint16 rx_ok_2:1;
+        Uint16 rx_ok_3:1;
+        Uint16 rx_ok_4:1;
+        Uint16 rx_ok_5:1;
+        Uint16 rx_ok_6:1;
+        Uint16 rx_ok_7:1;
+        Uint16 sync_ok_0:1;
+        Uint16 sync_ok_1:1;
+        Uint16 sync_ok_2:1;
+        Uint16 sync_ok_3:1;
+        Uint16 sync_ok_4:1;
+        Uint16 sync_ok_5:1;
+        Uint16 sync_ok_6:1;
+        Uint16 sync_ok_7:1;
+        Uint16 slave_rdy_0:1;
+        Uint16 slave_rdy_1:1;
+        Uint16 slave_rdy_2:1;
+        Uint16 slave_rdy_3:1;
+        Uint16 slave_rdy_4:1;
+        Uint16 slave_rdy_5:1;
+        Uint16 slave_rdy_6:1;
+        Uint16 slave_rdy_7:1;
+        Uint16 rsvd:8;
+    }bit;
+};
+
+#define FPGA_RESONANT_STATES 25
+#define FPGA_RESONANT_SERIES 4
+
+struct FPGA_Resonant_M0_struct
+{
+    int32 x1;
+    int32 x2;
+};
+
+struct FPGA_Resonant_M1_struct
+{
+    int32 cosine_A;
+    int32 sine_A;
+    int32 cosine_B;
+    int32 sine_B;
+    int32 cosine_C;
+    int32 sine_C;
+};
+
+#define FPGA_KALMAN_STATES 26
+#define FPGA_KALMAN_SERIES 4
+
+struct FPGA_Kalman_M0_struct
+{
+    int32 x1;
+    int32 x2;
+};
+
+struct FPGA_Kalman_M1_struct
+{
+    int32 cosine;
+    int32 sine;
+    int32 Kalman_gain_1;
+    int32 Kalman_gain_2;
+};
+
+union EMIF_union
+{
+    struct
+    {
+        union COMM_flags_union tx_wip;
+        union COMM_flags_union rx_rdy;
+        int16 U_grid_a;
+        int16 U_grid_b;
+        int16 U_grid_c;
+        int16 I_grid_a;
+        int16 I_grid_b;
+        int16 I_grid_c;
+        int16 U_dc;
+        int16 U_dc_n;
+        int16 I_conv_a;
+        int16 I_conv_b;
+        int16 I_conv_c;
+        int16 I_conv_n_dummy;
+        union FPGA_master_flags_union FPGA_flags;
+        union FPGA_master_sync_flags_union Sync_flags;
+        int16 clock_offsets[8];
+        int16 comm_delays[8];
+        Uint32 SD_sync_val;
+        Uint32 dsc;
+        Uint32 Scope_data_out1;
+        Uint32 Scope_data_out2;
+        Uint32 Scope_depth;
+        Uint32 Scope_width_mult;
+        Uint32 Scope_rdy;
+        Uint32 Scope_index_last;
+        Uint16 cycle_period;
+        Uint16 oversample;
+        Uint16 def_osr;
+        Uint16 sd_shift;
+        struct
+        {
+            Uint32 sync_phase:1;
+            Uint32 Resonant1_WIP:1;
+            Uint32 Resonant2_WIP:1;
+            Uint32 Kalman1_WIP:1;
+            Uint32 Kalman2_WIP:1;
+        }flags;
+        Uint32 mux_rsvd[1024-29];
+        Uint32 rx1_lopri_msg[8][32];
+        Uint32 rx1_hipri_msg[8][32];
+        Uint32 rx2_lopri_msg[8][32];
+        Uint32 rx2_hipri_msg[8][32];
+        struct
+        {
+            struct
+            {
+                struct FPGA_Resonant_M0_struct harmonic[FPGA_RESONANT_STATES];
+                int32 error;
+                int32 sum;
+                Uint32 rsvd[512/FPGA_RESONANT_SERIES - 2 - FPGA_RESONANT_STATES*sizeof(struct FPGA_Resonant_M0_struct)/sizeof(Uint32)];
+            }series[FPGA_RESONANT_SERIES];
+        }Resonant[2];
+        struct
+        {
+            struct
+            {
+                struct FPGA_Kalman_M0_struct harmonic[FPGA_KALMAN_STATES];
+                int32 estimate;
+                int32 error;
+                Uint32 rsvd[512/FPGA_KALMAN_SERIES - 2 - FPGA_KALMAN_STATES*sizeof(struct FPGA_Kalman_M0_struct)/sizeof(Uint32)];
+            }series[FPGA_KALMAN_SERIES];
+        }Kalman[2];
+    }read;
+    struct
+    {
+        union COMM_flags_union tx_start;
+        union COMM_flags_union rx_ack;
+        Uint32 SD_sync_val;
+        Uint32 Scope_address;
+        Uint32 Scope_acquire_before_trigger;
+        Uint32 Scope_trigger;
+        int16 duty[4];
+        Uint32 double_pulse;
+        Uint32 DSP_start;
+        Uint32 PWM_control;
+        Uint32 mux_rsvd[1024-11];
+        Uint32 tx1_lopri_msg[8][32];
+        Uint32 tx1_hipri_msg[8][32];
+        Uint32 tx2_lopri_msg[8][32];
+        Uint32 tx2_hipri_msg[8][32];
+        struct
+        {
+            struct FPGA_Resonant_M1_struct harmonic[FPGA_RESONANT_STATES];
+            struct
+            {
+                int32 error;
+                int32 harmonics;
+            }series[FPGA_RESONANT_SERIES];
+            Uint32 rsvd[512 - FPGA_RESONANT_SERIES*2 - FPGA_RESONANT_STATES*sizeof(struct FPGA_Resonant_M1_struct)/sizeof(Uint32)];
+        }Resonant[2];
+        struct
+        {
+            struct FPGA_Kalman_M1_struct harmonic[FPGA_KALMAN_STATES];
+            struct
+            {
+                int32 input;
+            }series[FPGA_KALMAN_SERIES];
+            Uint32 rsvd[512 - FPGA_KALMAN_SERIES - FPGA_KALMAN_STATES*sizeof(struct FPGA_Kalman_M1_struct)/sizeof(Uint32)];
+        }Kalman[2];
+    }write;
+};
+
+struct EMIF_CLA_struct
+{
+    int16 U_grid_a;
+    int16 U_grid_b;
+    int16 U_grid_c;
+    int16 I_grid_a;
+    int16 I_grid_b;
+    int16 I_grid_c;
+    int16 U_dc;
+    int16 U_dc_n;
+    int16 I_conv_a;
+    int16 I_conv_b;
+    int16 I_conv_c;
+    int16 I_conv_n;
 };
 
 struct CLA1toCLA2_struct
 {
-    float I_lim;
-    float w_filter;
-    struct Measurements_master_struct Meas_master;
+    struct abc_struct id_ref, iq_ref;
 };
 
 struct CLA2toCLA1_struct
 {
-    struct
-    {
-        Uint32 input_P_p[3];
-        Uint32 input_P_n[3];
-        Uint32 input_QI[3];
-        Uint32 input_QII[3];
-        Uint32 input_QIII[3];
-        Uint32 input_QIV[3];
-        struct
-        {
-            Uint32 input_P_p;
-            Uint32 input_P_n;
-            Uint32 input_QI;
-            Uint32 input_QII;
-            Uint32 input_QIII;
-            Uint32 input_QIV;
-        }sum;
-    }Energy_meter_input;
-    struct Grid_parameters_struct Grid;
-    struct Grid_parameters_struct Grid_filter;
+    float w_filter;
+    struct Measurements_master_struct Meas_master;
 };
 
 struct CPU1toCPU2_struct
 {
-    float CT_phase[3];
-    float CT_ratio[3];
+    float Kp_I;
+    float Kr_I;
+    float compensation2;
+    float L_conv;
     struct CLA1toCLA2_struct CLA1toCLA2;
 };
 

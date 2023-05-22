@@ -18,7 +18,7 @@ _Energy_meter_CPUasm:
 		MOV		T, #32
 		MOVL	XAR4, #_Energy_meter.upper
 		MOVL	XAR5, #_Energy_meter.lower
-		MOVL	XAR6, #_CPU2toCPU1.CLA2toCLA1.Energy_meter_input.input_P_p
+		MOVL	XAR6, #_Grid.input_P_p
 		ADDB SP, #2
 
 		ZAPA

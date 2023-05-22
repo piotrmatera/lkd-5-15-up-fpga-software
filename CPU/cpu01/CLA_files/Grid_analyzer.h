@@ -6,6 +6,41 @@
 #ifndef GRID_ANALYZER_H_
 #define GRID_ANALYZER_H_
 
+struct Grid_parameters_struct
+{
+    struct abc_struct I_grid_1h;
+    struct abc_struct U_grid_1h;
+    struct abc_struct P_grid_1h;
+    struct abc_struct P_load_1h;
+    struct abc_struct P_conv_1h;
+    struct abc_struct Q_grid_1h;
+    struct abc_struct Q_load_1h;
+    struct abc_struct Q_conv_1h;
+    struct abc_struct S_grid_1h;
+    struct abc_struct S_load_1h;
+    struct abc_struct S_conv_1h;
+    struct abc_struct PF_grid_1h;
+    struct abc_struct THD_I_grid;
+    struct abc_struct THD_U_grid;
+    struct abc_struct U_grid;
+    struct abc_struct I_grid;
+    struct abcn_struct I_conv;
+    struct abc_struct S_grid;
+    struct abc_struct S_conv;
+    struct abcn_struct Used_resources;
+    struct
+    {
+        float PF_grid_1h;
+        float P_load_1h;
+        float Q_load_1h;
+        float S_load_1h;
+        float P_grid_1h;
+        float Q_grid_1h;
+        float S_grid_1h;
+        float U_grid_1h;
+    }average;
+};
+
 struct Grid_analyzer_struct
 {
     float Ts;

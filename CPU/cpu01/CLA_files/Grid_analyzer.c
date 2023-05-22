@@ -113,9 +113,9 @@ void Grid_analyzer_calc()
     Grid.parameters.PF_grid_1h.a = Grid.parameters.P_grid_1h.a / fmaxf(Grid.parameters.S_grid_1h.a, 1.0f);
     Grid.parameters.PF_grid_1h.b = Grid.parameters.P_grid_1h.b / fmaxf(Grid.parameters.S_grid_1h.b, 1.0f);
     Grid.parameters.PF_grid_1h.c = Grid.parameters.P_grid_1h.c / fmaxf(Grid.parameters.S_grid_1h.c, 1.0f);
-    Grid.parameters.average.PF_grid_1h = (fabs(Grid.parameters.P_grid_1h.a) + fabs(Grid.parameters.P_grid_1h.b) + fabs(Grid.parameters.P_grid_1h.c)) / fmaxf(Grid.parameters.average.S_grid_1h, 1.0f);
+    Grid.parameters.average.PF_grid_1h = (fabsf(Grid.parameters.P_grid_1h.a) + fabsf(Grid.parameters.P_grid_1h.b) + fabsf(Grid.parameters.P_grid_1h.c)) / fmaxf(Grid.parameters.average.S_grid_1h, 1.0f);
 
-    register float div_I_lim = 1.0f / fmaxf(CLA1toCLA2.I_lim, 1.0f);
+    register float div_I_lim = 1.0f / fmaxf(Conv.I_lim_nominal, 1.0f);
     Grid.parameters.Used_resources.a = Grid.parameters.I_conv.a * div_I_lim;
     Grid.parameters.Used_resources.b = Grid.parameters.I_conv.b * div_I_lim;
     Grid.parameters.Used_resources.c = Grid.parameters.I_conv.c * div_I_lim;
@@ -133,44 +133,44 @@ void Grid_analyzer_calc()
     register float temp;
     register float sign;
     sign = sign_temp[0].f32 * gain;
-    Grid.input_P_p[0] = fabs(gain * fmaxf(Grid.parameters.P_grid_1h.a, 0.0f));
-    Grid.input_P_n[0] = fabs(gain * fminf(Grid.parameters.P_grid_1h.a, 0.0f));
+    Grid.input_P_p[0] = fabsf(gain * fmaxf(Grid.parameters.P_grid_1h.a, 0.0f));
+    Grid.input_P_n[0] = fabsf(gain * fminf(Grid.parameters.P_grid_1h.a, 0.0f));
     temp = sign * fmaxf(Grid.parameters.Q_grid_1h.a, 0.0f);
-    Grid.input_QI[0] = fabs(fmaxf(temp, 0.0f));
-    Grid.input_QII[0] = fabs(fminf(temp, 0.0f));
+    Grid.input_QI[0] = fabsf(fmaxf(temp, 0.0f));
+    Grid.input_QII[0] = fabsf(fminf(temp, 0.0f));
     temp = sign * fminf(Grid.parameters.Q_grid_1h.a, 0.0f);
-    Grid.input_QIII[0] = fabs(fmaxf(temp, 0.0f));
-    Grid.input_QIV[0] = fabs(fminf(temp, 0.0f));
+    Grid.input_QIII[0] = fabsf(fmaxf(temp, 0.0f));
+    Grid.input_QIV[0] = fabsf(fminf(temp, 0.0f));
 
     sign = sign_temp[1].f32 * gain;
-    Grid.input_P_p[1] = fabs(gain * fmaxf(Grid.parameters.P_grid_1h.b, 0.0f));
-    Grid.input_P_n[1] = fabs(gain * fminf(Grid.parameters.P_grid_1h.b, 0.0f));
+    Grid.input_P_p[1] = fabsf(gain * fmaxf(Grid.parameters.P_grid_1h.b, 0.0f));
+    Grid.input_P_n[1] = fabsf(gain * fminf(Grid.parameters.P_grid_1h.b, 0.0f));
     temp = sign * fmaxf(Grid.parameters.Q_grid_1h.b, 0.0f);
-    Grid.input_QI[1] = fabs(fmaxf(temp, 0.0f));
-    Grid.input_QII[1] = fabs(fminf(temp, 0.0f));
+    Grid.input_QI[1] = fabsf(fmaxf(temp, 0.0f));
+    Grid.input_QII[1] = fabsf(fminf(temp, 0.0f));
     temp = sign * fminf(Grid.parameters.Q_grid_1h.b, 0.0f);
-    Grid.input_QIII[1] = fabs(fmaxf(temp, 0.0f));
-    Grid.input_QIV[1] = fabs(fminf(temp, 0.0f));
+    Grid.input_QIII[1] = fabsf(fmaxf(temp, 0.0f));
+    Grid.input_QIV[1] = fabsf(fminf(temp, 0.0f));
 
     sign = sign_temp[2].f32 * gain;
-    Grid.input_P_p[2] = fabs(gain * fmaxf(Grid.parameters.P_grid_1h.c, 0.0f));
-    Grid.input_P_n[2] = fabs(gain * fminf(Grid.parameters.P_grid_1h.c, 0.0f));
+    Grid.input_P_p[2] = fabsf(gain * fmaxf(Grid.parameters.P_grid_1h.c, 0.0f));
+    Grid.input_P_n[2] = fabsf(gain * fminf(Grid.parameters.P_grid_1h.c, 0.0f));
     temp = sign * fmaxf(Grid.parameters.Q_grid_1h.c, 0.0f);
-    Grid.input_QI[2] = fabs(fmaxf(temp, 0.0f));
-    Grid.input_QII[2] = fabs(fminf(temp, 0.0f));
+    Grid.input_QI[2] = fabsf(fmaxf(temp, 0.0f));
+    Grid.input_QII[2] = fabsf(fminf(temp, 0.0f));
     temp = sign * fminf(Grid.parameters.Q_grid_1h.c, 0.0f);
-    Grid.input_QIII[2] = fabs(fmaxf(temp, 0.0f));
-    Grid.input_QIV[2] = fabs(fminf(temp, 0.0f));
+    Grid.input_QIII[2] = fabsf(fmaxf(temp, 0.0f));
+    Grid.input_QIV[2] = fabsf(fminf(temp, 0.0f));
 
     sign = sign_temp[3].f32 * gain;
-    Grid.sum.input_P_p = fabs(gain * fmaxf(Grid.parameters.average.P_grid_1h, 0.0f));
-    Grid.sum.input_P_n = fabs(gain * fminf(Grid.parameters.average.P_grid_1h, 0.0f));
+    Grid.sum.input_P_p = fabsf(gain * fmaxf(Grid.parameters.average.P_grid_1h, 0.0f));
+    Grid.sum.input_P_n = fabsf(gain * fminf(Grid.parameters.average.P_grid_1h, 0.0f));
     temp = sign * fmaxf(Grid.parameters.average.Q_grid_1h, 0.0f);
-    Grid.sum.input_QI = fabs(fmaxf(temp, 0.0f));
-    Grid.sum.input_QII = fabs(fminf(temp, 0.0f));
+    Grid.sum.input_QI = fabsf(fmaxf(temp, 0.0f));
+    Grid.sum.input_QII = fabsf(fminf(temp, 0.0f));
     temp = sign * fminf(Grid.parameters.average.Q_grid_1h, 0.0f);
-    Grid.sum.input_QIII = fabs(fmaxf(temp, 0.0f));
-    Grid.sum.input_QIV = fabs(fminf(temp, 0.0f));
+    Grid.sum.input_QIII = fabsf(fmaxf(temp, 0.0f));
+    Grid.sum.input_QIV = fabsf(fminf(temp, 0.0f));
 }
 
 void Grid_analyzer_filter_calc()
@@ -282,9 +282,9 @@ void Grid_analyzer_filter_calc()
     Grid_filter.parameters.PF_grid_1h.a = Grid_filter.parameters.P_grid_1h.a / fmaxf(Grid_filter.parameters.S_grid_1h.a, 1.0f);
     Grid_filter.parameters.PF_grid_1h.b = Grid_filter.parameters.P_grid_1h.b / fmaxf(Grid_filter.parameters.S_grid_1h.b, 1.0f);
     Grid_filter.parameters.PF_grid_1h.c = Grid_filter.parameters.P_grid_1h.c / fmaxf(Grid_filter.parameters.S_grid_1h.c, 1.0f);
-    Grid_filter.parameters.average.PF_grid_1h = (fabs(Grid_filter.parameters.P_grid_1h.a) + fabs(Grid_filter.parameters.P_grid_1h.b) + fabs(Grid_filter.parameters.P_grid_1h.c)) / fmaxf(Grid_filter.parameters.average.S_grid_1h, 1.0f);
+    Grid_filter.parameters.average.PF_grid_1h = (fabsf(Grid_filter.parameters.P_grid_1h.a) + fabsf(Grid_filter.parameters.P_grid_1h.b) + fabsf(Grid_filter.parameters.P_grid_1h.c)) / fmaxf(Grid_filter.parameters.average.S_grid_1h, 1.0f);
 
-    register float div_I_lim = 1.0f / fmaxf(CLA1toCLA2.I_lim, 1.0f);
+    register float div_I_lim = 1.0f / fmaxf(Conv.I_lim_nominal, 1.0f);
     Grid_filter.parameters.Used_resources.a = Grid_filter.parameters.I_conv.a * div_I_lim;
     Grid_filter.parameters.Used_resources.b = Grid_filter.parameters.I_conv.b * div_I_lim;
     Grid_filter.parameters.Used_resources.c = Grid_filter.parameters.I_conv.c * div_I_lim;

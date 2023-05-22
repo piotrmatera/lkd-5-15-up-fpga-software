@@ -358,15 +358,15 @@ Uint16 SD_card_class::log_data()
 
     float temp_array[20];
     temp_array[0] = *(float *)&FatFS_time;
-    temp_array[1] = CLA2toCLA1.Grid_filter.U_grid_1h.a;
-    temp_array[2] = CLA2toCLA1.Grid_filter.U_grid_1h.b;
-    temp_array[3] = CLA2toCLA1.Grid_filter.U_grid_1h.c;
-    temp_array[4] = CLA2toCLA1.Grid_filter.Q_grid_1h.a;
-    temp_array[5] = CLA2toCLA1.Grid_filter.Q_grid_1h.b;
-    temp_array[6] = CLA2toCLA1.Grid_filter.Q_grid_1h.c;
-    temp_array[7] = CLA2toCLA1.Grid_filter.P_grid_1h.a;
-    temp_array[8] = CLA2toCLA1.Grid_filter.P_grid_1h.b;
-    temp_array[9] = CLA2toCLA1.Grid_filter.P_grid_1h.c;
+    temp_array[1] = Grid_filter.parameters.U_grid_1h.a;
+    temp_array[2] = Grid_filter.parameters.U_grid_1h.b;
+    temp_array[3] = Grid_filter.parameters.U_grid_1h.c;
+    temp_array[4] = Grid_filter.parameters.Q_grid_1h.a;
+    temp_array[5] = Grid_filter.parameters.Q_grid_1h.b;
+    temp_array[6] = Grid_filter.parameters.Q_grid_1h.c;
+    temp_array[7] = Grid_filter.parameters.P_grid_1h.a;
+    temp_array[8] = Grid_filter.parameters.P_grid_1h.b;
+    temp_array[9] = Grid_filter.parameters.P_grid_1h.c;
 
 //    if(!status_master.slave_rdy_0)
 //    {
@@ -382,12 +382,12 @@ Uint16 SD_card_class::log_data()
 //        log_slave[0].Temperature.n = 0.0f;
 //    }
 
-    temp_array[10] = CLA2toCLA1.Grid_filter.Q_conv_1h.a;//log_slave[0].P_conv_1h.a;
-    temp_array[11] = CLA2toCLA1.Grid_filter.Q_conv_1h.b;//log_slave[0].P_conv_1h.b;
-    temp_array[12] = CLA2toCLA1.Grid_filter.Q_conv_1h.c;//log_slave[0].P_conv_1h.c;
-    temp_array[13] = CLA2toCLA1.Grid_filter.P_conv_1h.a;//log_slave[0].Q_conv_1h.a;
-    temp_array[14] = CLA2toCLA1.Grid_filter.P_conv_1h.b;//log_slave[0].Q_conv_1h.b;
-    temp_array[15] = CLA2toCLA1.Grid_filter.P_conv_1h.c;//log_slave[0].Q_conv_1h.c;
+    temp_array[10] = Grid_filter.parameters.Q_conv_1h.a;//log_slave[0].P_conv_1h.a;
+    temp_array[11] = Grid_filter.parameters.Q_conv_1h.b;//log_slave[0].P_conv_1h.b;
+    temp_array[12] = Grid_filter.parameters.Q_conv_1h.c;//log_slave[0].P_conv_1h.c;
+    temp_array[13] = Grid_filter.parameters.P_conv_1h.a;//log_slave[0].Q_conv_1h.a;
+    temp_array[14] = Grid_filter.parameters.P_conv_1h.b;//log_slave[0].Q_conv_1h.b;
+    temp_array[15] = Grid_filter.parameters.P_conv_1h.c;//log_slave[0].Q_conv_1h.c;
 //    temp_array[16] = log_slave[0].Temperature.a;
 //    temp_array[17] = log_slave[0].Temperature.b;
 //    temp_array[18] = log_slave[0].Temperature.c;

@@ -17,12 +17,12 @@ _Fast_copy_modbus_CPUasm:
 		MOVL	XAR0, #_Modbus_Converter.input_registers.Grid_filter
 		.asg 	0 , x
 		.loop 	$sizeof(Grid_parameters_struct)/2
-		MOV32	*XAR0++, *(#_CLA2toCLA1.Grid_filter + 2 * x)
+		MOV32	*XAR0++, *(#_Grid_filter.parameters + 2 * x)
 		.eval 	x+1, x
 		.endloop
 
-		MOVW    DP, #_PLL.f_filter
-		MOV32	*(#_Modbus_Converter.input_registers.frequency), @_PLL.f_filter
+		MOVW    DP, #_Conv.f_filter
+		MOV32	*(#_Modbus_Converter.input_registers.frequency), @_Conv.f_filter
 
 
 		.asg 	0 , y

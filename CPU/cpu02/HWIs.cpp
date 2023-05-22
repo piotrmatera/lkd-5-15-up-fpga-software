@@ -11,12 +11,15 @@
 #include "HWIs.h"
 
 #pragma CODE_SECTION(".TI.ramfunc");
-interrupt void IPC3_INT()
+interrupt void SD_FAST_INT()
 {
     Timer_PWM.CPU_SD = TIMESTAMP_PWM;
 
-    register Uint32 *src = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.Meas_master.U_grid_avg;
-    register Uint32 *dest = (Uint32 *)&Meas_master.U_grid_avg;
+    register Uint32 *src;
+    register Uint32 *dest;
+
+    src = (Uint32 *)&EMIF_mem.read.U_grid_a;
+    dest = (Uint32 *)&EMIF_CLA.U_grid_a;
 
     Cla1ForceTask1();
 
@@ -27,6 +30,9 @@ interrupt void IPC3_INT()
     *dest++ = *src++;
     *dest++ = *src++;
 
+    src = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.id_ref;
+    dest = (Uint32 *)&Conv.id_ref;
+
     *dest++ = *src++;
     *dest++ = *src++;
     *dest++ = *src++;
@@ -34,44 +40,59 @@ interrupt void IPC3_INT()
     *dest++ = *src++;
     *dest++ = *src++;
 
-    src = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.I_lim;
-    dest = (Uint32 *)&CLA1toCLA2.I_lim;
-    *dest++ = *src++;
-    *dest++ = *src++;
+    Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0].series[0].sum * Conv.div_range_modifier;
+    Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0].series[1].sum * Conv.div_range_modifier;
+    Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0].series[2].sum * Conv.div_range_modifier;
+    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1].series[0].sum * Conv.div_range_modifier;
+    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1].series[1].sum * Conv.div_range_modifier;
+    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1].series[2].sum * Conv.div_range_modifier;
+
+    Conv.cycle_period = EMIF_mem.read.cycle_period;
 
     Timer_PWM.CPU_MEAS = TIMESTAMP_PWM;
-
-    Grid.parameters.THD_U_grid.a = Kalman_U_grid[0].THD_total;
-    Grid.parameters.THD_U_grid.b = Kalman_U_grid[1].THD_total;
-    Grid.parameters.THD_U_grid.c = Kalman_U_grid[2].THD_total;
-    Grid.parameters.THD_I_grid.a = Kalman_I_grid[0].THD_total;
-    Grid.parameters.THD_I_grid.b = Kalman_I_grid[1].THD_total;
-    Grid.parameters.THD_I_grid.c = Kalman_I_grid[2].THD_total;
-
-    Kalman_calc_CPUasm(&Kalman_U_grid[0], sincos_kalman_table, Meas_master.U_grid_avg.a);
-    Kalman_THD_calc_CPUasm(&Kalman_U_grid[0]);
-    Kalman_calc_CPUasm(&Kalman_U_grid[1], sincos_kalman_table, Meas_master.U_grid_avg.b);
-    Kalman_THD_calc_CPUasm(&Kalman_U_grid[1]);
-    Kalman_calc_CPUasm(&Kalman_U_grid[2], sincos_kalman_table, Meas_master.U_grid_avg.c);
-    Kalman_THD_calc_CPUasm(&Kalman_U_grid[2]);
-    Timer_PWM.CPU_KALMAN_U = TIMESTAMP_PWM;
 
     while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
     PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
 
-    Fast_copy21_CPUasm();
+    Conv.zero_error = 1.0f;
+    if (fmaxf(fmaxf(fabsf(Conv.duty[0]), fabsf(Conv.duty[1])), fabsf(Conv.duty[2])) > Conv.cycle_period)
+        Conv.zero_error = 0;
 
-    Timer_PWM.CPU_GRID = TIMESTAMP_PWM;
+    static volatile Uint32 Resonant_WIP;
+    Resonant_WIP = EMIF_mem.read.flags.Resonant1_WIP;
 
-    Kalman_calc_CPUasm(&Kalman_I_grid[0], sincos_kalman_table, Meas_master.I_grid_avg.a);
-    Kalman_THD_calc_CPUasm(&Kalman_I_grid[0]);
-    Kalman_calc_CPUasm(&Kalman_I_grid[1], sincos_kalman_table, Meas_master.I_grid_avg.b);
-    Kalman_THD_calc_CPUasm(&Kalman_I_grid[1]);
-    Kalman_calc_CPUasm(&Kalman_I_grid[2], sincos_kalman_table, Meas_master.I_grid_avg.c);
-    Kalman_THD_calc_CPUasm(&Kalman_I_grid[2]);
+    register float modifier = Conv.range_modifier * Conv.zero_error;
+    EMIF_mem.write.Resonant[1].series[0].error =
+    EMIF_mem.write.Resonant[0].series[0].error = Conv.I_err.a * modifier;
+    EMIF_mem.write.Resonant[1].series[1].error =
+    EMIF_mem.write.Resonant[0].series[1].error = Conv.I_err.b * modifier;
+    EMIF_mem.write.Resonant[1].series[2].error =
+    EMIF_mem.write.Resonant[0].series[2].error = Conv.I_err.c * modifier;
+
+    EMIF_mem.write.DSP_start = 3UL;
+
+    Timer_PWM.CPU_MR_START = TIMESTAMP_PWM;
+
+    while(!PieCtrlRegs.PIEIFR11.bit.INTx2);
+    PieCtrlRegs.PIEIFR11.bit.INTx2 = 0;
+
+    *(Uint32 *)&EMIF_mem.write.duty[0] = *(Uint32 *)&Conv.duty[0];
+    *(Uint32 *)&EMIF_mem.write.duty[2] = *(Uint32 *)&Conv.duty[2];
+
+    Timer_PWM.CPU_PWM = TIMESTAMP_PWM;
+
+    static Uint16 decimator_cpu2 = 0;
+
+    if(decimator_cpu2++)
+    {
+        decimator_cpu2 = 0;
+
+        CPU2toCPU1.CLA2toCLA1.w_filter = PLL.w_filter;
+
+        IpcRegs.IPCSET.bit.IPC3 = 1;
+        IpcRegs.IPCCLR.bit.IPC3 = 1;
+    }
 
     Timer_PWM.CPU_SD_end = TIMESTAMP_PWM;
-
-
-    PieCtrlRegs.PIEACK.bit.ACK1 = 1;
+    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
 }
