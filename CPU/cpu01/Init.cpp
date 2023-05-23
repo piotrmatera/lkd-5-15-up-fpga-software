@@ -307,6 +307,7 @@ void Init_class::Variables()
 {
     Conv.Ts = (float)EMIF_mem.read.cycle_period * 8e-9 * (2.0f - (float)EMIF_mem.read.oversample);
     Conv.compensation2 = 2.0f;
+    Conv.w_filter = MATH_2PI * 50.0f;
 
     Meas_alarm_L.U_grid_rms = 5.0f;
     Meas_alarm_H.U_grid_abs = 380.0f;
@@ -353,14 +354,32 @@ void Init_class::Variables()
 
     ///////////////////////////////////////////////////////////////////
 
+    Conv.range_modifier = 1UL << 30;
+    Conv.div_range_modifier = 1.0f / Conv.range_modifier;
+
     register float p_pr_i = Conv.L_conv / (3.0f * Conv.Ts);
     register float r_pr_i = Conv.L_conv * MATH_PI / Conv.Ts;
     r_pr_i /= MATH_2PI * 50.0f;
 
-    CPU1toCPU2.Kp_I = p_pr_i;
-    CPU1toCPU2.Kr_I = r_pr_i;
-    CPU1toCPU2.compensation2 = 2.0f;
-    CPU1toCPU2.L_conv = Conv.L_conv;
+    Conv.Kp_I = p_pr_i;
+    Conv.Kr_I = r_pr_i;
+
+    for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
+    {
+        EMIF_mem.write.Resonant[0].harmonic[i].cosine_A = sincos_table[2 * i].cosine * Conv.range_modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].sine_A = sincos_table[2 * i].sine * Conv.range_modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].cosine_B = (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].sine_B = sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].cosine_C = sincos_table_comp[2 * i].cosine * Conv.range_modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].sine_C = sincos_table_comp[2 * i].sine * Conv.range_modifier;
+
+        EMIF_mem.write.Resonant[1].harmonic[i].cosine_A = sincos_table[2 * i + 1].cosine * Conv.range_modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].sine_A = sincos_table[2 * i + 1].sine * Conv.range_modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].cosine_B = (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].sine_B = sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].cosine_C = sincos_table_comp[2 * i + 1].cosine * Conv.range_modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].sine_C = sincos_table_comp[2 * i + 1].sine * Conv.range_modifier;
+    }
 
     ///////////////////////////////////////////////////////////////////
 
@@ -522,6 +541,11 @@ void Init_class::Variables()
     Grid.Resonant_I_conv[2].gain = 2.0f / (MATH_2PI * 50.0f) / (MATH_1_E * 0.02f);
 
     Grid.Accumulator_gain = ((float)0x80000000 * 2.0f / 3600.0f) * Grid.Ts;
+
+    ///////////////////////////////////////////////////////////////////
+
+    SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts);
+    SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts * Conv.compensation2);
 }
 
 void Init_class::PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg)

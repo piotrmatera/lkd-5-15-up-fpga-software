@@ -206,20 +206,19 @@ struct EMIF_CLA_struct
 struct CLA1toCLA2_struct
 {
     struct abc_struct id_ref, iq_ref;
+    float Kp_I;
+    float L_conv;
+    float enable;
 };
 
 struct CLA2toCLA1_struct
 {
-    float w_filter;
     struct Measurements_master_struct Meas_master;
+    float w_filter;
 };
 
 struct CPU1toCPU2_struct
 {
-    float Kp_I;
-    float Kr_I;
-    float compensation2;
-    float L_conv;
     struct CLA1toCLA2_struct CLA1toCLA2;
 };
 

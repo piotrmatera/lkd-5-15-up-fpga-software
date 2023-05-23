@@ -40,6 +40,10 @@ interrupt void SD_FAST_INT()
     *dest++ = *src++;
     *dest++ = *src++;
 
+    Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;
+    Conv.L_conv = CPU1toCPU2.CLA1toCLA2.L_conv;
+    Conv.enable = CPU1toCPU2.CLA1toCLA2.enable;
+
     Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0].series[0].sum * Conv.div_range_modifier;
     Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0].series[1].sum * Conv.div_range_modifier;
     Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0].series[2].sum * Conv.div_range_modifier;
@@ -61,13 +65,26 @@ interrupt void SD_FAST_INT()
     static volatile Uint32 Resonant_WIP;
     Resonant_WIP = EMIF_mem.read.flags.Resonant1_WIP;
 
-    register float modifier = Conv.range_modifier * Conv.zero_error;
-    EMIF_mem.write.Resonant[1].series[0].error =
-    EMIF_mem.write.Resonant[0].series[0].error = Conv.I_err.a * modifier;
-    EMIF_mem.write.Resonant[1].series[1].error =
-    EMIF_mem.write.Resonant[0].series[1].error = Conv.I_err.b * modifier;
-    EMIF_mem.write.Resonant[1].series[2].error =
-    EMIF_mem.write.Resonant[0].series[2].error = Conv.I_err.c * modifier;
+    if(Conv.enable)
+    {
+        register float modifier = Conv.range_modifier * Conv.zero_error;
+        EMIF_mem.write.Resonant[1].series[0].error =
+        EMIF_mem.write.Resonant[0].series[0].error = Conv.I_err.a * modifier;
+        EMIF_mem.write.Resonant[1].series[1].error =
+        EMIF_mem.write.Resonant[0].series[1].error = Conv.I_err.b * modifier;
+        EMIF_mem.write.Resonant[1].series[2].error =
+        EMIF_mem.write.Resonant[0].series[2].error = Conv.I_err.c * modifier;
+    }
+    else
+    {
+        register float modifier = Conv.range_modifier;
+        EMIF_mem.write.Resonant[1].series[0].error =
+        EMIF_mem.write.Resonant[0].series[0].error = (Meas_master.U_grid.a - Conv.MR_ref.a) * modifier;
+        EMIF_mem.write.Resonant[1].series[1].error =
+        EMIF_mem.write.Resonant[0].series[1].error = (Meas_master.U_grid.b - Conv.MR_ref.b) * modifier;
+        EMIF_mem.write.Resonant[1].series[2].error =
+        EMIF_mem.write.Resonant[0].series[2].error = (Meas_master.U_grid.c - Conv.MR_ref.c) * modifier;
+    }
 
     EMIF_mem.write.DSP_start = 3UL;
 

@@ -128,7 +128,7 @@ void main()
         Machine.Main();
         Machine.Background();
 
-        int32 max_period = 1999;//(int32)EMIF_mem.read.cycle_period - 1L;
+        int32 max_period = (int32)EMIF_mem.read.cycle_period - 1L;
         int32 SD_phase_temp = SD_phase;
         if(SD_phase < 0) SD_phase_temp = max_period + SD_phase;
         if(SD_phase_temp < 0) SD_phase_temp = 0;

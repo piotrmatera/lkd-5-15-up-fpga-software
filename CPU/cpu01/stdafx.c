@@ -39,6 +39,7 @@ struct Measurements_alarm_struct Meas_alarm_H;
 struct Measurements_alarm_struct Meas_alarm_L;
 
 struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
+struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
 
 struct abc_struct U_x0, U_x1;
 float decimator;

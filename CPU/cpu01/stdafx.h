@@ -166,6 +166,7 @@ extern CLA_FPTR CIC2_calibration_input;
 extern struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
 
 extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
+extern struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
 
 extern void Fast_copy_modbus_CPUasm();
 extern void Energy_meter_CPUasm();

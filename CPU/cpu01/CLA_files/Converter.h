@@ -26,6 +26,11 @@ struct Converter_struct
     struct abc_struct I_ref;
     struct abc_struct U_coupl;
 
+    float Kp_I;
+    float Kr_I;
+    float range_modifier;
+    float div_range_modifier;
+
     float w_filter;
     float f_filter;
     float compensation2;

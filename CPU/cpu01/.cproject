@@ -59,7 +59,6 @@
 									<listOptionValue builtIn="false" value="${COMMON_LIB}/Controllers"/>
 									<listOptionValue builtIn="false" value="${COMMON_LIB}"/>
 									<listOptionValue builtIn="false" value="${PROJECT_LOC}/.."/>
-									<listOptionValue builtIn="false" value="${PROJECT_LOC}/../cpu02/Software"/>
 									<listOptionValue builtIn="false" value="${PROJECT_LOC}/../.."/>
 									<listOptionValue builtIn="false" value="${CG_TOOL_ROOT}/include"/>
 								</option>

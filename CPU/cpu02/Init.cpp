@@ -127,7 +127,6 @@ void Init_class::Variables()
     memset(&Meas_master, 0, sizeof(Meas_master));
     memset(&Conv, 0, sizeof(Conv));
     memset(&PLL, 0, sizeof(PLL));
-    memset(&CIC1_adaptive_global__50Hz, 0, sizeof(CIC1_adaptive_global__50Hz));
     memset(&CPU2toCPU1, 0, sizeof(CPU2toCPU1));
 
     Conv.Ts = 16e-6;
@@ -149,13 +148,6 @@ void Init_class::Variables()
 
     PLL.state = PLL_omega_init;
     PLL.state_last = PLL_active;
-
-    ///////////////////////////////////////////////////////////////////
-
-    CIC1_adaptive_global__50Hz.Ts = Conv.Ts;
-
-    SINCOS_calc_CPUasm(sincos_table, PLL.w_filter * PLL.Ts);
-    SINCOS_calc_CPUasm(sincos_table_comp, PLL.w_filter * PLL.Ts * Conv.compensation2);
 }
 
 void Init_class::PWM_timestamp(volatile struct EPWM_REGS *EPwmReg)

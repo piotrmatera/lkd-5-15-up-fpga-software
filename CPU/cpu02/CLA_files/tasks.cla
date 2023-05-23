@@ -40,9 +40,6 @@ interrupt void Cla1Task1 ( void )
 
     Timer_PWM.CLA_PLL = TIMESTAMP_PWM;
 
-    CIC1_adaptive_global_CLAasm(&CIC1_adaptive_global__50Hz, PLL.w_filter * MATH_1_2PI);
-
-    ////////////////////////////////////////////////////////////////////////////////
     Timer_PWM.CLA_ENDTASK = TIMESTAMP_PWM;
 }
 

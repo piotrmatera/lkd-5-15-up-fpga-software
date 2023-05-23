@@ -61,12 +61,6 @@ extern struct Measurements_master_gain_offset_struct Meas_master_offset;
 extern volatile union EMIF_union EMIF_mem;
 extern struct EMIF_CLA_struct EMIF_CLA;
 
-extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
-extern struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
-extern struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
-
-extern void SINCOS_calc_CPUasm(struct trigonometric_struct *sincos_table, float angle);
-
 //
 //Task 2 (C) Variables
 //

@@ -16,8 +16,6 @@ struct Converter_struct
     float div_range_modifier;
 
     float Kp_I;
-    float Kr_I;
-    float compensation2;
     float L_conv;
     float Ts;
 
