@@ -15,6 +15,8 @@ void Converter_calc()
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 1;
 
+    ///////////////////////////////////////////////////////////////////
+
     register float wL = PLL.w_filter * MATH_SQRT2;
     Conv.U_coupl.a = wL * (Conv.iq_ref.a * PLL.trig_table[0].cosine + Conv.id_ref.a * PLL.trig_table[0].sine * PLL.sign);
     Conv.U_coupl.b = wL * (Conv.iq_ref.b * PLL.trig_table[1].cosine + Conv.id_ref.b * PLL.trig_table[1].sine * PLL.sign);

@@ -63,7 +63,14 @@ void Init_class::clear_alarms()
 
     GPIO_CLEAR(RST_CM);
 
+    CPU1toCPU2.clear_alarms = 1.0f;
     Init.EPwm_TZclear(&EPwm4Regs);
+
+    DELAY_US(1000);
+
+    CPU1toCPU2.clear_alarms = 0.0f;
+
+    DELAY_US(1000);
 
     if(alarm_master.bit.Not_enough_data_master)
     {
@@ -173,7 +180,7 @@ void Init_class::CPUS()
 {
     EALLOW;
 
-    DevCfgRegs.CPUSEL0.bit.EPWM10 = 1;
+    DevCfgRegs.CPUSEL0.bit.EPWM5 = 1;
 
     MemCfgRegs.GSxMSEL.bit.MSEL_GS0  = 0;
     MemCfgRegs.GSxMSEL.bit.MSEL_GS1  = 0;
@@ -305,9 +312,7 @@ void Init_class::CIC1_adaptive_filter(struct CIC1_adaptive_struct *CIC, float ma
 
 void Init_class::Variables()
 {
-    Conv.Ts = (float)EMIF_mem.read.cycle_period * 8e-9 * (2.0f - (float)EMIF_mem.read.oversample);
-    Conv.compensation2 = 2.0f;
-    Conv.w_filter = MATH_2PI * 50.0f;
+    Conv.Ts = (float)EMIF_mem.read.control_rate * (float)EMIF_mem.read.cycle_period * 8e-9;
 
     Meas_alarm_L.U_grid_rms = 5.0f;
     Meas_alarm_H.U_grid_abs = 380.0f;
@@ -354,8 +359,16 @@ void Init_class::Variables()
 
     ///////////////////////////////////////////////////////////////////
 
-    Conv.range_modifier = 1UL << 30;
-    Conv.div_range_modifier = 1.0f / Conv.range_modifier;
+    Conv.compensation2 = 2.0f;
+    Conv.w_filter = MATH_2PI * 50.0f;
+    Conv.Ts_ratio = 0.5f;
+
+    Conv.range_modifier_Resonant = 1UL << 30;
+    Conv.div_range_modifier_Resonant = 1.0f / Conv.range_modifier_Resonant;
+
+    SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts * Conv.Ts_ratio);
+    SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts * Conv.Ts_ratio * Conv.compensation2);
+    SINCOS_calc_CPUasm(sincos_table_Kalman, Conv.w_filter * Conv.Ts);
 
     register float p_pr_i = Conv.L_conv / (3.0f * Conv.Ts);
     register float r_pr_i = Conv.L_conv * MATH_PI / Conv.Ts;
@@ -366,21 +379,42 @@ void Init_class::Variables()
 
     for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
     {
-        EMIF_mem.write.Resonant[0].harmonic[i].cosine_A = sincos_table[2 * i].cosine * Conv.range_modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].sine_A = sincos_table[2 * i].sine * Conv.range_modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].cosine_B = (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].sine_B = sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].cosine_C = sincos_table_comp[2 * i].cosine * Conv.range_modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].sine_C = sincos_table_comp[2 * i].sine * Conv.range_modifier;
+        register float modifier = Conv.range_modifier_Resonant;
+        EMIF_mem.write.Resonant[0].harmonic[i].cosine_A = sincos_table[2 * i].cosine * modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].sine_A = sincos_table[2 * i].sine * modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].cosine_B = (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I * modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].sine_B = sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I * modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].cosine_C = sincos_table_comp[2 * i].cosine * modifier;
+        EMIF_mem.write.Resonant[0].harmonic[i].sine_C = sincos_table_comp[2 * i].sine * modifier;
 
-        EMIF_mem.write.Resonant[1].harmonic[i].cosine_A = sincos_table[2 * i + 1].cosine * Conv.range_modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].sine_A = sincos_table[2 * i + 1].sine * Conv.range_modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].cosine_B = (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].sine_B = sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].cosine_C = sincos_table_comp[2 * i + 1].cosine * Conv.range_modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].sine_C = sincos_table_comp[2 * i + 1].sine * Conv.range_modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].cosine_A = sincos_table[2 * i + 1].cosine * modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].sine_A = sincos_table[2 * i + 1].sine * modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].cosine_B = (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I * modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].sine_B = sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I * modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].cosine_C = sincos_table_comp[2 * i + 1].cosine * modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].sine_C = sincos_table_comp[2 * i + 1].sine * modifier;
     }
 
+    Conv.range_modifier_Kalman = 1UL << 31;
+    Conv.div_range_modifier_Kalman = 1.0f / Conv.range_modifier_Kalman;
+
+    EMIF_mem.write.Kalman[0].harmonic[0].Kalman_gain_1 = Kalman_gain[0] * Conv.range_modifier_Kalman;
+    EMIF_mem.write.Kalman[0].harmonic[0].Kalman_gain_2 = Kalman_gain[1] * Conv.range_modifier_Kalman;
+    EMIF_mem.write.Kalman[1].harmonic[0].Kalman_gain_1 = Kalman_gain[0] * Conv.range_modifier_Kalman;
+    EMIF_mem.write.Kalman[1].harmonic[0].Kalman_gain_2 = Kalman_gain[1] * Conv.range_modifier_Kalman;
+    for(Uint16 i = 1; i < FPGA_KALMAN_STATES; i++)
+    {
+        register float modifier = Conv.range_modifier_Kalman;
+        EMIF_mem.write.Kalman[0].harmonic[i].cosine = sincos_table_Kalman[2 * i - 1].cosine * modifier;
+        EMIF_mem.write.Kalman[0].harmonic[i].sine = sincos_table_Kalman[2 * i - 1].sine * modifier;
+        EMIF_mem.write.Kalman[0].harmonic[i].Kalman_gain_1 = Kalman_gain[2 * i] * modifier;
+        EMIF_mem.write.Kalman[0].harmonic[i].Kalman_gain_2 = Kalman_gain[2 * i + 1] * modifier;
+
+        EMIF_mem.write.Kalman[1].harmonic[i].cosine = sincos_table_Kalman[2 * i - 1].cosine * modifier;
+        EMIF_mem.write.Kalman[1].harmonic[i].sine = sincos_table_Kalman[2 * i - 1].sine * modifier;
+        EMIF_mem.write.Kalman[1].harmonic[i].Kalman_gain_1 = Kalman_gain[2 * i] * modifier;
+        EMIF_mem.write.Kalman[1].harmonic[i].Kalman_gain_2 = Kalman_gain[2 * i + 1] * modifier;
+    }
     ///////////////////////////////////////////////////////////////////
 
     float CT_SD_max_value[3];
@@ -541,18 +575,13 @@ void Init_class::Variables()
     Grid.Resonant_I_conv[2].gain = 2.0f / (MATH_2PI * 50.0f) / (MATH_1_E * 0.02f);
 
     Grid.Accumulator_gain = ((float)0x80000000 * 2.0f / 3600.0f) * Grid.Ts;
-
-    ///////////////////////////////////////////////////////////////////
-
-    SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts);
-    SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts * Conv.compensation2);
 }
 
 void Init_class::PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg)
 {
     EALLOW;
 
-    EPwmReg->TBPRD = 1599;                   // PWM frequency = 1/(TBPRD+1)
+    EPwmReg->TBPRD = (float)EMIF_mem.read.control_rate * (float)EMIF_mem.read.cycle_period * 0.8f - 1.0f;//1599;                   // PWM frequency = 1/(TBPRD+1)
     EPwmReg->TBCTR = 0;                     //clear counter
     EPwmReg->TBPHS.all = 0;
 
@@ -614,7 +643,8 @@ void Init_class::PWMs()
 
     PWM_TZ_timestamp(&EPwm4Regs);
 
-    GPIO_Setup(TZ_EN_CM);
+    GPIO_Setup(TZ_EN_CPU1_CM);
+    GPIO_Setup(TZ_EN_CPU2_CM);
 }
 
 void Init_class::Fan_speed()
@@ -748,7 +778,6 @@ void Init_class::EMIF()
     GPIO_Setup(EM1D30);
     GPIO_Setup(EM1D31);
 
-    GPIO_Setup(EM1CS0);
     GPIO_Setup(EM1WE );
     GPIO_Setup(EM1OE );
 
@@ -766,53 +795,18 @@ void Init_class::EMIF()
     GPIO_Setup(EM1A11);
 }
 
-#define TRIGGER0_CM  0
-#define TRIGGER1_CM  1
-
-#define RST_CM  2
-#define SD_NEW_CM  3
-#define SYNC_PWM_CM  4
-#define ON_OFF_CM  5
-#define TZ_EN_CM  6
-#define PWM_EN_CM  36
-#define FAN_CM  84
-
-#define LED1_CM  7
-#define LED2_CM  8
-#define LED3_CM  9
-#define LED4_CM  10
-#define LED5_CM  11
-
-#define SS_DClink_CM  15
-#define DClink_DSCH_CM  x
-
-#define C_SS_RLY_L1_CM  16
-#define GR_RLY_L1_CM  17
-#define C_SS_RLY_L2_CM  18
-#define GR_RLY_L2_CM  19
-#define C_SS_RLY_L3_CM  20
-#define GR_RLY_L3_CM  21
-#define C_SS_RLY_N_CM  22
-#define GR_RLY_N_CM  23
-
 const struct GPIO_struct GPIOreg[169] =
 {
-[SD_SPISIMO_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC | PULLUP},
-[SD_SPISOMI_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC | PULLUP},
-[SD_SPICLK_PIN] = {HIGH, MUX6, CPU1_IO, OUTPUT, PUSHPULL},
-[SD_SPISTE_PIN] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
-
-[TRIGGER0_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
-[TRIGGER1_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
-
+[TRIGGER_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [RST_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+
+[SD_AVG_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
 [SD_NEW_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
 [SYNC_PWM_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
-[ON_OFF_CM] = {LOW, MUX0, CPU1_IO, INPUT, QUAL6 | PULLUP},
-
-[TZ_EN_CM] = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
-[PWM_EN_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [FAN_CM]  = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
+[TZ_EN_CPU1_CM] = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
+[PWM_EN_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+[TZ_EN_CPU2_CM] = {LOW, MUX1, CPU2_IO, OUTPUT, PUSHPULL},
 
 [LED1_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [LED2_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
@@ -820,11 +814,10 @@ const struct GPIO_struct GPIOreg[169] =
 [LED4_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [LED5_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 
-//[DClink_DSCH_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
-//[SS_DClink_CM  ] = {LOW, MUX6, CPU1_IO, OUTPUT, PUSHPULL},
-[SS_DClink_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [C_SS_RLY_L1_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [GR_RLY_L1_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+
+
 [C_SS_RLY_L2_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [GR_RLY_L2_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [C_SS_RLY_L3_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
@@ -832,15 +825,22 @@ const struct GPIO_struct GPIOreg[169] =
 [C_SS_RLY_N_CM ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [GR_RLY_N_CM   ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 
+[SD_SPISIMO_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC | PULLUP},
+[SD_SPISOMI_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC | PULLUP},
+[SD_SPICLK_PIN] = {HIGH, MUX6, CPU1_IO, OUTPUT, PUSHPULL},
+[SD_SPISTE_PIN] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+
+[SS_DClink_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+//[DClink_DSCH_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+
+[ON_OFF_CM] = {LOW, MUX0, CPU1_IO, INPUT, QUAL6 | PULLUP},
+
 [EN_Mod_1_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [EN_Mod_2_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
-[EN_Mod_3_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [TX_Mod_1_CM]  = {HIGH, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
 [RX_Mod_1_CM]  = {HIGH, MUX1, CPU1_IO, INPUT, ASYNC},
 [TX_Mod_2_CM]  = {HIGH, MUX6, CPU1_IO, OUTPUT, PUSHPULL},
 [RX_Mod_2_CM]  = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC},
-[TX_Mod_3_CM]  = {HIGH, MUX6, CPU1_IO, OUTPUT, PUSHPULL},
-[RX_Mod_3_CM]  = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC},
 
 [I2CA_SDA_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC|PULLUP},
 [I2CA_SCL_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC|PULLUP},
@@ -880,7 +880,6 @@ const struct GPIO_struct GPIOreg[169] =
 [EM1D30] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 [EM1D31] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 
-[EM1CS0] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 [EM1WE ] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 [EM1OE ] = {HIGH, MUX2, CPU1_IO, INPUT, ASYNC},
 
@@ -900,16 +899,15 @@ const struct GPIO_struct GPIOreg[169] =
 
 void Init_class::GPIO()
 {
-    GPIO_Setup(RST_CM);
-    GPIO_Setup(ON_OFF_CM);
-    GPIO_Setup(SYNC_PWM_CM);
-    GPIO_Setup(SD_NEW_CM);
+    GPIO_Setup(TRIGGER_CM);
 
-    GPIO_Setup(PWM_EN_CM);
+    GPIO_Setup(RST_CM);
+    GPIO_Setup(SD_AVG_CM);
+    GPIO_Setup(SD_NEW_CM);
+    GPIO_Setup(SYNC_PWM_CM);
     GPIO_Setup(FAN_CM);
 
-    GPIO_Setup(TRIGGER0_CM);
-    GPIO_Setup(TRIGGER1_CM);
+    GPIO_Setup(PWM_EN_CM);
 
     GPIO_Setup(LED1_CM);
     GPIO_Setup(LED2_CM);
@@ -918,15 +916,17 @@ void Init_class::GPIO()
     GPIO_Setup(LED5_CM);
 
 //    GPIO_Setup(DClink_DSCH_CM);
+    GPIO_Setup(C_SS_RLY_L1_CM);
+    GPIO_Setup(GR_RLY_L1_CM  );
+    GPIO_Setup(C_SS_RLY_L2_CM);
+    GPIO_Setup(GR_RLY_L2_CM  );
+    GPIO_Setup(C_SS_RLY_L3_CM);
+    GPIO_Setup(GR_RLY_L3_CM  );
+    GPIO_Setup(C_SS_RLY_N_CM );
+    GPIO_Setup(GR_RLY_N_CM   );
     GPIO_Setup(SS_DClink_CM  );
-//    GPIO_Setup(C_SS_RLY_L1_CM);
-//    GPIO_Setup(GR_RLY_L1_CM  );
-//    GPIO_Setup(C_SS_RLY_L2_CM);
-//    GPIO_Setup(GR_RLY_L2_CM  );
-//    GPIO_Setup(C_SS_RLY_L3_CM);
-//    GPIO_Setup(GR_RLY_L3_CM  );
-//    GPIO_Setup(C_SS_RLY_N_CM );
-//    GPIO_Setup(GR_RLY_N_CM   );
+
+    GPIO_Setup(ON_OFF_CM);
 
     GPIO_Setup(I2CA_SDA_PIN);
     GPIO_Setup(I2CA_SCL_PIN);

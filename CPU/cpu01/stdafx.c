@@ -15,14 +15,10 @@ struct Thermistor_struct Therm;
 struct Grid_analyzer_struct Grid;
 struct Grid_analyzer_filter_struct Grid_filter;
 
-struct SCOPE_global scope_global;
-
 union CONTROL_EXT_MODBUS control_ext_modbus;
 
 struct CONTROL_master control_master;
 struct STATUS_master status_master;
-union ALARM_master alarm_master;
-union ALARM_master alarm_master_snapshot;
 
 struct Timer_PWM_struct Timer_PWM;
 
@@ -40,13 +36,12 @@ struct Measurements_alarm_struct Meas_alarm_L;
 
 struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
-
-struct abc_struct U_x0, U_x1;
-float decimator;
-
+struct trigonometric_struct sincos_table_Kalman[SINCOS_HARMONICS];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma SET_DATA_SECTION("CPUTOCLA")
+
+struct EMIF_SD_struct EMIF_CLA;
 
 #pragma SET_DATA_SECTION("CPU1TOCPU2")
 
@@ -56,20 +51,25 @@ struct CPU1toCPU2_struct CPU1toCPU2;
 
 struct CPU2toCPU1_struct CPU2toCPU1;
 
-#pragma SET_DATA_SECTION("KALMAN")
+#pragma SET_DATA_SECTION("CPU_shared")
 
-struct Kalman_struct Kalman_I_grid[3];
-struct Kalman_struct Kalman_U_grid[3];
+union ALARM_master alarm_master;
+union ALARM_master alarm_master_snapshot;
 
 #pragma SET_DATA_SECTION("EMIF_mem")
 
 volatile union EMIF_union EMIF_mem;
 
+#pragma DATA_SECTION(Scope,"Scope")
+
+struct Scope_v1 Scope;
+
 #pragma SET_DATA_SECTION()
 
-struct Energy_meter_struct Energy_meter;
+struct Kalman_struct Kalman_I_grid[3];
+struct Kalman_struct Kalman_U_grid[3];
 
-struct EMIF_CLA_struct EMIF_DMA;
+struct Energy_meter_struct Energy_meter;
 
 float on_off_odd_a[25];
 float on_off_odd_b[25];

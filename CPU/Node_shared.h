@@ -68,16 +68,27 @@ union FPGA_master_flags_union
         Uint16 RDY_L_L3:1;
         Uint16 RDY_H_N:1;
         Uint16 RDY_L_N:1;
-        Uint16 rx1_crc_error:1;
-        Uint16 rx1_overrun_error:1;
-        Uint16 rx1_frame_error:1;
-        Uint16 rx2_crc_error:1;
-        Uint16 rx2_overrun_error:1;
-        Uint16 rx2_frame_error:1;
-        Uint16 rx1_port_nrdy:1;
-        Uint16 rx2_port_nrdy:1;
+        Uint16 I_conv_a_H:1;
+        Uint16 I_conv_a_L:1;
+        Uint16 I_conv_b_H:1;
+        Uint16 I_conv_b_L:1;
+        Uint16 I_conv_c_H:1;
+        Uint16 I_conv_c_L:1;
+        Uint16 I_conv_n_H:1;
+        Uint16 I_conv_n_L:1;
+        Uint16 U_grid_abs_a_H:1;
+        Uint16 U_grid_abs_b_H:1;
+        Uint16 U_grid_abs_c_H:1;
         Uint16 sed_err:1;
-        Uint16 rsvd:7;
+        Uint16 rsvd:4;
+//        Uint16 rx1_crc_error:1;
+//        Uint16 rx1_overrun_error:1;
+//        Uint16 rx1_frame_error:1;
+//        Uint16 rx2_crc_error:1;
+//        Uint16 rx2_overrun_error:1;
+//        Uint16 rx2_frame_error:1;
+//        Uint16 rx1_port_nrdy:1;
+//        Uint16 rx2_port_nrdy:1;
     }bit;
 };
 
@@ -88,15 +99,6 @@ union ALARM_master
     {
         union FPGA_master_flags_union FPGA_errors;
         //32bits
-        Uint16 I_conv_a_H:1;
-        Uint16 I_conv_a_L:1;
-        Uint16 I_conv_b_H:1;
-        Uint16 I_conv_b_L:1;
-
-        Uint16 I_conv_c_H:1;
-        Uint16 I_conv_c_L:1;
-        Uint16 I_conv_n_H:1;
-        Uint16 I_conv_n_L:1;
 
         Uint16 I_conv_rms_a:1;
         Uint16 I_conv_rms_b:1;
@@ -112,23 +114,23 @@ union ALARM_master
         Uint16 U_grid_rms_b_L:1;
         Uint16 U_grid_rms_c_L:1;
 
-        Uint16 U_grid_abs_a_H:1;
-        Uint16 U_grid_abs_b_H:1;
-        Uint16 U_grid_abs_c_H:1;
-
         Uint16 U_dc_balance:1;
         Uint16 FLT_SUPPLY_MASTER:1;
         Uint16 CONV_SOFTSTART : 1;
         Uint16 FLT_SUPPLY_SLAVE : 1;
 
-        Uint16 TZ_CLOCKFAIL : 1;
-        Uint16 TZ_EMUSTOP : 1;
-        Uint16 TZ : 1;
+        Uint16 TZ_CLOCKFAIL_CPU1 : 1;
+        Uint16 TZ_EMUSTOP_CPU1 : 1;
+        Uint16 TZ_CLOCKFAIL_CPU2 : 1;
+        Uint16 TZ_EMUSTOP_CPU2 : 1;
+
+        //64bits
+        Uint16 TZ_CPU1 : 1;
+        Uint16 TZ_CPU2 : 1;
         Uint16 PLL_UNSYNC : 1;
 
         Uint16 Not_enough_data_master : 1;
         Uint16 CT_char_error : 1;
-        //64bits
 
 
         Uint16 rsvd1:16;
@@ -140,7 +142,6 @@ struct STATUS_master
 {
     Uint16 Init_done:1;
     Uint16 ONOFF:1;
-    Uint16 rsvd1:8;
     Uint16 calibration_procedure_error:1;
     Uint16 L_grid_measured:1;
     Uint16 Scope_snapshot_pending:1;
@@ -151,49 +152,31 @@ struct STATUS_master
     Uint16 SD_no_calibration : 1;
     Uint16 SD_no_harmonic_settings : 1;
     Uint16 SD_no_settings : 1;
-    Uint16 FLASH_not_enough_data : 1;
-    Uint16 FLASH_no_CT_characteristic : 1;
-    Uint16 FLASH_no_calibration : 1;
-    Uint16 FLASH_no_harmonic_settings : 1;
-    Uint16 FLASH_no_settings : 1;
     Uint16 in_limit_Q : 1;
     Uint16 in_limit_P : 1;
     Uint16 in_limit_H : 1;
     Uint16 Conv_active : 1;
     Uint16 PLL_sync : 1;
+
     Uint16 Grid_present : 1;
     Uint16 SD_no_meter : 1;
-    Uint16 wifi_on : 1;
 
-    Uint16 no_CT_connected_a : 1;
-    Uint16 no_CT_connected_b : 1;
-    Uint16 no_CT_connected_c : 1;
     Uint16 CT_connection_a : 2;
     Uint16 CT_connection_b : 2;
     Uint16 CT_connection_c : 2;
 
-    Uint16 slave_rdy_0 : 1;
-    Uint16 slave_rdy_1 : 1;
-    Uint16 slave_rdy_2 : 1;
-    Uint16 slave_rdy_3 : 1;
-
-    //kolejne slowo od tego miejsca, inaczej pole bitowe error_retry by sie podzielilo na dwa slowa Uint16
-
+    Uint16 no_CT_connected_a : 1;
+    Uint16 no_CT_connected_b : 1;
+    Uint16 no_CT_connected_c : 1;
+    Uint16 wifi_on : 1;
     Uint16 error_retry : 4;
-    Uint16 expected_number_of_slaves : 4;
-
-    Uint16 scope_trigger_request : 1;
-    Uint16 slave_any_sync : 1;
-    Uint16 incorrect_number_of_slaves : 1;
-
-    Uint16 rsvd2 : 5;
-
-    Uint16 comm_sync:1;
-    Uint16 comm_msg2:1;
+    //kolejne slowo od tego miejsca, inaczej pole bitowe error_retry by sie podzielilo na dwa slowa Uint16
     Uint16 ONOFF_current:1;
-
     Uint16 recent_error:1;
     Uint16 Conv_enable:1;
+
+    Uint16 rsvd1 : 13;
+    Uint16 rsvd2 : 16;
 };
 
 struct CONTROL_master
@@ -225,14 +208,13 @@ struct CONTROL_master
         struct
         {
             Uint16 Scope_snapshot:1;
-            Uint16 save_to_FLASH:1;
             Uint16 SD_save_H_settings:1;
             Uint16 SD_save_settings:1;
             Uint16 CPU_reset:1;
             Uint16 SD_reset_energy_meter:1;
             Uint16 ONOFF_set:1;
             Uint16 ONOFF_reset:1;
-            Uint16 rsvd1:8;
+            Uint16 rsvd1:9;
         }bit;
     }triggers;
     struct abc_struct tangens_range[2];
@@ -275,15 +257,6 @@ struct timestamp_struct
     int16 rx1;
     int16 tx2;
     int16 rx2;
-};
-
-struct SCOPE_global
-{
-    Uint16 decimation_ratio:13;
-    Uint16 scope_trigger:1;
-    Uint16 zero_counter:1;
-    Uint16 sync_index:1;
-    Uint16 acquire_before_trigger;
 };
 
 ///////////////////////////////////////////////////////////

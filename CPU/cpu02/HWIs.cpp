@@ -11,24 +11,24 @@
 #include "HWIs.h"
 
 #pragma CODE_SECTION(".TI.ramfunc");
-interrupt void SD_FAST_INT()
+interrupt void SD_NEW_INT()
 {
     Timer_PWM.CPU_SD = TIMESTAMP_PWM;
 
     register Uint32 *src;
     register Uint32 *dest;
 
-    src = (Uint32 *)&EMIF_mem.read.U_grid_a;
-    dest = (Uint32 *)&EMIF_CLA.U_grid_a;
+    src = (Uint32 *)&EMIF_mem.read.SD_new;
+    dest = (Uint32 *)&EMIF_CLA;
+
+    *dest++ = *src++;
+    *dest++ = *src++;
+    *dest++ = *src++;
+    *dest++ = *src++;
+    *dest++ = *src++;
+    *dest++ = *src++;
 
     Cla1ForceTask1();
-
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
 
     src = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.id_ref;
     dest = (Uint32 *)&Conv.id_ref;
@@ -44,12 +44,12 @@ interrupt void SD_FAST_INT()
     Conv.L_conv = CPU1toCPU2.CLA1toCLA2.L_conv;
     Conv.enable = CPU1toCPU2.CLA1toCLA2.enable;
 
-    Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0].series[0].sum * Conv.div_range_modifier;
-    Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0].series[1].sum * Conv.div_range_modifier;
-    Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0].series[2].sum * Conv.div_range_modifier;
-    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1].series[0].sum * Conv.div_range_modifier;
-    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1].series[1].sum * Conv.div_range_modifier;
-    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1].series[2].sum * Conv.div_range_modifier;
+    Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0].series[0].sum * Conv.div_range_modifier_Resonant;
+    Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0].series[1].sum * Conv.div_range_modifier_Resonant;
+    Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0].series[2].sum * Conv.div_range_modifier_Resonant;
+    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1].series[0].sum * Conv.div_range_modifier_Resonant;
+    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1].series[1].sum * Conv.div_range_modifier_Resonant;
+    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1].series[2].sum * Conv.div_range_modifier_Resonant;
 
     Conv.cycle_period = EMIF_mem.read.cycle_period;
 
@@ -57,6 +57,8 @@ interrupt void SD_FAST_INT()
 
     while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
     PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
+
+    ///////////////////////////////////////////////////////////////////
 
     Conv.zero_error = 1.0f;
     if (fmaxf(fmaxf(fabsf(Conv.duty[0]), fabsf(Conv.duty[1])), fabsf(Conv.duty[2])) > Conv.cycle_period)
@@ -67,7 +69,7 @@ interrupt void SD_FAST_INT()
 
     if(Conv.enable)
     {
-        register float modifier = Conv.range_modifier * Conv.zero_error;
+        register float modifier = Conv.range_modifier_Resonant * Conv.zero_error;
         EMIF_mem.write.Resonant[1].series[0].error =
         EMIF_mem.write.Resonant[0].series[0].error = Conv.I_err.a * modifier;
         EMIF_mem.write.Resonant[1].series[1].error =
@@ -77,7 +79,7 @@ interrupt void SD_FAST_INT()
     }
     else
     {
-        register float modifier = Conv.range_modifier;
+        register float modifier = Conv.range_modifier_Resonant;
         EMIF_mem.write.Resonant[1].series[0].error =
         EMIF_mem.write.Resonant[0].series[0].error = (Meas_master.U_grid.a - Conv.MR_ref.a) * modifier;
         EMIF_mem.write.Resonant[1].series[1].error =
@@ -90,6 +92,8 @@ interrupt void SD_FAST_INT()
 
     Timer_PWM.CPU_MR_START = TIMESTAMP_PWM;
 
+    ///////////////////////////////////////////////////////////////////
+
     while(!PieCtrlRegs.PIEIFR11.bit.INTx2);
     PieCtrlRegs.PIEIFR11.bit.INTx2 = 0;
 
@@ -98,18 +102,22 @@ interrupt void SD_FAST_INT()
 
     Timer_PWM.CPU_PWM = TIMESTAMP_PWM;
 
-    static Uint16 decimator_cpu2 = 0;
+    ///////////////////////////////////////////////////////////////////
 
-    if(decimator_cpu2++)
-    {
-        decimator_cpu2 = 0;
+    CPU2toCPU1.w_filter = PLL.w_filter;
+    CPU2toCPU1.f_filter = PLL.f_filter;
+    CPU2toCPU1.sign = PLL.sign;
+    CPU2toCPU1.PLL_RDY = PLL.RDY;
 
-        CPU2toCPU1.CLA2toCLA1.w_filter = PLL.w_filter;
+    if(EPwm5Regs.TZFLG.bit.OST) alarm_master.bit.TZ_CPU2 = 1;
+    if(EPwm5Regs.TZOSTFLG.bit.OST5) alarm_master.bit.TZ_CLOCKFAIL_CPU2 = 1;
+    if(EPwm5Regs.TZOSTFLG.bit.OST6) alarm_master.bit.TZ_EMUSTOP_CPU2 = 1;
 
-        IpcRegs.IPCSET.bit.IPC3 = 1;
-        IpcRegs.IPCCLR.bit.IPC3 = 1;
-    }
+    static Uint64 benchmark_timer_HWI;
+    static volatile float benchmark_HWI;
+    benchmark_HWI = (float)(ReadIpcTimer() - benchmark_timer_HWI)*(1.0f/200000000.0f);
+    benchmark_timer_HWI = ReadIpcTimer();
 
     Timer_PWM.CPU_SD_end = TIMESTAMP_PWM;
-    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+    PieCtrlRegs.PIEACK.all = PIEACK_GROUP12;
 }

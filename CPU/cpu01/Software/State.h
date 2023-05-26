@@ -46,7 +46,6 @@ struct settings_struct
     float Baudrate;
     float modbus_ext_server_id;
     float wifi_on;
-    float number_of_slaves;
     float C_dc;
     float L_conv;
     float I_lim;

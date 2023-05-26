@@ -130,8 +130,8 @@ void Init_class::Variables()
     memset(&CPU2toCPU1, 0, sizeof(CPU2toCPU1));
 
     Conv.Ts = 16e-6;
-    Conv.range_modifier = 1UL << 30;
-    Conv.div_range_modifier = 1.0f / Conv.range_modifier;
+    Conv.range_modifier_Resonant = 1UL << 30;
+    Conv.div_range_modifier_Resonant = 1.0f / Conv.range_modifier_Resonant;
 
     ///////////////////////////////////////////////////////////////////
 
@@ -150,12 +150,11 @@ void Init_class::Variables()
     PLL.state_last = PLL_active;
 }
 
-void Init_class::PWM_timestamp(volatile struct EPWM_REGS *EPwmReg)
+void Init_class::PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg)
 {
     EALLOW;
 
-    EPwmReg->TBPRD = 3199;                   // PWM frequency = 1/(TBPRD+1)
-    EPwmReg->CMPA.bit.CMPA = 20;
+    EPwmReg->TBPRD = (float)EMIF_mem.read.cycle_period * 0.8f - 1.0f;//1599;                   // PWM frequency = 1/(TBPRD+1)
     EPwmReg->TBCTR = 0;                     //clear counter
     EPwmReg->TBPHS.all = 0;
 
@@ -170,6 +169,24 @@ void Init_class::PWM_timestamp(volatile struct EPWM_REGS *EPwmReg)
     EPwmReg->TBCTL.bit.FREE_SOFT = 2;
     EPwmReg->TBCTL.bit.PRDLD = TB_SHADOW;                 // set Shadow load
 
+    EPwmReg->AQCTLA.bit.ZRO = AQ_SET;
+    EPwmReg->AQCTLA.bit.PRD = AQ_SET;
+
+    //Configure trip-zone
+    EPwmReg->TZCTL.bit.TZA = TZ_FORCE_LO;
+
+//    EPwmReg->TZSEL.bit.OSHT1 = 1;
+//    EPwmReg->TZSEL.bit.OSHT3 = 1;
+    EPwmReg->TZSEL.bit.OSHT5 = 1;
+    EPwmReg->TZSEL.bit.OSHT6 = 1;
+    EDIS;
+}
+
+void Init_class::EPwm_TZclear(volatile struct EPWM_REGS *EPwmReg)
+{
+    EALLOW;
+    EPwmReg->TZOSTCLR.all = 0xFF;
+    EPwmReg->TZCLR.bit.OST = 1;
     EDIS;
 }
 
@@ -180,8 +197,8 @@ void Init_class::PWMs()
     EDIS;
 
     EALLOW;
-    CpuSysRegs.PCLKCR2.bit.EPWM10 = 1;
+    CpuSysRegs.PCLKCR2.bit.EPWM5 = 1;
     EDIS;
 
-    PWM_timestamp(&EPwm10Regs);
+    PWM_TZ_timestamp(&EPwm5Regs);
 }

@@ -26,7 +26,7 @@ class SD_card_class
 
     static Uint16 find_last_enumeration(Uint16 update, Uint16 *file_number, const char *head_filename, const char *scan_filename);
     static Uint16 log_data();
-    static void save_state_task();
+    static Uint16 save_state();
 
     static Uint16 save_settings();
     static Uint16 read_settings();
@@ -50,7 +50,6 @@ class SD_card_class
     static char working_buffer[WBUF_SIZE];
     static char filename_buffer[WBUF_SIZE];
 
-    static void save_text_message(FIL *fil);
     static void print_filinfo(Uint16 fno_p);
     static void save_single_state_master(FIL *fil, union ALARM_master alarm_master_temp);
     static Uint32 save_FPGA_scope(FIL* fp, Uint32 index);
@@ -61,6 +60,8 @@ class SD_card_class
     static Uint16 read_memory(FIL* fp, Uint16 *destination_address, Uint32 size);
     static void save_table(FIL* fp, const char *formatting, Uint16 max_columns, Uint16 max_rows, ...);
     static Uint16 read_table(FIL* fp, const char *formatting, Uint16 max_columns, Uint16 max_rows, ...);
+
+    static void save_drivers_state(FIL *fil);
 };
 
 extern class SD_card_class SD_card;

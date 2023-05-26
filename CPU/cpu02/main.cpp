@@ -19,16 +19,20 @@ void main()
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;
 
     EALLOW;
-    PieVectTable.XINT1_INT = &SD_FAST_INT;
+    XintRegs.XINT3CR.bit.POLARITY = 0;
+    XintRegs.XINT3CR.bit.ENABLE = 1;
+    PieVectTable.XINT3_INT = &SD_NEW_INT;
     EDIS;
-    PieCtrlRegs.PIEIER1.bit.INTx4 = 1;
-    IER |= M_INT1;
+    PieCtrlRegs.PIEIER12.bit.INTx1 = 1;
+    IER |= M_INT12;
 
     Init.PWMs();
 
     Init.CLA();
 
     Init.Variables();
+
+    Init.EPwm_TZclear(&EPwm5Regs);
 
     EALLOW;
     Cla1Regs.MIER.bit.INT1 = 1;
@@ -38,6 +42,15 @@ void main()
 
     while(1)
     {
+        if(CPU1toCPU2.clear_alarms) Init.EPwm_TZclear(&EPwm5Regs);
+
+        if(IpcRegs.IPCSTS.bit.IPC4)
+        {
+            IpcRegs.IPCACK.bit.IPC4 = 1;
+            Meas_master_gain = CPU1toCPU2.Meas_master_gain;
+            Meas_master_offset = CPU1toCPU2.Meas_master_offset;
+        }
+
         static Uint32 timer_new = 0;
         static Uint32 timer_old = 0;
         timer_new = ReadIpcTimer();

@@ -14,19 +14,14 @@
 
 
 extern Modbus_ADU_slave_transparent Modbus_slave_LCD;
-extern Modbus_ADU_slave_transparent Modbus_slave_LCD_OLD;
 extern Modbus_ADU_slave_transparent Modbus_slave_EXT;
 extern Modbus_ADU_slave_translated Modbus_slave_EXT_translated;
 
 extern Modbus_RTU_class RTU_LCD;
 extern Modbus_RTU_class RTU_EXT;
-extern Modbus_RTU_class RTU_LCD_OLD; //RTU na starym porcie
 
 #define MODBUS_SLAVE_LCD_ARGS \
     1, &RTU_LCD
-
-#define MODBUS_SLAVE_LCD_OLD_ARGS \
-    1, &RTU_LCD_OLD
 
 #define MODBUS_SLAVE_EXT_ARGS \
         MODBUS_EXT_ADDRESS, &RTU_EXT

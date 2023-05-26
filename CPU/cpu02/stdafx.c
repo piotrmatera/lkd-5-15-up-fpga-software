@@ -22,7 +22,7 @@ struct Measurements_master_gain_offset_struct Meas_master_offset;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma SET_DATA_SECTION("CPUTOCLA")
 
-struct EMIF_CLA_struct EMIF_CLA;
+struct EMIF_SD_struct EMIF_CLA;
 
 #pragma SET_DATA_SECTION("CPU1TOCPU2")
 
@@ -32,8 +32,17 @@ struct CPU1toCPU2_struct CPU1toCPU2;
 
 struct CPU2toCPU1_struct CPU2toCPU1;
 
+#pragma SET_DATA_SECTION("CPU_shared")
+
+union ALARM_master alarm_master;
+union ALARM_master alarm_master_snapshot;
+
 #pragma SET_DATA_SECTION("EMIF_mem")
 
 volatile union EMIF_union EMIF_mem;
+
+#pragma DATA_SECTION(Scope,"Scope")
+
+struct Scope_v1 Scope;
 
 #pragma SET_DATA_SECTION()

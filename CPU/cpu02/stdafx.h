@@ -45,21 +45,18 @@ struct Timer_PWM_struct
 
 extern struct Timer_PWM_struct Timer_PWM;
 
-#define TIMESTAMP_PWM EPwm10Regs.TBCTR
+#define TIMESTAMP_PWM EPwm5Regs.TBCTR
 
 //
 //Task 1 (C) Variables
 //
 
-extern struct CPU1toCPU2_struct CPU1toCPU2;
-extern struct CPU2toCPU1_struct CPU2toCPU1;
 extern struct CLA1toCLA2_struct CLA1toCLA2;
 
 extern struct Measurements_master_struct Meas_master;
 extern struct Measurements_master_gain_offset_struct Meas_master_gain;
 extern struct Measurements_master_gain_offset_struct Meas_master_offset;
-extern volatile union EMIF_union EMIF_mem;
-extern struct EMIF_CLA_struct EMIF_CLA;
+extern struct EMIF_SD_struct EMIF_CLA;
 
 //
 //Task 2 (C) Variables

@@ -1,5 +1,58 @@
 `include "global.v" 
 
+module compare_LH(clk_i, value_i, compare_value_i, compare_o);
+	parameter WIDTH = 16;
+		
+	input wire clk_i;
+	input wire signed [WIDTH-1:0] value_i;
+	input wire [2*WIDTH-1:0] compare_value_i;
+	output reg [1:0] compare_o;
+	
+	wire signed [WIDTH-1:0] compare_value_H_i;
+	wire signed [WIDTH-1:0] compare_value_L_i;
+	assign compare_value_H_i = compare_value_i[15:0];
+	assign compare_value_L_i = compare_value_i[31:16];
+	
+	always @(posedge clk_i) begin
+		compare_o[0] <= value_i > compare_value_H_i;
+		compare_o[1] <= value_i < compare_value_L_i;
+	end
+endmodule
+
+module MovingAverage(clk, enable, in, out);
+	parameter N = 4;
+	parameter WIDTH = 16;
+	
+	input wire clk;
+	input wire enable;
+	input wire [WIDTH-1:0] in;
+	output wire [WIDTH-1:0] out;
+	
+	localparam N_WIDTH = $clog2(N);
+	
+	integer i;
+	reg [WIDTH-1:0] buffer [N-2:0];
+	always @(posedge clk) begin
+		if(enable) begin
+			buffer[0] <= in;
+			for (i = N-2; i > 0; i = i - 1)
+				buffer[i] <= buffer[i-1];
+		end
+	end
+	
+	reg [WIDTH-1+N_WIDTH:0] sum [N-1:0];
+	always @(*) begin
+		for (i = 0; i<N; i = i + 1) begin
+			if (i == 0)
+				sum[i] = {{N_WIDTH{in[WIDTH-1]}}, in};
+			else
+				sum[i] = sum[i-1] + {{N_WIDTH{buffer[i-1][WIDTH-1]}}, buffer[i-1]};
+		end
+	end
+	
+	assign out = sum[N-1] >> N_WIDTH;
+endmodule
+
 module Sync_latch_input(clk_i, in, out, reset_i, set_i); 
 	parameter OUT_POLARITY = 0; 
 	parameter STEPS = 2; 

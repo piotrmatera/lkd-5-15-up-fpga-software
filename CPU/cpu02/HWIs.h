@@ -8,6 +8,6 @@
 #ifndef HWIS_H_
 #define HWIS_H_
 
-interrupt void SD_FAST_INT();
+interrupt void SD_NEW_INT();
 
 #endif /* HWIS_H_ */

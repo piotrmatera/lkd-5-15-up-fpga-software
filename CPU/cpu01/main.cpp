@@ -17,7 +17,7 @@
 Rtc rtc;
 FATFS fs;           /* Filesystem object */
 MosfetCtrlApp mosfet_ctrl_app;
-int32 SD_phase = 1500;
+int32 SD_phase = -100;
 
 #pragma CODE_SECTION(".TI.ramfunc");
 interrupt void NMI_INT()
@@ -43,21 +43,18 @@ void main()
     IFR = 0x0000;
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;
 
-//    EALLOW;
-//    InputXbarRegs.INPUT6SELECT = EM1A2;
-//    OutputXbarRegs.OUTPUT4MUX0TO15CFG.bit.MUX11 = 1;
-//    OutputXbarRegs.OUTPUT4MUXENABLE.bit.MUX11 = 1;
-//    EDIS;
+    EALLOW;
+    InputXbarRegs.INPUT6SELECT = SD_NEW_CM;
+    EDIS;
 
     EALLOW;
-    InputXbarRegs.INPUT4SELECT = SD_NEW_CM;
+    InputXbarRegs.INPUT4SELECT = SD_AVG_CM;
     XintRegs.XINT1CR.bit.POLARITY = 0;
     XintRegs.XINT1CR.bit.ENABLE = 1;
-    PieVectTable.IPC3_INT = &SD_INT;
+    PieVectTable.XINT1_INT = &SD_AVG_NT;
     EDIS;
-    PieCtrlRegs.PIEIER1.bit.INTx16 = 1;
+    PieCtrlRegs.PIEIER1.bit.INTx4 = 1;
     IER |= M_INT1;
-
 
     EALLOW;
     PieVectTable.NMI_INT = &NMI_INT;
@@ -74,11 +71,11 @@ void main()
 
     Init.GPIO();
 
+    Init.EMIF();
+
     Init.CLA();
 
     Init.PWMs();
-
-    Init.EMIF();
 
     Init.ADC();
 
@@ -107,20 +104,6 @@ void main()
     f_mount(&fs, "", 1);
 
     mosfet_ctrl_app.init();
-
-    float omega = MATH_2PI * 50.0f * 32e-6;
-    for(Uint16 i = 0; i < FPGA_KALMAN_STATES; i++)
-    {
-        int32 temp;
-        temp = cosf(omega * (float)(2 * i - 1)) * (float)(1UL<<31);
-        EMIF_mem.write.Kalman[0].harmonic[i].cosine = temp;
-        temp = sinf(omega * (float)(2 * i - 1)) * (float)(1UL<<31);
-        EMIF_mem.write.Kalman[0].harmonic[i].sine = temp;
-        temp = Kalman_gain[2 * i] * (float)(1UL<<31);
-        EMIF_mem.write.Kalman[0].harmonic[i].Kalman_gain_1 = temp;
-        temp = Kalman_gain[2 * i + 1] * (float)(1UL<<31);
-        EMIF_mem.write.Kalman[0].harmonic[i].Kalman_gain_2 = temp;
-    }
 
     Machine.state = Machine_class::state_init;
     while(1)

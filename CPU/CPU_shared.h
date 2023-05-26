@@ -10,6 +10,34 @@
 
 #include "IO.h"
 #include "Node_shared.h"
+#include "Scope.h"
+
+struct Measurements_alarm_struct
+{
+    float U_grid_abs;
+    float U_grid_rms;
+    float Temp;
+    float I_conv;
+    float I_conv_rms;
+    float U_dc;
+    float U_dc_balance;
+};
+
+struct EMIF_SD_struct
+{
+    int16 U_grid_a;
+    int16 U_grid_b;
+    int16 U_grid_c;
+    int16 I_grid_a;
+    int16 I_grid_b;
+    int16 I_grid_c;
+    int16 U_dc;
+    int16 U_dc_n;
+    int16 I_conv_a;
+    int16 I_conv_b;
+    int16 I_conv_c;
+    int16 I_conv_n;
+};
 
 union FPGA_master_sync_flags_union
 {
@@ -86,18 +114,8 @@ union EMIF_union
     {
         union COMM_flags_union tx_wip;
         union COMM_flags_union rx_rdy;
-        int16 U_grid_a;
-        int16 U_grid_b;
-        int16 U_grid_c;
-        int16 I_grid_a;
-        int16 I_grid_b;
-        int16 I_grid_c;
-        int16 U_dc;
-        int16 U_dc_n;
-        int16 I_conv_a;
-        int16 I_conv_b;
-        int16 I_conv_c;
-        int16 I_conv_n_dummy;
+        struct EMIF_SD_struct SD_new;
+        struct EMIF_SD_struct SD_avg;
         union FPGA_master_flags_union FPGA_flags;
         union FPGA_master_sync_flags_union Sync_flags;
         int16 clock_offsets[8];
@@ -111,7 +129,7 @@ union EMIF_union
         Uint32 Scope_rdy;
         Uint32 Scope_index_last;
         Uint16 cycle_period;
-        Uint16 oversample;
+        Uint16 control_rate;
         Uint16 def_osr;
         Uint16 sd_shift;
         struct
@@ -122,7 +140,7 @@ union EMIF_union
             Uint32 Kalman1_WIP:1;
             Uint32 Kalman2_WIP:1;
         }flags;
-        Uint32 mux_rsvd[1024-29];
+        Uint32 mux_rsvd[1024-35];
         Uint32 rx1_lopri_msg[8][32];
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];
@@ -160,7 +178,14 @@ union EMIF_union
         Uint32 double_pulse;
         Uint32 DSP_start;
         Uint32 PWM_control;
-        Uint32 mux_rsvd[1024-11];
+        Uint32 I_conv_a_lim;
+        Uint32 I_conv_b_lim;
+        Uint32 I_conv_c_lim;
+        Uint32 I_conv_n_lim;
+        Uint32 U_grid_a_lim;
+        Uint32 U_grid_b_lim;
+        Uint32 U_grid_c_lim;
+        Uint32 mux_rsvd[1024-18];
         Uint32 tx1_lopri_msg[8][32];
         Uint32 tx1_hipri_msg[8][32];
         Uint32 tx2_lopri_msg[8][32];
@@ -187,22 +212,6 @@ union EMIF_union
     }write;
 };
 
-struct EMIF_CLA_struct
-{
-    int16 U_grid_a;
-    int16 U_grid_b;
-    int16 U_grid_c;
-    int16 I_grid_a;
-    int16 I_grid_b;
-    int16 I_grid_c;
-    int16 U_dc;
-    int16 U_dc_n;
-    int16 I_conv_a;
-    int16 I_conv_b;
-    int16 I_conv_c;
-    int16 I_conv_n;
-};
-
 struct CLA1toCLA2_struct
 {
     struct abc_struct id_ref, iq_ref;
@@ -213,18 +222,34 @@ struct CLA1toCLA2_struct
 
 struct CLA2toCLA1_struct
 {
-    struct Measurements_master_struct Meas_master;
-    float w_filter;
+    float dummy;
 };
 
 struct CPU1toCPU2_struct
 {
     struct CLA1toCLA2_struct CLA1toCLA2;
+    struct Measurements_master_gain_offset_struct Meas_master_gain;
+    struct Measurements_master_gain_offset_struct Meas_master_offset;
+    float clear_alarms;
 };
 
 struct CPU2toCPU1_struct
 {
     struct CLA2toCLA1_struct CLA2toCLA1;
+    float w_filter;
+    float f_filter;
+    float sign;
+    float PLL_RDY;
 };
+
+extern struct CPU1toCPU2_struct CPU1toCPU2;
+extern struct CPU2toCPU1_struct CPU2toCPU1;
+
+extern union ALARM_master alarm_master;
+extern union ALARM_master alarm_master_snapshot;
+
+extern volatile union EMIF_union EMIF_mem;
+
+extern struct Scope_v1 Scope;
 
 #endif /* CPU_SHARED_H_ */

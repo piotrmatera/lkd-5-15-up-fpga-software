@@ -164,6 +164,10 @@ void CT_char_calc()
     rotation = CT_char_vars.CT_phase[2] * wTs;
     Grid.I_grid_rot[2].sine = sinf(rotation);
     Grid.I_grid_rot[2].cosine = cosf(rotation);
+
+    CPU1toCPU2.Meas_master_gain = Meas_master_gain;
+    CPU1toCPU2.Meas_master_offset = Meas_master_offset;
+    IpcRegs.IPCSET.bit.IPC4 = 1;
 }
 
 void timer_update(struct timer_struct *Timer, Uint16 enable_counting)
@@ -498,25 +502,6 @@ void Machine_class::Background()
         break;
     }
 
-    //przetwarzanie na dodatkowym porcie 3. ( port LCD na starych plytach )
-    if( process_next_ADU ){
-        process_next_ADU = 0;
-
-        switch( Modbus_slave_LCD_OLD.task() ){
-        case mdb_no_request:
-            process_next_ADU = 1;
-            break;
-
-        case mdb_request_error:
-        case mdb_request_valid:
-            break;
-
-        case mdb_request_wrong_address:
-            Modbus_slave_LCD_OLD.RTU->signal_data_processed();//skoro wykrylo zly adres to musialy byc dane
-            break;
-        }
-    }
-
     //przetwarzanie urzadzen na 2. RTU
     //optym. obciazenia petli glownej i wysylania znakow, gdy obslugiwano urzadzenie z 1. RTU,
     //to z drugiego RTU zrobic w kolejnym cyklu petli glownej
@@ -542,9 +527,7 @@ void Machine_class::Background()
     Fiber_comm[1].Main();
     Fiber_comm[2].Main();
     Fiber_comm[3].Main();
-//    status_master.in_limit_H = status_master[0].in_limit_H | status_master[1].in_limit_H | status_master[2].in_limit_H | status_master[3].in_limit_H;
 
-    SD_card.save_state_task();
     SD_card.Scope_snapshot_task();
 
     if(Machine.error_retry)
@@ -636,24 +619,32 @@ void Machine_class::Background()
 
         ////////////////////////////////////////////////////////////////////////////////////////
 
-        SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts);
-        SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts * Conv.compensation2);
+        SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts * Conv.Ts_ratio);
+        SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts * Conv.Ts_ratio * Conv.compensation2);
+        SINCOS_calc_CPUasm(sincos_table_Kalman, Conv.w_filter * Conv.Ts);
 
         for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
         {
-            EMIF_mem.write.Resonant[0].harmonic[i].cosine_A = sincos_table[2 * i].cosine * Conv.range_modifier;
-            EMIF_mem.write.Resonant[0].harmonic[i].sine_A = sincos_table[2 * i].sine * Conv.range_modifier;
-            EMIF_mem.write.Resonant[0].harmonic[i].cosine_B = (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier;
-            EMIF_mem.write.Resonant[0].harmonic[i].sine_B = sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier;
-            EMIF_mem.write.Resonant[0].harmonic[i].cosine_C = sincos_table_comp[2 * i].cosine * Conv.range_modifier;
-            EMIF_mem.write.Resonant[0].harmonic[i].sine_C = sincos_table_comp[2 * i].sine * Conv.range_modifier;
+            EMIF_mem.write.Resonant[0].harmonic[i].cosine_A = sincos_table[2 * i].cosine * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[0].harmonic[i].sine_A = sincos_table[2 * i].sine * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[0].harmonic[i].cosine_B = (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[0].harmonic[i].sine_B = sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[0].harmonic[i].cosine_C = sincos_table_comp[2 * i].cosine * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[0].harmonic[i].sine_C = sincos_table_comp[2 * i].sine * Conv.range_modifier_Resonant;
 
-            EMIF_mem.write.Resonant[1].harmonic[i].cosine_A = sincos_table[2 * i + 1].cosine * Conv.range_modifier;
-            EMIF_mem.write.Resonant[1].harmonic[i].sine_A = sincos_table[2 * i + 1].sine * Conv.range_modifier;
-            EMIF_mem.write.Resonant[1].harmonic[i].cosine_B = (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier;
-            EMIF_mem.write.Resonant[1].harmonic[i].sine_B = sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier;
-            EMIF_mem.write.Resonant[1].harmonic[i].cosine_C = sincos_table_comp[2 * i + 1].cosine * Conv.range_modifier;
-            EMIF_mem.write.Resonant[1].harmonic[i].sine_C = sincos_table_comp[2 * i + 1].sine * Conv.range_modifier;
+            EMIF_mem.write.Resonant[1].harmonic[i].cosine_A = sincos_table[2 * i + 1].cosine * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[1].harmonic[i].sine_A = sincos_table[2 * i + 1].sine * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[1].harmonic[i].cosine_B = (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[1].harmonic[i].sine_B = sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[1].harmonic[i].cosine_C = sincos_table_comp[2 * i + 1].cosine * Conv.range_modifier_Resonant;
+            EMIF_mem.write.Resonant[1].harmonic[i].sine_C = sincos_table_comp[2 * i + 1].sine * Conv.range_modifier_Resonant;
+        }
+
+        for(Uint16 i = 1; i < FPGA_KALMAN_STATES; i++)
+        {
+            register float modifier = Conv.range_modifier_Kalman;
+            EMIF_mem.write.Kalman[0].harmonic[i].cosine = sincos_table_Kalman[2 * i - 1].cosine * modifier;
+            EMIF_mem.write.Kalman[0].harmonic[i].sine = sincos_table_Kalman[2 * i - 1].sine * modifier;
         }
     }
 
@@ -723,7 +714,6 @@ void Machine_class::Background()
 
     if(control_master.triggers.bit.CPU_reset
             && Modbus_slave_LCD.RTU->state == Modbus_RTU_class::Modbus_RTU_idle
-            && Modbus_slave_LCD_OLD.RTU->state == Modbus_RTU_class::Modbus_RTU_idle
             && Modbus_slave_EXT.RTU->state == Modbus_RTU_class::Modbus_RTU_idle)
     {
         control_master.triggers.bit.CPU_reset = 0;
@@ -766,7 +756,6 @@ void Machine_class::init()
     memset(&Grid, 0, sizeof(Grid));
     memset(&Grid_filter, 0, sizeof(Grid_filter));
 
-    memset(&scope_global, 0, sizeof(scope_global));
     memset(&control_master, 0, sizeof(control_master));
     memset(&control_ext_modbus, 0, sizeof(control_ext_modbus));
     memset(&status_master, 0, sizeof(status_master));
@@ -835,7 +824,6 @@ void Machine_class::init()
         SD_card.settings.C_dc = 1e-3;
         SD_card.settings.L_conv = 200e-6;
         SD_card.settings.I_lim = 24.0f;
-        SD_card.settings.number_of_slaves = 1.0f;
     }
     else
     {
@@ -895,10 +883,11 @@ void Machine_class::init()
         Meas_master_offset.I_grid.a *= ratio_SD;
         Meas_master_offset.I_grid.b *= ratio_SD;
         Meas_master_offset.I_grid.c *= ratio_SD;
-
-
-        status_master.expected_number_of_slaves = SD_card.settings.number_of_slaves;
     }
+
+    CPU1toCPU2.Meas_master_gain = Meas_master_gain;
+    CPU1toCPU2.Meas_master_offset = Meas_master_offset;
+    IpcRegs.IPCSET.bit.IPC4 = 1;
 
     Machine.harmonics_odd_last =
     Machine.harmonics_even_last =
@@ -928,6 +917,37 @@ void Machine_class::init()
 
     Init.Variables();
 
+    union
+    {
+        Uint32 u32;
+        int16 i16[2];
+    }Meas_alarm_int;
+
+    Meas_alarm_int.i16[0] = Meas_alarm_H.I_conv / Meas_master_gain.I_conv.a + Meas_master_offset.I_conv.a;
+    Meas_alarm_int.i16[1] = Meas_alarm_L.I_conv / Meas_master_gain.I_conv.a + Meas_master_offset.I_conv.a;
+    EMIF_mem.write.I_conv_a_lim = Meas_alarm_int.u32;
+    Meas_alarm_int.i16[0] = Meas_alarm_H.I_conv / Meas_master_gain.I_conv.b + Meas_master_offset.I_conv.b;
+    Meas_alarm_int.i16[1] = Meas_alarm_L.I_conv / Meas_master_gain.I_conv.b + Meas_master_offset.I_conv.b;
+    EMIF_mem.write.I_conv_b_lim = Meas_alarm_int.u32;
+    Meas_alarm_int.i16[0] = Meas_alarm_H.I_conv / Meas_master_gain.I_conv.c + Meas_master_offset.I_conv.c;
+    Meas_alarm_int.i16[1] = Meas_alarm_L.I_conv / Meas_master_gain.I_conv.c + Meas_master_offset.I_conv.c;
+    EMIF_mem.write.I_conv_c_lim = Meas_alarm_int.u32;
+    Meas_master_gain.I_conv.n = (Meas_master_gain.I_conv.a + Meas_master_gain.I_conv.b + Meas_master_gain.I_conv.c) * MATH_1_3;
+    Meas_master_offset.I_conv.n = Meas_master_offset.I_conv.a + Meas_master_offset.I_conv.b + Meas_master_offset.I_conv.c;
+    Meas_alarm_int.i16[0] = (Meas_alarm_H.I_conv / Meas_master_gain.I_conv.n + Meas_master_offset.I_conv.n) * 0.25f;
+    Meas_alarm_int.i16[1] = (Meas_alarm_L.I_conv / Meas_master_gain.I_conv.n + Meas_master_offset.I_conv.n) * 0.25f;
+    EMIF_mem.write.I_conv_n_lim = Meas_alarm_int.u32;
+
+    Meas_alarm_int.i16[0] = +Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.a + Meas_master_offset.U_grid.a;
+    Meas_alarm_int.i16[1] = -Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.a + Meas_master_offset.U_grid.a;
+    EMIF_mem.write.U_grid_a_lim = Meas_alarm_int.u32;
+    Meas_alarm_int.i16[0] = +Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.b + Meas_master_offset.U_grid.b;
+    Meas_alarm_int.i16[1] = -Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.b + Meas_master_offset.U_grid.b;
+    EMIF_mem.write.U_grid_b_lim = Meas_alarm_int.u32;
+    Meas_alarm_int.i16[0] = +Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.c + Meas_master_offset.U_grid.c;
+    Meas_alarm_int.i16[1] = -Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.c + Meas_master_offset.U_grid.c;
+    EMIF_mem.write.U_grid_c_lim = Meas_alarm_int.u32;
+
     Modbus_RTU_class::Modbus_RTU_parameters_struct RTU_LCD_parameters;
     RTU_LCD_parameters.use_DERE = 1;
     RTU_LCD_parameters.DERE_pin = EN_Mod_1_CM;
@@ -948,16 +968,6 @@ void Machine_class::init()
     if(SD_card.settings.Baudrate >= 9600) RTU_EXT_parameters.baudrate = SD_card.settings.Baudrate;
     else RTU_EXT_parameters.baudrate = 9600;
     Modbus_slave_EXT.RTU->init(&RTU_EXT_parameters);
-
-    Modbus_RTU_class::Modbus_RTU_parameters_struct RTU_LCD_OLD_parameters;
-    RTU_LCD_OLD_parameters.use_DERE = 1;
-    RTU_LCD_OLD_parameters.DERE_pin = EN_Mod_3_CM;
-    RTU_LCD_OLD_parameters.RX_pin = RX_Mod_3_CM;
-    RTU_LCD_OLD_parameters.TX_pin = TX_Mod_3_CM;
-    RTU_LCD_OLD_parameters.SciRegs = &ScicRegs;
-    RTU_LCD_OLD_parameters.ECapRegs = &ECap3Regs;
-    RTU_LCD_OLD_parameters.baudrate = 115200;
-    Modbus_slave_LCD_OLD.RTU->init(&RTU_LCD_OLD_parameters);
 
     Uint32 delay_timer = IpcRegs.IPCCOUNTERL;
     while(!RTC_current_time.year10 && !RTC_current_time.year)
@@ -1063,19 +1073,19 @@ void Machine_class::idle()
         Conv.enable = 0;
     }
 
-    if(ReadIpcTimer() < 2000000000ULL)//10s
-    {
-        if(alarm_master.bit.FPGA_errors.bit.rx1_port_nrdy ||
-            alarm_master.bit.FPGA_errors.bit.rx1_overrun_error ||
-            alarm_master.bit.FPGA_errors.bit.rx1_frame_error ||
-            alarm_master.bit.FPGA_errors.bit.rx1_crc_error)
-            Init.clear_alarms();
-    }
+//    if(ReadIpcTimer() < 2000000000ULL)//10s
+//    {
+//        if(alarm_master.bit.FPGA_errors.bit.rx1_port_nrdy ||
+//            alarm_master.bit.FPGA_errors.bit.rx1_overrun_error ||
+//            alarm_master.bit.FPGA_errors.bit.rx1_frame_error ||
+//            alarm_master.bit.FPGA_errors.bit.rx1_crc_error)
+//            Init.clear_alarms();
+//    }
 
     if(Machine.ONOFF)
     {
         if(status_master.SD_no_calibration) Machine.state = state_calibrate_offsets;
-        else if(status_master.PLL_sync && status_master.Grid_present && (ReadIpcTimer() > 2000000000ULL || status_master.slave_any_sync))
+        else if(status_master.PLL_sync && status_master.Grid_present)
         {
             static const float delay_table[] =
             {
@@ -2194,16 +2204,20 @@ void Machine_class::cleanup()
     {
         Machine.state_last = Machine.state;
         Conv.enable = 0;
+        Scope_trigger_unc();
+        Machine.recent_error = 1;
+        if(mosfet_ctrl_app.getState() == MosfetCtrlApp::state_error){
+            //gdy wystapil jakis blad to proba zrestartowania maszyn stanowych
+            mosfet_ctrl_app.process_event(MosfetCtrlApp::event_restart, NULL);
+        }
+        mosfet_ctrl_app.process_event( MosfetCtrlApp::event_get_status );
     }
-    if(mosfet_ctrl_app.getState() == MosfetCtrlApp::state_error)
+
+    if(Scope.finished_sorting && !status_master.Scope_snapshot_pending && !control_master.triggers.bit.Scope_snapshot
+            && mosfet_ctrl_app.finished())
     {
-        //gdy wystapil jakis blad to proba zrestartowania maszyn stanowych
-        mosfet_ctrl_app.process_event(MosfetCtrlApp::event_restart, NULL);
+        SD_card.save_state();
+        if(Machine.error_retry == 4) control_master.triggers.bit.CPU_reset = 1;
+        Machine.state = state_idle;
     }
-    mosfet_ctrl_app.process_event( MosfetCtrlApp::event_get_status );
-
-//        if(Scope.finished_sorting && !status.bit.Scope_snapshot_pending && !control.fields.control_bits.Scope_snapshot
-//                && mosfet_ctrl_app.finished());
-
-    if(!SD_card_class::save_error_state) Machine.state = state_idle;
 }

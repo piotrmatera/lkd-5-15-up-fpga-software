@@ -12,8 +12,8 @@ struct Converter_struct
     struct abc_struct I_ref, I_err;
     struct abc_struct U_coupl;
 
-    float range_modifier;
-    float div_range_modifier;
+    float range_modifier_Resonant;
+    float div_range_modifier_Resonant;
 
     float Kp_I;
     float L_conv;

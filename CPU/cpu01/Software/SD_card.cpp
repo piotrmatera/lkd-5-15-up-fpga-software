@@ -23,6 +23,9 @@
 
 #include "Fiber_comm_master.h"
 
+#include "MosfetCtrlApp.h"
+#include "version.h"
+
 extern FATFS fs;
 class SD_card_class SD_card;
 
@@ -172,97 +175,97 @@ Uint16 SD_card_class::read_table(FIL* fp, const char *formatting, Uint16 max_col
 void SD_card_class::Scope_snapshot_task()
 {
     static FIL fil;
+    static Uint16 size_to_save;
+    static Uint16 *save_pointer;
     static Uint16 acquire_before_trigger;
-    static Uint32 timeout_counter;
-    static Uint16 current_node;
+    static Uint16 Scope_snapshot_state_last = 0;
 
     switch(Scope_snapshot_state)
     {
         case 0:
         {
+            if(Scope_snapshot_state_last != Scope_snapshot_state)
+            {
+                Scope_snapshot_state_last = Scope_snapshot_state;
+            }
             if(control_master.triggers.bit.Scope_snapshot && !control_master.triggers.bit.CPU_reset)
             {
                 control_master.triggers.bit.Scope_snapshot = 0;
-                acquire_before_trigger = scope_global.acquire_before_trigger;
-                static volatile Uint16 acquire_before = 3;
-                scope_global.acquire_before_trigger = acquire_before;
-                Scope_input_last = Kalman_U_grid[0].states[2];
-                timeout_counter = IpcRegs.IPCCOUNTERL;
-                Scope_snapshot_state++;
-            }
-            break;
-        }
-        case 1:
-        {
-            if(IpcRegs.IPCCOUNTERL - timeout_counter > 8000000UL)//40ms
-                scope_global.scope_trigger = 1;
-
-            if(Scope.finished_sorting)
-            {
                 if(fresult = f_open(&fil, "scope.bin", FA_READ | FA_WRITE | FA_CREATE_ALWAYS))
                 {
-                    Scope_snapshot_state = 100;
                     f_close(&fil);
+                    status_master.Scope_snapshot_error = 1;
                 }
                 else
                 {
-                    for(Uint16 i = 0; i<6; i++)
-                    {
-                        save_memory(&fil, (Uint16 *)&Scope.data[i], sizeof(Scope.data[0]));
-                        Fiber_comm[0].Main();
-                        Fiber_comm[1].Main();
-                        Fiber_comm[2].Main();
-                        Fiber_comm[3].Main();
-                    }
-                    memset(&Scope.data, 0, sizeof(Scope.data));
-                    f_close(&fil);
-                    current_node = 0;
-                    Fiber_comm[current_node].input_flags.read_scope = 1;
+                    status_master.Scope_snapshot_error = 0;
+                    status_master.Scope_snapshot_pending = 1;
+                    Scope_start();
+                    acquire_before_trigger = Scope.acquire_before_trigger;
+                    static volatile Uint16 acquire_before = 3;
+                    Scope.acquire_before_trigger = acquire_before;
+                    Scope_input_last = Kalman_U_grid[0].states[2];
                     Scope_snapshot_state++;
                 }
             }
             break;
         }
+        case 1:
+        {
+            static Uint32 timeout_counter;
+            if(Scope_snapshot_state_last != Scope_snapshot_state)
+            {
+                Scope_snapshot_state_last = Scope_snapshot_state;
+                timeout_counter = IpcRegs.IPCCOUNTERL;
+            }
+
+            if(IpcRegs.IPCCOUNTERL - timeout_counter > 8000000UL)//40ms
+            {
+                Scope_trigger_unc();
+            }
+
+            if(Scope.finished_sorting)
+            {
+                size_to_save = sizeof(Scope.data);
+                save_pointer = (Uint16 *)&Scope.data;
+                Scope_snapshot_state++;
+            }
+            break;
+        }
         case 2:
         {
-            if(!Fiber_comm[current_node].input_flags.read_scope)
+            if(Scope_snapshot_state_last != Scope_snapshot_state)
             {
-                if((fresult = f_open(&fil, "scope.bin", FA_READ | FA_WRITE | FA_OPEN_APPEND)) || alarm_master.bit.FLT_SUPPLY_MASTER)
-                {
-                    Scope_snapshot_state = 100;
-                    f_close(&fil);
-                }
-                else
-                {
-                    for(Uint16 i = 0; i<6; i++)
-                    {
-                        save_memory(&fil, (Uint16 *)&Scope.data[i], sizeof(Scope.data[0]));
-                        Fiber_comm[0].Main();
-                        Fiber_comm[1].Main();
-                        Fiber_comm[2].Main();
-                        Fiber_comm[3].Main();
-                    }
-                    f_close(&fil);
-                    if(++current_node >= 4)
-                    {
-                        status_master.Scope_snapshot_error = 0;
-                        Scope.acquire_before_trigger = acquire_before_trigger;
-                        scope_global.scope_trigger = 0;
-                        Scope_snapshot_state = 0;
-                    }
-                    else
-                    {
-                        memset(&Scope.data, 0, sizeof(Scope.data));
-                        Fiber_comm[current_node].input_flags.read_scope = 1;
-                    }
-                }
+                Scope_snapshot_state_last = Scope_snapshot_state;
+            }
+
+            const Uint16 buffer_scope_size = 100;
+            Uint16 buffer_scope[buffer_scope_size];
+            Uint16 bw;
+
+            if(size_to_save)
+            {
+                Uint32 btw = size_to_save > buffer_scope_size/2 ? buffer_scope_size/2 : size_to_save;
+                size_to_save -= btw;
+                save_pointer = byte2_to_word2(buffer_scope, save_pointer, btw);
+                fresult = f_write(&fil, buffer_scope, btw*2, &bw);
+            }
+            else
+            {
+                f_close(&fil);
+                Scope.acquire_before_trigger = acquire_before_trigger;
+                Scope_start();
+                status_master.Scope_snapshot_pending = 0;
+                Scope_snapshot_state = 0;
             }
             break;
         }
         default:
         {
-            status_master.Scope_snapshot_error = 1;
-            scope_global.scope_trigger = 0;
+            if(Scope_snapshot_state_last != Scope_snapshot_state)
+            {
+                Scope_snapshot_state_last = Scope_snapshot_state;
+            }
             Scope_snapshot_state = 0;
             break;
         }
@@ -281,7 +284,7 @@ Uint16 SD_card_class::find_last_enumeration(Uint16 update, Uint16 *file_number, 
 
         do
         {
-            if(++*file_number >= 1000)
+            if(++*file_number >= 100)
             {
                 *file_number = 1;
                 ltoa(*file_number, filename_buffer, 10);
@@ -311,7 +314,7 @@ Uint16 SD_card_class::find_last_enumeration(Uint16 update, Uint16 *file_number, 
         sscanf(working_buffer, "%g", &value);
         *file_number = value;
         if(update)
-            if(++*file_number >= 1000) *file_number = 1;
+            if(++*file_number >= 100) *file_number = 1;
     }
     fresult = f_lseek(&fil, 0);
     f_puts(ltoa(*file_number, working_buffer, 10), &fil);
@@ -476,14 +479,14 @@ Uint16 SD_card_class::log_data()
 
 void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_master_temp)
 {
-    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_crc_error    ) f_puts("\t\trx1_crc_error \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_overrun_error) f_puts("\t\trx1_overrun_error \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_frame_error  ) f_puts("\t\trx1_frame_error \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_crc_error    ) f_puts("\t\trx2_crc_error \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_overrun_error) f_puts("\t\trx2_overrun_error \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_frame_error  ) f_puts("\t\trx2_frame_error \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_port_nrdy    ) f_puts("\t\trx1_port_nrdy \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_port_nrdy    ) f_puts("\t\trx2_port_nrdy \n", fil);
+//    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_crc_error    ) f_puts("\t\trx1_crc_error \n", fil);
+//    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_overrun_error) f_puts("\t\trx1_overrun_error \n", fil);
+//    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_frame_error  ) f_puts("\t\trx1_frame_error \n", fil);
+//    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_crc_error    ) f_puts("\t\trx2_crc_error \n", fil);
+//    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_overrun_error) f_puts("\t\trx2_overrun_error \n", fil);
+//    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_frame_error  ) f_puts("\t\trx2_frame_error \n", fil);
+//    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_port_nrdy    ) f_puts("\t\trx1_port_nrdy \n", fil);
+//    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_port_nrdy    ) f_puts("\t\trx2_port_nrdy \n", fil);
     if(alarm_master_temp.bit.FPGA_errors.bit.sed_err          ) f_puts("\t\tsed_err \n", fil);
 
     if(alarm_master_temp.bit.Not_enough_data_master) f_puts("\t\tNot_enough_data_master \n", fil);
@@ -495,20 +498,20 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
     if(alarm_master_temp.bit.U_grid_rms_b_L) f_puts("\t\tU_grid_rms_b_L \n", fil);
     if(alarm_master_temp.bit.U_grid_rms_c_L) f_puts("\t\tU_grid_rms_c_L \n", fil);
 
-    if(alarm_master_temp.bit.U_grid_abs_a_H) f_puts("\t\tU_grid_abs_a_H \n", fil);
-    if(alarm_master_temp.bit.U_grid_abs_b_H) f_puts("\t\tU_grid_abs_b_H \n", fil);
-    if(alarm_master_temp.bit.U_grid_abs_c_H) f_puts("\t\tU_grid_abs_c_H \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.U_grid_abs_a_H) f_puts("\t\tU_grid_abs_a_H \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.U_grid_abs_b_H) f_puts("\t\tU_grid_abs_b_H \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.U_grid_abs_c_H) f_puts("\t\tU_grid_abs_c_H \n", fil);
 
     ///////////////////////////////////////////
 
-    if(alarm_master_temp.bit.I_conv_a_H) f_puts("\t\tI_conv_a_H \n", fil);
-    if(alarm_master_temp.bit.I_conv_a_L) f_puts("\t\tI_conv_a_L \n", fil);
-    if(alarm_master_temp.bit.I_conv_b_H) f_puts("\t\tI_conv_b_H \n", fil);
-    if(alarm_master_temp.bit.I_conv_b_L) f_puts("\t\tI_conv_b_L \n", fil);
-    if(alarm_master_temp.bit.I_conv_c_H) f_puts("\t\tI_conv_c_H \n", fil);
-    if(alarm_master_temp.bit.I_conv_c_L) f_puts("\t\tI_conv_c_L \n", fil);
-    if(alarm_master_temp.bit.I_conv_n_H) f_puts("\t\tI_conv_n_H \n", fil);
-    if(alarm_master_temp.bit.I_conv_n_L) f_puts("\t\tI_conv_n_L \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_a_H) f_puts("\t\tI_conv_a_H \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_a_L) f_puts("\t\tI_conv_a_L \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_b_H) f_puts("\t\tI_conv_b_H \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_b_L) f_puts("\t\tI_conv_b_L \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_c_H) f_puts("\t\tI_conv_c_H \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_c_L) f_puts("\t\tI_conv_c_L \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_n_H) f_puts("\t\tI_conv_n_H \n", fil);
+    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_n_L) f_puts("\t\tI_conv_n_L \n", fil);
     //
     if(alarm_master_temp.bit.FPGA_errors.bit.FLT_H_L1) f_puts("\t\tFLT_H_L1 \n", fil);
     if(alarm_master_temp.bit.FPGA_errors.bit.FLT_L_L1) f_puts("\t\tFLT_L_L1 \n", fil);
@@ -540,9 +543,13 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
     if(alarm_master_temp.bit.CONV_SOFTSTART       ) f_puts("\t\tCONV_SOFTSTART \n", fil);
     if(alarm_master_temp.bit.FLT_SUPPLY_SLAVE     ) f_puts("\t\tFLT_SUPPLY_SLAVE \n", fil);
     //
-    if(alarm_master_temp.bit.TZ_CLOCKFAIL) f_puts("\t\tTZ_CLOCKFAIL \n", fil);
-    if(alarm_master_temp.bit.TZ_EMUSTOP  ) f_puts("\t\tTZ_EMUSTOP \n", fil);
-    if(alarm_master_temp.bit.TZ          ) f_puts("\t\tTZ \n", fil);
+    if(alarm_master_temp.bit.TZ_CLOCKFAIL_CPU1) f_puts("\t\tTZ_CLOCKFAIL_CPU1 \n", fil);
+    if(alarm_master_temp.bit.TZ_EMUSTOP_CPU1  ) f_puts("\t\tTZ_EMUSTOP_CPU1 \n", fil);
+    if(alarm_master_temp.bit.TZ_CPU1          ) f_puts("\t\tTZ_CPU1 \n", fil);
+
+    if(alarm_master_temp.bit.TZ_CLOCKFAIL_CPU2) f_puts("\t\tTZ_CLOCKFAIL_CPU2 \n", fil);
+    if(alarm_master_temp.bit.TZ_EMUSTOP_CPU2  ) f_puts("\t\tTZ_EMUSTOP_CPU2 \n", fil);
+    if(alarm_master_temp.bit.TZ_CPU2          ) f_puts("\t\tTZ_CPU2 \n", fil);
     //
     if(alarm_master_temp.bit.U_dc_balance          ) f_puts("\t\tU_dc_balance \n", fil);
 
@@ -550,223 +557,149 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
     f_puts(working_buffer, fil);
 }
 
-void SD_card_class::save_text_message(FIL *fil)
-{
-    f_puts("Error time:\n", fil);
+void SD_card_class::save_drivers_state(FIL *fil){
+    extern MosfetCtrlApp mosfet_ctrl_app;
 
-    working_buffer[0] = '0' + RTC_current_time.day10;
-    working_buffer[1] = '0' + RTC_current_time.day;
+    f_puts("\n err_retry: ", fil);
+    f_puts(ltoa( Machine.error_retry, working_buffer, 16), fil);
+
+    f_puts("\nRESC: ", fil);
+    f_puts(ltoa( CpuSysRegs.RESC.all, working_buffer, 16), fil);
+
+    f_puts("\n\nFW= " FW_ID_STRING " ", fil);
+    f_puts( fw_descriptor.build_date, fil );
+    f_putc(' ', fil);
+    f_puts( fw_descriptor.build_time, fil );
+    f_putc('\n', fil);
+
+    f_puts("\nDriversErr: ", fil);
+
+
+    for( uint16_t h=0; h<4; h++ ){
+        f_puts(ltoa(mosfet_ctrl_app.getErrorsAtPoint((MosfetCtrlApp::logpoint_t)h), working_buffer, 16), fil);
+        f_putc(' ', fil);
+    }
+
+    //informacje o stanie SM gdy wystapil blad
+    f_puts("\nErrofInfo: ", fil);
+    for(int h=0;h<2;h++){
+        if( h==1 )
+            f_puts(" , ", fil);
+        f_puts(ltoa(mosfet_ctrl_app.sm_status_info[h].error_line, working_buffer, 10), fil);
+        f_puts(" ", fil);
+        f_puts(ltoa(mosfet_ctrl_app.sm_status_info[h].subm_state, working_buffer, 10), fil);
+        f_puts(" ", fil);
+        f_puts(ltoa(mosfet_ctrl_app.sm_status_info[h].i2c_state, working_buffer, 10), fil);
+    }
+
+    //drivery z ktorymi nie udala sie komunikacja podczas pobierania stanu
+    f_puts(", state=", fil);
+    f_puts(ltoa(mosfet_ctrl_app.getState(), working_buffer, 16), fil);
+    f_putc('\n', fil);
+
+    for(int device=0; device < MAX_MOS_DRIVERS; device++){
+       f_puts("\nDriver ", fil);
+        f_puts(ltoa(device, working_buffer, 10), fil);
+        f_putc('\n', fil);
+
+        for( int reg=0; reg<CHIP1ED389_STATUS_REGS_COUNT;reg++){
+           f_puts("R-", fil);
+           f_puts(ltoa(reg+CHIP1ED389_RDYSTAT, working_buffer, 16), fil);
+           f_puts("=0x", fil);
+           f_puts(ltoa(mosfet_ctrl_app.buffer_item(device,reg), working_buffer, 16), fil);
+           f_putc('\n', fil);
+        }
+    }
+
+}
+
+Uint16 SD_card_class::save_state()
+{
+    FIL fil;
+
+    find_last_enumeration(1, &file_number_errors, "err_cnt.txt", "error.txt");
+
+    ltoa(file_number_errors+1, filename_buffer, 10);
+    strcat(filename_buffer,"error.txt");
+    f_unlink(filename_buffer);
+    ltoa(file_number_errors+1, filename_buffer, 10);
+    strcat(filename_buffer,"scope.bin");
+    f_unlink(filename_buffer);
+    ltoa(file_number_errors+1, filename_buffer, 10);
+    strcat(filename_buffer,"scope.bit");
+    f_unlink(filename_buffer);
+
+    ltoa(file_number_errors, filename_buffer, 10);
+    strcat(filename_buffer,"Error.txt");
+    if(fresult = f_open(&fil, filename_buffer, FA_READ | FA_WRITE | FA_CREATE_ALWAYS))
+    {
+        f_close(&fil);
+        return fresult;
+    }
+    f_puts("Error time:\n", &fil);
+
+    working_buffer[0] = '0' + FatFS_time.day / 10;
+    working_buffer[1] = '0' + FatFS_time.day % 10;
     working_buffer[2] = '.';
-    working_buffer[3] = '0' + RTC_current_time.month10;
-    working_buffer[4] = '0' + RTC_current_time.month;
+    working_buffer[3] = '0' + FatFS_time.month / 10;
+    working_buffer[4] = '0' + FatFS_time.month % 10;
     working_buffer[5] = '.';
     working_buffer[6] = '2';
     working_buffer[7] = '0';
-    working_buffer[8] = '0' + RTC_current_time.year10;
-    working_buffer[9] = '0' + RTC_current_time.year;
+    Uint16 year = FatFS_time.year;
+    if(year >= 20) year -= 20;
+    working_buffer[8] = '0' + year / 10;
+    working_buffer[9] = '0' + year % 10;
     working_buffer[10] = ' ';
-    working_buffer[11] = '0' + RTC_current_time.hour10;
-    working_buffer[12] = '0' + RTC_current_time.hour;
+    working_buffer[11] = '0' + FatFS_time.hour / 10;
+    working_buffer[12] = '0' + FatFS_time.hour % 10;
     working_buffer[13] = ':';
-    working_buffer[14] = '0' + RTC_current_time.minute10;
-    working_buffer[15] = '0' + RTC_current_time.minute;
+    working_buffer[14] = '0' + FatFS_time.minute / 10;
+    working_buffer[15] = '0' + FatFS_time.minute % 10;
     working_buffer[16] = ':';
-    working_buffer[17] = '0' + RTC_current_time.second10;
-    working_buffer[18] = '0' + RTC_current_time.second;
+    working_buffer[17] = '0' + (FatFS_time.second_2 * 2) / 10;
+    working_buffer[18] = '0' + (FatFS_time.second_2 * 2) % 10;
     working_buffer[19] = '\n';
     working_buffer[20] = 0;
-    f_puts(working_buffer, fil);
+    f_puts(working_buffer, &fil);
 
-    f_puts("\nMaster errors:\n", fil);
-    f_puts("\tList of snapshot errors:\n", fil);
-    save_single_state_master(fil, alarm_master_snapshot);
-    f_puts("\tList of all errors:\n", fil);
-    save_single_state_master(fil, alarm_master);
-}
+    f_puts("The converter has worked for:\n", &fil);
 
-void SD_card_class::save_state_task()
-{
-    static FIL fil;
-    static Uint16 current_node;
-    static Uint32 delay_timer;
+    f_puts(ltoa(Timer_total.days, working_buffer, 10), &fil);
+    f_putc(':', &fil);
+    f_puts(ltoa(Timer_total.hours, working_buffer, 10), &fil);
+    f_putc(':', &fil);
+    f_puts(ltoa(Timer_total.minutes, working_buffer, 10), &fil);
+    f_putc(':', &fil);
+    f_puts(ltoa(Timer_total.seconds, working_buffer, 10), &fil);
+    f_puts(" days/hours/minutes/seconds\n", &fil);
 
-    switch(save_error_state)
+    f_puts("\nList of snapshot errors:\n", &fil);
+    save_single_state_master(&fil, alarm_master_snapshot);
+
+    f_puts("\nList of all errors:\n", &fil);
+    save_single_state_master(&fil, alarm_master);
+
+    save_drivers_state(&fil);
+
+    fresult = f_truncate(&fil);
+    fresult = f_close(&fil);
+    if(alarm_master.bit.FLT_SUPPLY_MASTER) return fresult;
+///////////////////////////////////////////////////////////////////
+
+
+    ltoa(file_number_errors, filename_buffer, 10);
+    strcat(filename_buffer,"Scope.bin");
+    if(fresult = f_open(&fil, filename_buffer, FA_READ | FA_WRITE | FA_CREATE_ALWAYS))
     {
-        case 0:
-        {
-            break;
-        }
-        case 1:
-        {
-            scope_global.scope_trigger = 1;
-            EMIF_mem.write.Scope_trigger = 1;
-            Fiber_comm[0].input_flags.read_async_data = 1;
-//            Fiber_comm[1].input_flags.read_async_data = 1;
-//            Fiber_comm[2].input_flags.read_async_data = 1;
-//            Fiber_comm[3].input_flags.read_async_data = 1;
-
-            delay_timer = IpcRegs.IPCCOUNTERL;
-            save_error_state++;
-            break;
-        }
-        case 2:
-        {
-            if (Fiber_comm[0].input_flags.read_async_data == 0 || IpcRegs.IPCCOUNTERL - delay_timer > 1000000000)
-            {
-                Fiber_comm[0].input_flags.read_async_data = 0;
-                save_error_state++;
-            }
-//            if ((Fiber_comm[0].input_flags.read_async_data == 0 &&
-//                Fiber_comm[1].input_flags.read_async_data == 0 &&
-//                Fiber_comm[2].input_flags.read_async_data == 0 &&
-//                Fiber_comm[3].input_flags.read_async_data == 0) ||
-//                IpcRegs.IPCCOUNTERL - delay_timer > 1000000000)
-//            {
-//                Fiber_comm[0].input_flags.read_async_data = 0;
-//                Fiber_comm[1].input_flags.read_async_data = 0;
-//                Fiber_comm[2].input_flags.read_async_data = 0;
-//                Fiber_comm[3].input_flags.read_async_data = 0;
-//                save_error_state++;
-//            }
-            break;
-        }
-        case 3:
-        {
-            find_last_enumeration(1, &file_number_errors, "err_cnt.txt", "error.txt");
-
-            ltoa(file_number_errors+1, filename_buffer, 10);
-            strcat(filename_buffer,"error.txt");
-            f_unlink(filename_buffer);
-            ltoa(file_number_errors+1, filename_buffer, 10);
-            strcat(filename_buffer,"scope.bin");
-            f_unlink(filename_buffer);
-            ltoa(file_number_errors+1, filename_buffer, 10);
-            strcat(filename_buffer,"scope.bit");
-            f_unlink(filename_buffer);
-
-            ltoa(file_number_errors, filename_buffer, 10);
-            strcat(filename_buffer,"Error.txt");
-            f_close(&fil);
-            if(fresult = f_open(&fil, filename_buffer, FA_READ | FA_WRITE | FA_CREATE_ALWAYS))
-            {
-                f_close(&fil);
-                save_error_state = 7;
-            }
-            else
-            {
-                save_text_message(&fil);
-                fresult = f_close(&fil);
-                save_error_state++;
-            }
-
-            break;
-        }
-        case 4:
-        {
-            if(Scope.finished_sorting)
-            {
-                ltoa(file_number_errors, filename_buffer, 10);
-                strcat(filename_buffer,"Scope.bin");
-                if((fresult = f_open(&fil, filename_buffer, FA_READ | FA_WRITE | FA_CREATE_ALWAYS)) || alarm_master.bit.FLT_SUPPLY_MASTER)
-                {
-                    f_close(&fil);
-                    save_error_state = 7;
-                }
-                else
-                {
-                    for(Uint16 i = 0; i<6; i++)
-                    {
-                        save_memory(&fil, (Uint16 *)&Scope.data[i], sizeof(Scope.data[0]));
-                        Fiber_comm[0].Main();
-                        Fiber_comm[1].Main();
-                        Fiber_comm[2].Main();
-                        Fiber_comm[3].Main();
-                    }
-                    f_close(&fil);
-
-                    memset(&Scope.data, 0, sizeof(Scope.data));
-                    current_node = 0;
-                    Fiber_comm[current_node].input_flags.read_scope = 1;
-
-                    save_error_state++;
-                }
-            }
-            break;
-        }
-        case 5:
-        {
-            if(!Fiber_comm[current_node].input_flags.read_scope)
-            {
-                ltoa(file_number_errors, filename_buffer, 10);
-                strcat(filename_buffer,"Scope.bin");
-                if((fresult = f_open(&fil, filename_buffer, FA_READ | FA_WRITE | FA_OPEN_APPEND)) || alarm_master.bit.FLT_SUPPLY_MASTER)
-                {
-                    f_close(&fil);
-                    save_error_state = 7;
-                }
-                else
-                {
-                    for(Uint16 i = 0; i<6; i++)
-                    {
-                        save_memory(&fil, (Uint16 *)&Scope.data[i], sizeof(Scope.data[0]));
-                        Fiber_comm[0].Main();
-                        Fiber_comm[1].Main();
-                        Fiber_comm[2].Main();
-                        Fiber_comm[3].Main();
-                    }
-                    if(++current_node >= 1)//ograniczone do jednego scope
-                    {
-                        save_error_state++;
-                        save_text_message(&fil);
-                    }
-                    else
-                    {
-                        memset(&Scope.data, 0, sizeof(Scope.data));
-                        Fiber_comm[current_node].input_flags.read_scope = 1;
-                    }
-                    f_close(&fil);
-                }
-            }
-            break;
-        }
-        case 6:
-        {
-            if(EMIF_mem.read.Scope_rdy)
-            {
-                ltoa(file_number_errors, filename_buffer, 10);
-                strcat(filename_buffer,"Scope.bit");
-                f_close(&fil);
-                if(fresult = f_open(&fil, filename_buffer, FA_READ | FA_WRITE | FA_CREATE_ALWAYS))
-                {
-                    f_close(&fil);
-                    save_error_state = 7;
-                }
-                else
-                {
-                    Uint32 Scope_depth = EMIF_mem.read.Scope_depth;
-                    Uint32 index = 0;
-                    while(index < Scope_depth)
-                    {
-                        index = save_FPGA_scope(&fil, index);
-                        Fiber_comm[0].Main();
-                        Fiber_comm[1].Main();
-                        Fiber_comm[2].Main();
-                        Fiber_comm[3].Main();
-                    }
-                    fresult = f_close(&fil);
-                    save_error_state++;
-                }
-            }
-            break;
-        }
-        default:
-        {
-            scope_global.scope_trigger = 0;
-            EMIF_mem.write.Scope_trigger = 0;
-            save_error_state = 0;
-            break;
-        }
+        f_close(&fil);
+        return fresult;
     }
+    save_memory(&fil, (Uint16 *)&Scope.data, sizeof(Scope.data));
+    fresult = f_truncate(&fil);
+    fresult = f_close(&fil);
+
+    return fresult;
 }
 
 Uint16 SD_card_class::read_settings()
@@ -853,9 +786,6 @@ Uint16 SD_card_class::read_settings()
         if(!strncmp(working_buffer, "WIFI_ONOFF", sizeof("WIFI_ONOFF")-1))
             settings.wifi_on = value==0? 0 : 1;
 
-        if(!strncmp(working_buffer, "NUMBER OF SLAVES", sizeof("NUMBER OF SLAVES")-1))
-            settings.number_of_slaves = value;
-
         if(!strncmp(working_buffer, "C", sizeof("C")-1))
             settings.C_dc = value;
 
@@ -870,7 +800,6 @@ Uint16 SD_card_class::read_settings()
 
     if(settings.modbus_ext_server_id <1 || settings.modbus_ext_server_id>230 )
         settings.modbus_ext_server_id = 1;
-    if(settings.number_of_slaves < 1.0f || settings.number_of_slaves > 4.0f) return fresult;
     if(settings.control.tangens_range[0].a < -1.0f || settings.control.tangens_range[0].a > 1.0f) return fresult;
     if(settings.control.tangens_range[0].b < -1.0f || settings.control.tangens_range[0].b > 1.0f) return fresult;
     if(settings.control.tangens_range[0].c < -1.0f || settings.control.tangens_range[0].c > 1.0f) return fresult;
@@ -982,11 +911,6 @@ Uint16 SD_card_class::save_settings()
     f_putc('\n', &fil);
     f_puts("WIFI_ONOFF;", &fil);
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.wifi_on);
-    f_puts(working_buffer, &fil);
-    f_putc('\n', &fil);
-
-    f_puts("NUMBER OF SLAVES;", &fil);
-    snprintf(working_buffer, WBUF_SIZE, "%g", settings.number_of_slaves);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
 

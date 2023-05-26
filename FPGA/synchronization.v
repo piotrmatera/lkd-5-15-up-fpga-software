@@ -86,6 +86,7 @@ module Local_counter(clk_i, next_period_i, current_period_o, local_counter_o, sy
 
 	assign snapshot_value_o = {snapshot_value_r[3], snapshot_value_r[2],	snapshot_value_r[1], snapshot_value_r[0]};
 
+	reg [`CONTROL_RATE_WIDTH-1:0] avg_counter;	
 	always @(posedge clk_i) begin
 		if(snapshot_start_r[3]) snapshot_value_r[3] <= local_counter_o; 
 		if(snapshot_start_r[2]) snapshot_value_r[2] <= local_counter_o; 
@@ -96,9 +97,10 @@ module Local_counter(clk_i, next_period_i, current_period_o, local_counter_o, sy
 			sync_o <= 1'b0;
 			
 		if(local_counter_o == current_period_o) begin
+			avg_counter <= avg_counter + 1'b1;
 			current_period_o <= next_period_i;			
 			sync_phase_o <= ~sync_phase_o;
-			sync_o <= 1'b1;
+			sync_o <= &avg_counter;
 			local_counter_o <= 0; 
 		end
 		else 

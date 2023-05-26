@@ -104,12 +104,12 @@ SECTIONS
    .esysmem: 	>  RAMM1,   PAGE = 0
    .cio: 		>  RAMGS0_3,   PAGE = 0
 
+   CPU_shared:	>> RAMGS15, PAGE = 0
    Scope: 		>  RAMGS5_12,   PAGE = 0
-
-   KALMAN:	 	>> RAMGS15, PAGE = 0
-   RAM_16BIT_ADDR: >>  RAMM0 | RAMGS0_3,   PAGE = 0
    EMIF_mem: 	>> EMIF1_CS2n, PAGE = 0
    CPUTOCLA: 	>> CLA1_MSGRAMHIGH, PAGE = 0
+
+   RAM_16BIT_ADDR: >>  RAMM0 | RAMGS0_3,   PAGE = 0
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -123,13 +123,15 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	
 	assign MULTA_A = DataAA[AAMemsel];
 	assign MULTA_B = DataAB[ABMemsel];
-	assign MULTA_C = {18{scuba_vlo}};//Any
+	assign MULTA_C = {18{scuba_vlo}};//ALU_C[17:0];
+	assign MULTA_SRIA = {18{scuba_vlo}};
+	assign MULTA_SRIB = {18{scuba_vlo}};
 	
 	assign MULTB_A = DataBA[BAMemsel];
 	assign MULTB_B = DataBB[BBMemsel];
-	assign MULTB_C = {18{scuba_vlo}};//ALU_C[44:27];	
-	//assign MULTA_SRIA = MULTB_SROA;
-	//assign MULTA_SRIB = MULTB_SROB;
+	assign MULTB_C = {18{scuba_vlo}};//ALU_C[44:27];
+	assign MULTB_SRIA = {18{scuba_vlo}};
+	assign MULTB_SRIB = {18{scuba_vlo}};
 	
 	defparam dsp_alu.CLK3_DIV = "ENABLED" ;
     defparam dsp_alu.CLK2_DIV = "ENABLED" ;

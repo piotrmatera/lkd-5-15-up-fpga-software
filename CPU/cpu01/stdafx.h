@@ -1,10 +1,6 @@
 #ifndef _CLA_SHARED_H_
 #define _CLA_SHARED_H_
 
-#define SCOPE_BUFFER 1250
-#define SCOPE_CHANNEL 12
-typedef float scope_data_type;
-
 #define SINCOS_HARMONICS 50
 #define CIC_upsample1 10
 #define CIC_upsample2 10
@@ -62,17 +58,6 @@ struct Thermistor_struct
     float T_0;
     float R25;
     float DIV_Rinf;
-};
-
-struct Measurements_alarm_struct
-{
-    float U_grid_abs;
-    float U_grid_rms;
-    float Temp;
-    float I_conv;
-    float I_conv_rms;
-    float U_dc;
-    float U_dc_balance;
 };
 
 struct Energy_meter_upper_struct
@@ -133,8 +118,6 @@ union CONTROL_EXT_MODBUS
 //
 extern struct Energy_meter_struct Energy_meter;
 
-extern struct CPU1toCPU2_struct CPU1toCPU2;
-extern struct CPU2toCPU1_struct CPU2toCPU1;
 extern struct CLA2toCLA1_struct CLA2toCLA1;
 
 extern struct Thermistor_struct Therm;
@@ -146,20 +129,12 @@ extern struct Measurements_master_gain_offset_struct Meas_master_gain;
 extern struct Measurements_master_gain_offset_struct Meas_master_offset;
 extern struct Measurements_alarm_struct Meas_alarm_H;
 extern struct Measurements_alarm_struct Meas_alarm_L;
-
-extern struct abc_struct U_x0, U_x1;
-extern float decimator;
-
-extern struct SCOPE_global scope_global;
+extern struct EMIF_SD_struct EMIF_CLA;
 
 extern union CONTROL_EXT_MODBUS control_ext_modbus;
 
 extern struct CONTROL_master control_master;
 extern struct STATUS_master status_master;
-extern union ALARM_master alarm_master;
-extern union ALARM_master alarm_master_snapshot;
-
-extern volatile union EMIF_union EMIF_mem;
 
 extern struct CIC2_struct CIC2_calibration;
 extern CLA_FPTR CIC2_calibration_input;
@@ -167,6 +142,7 @@ extern struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
 
 extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 extern struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
+extern struct trigonometric_struct sincos_table_Kalman[SINCOS_HARMONICS];
 
 extern void Fast_copy_modbus_CPUasm();
 extern void Energy_meter_CPUasm();

@@ -1,38 +1,41 @@
 `include "global.v" 
 
  //CPU IO MASTER
-`define TRIGGER0_CM  0
-`define TRIGGER1_CM  1
-
-`define RST_CM  2
-`define SD_NEW_CM  3
+`define TRIGGER_CM  0
+`define RST_CM  1
+`define SD_NEW_CM  2
+`define SD_AVG_CM  3
 `define SYNC_PWM_CM  4
-`define ON_OFF_CM  5
-`define TZ_EN_CM  6
-`define PWM_EN_CM  36
-`define FAN_CM  84
+`define FAN_CM  5
+`define TZ_EN_CPU1_CM  6
+`define PWM_EN_CM  7
+`define TZ_EN_CPU2_CM  8
 
-`define LED1_CM  7
-`define LED2_CM  8
-`define LED3_CM  9
-`define LED4_CM  10
-`define LED5_CM  11
+`define LED1_CM  9
+`define LED2_CM  10
+`define LED3_CM  11
+`define LED4_CM  12
+`define LED5_CM  13
 
-`define TX_Mod_CM  12
-`define RX_Mod_CM  13
-`define EN_Mod_CM  14
+`define C_SS_RLY_L1_CM  14
+`define GR_RLY_L1_CM  15
 
-`define SS_DClink_CM  15
+`define FPGA_FLASH_SPI_IO0 16
+`define FPGA_FLASH_SPI_IO1 17
+`define FPGA_FLASH_SPI_SCK 18
+`define FPGA_FLASH_SPI_CS  19
+
+`define C_SS_RLY_L2_CM  20
+`define GR_RLY_L2_CM  21
+`define C_SS_RLY_L3_CM  22
+`define GR_RLY_L3_CM  23
+`define C_SS_RLY_N_CM  32
+`define GR_RLY_N_CM  33
+
+`define SS_DClink_CM  36
 `define DClink_DSCH_CM  x
 
-`define C_SS_RLY_L1_CM  16
-`define GR_RLY_L1_CM  17
-`define C_SS_RLY_L2_CM  18
-`define GR_RLY_L2_CM  19
-`define C_SS_RLY_L3_CM  20
-`define GR_RLY_L3_CM  21
-`define C_SS_RLY_N_CM  22
-`define GR_RLY_N_CM  23
+`define ON_OFF_CM  84
 
 `define FPGA_SED  133
 
@@ -147,34 +150,31 @@ module SerDes_master(CPU_io, FPGA_io);
 	localparam EMIF_MEMORY_WIDTH = `COMM_MEMORY_EMIF_WIDTH+3;//$clog2(2x COMM_MEMORY + MUX) = $clog2(3) = 2 
 	wire EMIF_oe_i; 
 	wire EMIF_we_i; 
-	wire EMIF_cs_i; 
-	wire[31:0] EMIF_data_i; 
-	reg[31:0] EMIF_data_o; 
-	wire[EMIF_MEMORY_WIDTH-1:0] EMIF_address_i; 
+	wire [31:0] EMIF_data_i; 
+	reg [31:0] EMIF_data_o; 
+	wire [EMIF_MEMORY_WIDTH-1:0] EMIF_address_i; 
  
-	localparam EMIF_MUX_NUMBER = 29;
-	localparam EMIF_REG_NUMBER = 11;
+	localparam EMIF_MUX_NUMBER = 35;
+	localparam EMIF_REG_NUMBER = 18;
 	localparam EMIF_MUX_WIDTH = $clog2(EMIF_MUX_NUMBER);
 	localparam EMIF_REG_WIDTH = $clog2(EMIF_REG_NUMBER);
-	wire[31:0] EMIF_TX_mux[EMIF_MUX_NUMBER-1:0];
-	wire[31:0] EMIF_RX_reg[EMIF_REG_NUMBER-1:0]; 
+	wire [31:0] EMIF_TX_mux[EMIF_MUX_NUMBER-1:0];
+	wire [31:0] EMIF_RX_reg [EMIF_REG_NUMBER-1:0]; 
 
 	wire EMIF_oe_i2; 
 	wire EMIF_we_i2; 
-	wire EMIF_cs_i2; 
-	wire[31:0] EMIF_data_i2;
-	wire[EMIF_MEMORY_WIDTH-1:0] EMIF_address_i2; 
+	wire [31:0] EMIF_data_i2;
+	wire [EMIF_MEMORY_WIDTH-1:0] EMIF_address_i2; 
 	
 	assign EMIF_oe_i2 = EMIF_oe_i; 
 	assign EMIF_we_i2 = EMIF_we_i; 
-	assign EMIF_cs_i2 = EMIF_cs_i; 
 	assign EMIF_data_i2 = EMIF_data_i;
 	assign EMIF_address_i2 = EMIF_address_i; 
 	
 ///////////////////////////////////////////////////////////////////// 
  
-	wire[1:0] rx_i; 
-	wire[1:0] tx_o; 
+	wire [1:0] rx_i; 
+	wire [1:0] tx_o; 
  
 	wire tx_clk_5x; 
 	wire rx1_clk_10x; 
@@ -189,8 +189,8 @@ module SerDes_master(CPU_io, FPGA_io);
 	.local_5x_clk_o(clk_5x), .tx_clk_5x_o(tx_clk_5x), .rx1_clk_10x_o(rx1_clk_10x), .rx2_clk_10x_o(rx2_clk_10x)); 
  
  	wire timestamp_code_rx1;
-	wire[8:0] fifo_rx1_port; 
-	wire[1:0] fifo_rx1_port_we; 
+	wire [8:0] fifo_rx1_port; 
+	wire [1:0] fifo_rx1_port_we; 
 	wire fifo_rx1_clk_5x; 
 	wire rx1_port_rdy; 
 	RX_port RX1_port(.rx_clk_i(rx1_clk_10x), .rx_i(rx_i[0]), .rx_clk_phasestep_lag_o(rx1_clk_phasestep_lag), .timestamp_code_o(timestamp_code_rx1), .rx_rdy_o(rx1_port_rdy),
@@ -198,8 +198,8 @@ module SerDes_master(CPU_io, FPGA_io);
 	.clk_i(clk_1x), .rst_i(!LOCK)); 
 
 	wire timestamp_code_rx2;
-	wire[8:0] fifo_rx2_port; 
-	wire[1:0] fifo_rx2_port_we; 
+	wire [8:0] fifo_rx2_port; 
+	wire [1:0] fifo_rx2_port_we; 
 	wire fifo_rx2_clk_5x; 
 	wire rx2_port_rdy; 
 	RX_port RX2_port(.rx_clk_i(rx2_clk_10x), .rx_i(rx_i[1]), .rx_clk_phasestep_lag_o(rx2_clk_phasestep_lag), .timestamp_code_o(timestamp_code_rx2), .rx_rdy_o(rx2_port_rdy),
@@ -207,16 +207,16 @@ module SerDes_master(CPU_io, FPGA_io);
 	.clk_i(clk_1x), .rst_i(!LOCK)); 
 
 	wire timestamp_code_tx1;
-	wire[8:0] fifo_tx1_core; 
-	wire[1:0] fifo_tx1_core_we; 
+	wire [8:0] fifo_tx1_core; 
+	wire [1:0] fifo_tx1_core_we; 
 	wire fifo_tx1_clk_1x; 
 	TX_port TX1_port(.tx_clk_i(tx_clk_5x), .tx_o(tx_o[0]), .timestamp_code_o(timestamp_code_tx1), 
 	.fifo1_clk_i(1'b0), .fifo1_we_i(2'b0), .fifo1_i(9'b0), 
 	.fifo2_clk_i(fifo_tx1_clk_1x), .fifo2_we_i(fifo_tx1_core_we), .fifo2_i(fifo_tx1_core));
 
 	wire timestamp_code_tx2;
-	wire[8:0] fifo_tx2_core; 
-	wire[1:0] fifo_tx2_core_we; 
+	wire [8:0] fifo_tx2_core; 
+	wire [1:0] fifo_tx2_core_we; 
 	wire fifo_tx2_clk_1x; 
 	TX_port TX2_port(.tx_clk_i(tx_clk_5x), .tx_o(tx_o[1]), .timestamp_code_o(timestamp_code_tx2), 
 	.fifo1_clk_i(1'b0), .fifo1_we_i(2'b0), .fifo1_i(9'b0), 
@@ -224,18 +224,18 @@ module SerDes_master(CPU_io, FPGA_io);
  	 
 ///////////////////////////////////////////////////////////////////// 
  
-	wire[`POINTER_WIDTH-1:0] Comm_rx1_addrw; 
-	wire[7:0] Comm_rx1_dataw; 
+	wire [`POINTER_WIDTH-1:0] Comm_rx1_addrw; 
+	wire [7:0] Comm_rx1_dataw; 
 	wire Comm_rx1_we; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] rx1_hipri_msg_ack; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] rx1_hipri_msg_rdy; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] rx1_hipri_msg_wip; 
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] rx1_lopri_msg_ack; 
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] rx1_lopri_msg_rdy; 
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] rx1_lopri_msg_wip; 
-	wire[8:0] rx1_fifo_rx_o; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] rx1_hipri_msg_ack; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] rx1_hipri_msg_rdy; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] rx1_hipri_msg_wip; 
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] rx1_lopri_msg_ack; 
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] rx1_lopri_msg_rdy; 
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] rx1_lopri_msg_wip; 
+	wire [8:0] rx1_fifo_rx_o; 
 	wire rx1_fifo_rx_dv; 
-	wire[2:0] rx1_state_reg;
+	wire [2:0] rx1_state_reg;
 
 	wire rx1_crc_error; 
 	wire rx1_overrun_error; 
@@ -249,15 +249,15 @@ module SerDes_master(CPU_io, FPGA_io);
 	.fifo_rx_o(rx1_fifo_rx_o), .fifo_rx_dv(rx1_fifo_rx_dv), .state_reg(rx1_state_reg)); 
  
   
-	wire[`POINTER_WIDTH-1:0] Comm_rx2_addrw; 
-	wire[7:0] Comm_rx2_dataw; 
+	wire [`POINTER_WIDTH-1:0] Comm_rx2_addrw; 
+	wire [7:0] Comm_rx2_dataw; 
 	wire Comm_rx2_we; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] rx2_hipri_msg_ack; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] rx2_hipri_msg_rdy; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] rx2_hipri_msg_wip; 
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] rx2_lopri_msg_ack; 
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] rx2_lopri_msg_rdy; 
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] rx2_lopri_msg_wip;
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] rx2_hipri_msg_ack; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] rx2_hipri_msg_rdy; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] rx2_hipri_msg_wip; 
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] rx2_lopri_msg_ack; 
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] rx2_lopri_msg_rdy; 
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] rx2_lopri_msg_wip;
 
 	wire rx2_crc_error; 
 	wire rx2_overrun_error; 
@@ -270,19 +270,19 @@ module SerDes_master(CPU_io, FPGA_io);
 	.rx_crc_error_o(rx2_crc_error), .rx_overrun_error_o(rx2_overrun_error), .rx_frame_error_o(rx2_frame_error)); 
  
  
-	wire[`POINTER_WIDTH-1:0] Comm_tx1_addrr;
-	wire[7:0] Comm_tx1_datar;
+	wire [`POINTER_WIDTH-1:0] Comm_tx1_addrr;
+	wire [7:0] Comm_tx1_datar;
 	
-	wire[7:0] Comm_tx1_mem_datar;
-	reg[7:0] Comm_tx1_mux_datar_r;
+	wire [7:0] Comm_tx1_mem_datar;
+	reg [7:0] Comm_tx1_mux_datar_r;
 	reg tx1_select_memory;
 	assign Comm_tx1_datar = tx1_select_memory ? Comm_tx1_mux_datar_r : Comm_tx1_mem_datar; 
 	
 	wire tx1_code_start; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] tx1_hipri_msg_start;
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] tx1_hipri_msg_wip; 
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] tx1_lopri_msg_start;
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] tx1_lopri_msg_wip; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] tx1_hipri_msg_start;
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] tx1_hipri_msg_wip; 
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] tx1_lopri_msg_start;
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] tx1_lopri_msg_wip; 
 	TX_core TX1_core(.core_clk_i(clk_1x), .hipri_msg_en_i(1'b1), .lopri_msg_en_i(1'b1),
 	.fifo_clk_o(fifo_tx1_clk_1x), .fifo_we_o(fifo_tx1_core_we), .fifo_o(fifo_tx1_core), 
 	.mem_addr_o(Comm_tx1_addrr), .mem_data_i(Comm_tx1_datar), 
@@ -291,19 +291,19 @@ module SerDes_master(CPU_io, FPGA_io);
 	.tx_code_start_i(tx1_code_start)); 
 
  
-	wire[`POINTER_WIDTH-1:0] Comm_tx2_addrr; 
-	wire[7:0] Comm_tx2_datar; 
+	wire [`POINTER_WIDTH-1:0] Comm_tx2_addrr; 
+	wire [7:0] Comm_tx2_datar; 
 		
-	wire[7:0] Comm_tx2_mem_datar; 
-	reg[7:0] Comm_tx2_mux_datar_r; 
+	wire [7:0] Comm_tx2_mem_datar; 
+	reg [7:0] Comm_tx2_mux_datar_r; 
 	reg tx2_select_memory; 
 	assign Comm_tx2_datar = tx2_select_memory ? Comm_tx2_mux_datar_r : Comm_tx2_mem_datar; 
 	
 	wire tx2_code_start; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] tx2_hipri_msg_start;
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] tx2_hipri_msg_wip; 
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] tx2_lopri_msg_start;
-	wire[`LOPRI_MAILBOXES_NUMBER-1:0] tx2_lopri_msg_wip; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] tx2_hipri_msg_start;
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] tx2_hipri_msg_wip; 
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] tx2_lopri_msg_start;
+	wire [`LOPRI_MAILBOXES_NUMBER-1:0] tx2_lopri_msg_wip; 
 	TX_core TX2_core(.core_clk_i(clk_1x), .hipri_msg_en_i(1'b1), .lopri_msg_en_i(1'b1),
 	.fifo_clk_o(fifo_tx2_clk_1x), .fifo_we_o(fifo_tx2_core_we), .fifo_o(fifo_tx2_core), 
 	.mem_addr_o(Comm_tx2_addrr), .mem_data_i(Comm_tx2_datar), 
@@ -311,8 +311,8 @@ module SerDes_master(CPU_io, FPGA_io);
 	.tx_lopri_msg_start_i(tx2_lopri_msg_start), .tx_lopri_msg_wip_o(tx2_lopri_msg_wip),
 	.tx_code_start_i(tx2_code_start)); 
 	
-	wire[31:0] COMM_RX_MEM1_data_o; 
-	wire[31:0] COMM_RX_MEM2_data_o;  
+	wire [31:0] COMM_RX_MEM1_data_o; 
+	wire [31:0] COMM_RX_MEM2_data_o;  
 	
  	pmi_ram_dp
 	#(.pmi_wr_addr_depth(2048),
@@ -388,9 +388,9 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant1_START;
 	
 	wire Resonant1_Mem2_we;
-	wire[8:0] Resonant1_Mem2_addrw;
-	wire[35:0] Resonant1_Mem2_data;
-	wire[31:0] Resonant1_data_o;
+	wire [8:0] Resonant1_Mem2_addrw;
+	wire [35:0] Resonant1_Mem2_data;
+	wire [31:0] Resonant1_data_o;
 	wire [53:0] Resonant1_CIN;
 	wire [53:0] Resonant1_CO;
 	wire Resonant1_SIGNEDCIN;
@@ -415,9 +415,9 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant2_START;
 	
 	wire Resonant2_Mem2_we;
-	wire[8:0] Resonant2_Mem2_addrw;
-	wire[35:0] Resonant2_Mem2_data;
-	wire[31:0] Resonant2_data_o;
+	wire [8:0] Resonant2_Mem2_addrw;
+	wire [35:0] Resonant2_Mem2_data;
+	wire [31:0] Resonant2_data_o;
 	wire [53:0] Resonant2_CIN;
 	wire [53:0] Resonant2_CO;
 	wire Resonant2_SIGNEDCIN;
@@ -441,9 +441,9 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Kalman1_START;
 	
 	wire Kalman1_Mem2_we;
-	wire[8:0] Kalman1_Mem2_addrw;
-	wire[35:0] Kalman1_Mem2_data;
-	wire[31:0] Kalman1_data_o;
+	wire [8:0] Kalman1_Mem2_addrw;
+	wire [35:0] Kalman1_Mem2_data;
+	wire [31:0] Kalman1_data_o;
 	wire [53:0] Kalman1_CIN;
 	wire [53:0] Kalman1_CO;
 	wire Kalman1_SIGNEDCIN;
@@ -467,9 +467,9 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Kalman2_START;
 	
 	wire Kalman2_Mem2_we;
-	wire[8:0] Kalman2_Mem2_addrw;
-	wire[35:0] Kalman2_Mem2_data;
-	wire[31:0] Kalman2_data_o;
+	wire [8:0] Kalman2_Mem2_addrw;
+	wire [35:0] Kalman2_Mem2_data;
+	wire [31:0] Kalman2_data_o;
 	wire [53:0] Kalman2_CIN;
 	wire [53:0] Kalman2_CO;
 	wire Kalman2_SIGNEDCIN;
@@ -515,54 +515,72 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign Kalman2_CIN = Kalman1_CO;
 	assign Kalman2_SIGNEDCIN = Kalman1_SIGNEDCO;
 	
-	assign {Kalman2_START, Kalman1_START, Resonant2_START, Resonant1_START} = EMIF_RX_reg[9][3:0];
+	assign {Kalman2_START, Kalman1_START, Resonant2_START, Resonant1_START} = EMIF_RX_reg [9][3:0];
 	
 ///////////////////////////////////////////////////////////////////// 
  
 	localparam OSR = `DEF_OSR; 
 	localparam SD_WIDTH = 16; 
 	localparam SD_NUMBER = 11; 
-	wire[1:0] decimator_pulse; 
+	wire [1:0] decimator_pulse; 
 	wire new_value; 
+	wire avg_value; 
 	wire new_value_early; 
 	reg SD_sync_pulse; 
 	wire select_SD; 
 	SD_filter_sync_gen #(.OSR(OSR)) SD_filter_sync_gen1(.clk_i(XTAL_20MHz_i), .sync_pulse_i(SD_sync_pulse), 
 	.decimator_pulse_o(decimator_pulse), .select_o(select_SD), .new_value_o(new_value), .new_value_early_o(new_value_early)); 
  
-	wire[SD_NUMBER-1:0] SD_DAT; 
-	wire[SD_NUMBER-1:0] SD_DAT_IDDR; 
-	wire[5-1:0] SD_CLK; 
+	wire [SD_NUMBER-1:0] SD_DAT; 
+	wire [SD_NUMBER-1:0] SD_DAT_IDDR; 
+	wire [5-1:0] SD_CLK; 
  	ODDRX1F SD_CLK_gen[5-1:0] (.D0(1'b0), .D1(1'b1), .SCLK(XTAL_20MHz_i), .RST(1'b0), .Q(SD_CLK)); 
 	
     IDDRX1F SD_IDDR[SD_NUMBER-1:0](.D(SD_DAT), .RST(1'b0), .SCLK(XTAL_20MHz_i), .Q0(SD_DAT_IDDR), .Q1());
  
-	wire[SD_WIDTH*SD_NUMBER-1:0] SD_dat; 
+	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat; 
 	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i(SD_DAT_IDDR), 
 	.clk_i(XTAL_20MHz_i), .decimator_pulse_i(decimator_pulse), .select_i(select_SD), .data_o(SD_dat)); 
 	
-	reg new_value_r;
-	reg[SD_WIDTH*SD_NUMBER-1:0] SD_dat_last;
-	reg[SD_WIDTH*SD_NUMBER-1:0] SD_dat_avg;
-	always@(posedge XTAL_20MHz_i) begin
-		new_value_r <= new_value;
+	wire [SD_WIDTH-1+2:0] SD_dat_In; 
+	assign SD_dat_In = 
+	{{`CONTROL_RATE_WIDTH{SD_dat[8*16+15]}}, SD_dat[8*16 +: 16]} +
+	{{`CONTROL_RATE_WIDTH{SD_dat[9*16+15]}}, SD_dat[9*16 +: 16]} +
+	{{`CONTROL_RATE_WIDTH{SD_dat[10*16+15]}}, SD_dat[10*16 +: 16]};
+	
+	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat_avg;
+	MovingAverage #(.N(`CONTROL_RATE)) SD_average[SD_NUMBER-1:0](.clk(XTAL_20MHz_i), .enable(new_value), .in(SD_dat), .out(SD_dat_avg));
+
+	localparam COMPARE_NUMBER = 7;
+	wire [COMPARE_NUMBER*2-1:0] compare_o;
+	wire [COMPARE_NUMBER*SD_WIDTH-1:0] compare_dat;
+	assign compare_dat[0*SD_WIDTH +: 3*SD_WIDTH] = SD_dat[8*SD_WIDTH +: 3*SD_WIDTH];
+	assign compare_dat[3*SD_WIDTH +: SD_WIDTH] = SD_dat_In[SD_WIDTH-1+2:2];
+	assign compare_dat[4*SD_WIDTH +: 3*SD_WIDTH] = SD_dat[0*SD_WIDTH +: 3*SD_WIDTH];
+	compare_LH compare_LH[COMPARE_NUMBER-1:0](.clk_i(XTAL_20MHz_i), .value_i(compare_dat),
+	.compare_value_i({EMIF_RX_reg[17], EMIF_RX_reg[16], EMIF_RX_reg[15], EMIF_RX_reg[14], EMIF_RX_reg[13], EMIF_RX_reg[12], EMIF_RX_reg[11]}),
+	.compare_o(compare_o));
+	
+	reg [`CONTROL_RATE_WIDTH-1:0] avg_counter;
+	always @(posedge XTAL_20MHz_i)
 		if(new_value)
-			SD_dat_last <= SD_dat;
-		for (i = 0; i < SD_NUMBER; i = i + 1)
-			if(new_value_r)
-				SD_dat_avg[i*16 +: 16] = ({SD_dat_last[i*16], SD_dat_last[i*16 +: 16]} + {SD_dat[i*16], SD_dat[i*16 +: 16]}) >> 1;
-	end
+			avg_counter <= avg_counter + 1'b1;
+	assign avg_value = avg_counter[`CONTROL_RATE_WIDTH-1];
+	
 ///////////////////////////////////////////////////////////////////// 
 	
 	wire SED_enable;
 	SED_machine SED_machine(.clk_i(XTAL_20MHz_i), .enable_i(SED_enable), .err_o(sed_err));
 
-	localparam FAULT_NUMBER = 25; 
+	localparam FAULT_NUMBER = 28; 
  
-	wire[FAULT_NUMBER-1:0] FLT_REG_O; 
-	wire[FAULT_NUMBER-1:0] FLT_bus; 
+	wire [FAULT_NUMBER-1:0] FLT_REG_O; 
+	wire [FAULT_NUMBER-1:0] FLT_bus; 
 
-	assign FLT_bus[23:16] = 8'hFF; 
+	assign FLT_bus[23:16] = ~compare_o[7:0]; 
+	assign FLT_bus[24] = ~|compare_o[9:8]; 
+	assign FLT_bus[25] = ~|compare_o[11:10]; 
+	assign FLT_bus[26] = ~|compare_o[13:12]; 
 	
 	//assign FLT_bus[16] = !rx1_crc_error; 
 	//assign FLT_bus[17] = !rx1_overrun_error; 
@@ -572,7 +590,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	//assign FLT_bus[21] = !rx2_frame_error; 
 	//assign FLT_bus[22] = rx1_port_rdy; 
 	//assign FLT_bus[23] = rx2_port_rdy; 
-	assign FLT_bus[24] = !sed_err;
+	assign FLT_bus[27] = !sed_err;
  
  	wire rst_faults;
 	FD1P3BX FLT_ff[FAULT_NUMBER-1:0](.D(1'b0), .SP(rst_faults), .CK(clk_5x), .PD(~FLT_bus), .Q(FLT_REG_O)); 
@@ -587,10 +605,10 @@ module SerDes_master(CPU_io, FPGA_io);
 	defparam RX1_port.TIMESTAMP_CODE = `K_Timestamp_slave;
 	defparam RX2_port.TIMESTAMP_CODE = `K_Timestamp_slave;	
 	
-	wire[63:0] snapshot_value;
-	wire[15:0] local_counter; 
-	wire[15:0] current_period;
-	wire[15:0] next_period;
+	wire [63:0] snapshot_value;
+	wire [15:0] local_counter; 
+	wire [15:0] current_period;
+	wire [15:0] next_period;
 	wire sync_phase;
 	wire sync;
 	Local_counter Local_counter(.clk_i(clk_5x), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase), .sync_o(sync),
@@ -598,34 +616,34 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign next_period = `CYCLE_PERIOD - 16'd1;
 	
 	always @(posedge clk_5x)
-		SD_sync_pulse <= local_counter >= EMIF_RX_reg[2][15:0];
+		SD_sync_pulse <= local_counter >= EMIF_RX_reg [2][15:0];
 	 
 	reg pulse_cycle_r;
 	always @(posedge clk_5x) 
 		pulse_cycle_r = local_counter == `CYCLE_PERIOD - (`CYCLE_PERIOD>>2); 
 		
-	wire[`HIPRI_MAILBOXES_NUMBER*16-1:0] clock_offsets;
-	wire[`HIPRI_MAILBOXES_NUMBER*16-1:0] comm_delays; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] rx_ok; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] sync_ok; 
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] slave_rdy;
-	wire[`HIPRI_MAILBOXES_NUMBER-1:0] scope_trigger_request;
+	wire [`HIPRI_MAILBOXES_NUMBER*16-1:0] clock_offsets;
+	wire [`HIPRI_MAILBOXES_NUMBER*16-1:0] comm_delays; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] rx_ok; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] sync_ok; 
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] slave_rdy;
+	wire [`HIPRI_MAILBOXES_NUMBER-1:0] scope_trigger_request;
 	Master_sync Master_sync(.clk_i(clk_1x), .pulse_cycle_i(pulse_cycle_r),
 	.rx_addrw_i(Comm_rx1_addrw), .rx_dataw_i(Comm_rx1_dataw), .rx_we_i(Comm_rx1_we),
 	.snapshot_value_i(snapshot_value), .clock_offsets_o(clock_offsets), .comm_delays_o(comm_delays),
 	.rx_ok_o(rx_ok), .sync_ok_o(sync_ok), .slave_rdy_o(slave_rdy), .scope_trigger_request_o(scope_trigger_request));
 	
-	assign rx1_hipri_msg_ack = EMIF_RX_reg[1][1*8 +: `HIPRI_MAILBOXES_NUMBER]; 
-	assign rx2_hipri_msg_ack = EMIF_RX_reg[1][3*8 +: `HIPRI_MAILBOXES_NUMBER]; 
+	assign rx1_hipri_msg_ack = EMIF_RX_reg [1][1*8 +: `HIPRI_MAILBOXES_NUMBER]; 
+	assign rx2_hipri_msg_ack = EMIF_RX_reg [1][3*8 +: `HIPRI_MAILBOXES_NUMBER]; 
 
-	assign rx1_lopri_msg_ack = EMIF_RX_reg[1][0*8 +: `LOPRI_MAILBOXES_NUMBER]; 
-	assign rx2_lopri_msg_ack = EMIF_RX_reg[1][2*8 +: `LOPRI_MAILBOXES_NUMBER]; 
+	assign rx1_lopri_msg_ack = EMIF_RX_reg [1][0*8 +: `LOPRI_MAILBOXES_NUMBER]; 
+	assign rx2_lopri_msg_ack = EMIF_RX_reg [1][2*8 +: `LOPRI_MAILBOXES_NUMBER]; 
 	
-	assign tx1_hipri_msg_start = {EMIF_RX_reg[0][1*8+2 +: `HIPRI_MAILBOXES_NUMBER-2], new_value, new_value_early}; 
-	assign tx2_hipri_msg_start = EMIF_RX_reg[0][3*8 +: `HIPRI_MAILBOXES_NUMBER]; 
+	assign tx1_hipri_msg_start = {EMIF_RX_reg [0][1*8+2 +: `HIPRI_MAILBOXES_NUMBER-2], new_value, new_value_early}; 
+	assign tx2_hipri_msg_start = EMIF_RX_reg [0][3*8 +: `HIPRI_MAILBOXES_NUMBER]; 
 	
-	assign tx1_lopri_msg_start = EMIF_RX_reg[0][0*8 +: `LOPRI_MAILBOXES_NUMBER]; 
-	assign tx2_lopri_msg_start = EMIF_RX_reg[0][2*8 +: `LOPRI_MAILBOXES_NUMBER]; 
+	assign tx1_lopri_msg_start = EMIF_RX_reg [0][0*8 +: `LOPRI_MAILBOXES_NUMBER]; 
+	assign tx2_lopri_msg_start = EMIF_RX_reg [0][2*8 +: `LOPRI_MAILBOXES_NUMBER]; 
 
  	defparam TX1_core.TX_CODE = `K_Timestamp_master;
 	defparam TX2_core.TX_CODE = `K_Timestamp_master;
@@ -688,17 +706,17 @@ module SerDes_master(CPU_io, FPGA_io);
 	
 	wire Scope_enable;
 	wire Scope_enable_extended;
-	reg[5:0] Scope_enable_counter;
+	reg [5:0] Scope_enable_counter;
 	wire Scope_trigger;
 	reg Scope_trigger_r;
 	wire Scope_WE;
-	wire[DEB_READ_WIDTH-1:0] Scope_data_out;
-	wire[DEB_WRITE_WIDTH-1:0] Scope_data_in;
-	reg[DEB_WADDR_WIDTH-1:0] Scope_index;
-	reg[DEB_WADDR_WIDTH-1:0] Scope_index_last;
-	reg[DEB_WADDR_WIDTH-1:0] Scope_acquire_counter;
-	reg[DEB_WADDR_WIDTH-1:0] Scope_acquire_before_counter;
-	wire[DEB_WADDR_WIDTH-1:0] Scope_acquire_before_trigger;
+	wire [DEB_READ_WIDTH-1:0] Scope_data_out;
+	wire [DEB_WRITE_WIDTH-1:0] Scope_data_in;
+	reg [DEB_WADDR_WIDTH-1:0] Scope_index;
+	reg [DEB_WADDR_WIDTH-1:0] Scope_index_last;
+	reg [DEB_WADDR_WIDTH-1:0] Scope_acquire_counter;
+	reg [DEB_WADDR_WIDTH-1:0] Scope_acquire_before_counter;
+	wire [DEB_WADDR_WIDTH-1:0] Scope_acquire_before_trigger;
 	
 	localparam STATES_WIDTH = 2;
 	localparam [STATES_WIDTH-1:0]
@@ -706,7 +724,7 @@ module SerDes_master(CPU_io, FPGA_io);
     Scope_1 = 1,
     Scope_2 = 2,
 	Scope_3 = 3;
-	reg[STATES_WIDTH-1:0] Scope_state;
+	reg [STATES_WIDTH-1:0] Scope_state;
 	
 	always @(posedge clk_1x) begin
 		if(Scope_enable)
@@ -764,11 +782,11 @@ module SerDes_master(CPU_io, FPGA_io);
 	.pmi_optimization("speed"),//"speed", "area"
 	.pmi_family("ECP5U")
 	) Debugger_memory (.WrAddress(Scope_index), .WrClock(clk_1x), .WrClockEn(1'b1), .WE(Scope_WE), .Data(Scope_data_in), 
-    .RdAddress(EMIF_RX_reg[3][DEB_RADDR_WIDTH-1:0]), .RdClock(!EMIF_oe_i), .RdClockEn(1'b1), .Reset(1'b0), .Q(Scope_data_out)); 
+    .RdAddress(EMIF_RX_reg [3][DEB_RADDR_WIDTH-1:0]), .RdClock(!EMIF_oe_i), .RdClockEn(1'b1), .Reset(1'b0), .Q(Scope_data_out)); 
 
-	reg[31:0] timestamp_counter;
-	reg[31:0] timestamp_mem;
-	wire[31:0] timestamp_diff;
+	reg [31:0] timestamp_counter;
+	reg [31:0] timestamp_mem;
+	wire [31:0] timestamp_diff;
 	
 	assign timestamp_diff = timestamp_counter - timestamp_mem;
 	always @(posedge clk_1x) begin
@@ -776,10 +794,10 @@ module SerDes_master(CPU_io, FPGA_io);
 		if(Scope_enable_extended) timestamp_mem <= timestamp_counter;
 	end
 	
-	assign Scope_acquire_before_trigger = EMIF_RX_reg[4][DEB_WADDR_WIDTH-1:0];
+	assign Scope_acquire_before_trigger = EMIF_RX_reg [4][DEB_WADDR_WIDTH-1:0];
 	assign Scope_enable = rx1_lopri_msg_rdy[0] | (|rx1_lopri_msg_wip) | fifo_tx1_core_we[1] | (rx1_fifo_rx_o == `K_Start_Lopri_Packet);
 	assign Scope_data_in = {rx1_state_reg, rx1_lopri_msg_rdy[3:0], rx1_lopri_msg_wip[3:0], rx1_fifo_rx_o, rx1_fifo_rx_dv, tx1_lopri_msg_wip[3:0], fifo_tx1_core, fifo_tx1_core_we, Scope_trigger_r, timestamp_diff};
-	assign Scope_trigger = EMIF_RX_reg[5][0];
+	assign Scope_trigger = EMIF_RX_reg [5][0];
 	
 ///////////////////////////////////////////////////////////////////// 
  
@@ -795,73 +813,73 @@ module SerDes_master(CPU_io, FPGA_io);
 			7 : EMIF_data_o = Kalman2_data_o;
 		endcase
 	end
-	//assign EMIF_data_o = EMIF_TX_mux[EMIF_address_i[EMIF_MUX_WIDTH-1:0]]; 
  	
-	localparam[15:0] OVERSAMPLE = `OVERSAMPLE;
-	localparam[15:0] CYCLE_PERIOD = `CYCLE_PERIOD;
-	localparam[15:0] DEF_OSR = `DEF_OSR;
+	localparam [15:0] CONTROL_RATE = `CONTROL_RATE;
+	localparam [15:0] CYCLE_PERIOD = `CYCLE_PERIOD;
+	localparam [15:0] DEF_OSR = `DEF_OSR;
 	localparam WIDTH = $clog2((DEF_OSR**2)+1)+1;
 	localparam OUTPUT_SHIFT_BIT = (WIDTH - SD_WIDTH > 0) ? WIDTH - SD_WIDTH : 0;
-	localparam[15:0] OUTPUT_SHIFT = 2**OUTPUT_SHIFT_BIT;
+	localparam [15:0] OUTPUT_SHIFT = 2**OUTPUT_SHIFT_BIT;
 		
 	assign EMIF_TX_mux[0] = {tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}; 
 	assign EMIF_TX_mux[1] = {rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}; 
-	if(`OVERSAMPLE) begin
-		assign EMIF_TX_mux[2] = SD_dat[0*32 +: 32]; 
-		assign EMIF_TX_mux[3] = SD_dat[1*32 +: 32]; 
-		assign EMIF_TX_mux[4] = SD_dat[2*32 +: 32]; 
-		assign EMIF_TX_mux[5] = SD_dat[3*32 +: 32]; 
-		assign EMIF_TX_mux[6] = SD_dat[4*32 +: 32]; 
-		assign EMIF_TX_mux[7] = SD_dat[5*32 +: 16]; 
-	end else begin
-		assign EMIF_TX_mux[2] = SD_dat_avg[0*32 +: 32]; 
-		assign EMIF_TX_mux[3] = SD_dat_avg[1*32 +: 32]; 
-		assign EMIF_TX_mux[4] = SD_dat_avg[2*32 +: 32]; 
-		assign EMIF_TX_mux[5] = SD_dat_avg[3*32 +: 32]; 
-		assign EMIF_TX_mux[6] = SD_dat_avg[4*32 +: 32]; 
-		assign EMIF_TX_mux[7] = SD_dat_avg[5*32 +: 16]; 
-	end	
-	assign EMIF_TX_mux[8] = {{32-FAULT_NUMBER{1'b0}}, FLT_REG_O}; 
-	assign EMIF_TX_mux[9] = {8'b0, slave_rdy, sync_ok, rx_ok}; 
-	assign EMIF_TX_mux[10] = clock_offsets[0*32 +: 32]; 
-	assign EMIF_TX_mux[11] = clock_offsets[1*32 +: 32]; 
-	assign EMIF_TX_mux[12] = clock_offsets[2*32 +: 32];
-	assign EMIF_TX_mux[13] = clock_offsets[3*32 +: 32];
-	assign EMIF_TX_mux[14] = comm_delays[0*32 +: 32];
-	assign EMIF_TX_mux[15] = comm_delays[1*32 +: 32];
-	assign EMIF_TX_mux[16] = comm_delays[2*32 +: 32];
-	assign EMIF_TX_mux[17] = comm_delays[3*32 +: 32];
-	assign EMIF_TX_mux[18] = EMIF_RX_reg[2];
-	assign EMIF_TX_mux[19] = `VERSION;
-	assign EMIF_TX_mux[20] = Scope_data_out[31:0];
-	assign EMIF_TX_mux[21] = {28'b0, Scope_data_out[DEB_READ_WIDTH-1:32]};
-	assign EMIF_TX_mux[22] = DEB_RADDR_DEPTH;
-	assign EMIF_TX_mux[23] = DEB_WRITE_WIDTH_MULTIPLY;
-	assign EMIF_TX_mux[24] = Scope_state[1];
-	assign EMIF_TX_mux[25] = Scope_index_last;
-	assign EMIF_TX_mux[26] = {OVERSAMPLE, CYCLE_PERIOD}; 
-	assign EMIF_TX_mux[27] = {OUTPUT_SHIFT, DEF_OSR}; 
-	assign EMIF_TX_mux[28] = {Kalman2_WIP, Kalman1_WIP, Resonant2_WIP, Resonant1_WIP, sync_phase}; 
+	assign EMIF_TX_mux[2] = SD_dat[0*32 +: 32]; 
+	assign EMIF_TX_mux[3] = SD_dat[1*32 +: 32]; 
+	assign EMIF_TX_mux[4] = SD_dat[2*32 +: 32]; 
+	assign EMIF_TX_mux[5] = SD_dat[3*32 +: 32]; 
+	assign EMIF_TX_mux[6] = SD_dat[4*32 +: 32]; 
+	assign EMIF_TX_mux[7] = SD_dat[5*32 +: 16];
+	assign EMIF_TX_mux[8] = SD_dat_avg[0*32 +: 32]; 
+	assign EMIF_TX_mux[9] = SD_dat_avg[1*32 +: 32]; 
+	assign EMIF_TX_mux[10] = SD_dat_avg[2*32 +: 32]; 
+	assign EMIF_TX_mux[11] = SD_dat_avg[3*32 +: 32]; 
+	assign EMIF_TX_mux[12] = SD_dat_avg[4*32 +: 32]; 
+	assign EMIF_TX_mux[13] = SD_dat_avg[5*32 +: 16]; 
+	assign EMIF_TX_mux[14] = {{32-FAULT_NUMBER{1'b0}}, FLT_REG_O}; 
+	assign EMIF_TX_mux[15] = {8'b0, slave_rdy, sync_ok, rx_ok}; 
+	assign EMIF_TX_mux[16] = clock_offsets[0*32 +: 32]; 
+	assign EMIF_TX_mux[17] = clock_offsets[1*32 +: 32]; 
+	assign EMIF_TX_mux[18] = clock_offsets[2*32 +: 32];
+	assign EMIF_TX_mux[19] = clock_offsets[3*32 +: 32];
+	assign EMIF_TX_mux[20] = comm_delays[0*32 +: 32];
+	assign EMIF_TX_mux[21] = comm_delays[1*32 +: 32];
+	assign EMIF_TX_mux[22] = comm_delays[2*32 +: 32];
+	assign EMIF_TX_mux[23] = comm_delays[3*32 +: 32];
+	assign EMIF_TX_mux[24] = EMIF_RX_reg [2];
+	assign EMIF_TX_mux[25] = `VERSION;
+	assign EMIF_TX_mux[26] = Scope_data_out[31:0];
+	assign EMIF_TX_mux[27] = {28'b0, Scope_data_out[DEB_READ_WIDTH-1:32]};
+	assign EMIF_TX_mux[28] = DEB_RADDR_DEPTH;
+	assign EMIF_TX_mux[29] = DEB_WRITE_WIDTH_MULTIPLY;
+	assign EMIF_TX_mux[30] = Scope_state[1];
+	assign EMIF_TX_mux[31] = Scope_index_last;
+	assign EMIF_TX_mux[32] = {CONTROL_RATE, CYCLE_PERIOD}; 
+	assign EMIF_TX_mux[33] = {OUTPUT_SHIFT, DEF_OSR}; 
+	assign EMIF_TX_mux[34] = {Kalman2_WIP, Kalman1_WIP, Resonant2_WIP, Resonant1_WIP, sync_phase}; 
 	
- 	FD1P3DX EMIF_RX_reg_0[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 0), .CK(EMIF_we_i), .CD({tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}), .Q(EMIF_RX_reg[0]));
- 	FD1P3DX EMIF_RX_reg_1[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 1), .CK(EMIF_we_i), .CD(~{rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}), .Q(EMIF_RX_reg[1]));
-	EMIF_RX_reg #(.INIT_VAL(32'd1625)) EMIF_RX_reg_2(.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 2), .CK(EMIF_we_i), .RST(1'b0), .Q(EMIF_RX_reg[2]));
-	EMIF_RX_reg #(.INIT_VAL(32'd0)) EMIF_RX_reg_3(.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 3), .CK(EMIF_we_i), .RST(1'b0), .Q(EMIF_RX_reg[3]));
-	EMIF_RX_reg #(.INIT_VAL(DEB_WADDR_DEPTH>>1)) EMIF_RX_reg_4(.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 4), .CK(EMIF_we_i), .RST(1'b0), .Q(EMIF_RX_reg[4]));
-	EMIF_RX_reg #(.INIT_VAL(32'd0)) EMIF_RX_reg_5(.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 5), .CK(EMIF_we_i), .RST(1'b0), .Q(EMIF_RX_reg[5]));
- 	FD1P3DX EMIF_RX_reg_6[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 6), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg[6]));
- 	FD1P3DX EMIF_RX_reg_7[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 7), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg[7]));
- 	FD1P3DX EMIF_RX_reg_8[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 8), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg[8]));
- 	FD1P3DX EMIF_RX_reg_9[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 9), .CK(EMIF_we_i), .CD({28'b0, Kalman2_WIP, Kalman1_WIP, Resonant2_WIP, Resonant1_WIP}), .Q(EMIF_RX_reg[9]));
- 	FD1P3DX EMIF_RX_reg_10[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 10), .CK(EMIF_we_i), .CD({32{!rst_faults}}), .Q(EMIF_RX_reg[10]));
+ 	FD1P3DX EMIF_RX_reg_0[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 0), .CK(EMIF_we_i), .CD({tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}), .Q(EMIF_RX_reg [0]));
+ 	FD1P3DX EMIF_RX_reg_1[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 1), .CK(EMIF_we_i), .CD(~{rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}), .Q(EMIF_RX_reg [1]));
+	EMIF_RX_reg #(.INIT_VAL(32'd1625)) EMIF_RX_reg_2(.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 2), .CK(EMIF_we_i), .RST(1'b0), .Q(EMIF_RX_reg [2]));
+	EMIF_RX_reg #(.INIT_VAL(32'd0)) EMIF_RX_reg_3(.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 3), .CK(EMIF_we_i), .RST(1'b0), .Q(EMIF_RX_reg [3]));
+	EMIF_RX_reg #(.INIT_VAL(DEB_WADDR_DEPTH>>1)) EMIF_RX_reg_4(.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 4), .CK(EMIF_we_i), .RST(1'b0), .Q(EMIF_RX_reg [4]));
+	EMIF_RX_reg #(.INIT_VAL(32'd0)) EMIF_RX_reg_5(.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 5), .CK(EMIF_we_i), .RST(1'b0), .Q(EMIF_RX_reg [5]));
+ 	FD1P3DX EMIF_RX_reg_6[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 6), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [6]));
+ 	FD1P3DX EMIF_RX_reg_7[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 7), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [7]));
+ 	FD1P3DX EMIF_RX_reg_8[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 8), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [8]));
+ 	FD1P3DX EMIF_RX_reg_9[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 9), .CK(EMIF_we_i), .CD({28'b0, Kalman2_WIP, Kalman1_WIP, Resonant2_WIP, Resonant1_WIP}), .Q(EMIF_RX_reg [9]));
+ 	FD1P3DX EMIF_RX_reg_10[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 10), .CK(EMIF_we_i), .CD({32{!rst_faults}}), .Q(EMIF_RX_reg [10]));
+ 	FD1P3DX EMIF_RX_reg_11[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 11), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [11]));
+ 	FD1P3DX EMIF_RX_reg_12[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 12), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [12]));
+ 	FD1P3DX EMIF_RX_reg_13[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 13), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [13]));
+ 	FD1P3DX EMIF_RX_reg_14[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 14), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [14]));
+ 	FD1P3DX EMIF_RX_reg_15[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 15), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [15]));
+ 	FD1P3DX EMIF_RX_reg_16[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 16), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [16]));
+ 	FD1P3DX EMIF_RX_reg_17[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 17), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [17]));
 
 ///////////////////////////////////////////////////////////////////// 
 
-	BB BB_CPU_IO84(.I(1'b0), .T(1'b1), .O(), .B(CPU_io[84]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP"*/; 
-	
 	BB BB_EMIF_OE(.I(1'b0), .T(1'b1), .O(EMIF_oe_i), .B(CPU_io[`EM1OE]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP"*/; 
-	BB BB_EMIF_WE(.I(1'b0), .T(1'b1), .O(EMIF_we_i), .B(CPU_io[`EM1WE]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP"*/; 
-	BB BB_EMIF_CS(.I(1'b0), .T(1'b1), .O(EMIF_cs_i), .B(CPU_io[`EM1CS0]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP"*/; 
+	BB BB_EMIF_WE(.I(1'b0), .T(1'b1), .O(EMIF_we_i), .B(CPU_io[`EM1WE]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP"*/;
  
 	`define EMIF_data_options /*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" SLEWRATE="FAST" DRIVE="8"*/
 	BB BB_EMIF_data0(.I(EMIF_data_o[0]), .T(EMIF_oe_i), .O(EMIF_data_i[0]), .B(CPU_io[`EM1D0])) `EMIF_data_options; 
@@ -914,13 +932,9 @@ module SerDes_master(CPU_io, FPGA_io);
 
 	BB BB_RST(.I(1'b0), .T(1'b1), .O(rst_faults), .B(CPU_io[`RST_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
 
-	if(`OVERSAMPLE) begin
-		BB BB_SD_NEW(.I(new_value), .T(1'b0), .O(), .B(CPU_io[`SD_NEW_CM]))/*synthesis IO_TYPE="LVCMOS33"*/; 
-		BB BB_SYNC_PWM(.I(sync), .T(1'b0), .O(), .B(CPU_io[`SYNC_PWM_CM]))/*synthesis IO_TYPE="LVCMOS33"*/;
-	end else begin
-		BB BB_SD_NEW(.I(new_value & !sync_phase), .T(1'b0), .O(), .B(CPU_io[`SD_NEW_CM]))/*synthesis IO_TYPE="LVCMOS33"*/;
-		BB BB_SYNC_PWM(.I(sync_phase), .T(1'b0), .O(), .B(CPU_io[`SYNC_PWM_CM]))/*synthesis IO_TYPE="LVCMOS33"*/;
-	end	
+	BB BB_SD_NEW(.I(new_value), .T(1'b0), .O(), .B(CPU_io[`SD_NEW_CM]))/*synthesis IO_TYPE="LVCMOS33"*/; 
+	BB BB_SD_AVG(.I(avg_value), .T(1'b0), .O(), .B(CPU_io[`SD_AVG_CM]))/*synthesis IO_TYPE="LVCMOS33"*/; 
+	BB BB_SYNC_PWM(.I(sync), .T(1'b0), .O(), .B(CPU_io[`SYNC_PWM_CM]))/*synthesis IO_TYPE="LVCMOS33"*/;
 	
 	BB BB_SD_CLK0(.I(SD_CLK[0]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_UDC_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_SD_CLK1(.I(SD_CLK[1]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_I_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
@@ -959,16 +973,16 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_FLT_FPGA6(.I(1'b0), .T(1'b1), .O(FLT_bus[6]), .B(FPGA_io[`FLT_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
 	BB BB_FLT_FPGA7(.I(1'b0), .T(1'b1), .O(FLT_bus[7]), .B(FPGA_io[`FLT_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
  
-	BB BB_FLT_FPGA8(.I(!EMIF_RX_reg[10][8]), .T(1'b0), .O(FLT_bus[8]), .B(FPGA_io[`RDY_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA9(.I(!EMIF_RX_reg[10][9]), .T(1'b0), .O(FLT_bus[9]), .B(FPGA_io[`RDY_L_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA10(.I(!EMIF_RX_reg[10][10]), .T(1'b0), .O(FLT_bus[10]), .B(FPGA_io[`RDY_H_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA11(.I(!EMIF_RX_reg[10][11]), .T(1'b0), .O(FLT_bus[11]), .B(FPGA_io[`RDY_L_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA12(.I(!EMIF_RX_reg[10][12]), .T(1'b0), .O(FLT_bus[12]), .B(FPGA_io[`RDY_H_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA13(.I(!EMIF_RX_reg[10][13]), .T(1'b0), .O(FLT_bus[13]), .B(FPGA_io[`RDY_L_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA14(.I(!EMIF_RX_reg[10][14]), .T(1'b0), .O(FLT_bus[14]), .B(FPGA_io[`RDY_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA15(.I(!EMIF_RX_reg[10][15]), .T(1'b0), .O(FLT_bus[15]), .B(FPGA_io[`RDY_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA8(.I(!EMIF_RX_reg [10][8]), .T(1'b0), .O(FLT_bus[8]), .B(FPGA_io[`RDY_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA9(.I(!EMIF_RX_reg [10][9]), .T(1'b0), .O(FLT_bus[9]), .B(FPGA_io[`RDY_L_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA10(.I(!EMIF_RX_reg [10][10]), .T(1'b0), .O(FLT_bus[10]), .B(FPGA_io[`RDY_H_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA11(.I(!EMIF_RX_reg [10][11]), .T(1'b0), .O(FLT_bus[11]), .B(FPGA_io[`RDY_L_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA12(.I(!EMIF_RX_reg [10][12]), .T(1'b0), .O(FLT_bus[12]), .B(FPGA_io[`RDY_H_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA13(.I(!EMIF_RX_reg [10][13]), .T(1'b0), .O(FLT_bus[13]), .B(FPGA_io[`RDY_L_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA14(.I(!EMIF_RX_reg [10][14]), .T(1'b0), .O(FLT_bus[14]), .B(FPGA_io[`RDY_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA15(.I(!EMIF_RX_reg [10][15]), .T(1'b0), .O(FLT_bus[15]), .B(FPGA_io[`RDY_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
  
-	wire[7:0] PWM_o; 
+	wire [7:0] PWM_o; 
 	BB BB_PWM_FPGA0(.I(PWM_o[0]), .T(1'b0), .O(), .B(FPGA_io[`PWM_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_PWM_FPGA1(.I(PWM_o[1]), .T(1'b0), .O(), .B(FPGA_io[`PWM_L_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_PWM_FPGA2(.I(PWM_o[2]), .T(1'b0), .O(), .B(FPGA_io[`PWM_H_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
@@ -978,37 +992,38 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_PWM_FPGA6(.I(PWM_o[6]), .T(1'b0), .O(), .B(FPGA_io[`PWM_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_PWM_FPGA7(.I(PWM_o[7]), .T(1'b0), .O(), .B(FPGA_io[`PWM_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
  
-	wire[1:0] TRIGGER; 
-	reg[1:0] TRIGGER_r; 
-	BB BB_TRIGGER0(.I(1'b0), .T(1'b1), .O(TRIGGER[0]), .B(CPU_io[`TRIGGER0_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
-	BB BB_TRIGGER1(.I(1'b0), .T(1'b1), .O(TRIGGER[1]), .B(CPU_io[`TRIGGER1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
+	wire TRIGGER; 
+	reg TRIGGER_r; 
+	BB BB_TRIGGER(.I(1'b0), .T(1'b1), .O(TRIGGER), .B(CPU_io[`TRIGGER_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	always @(posedge clk_1x) 
 		TRIGGER_r <= TRIGGER; 
  
 	wire PWM_EN; 
-	wire TZ_EN; 
+	wire TZ_EN_CPU1; 
+	wire TZ_EN_CPU2; 
 	BB BB_PWM_EN(.I(1'b0), .T(1'b1), .O(PWM_EN), .B(CPU_io[`PWM_EN_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
-	BB BB_TZ_EN(.I(1'b0), .T(1'b1), .O(TZ_EN), .B(CPU_io[`TZ_EN_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
-	reg[1:0] sync_reg; 
+	BB BB_TZ_EN_CPU1(.I(1'b0), .T(1'b1), .O(TZ_EN_CPU1), .B(CPU_io[`TZ_EN_CPU1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
+	BB BB_TZ_EN_CPU2(.I(1'b0), .T(1'b1), .O(TZ_EN_CPU2), .B(CPU_io[`TZ_EN_CPU2_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
+	reg [1:0] sync_reg; 
 	always @(posedge clk_5x) 
-		sync_reg <= {sync_phase, sync_reg[1]}; 
+		sync_reg <= {sync_phase, sync_reg [1]}; 
  
- 	assign TZ_CLR = !(TZ_EN & PWM_EN & TZ_FPGA);
-	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg[1] ^ sync_reg[0]), .CK(clk_5x), .CD(TZ_CLR), .Q(PWM_EN_r)); 
+ 	assign TZ_CLR = !(TZ_EN_CPU1 & TZ_EN_CPU2 & PWM_EN & TZ_FPGA);
+	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg [1] ^ sync_reg [0]), .CK(clk_5x), .CD(TZ_CLR), .Q(PWM_EN_r)); 
  
 	//Symmetrical_PWM #(.DEADTIME(65))
-	//Symmetrical_PWM[3:0](.clk_i(clk_5x), .enable_output_i(PWM_EN_r), .override_i(EMIF_RX_reg[10][7:0]), .duty_i({EMIF_RX_reg[7], EMIF_RX_reg[6]}),
+	//Symmetrical_PWM[3:0](.clk_i(clk_5x), .enable_output_i(PWM_EN_r), .override_i(EMIF_RX_reg [10][7:0]), .duty_i({EMIF_RX_reg [7], EMIF_RX_reg [6]}),
 	//.next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
 
 	wire PWM_dp; 
-	wire[7:0] PWM_dp_dt; 
-	double_pulse double_pulse(.clk_i(XTAL_20MHz_i), .start_i(PWM_EN_r), .length0_i(EMIF_RX_reg[8][15:0]), .length1_i(EMIF_RX_reg[8][31:16]), .PWM_o(PWM_dp)); 
-	deadtime deadtime[3:0](.clk_i(XTAL_20MHz_i), .PWM_i({4{PWM_dp}}), .enable_i({PWM_EN_r, 3'b0}), .override_i(EMIF_RX_reg[10][7:0]), .PWM_o(PWM_o)); 
+	wire [7:0] PWM_dp_dt; 
+	double_pulse double_pulse(.clk_i(XTAL_20MHz_i), .start_i(PWM_EN_r), .length0_i(EMIF_RX_reg [8][15:0]), .length1_i(EMIF_RX_reg [8][31:16]), .PWM_o(PWM_dp)); 
+	deadtime deadtime[3:0](.clk_i(XTAL_20MHz_i), .PWM_i({4{PWM_dp}}), .enable_i({PWM_EN_r, 3'b0}), .override_i(EMIF_RX_reg [10][7:0]), .PWM_o(PWM_o)); 
 
 
-	wire[8:0] REL_i; 
-	wire[8:0] REL_o; 
-	assign REL_o = TZ_EN ? REL_i : 9'b0; 
+	wire [8:0] REL_i; 
+	wire [8:0] REL_o; 
+	assign REL_o = (TZ_EN_CPU1 & TZ_EN_CPU2 & TZ_FPGA) ? REL_i : 9'b0; 
 	BB BB_REL_CPU0(.I(1'b0), .T(1'b1), .O(REL_i[0]), .B(CPU_io[`C_SS_RLY_L1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU1(.I(1'b0), .T(1'b1), .O(REL_i[1]), .B(CPU_io[`GR_RLY_L1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU2(.I(1'b0), .T(1'b1), .O(REL_i[2]), .B(CPU_io[`C_SS_RLY_L2_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
@@ -1019,17 +1034,17 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_REL_CPU7(.I(1'b0), .T(1'b1), .O(REL_i[7]), .B(CPU_io[`GR_RLY_N_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU8(.I(1'b0), .T(1'b1), .O(REL_i[8]), .B(CPU_io[`SS_DClink_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
  
-	BB BB_REL_FPGA0(.I(REL_o[0]), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA1(.I(REL_o[1]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA2(.I(REL_o[2]), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA3(.I(REL_o[3]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA4(.I(REL_o[4]), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA5(.I(REL_o[5]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA0(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA1(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA2(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA3(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA4(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA5(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	//BB BB_REL_FPGA6(.I(REL_o[6]), .T(1'b0), .O(), .B(FPGA_io[`DClink_DSCH_CM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA7(.I(REL_o[7]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA8(.I(REL_o[8]), .T(1'b0), .O(), .B(FPGA_io[`SS_DClink_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA7(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA8(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`SS_DClink_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
  
-	wire[5:1] LED_BUS; 
+	wire [5:1] LED_BUS; 
 	BB BB_LED_CPU1(.I(1'b0), .T(1'b1), .O(LED_BUS[1]), .B(CPU_io[`LED1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_LED_CPU2(.I(1'b0), .T(1'b1), .O(LED_BUS[2]), .B(CPU_io[`LED2_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_LED_CPU3(.I(1'b0), .T(1'b1), .O(LED_BUS[3]), .B(CPU_io[`LED3_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
@@ -1052,16 +1067,13 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Modbus_TX; 
 	wire Modbus_RX; 
 
-	BB BB_Modbus_EN_CPU(.I(1'b0), .T(1'b1), .O(Modbus_EN), .B(CPU_io[`EN_Mod_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
+	assign Modbus_EN = 1'b0;
+	assign Modbus_TX = 1'b1;
+	
 	BB BB_Modbus_EN_FPGA(.I(Modbus_EN), .T(1'b0), .O(), .B(FPGA_io[`EN_Mod_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-
-	BB BB_Modbus_TX_CPU(.I(1'b0), .T(1'b1), .O(Modbus_TX), .B(CPU_io[`TX_Mod_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
 	BB BB_Modbus_TX_FPGA(.I(Modbus_TX), .T(1'b0), .O(), .B(FPGA_io[`TX_Mod_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
- 
-	BB BB_Modbus_RX_CPU(.I(Modbus_RX), .T(1'b0), .O(), .B(CPU_io[`RX_Mod_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
 	BB BB_Modbus_RX_FPGA(.I(1'b0), .T(1'b1), .O(Modbus_RX), .B(FPGA_io[`RX_Mod_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
- 
- 
+  
 	BB BB_COMM_TX0(.I(tx_o[0]), .T(1'b0), .O(), .B(FPGA_io[`TX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
 	BB BB_COMM_TX1(.I(tx_o[1]), .T(1'b0), .O(), .B(FPGA_io[`TX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
 	BB BB_COMM_RX0(.I(1'b0), .T(1'b1), .O(rx_i[0]), .B(FPGA_io[`RX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 

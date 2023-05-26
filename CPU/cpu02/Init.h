@@ -11,7 +11,8 @@
 class Init_class
 {
 public:
-    void PWM_timestamp(volatile struct EPWM_REGS *EPwmReg);
+    void PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg);
+    void EPwm_TZclear(volatile struct EPWM_REGS *EPwmReg);
     void PWMs();
     void CLA();
     void CIC1_filter(struct CIC1_struct *CIC, float max_value, float OSR, float decimation_ratio);

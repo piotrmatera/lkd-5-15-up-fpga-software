@@ -28,8 +28,11 @@ struct Converter_struct
 
     float Kp_I;
     float Kr_I;
-    float range_modifier;
-    float div_range_modifier;
+    float range_modifier_Resonant;
+    float div_range_modifier_Resonant;
+    float range_modifier_Kalman;
+    float div_range_modifier_Kalman;
+    float Ts_ratio;
 
     float w_filter;
     float f_filter;

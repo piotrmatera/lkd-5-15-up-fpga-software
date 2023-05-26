@@ -10,6 +10,10 @@
 
 #include "stdafx.h"
 
+#define SCOPE_BUFFER 1250
+#define SCOPE_CHANNEL 12
+typedef float scope_data_type;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,8 +30,6 @@ struct Scope_v1{
     Uint32 finished_sorting;
     Uint32 acquire_before_trigger;
 };
-
-extern struct Scope_v1 Scope;
 
 void Scope_start();
 Uint32 Scope_trigger(float input, float *input_last, float trigger_val, float edge);

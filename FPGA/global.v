@@ -110,11 +110,12 @@
 
 `define PWM_CLOCK 125000000
 `define SD_CLOCK 20000000
-`define CONV_FREQUENCY 31250
-`define OVERSAMPLE 1
+`define CONV_FREQUENCY 62500
 
 `define CYCLE_PERIOD (`PWM_CLOCK/`CONV_FREQUENCY/2)
 `define DEF_OSR (`SD_CLOCK/`CONV_FREQUENCY/2)
+`define CONTROL_RATE 4
+`define CONTROL_RATE_WIDTH $clog2(`CONTROL_RATE)
 
 /////////////////////////////////////////////////////////////////////
 
