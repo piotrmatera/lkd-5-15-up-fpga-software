@@ -312,7 +312,8 @@ void Init_class::CIC1_adaptive_filter(struct CIC1_adaptive_struct *CIC, float ma
 
 void Init_class::Variables()
 {
-    Conv.Ts = (float)EMIF_mem.read.control_rate * (float)EMIF_mem.read.cycle_period * 8e-9;
+    Conv.Ts_rate = EMIF_mem.read.control_rate;
+    Conv.Ts = Conv.Ts_rate * (float)EMIF_mem.read.cycle_period * 8e-9;
 
     Meas_alarm_L.U_grid_rms = 5.0f;
     Meas_alarm_H.U_grid_abs = 380.0f;
@@ -361,13 +362,12 @@ void Init_class::Variables()
 
     Conv.compensation2 = 2.0f;
     Conv.w_filter = MATH_2PI * 50.0f;
-    Conv.Ts_ratio = 0.5f;
 
     Conv.range_modifier_Resonant = 1UL << 30;
     Conv.div_range_modifier_Resonant = 1.0f / Conv.range_modifier_Resonant;
 
-    SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts * Conv.Ts_ratio);
-    SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts * Conv.Ts_ratio * Conv.compensation2);
+    SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts / Conv.Ts_rate);
+    SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation2);
     SINCOS_calc_CPUasm(sincos_table_Kalman, Conv.w_filter * Conv.Ts);
 
     register float p_pr_i = Conv.L_conv / (3.0f * Conv.Ts);
@@ -380,40 +380,38 @@ void Init_class::Variables()
     for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
     {
         register float modifier = Conv.range_modifier_Resonant;
-        EMIF_mem.write.Resonant[0].harmonic[i].cosine_A = sincos_table[2 * i].cosine * modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].sine_A = sincos_table[2 * i].sine * modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].cosine_B = (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I * modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].sine_B = sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I * modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].cosine_C = sincos_table_comp[2 * i].cosine * modifier;
-        EMIF_mem.write.Resonant[0].harmonic[i].sine_C = sincos_table_comp[2 * i].sine * modifier;
-
-        EMIF_mem.write.Resonant[1].harmonic[i].cosine_A = sincos_table[2 * i + 1].cosine * modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].sine_A = sincos_table[2 * i + 1].sine * modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].cosine_B = (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I * modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].sine_B = sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I * modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].cosine_C = sincos_table_comp[2 * i + 1].cosine * modifier;
-        EMIF_mem.write.Resonant[1].harmonic[i].sine_C = sincos_table_comp[2 * i + 1].sine * modifier;
+        EMIF_mem.write.Resonant[1].harmonic[i].cos_A =
+        EMIF_mem.write.Resonant[0].harmonic[i].cos_A = modifier * sincos_table[2 * i].cosine;
+        EMIF_mem.write.Resonant[1].harmonic[i].sin_A =
+        EMIF_mem.write.Resonant[0].harmonic[i].sin_A = modifier * sincos_table[2 * i].sine;
+        EMIF_mem.write.Resonant[1].harmonic[i].cos_B =
+        EMIF_mem.write.Resonant[0].harmonic[i].cos_B = modifier * (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I;
+        EMIF_mem.write.Resonant[1].harmonic[i].sin_B =
+        EMIF_mem.write.Resonant[0].harmonic[i].sin_B = modifier * sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I;
+        EMIF_mem.write.Resonant[1].harmonic[i].cos_C =
+        EMIF_mem.write.Resonant[0].harmonic[i].cos_C = modifier * sincos_table_comp[2 * i].cosine;
+        EMIF_mem.write.Resonant[1].harmonic[i].sin_C =
+        EMIF_mem.write.Resonant[0].harmonic[i].sin_C = modifier * sincos_table_comp[2 * i].sine;
     }
 
     Conv.range_modifier_Kalman = 1UL << 31;
     Conv.div_range_modifier_Kalman = 1.0f / Conv.range_modifier_Kalman;
 
-    EMIF_mem.write.Kalman[0].harmonic[0].Kalman_gain_1 = Kalman_gain[0] * Conv.range_modifier_Kalman;
-    EMIF_mem.write.Kalman[0].harmonic[0].Kalman_gain_2 = Kalman_gain[1] * Conv.range_modifier_Kalman;
-    EMIF_mem.write.Kalman[1].harmonic[0].Kalman_gain_1 = Kalman_gain[0] * Conv.range_modifier_Kalman;
-    EMIF_mem.write.Kalman[1].harmonic[0].Kalman_gain_2 = Kalman_gain[1] * Conv.range_modifier_Kalman;
+    EMIF_mem.write.Kalman[0].harmonic[0].K1 = Kalman_gain[0] * Conv.range_modifier_Kalman;
+    EMIF_mem.write.Kalman[0].harmonic[0].K2 = Kalman_gain[1] * Conv.range_modifier_Kalman;
+    EMIF_mem.write.Kalman[1].harmonic[0].K1 = Kalman_gain[0] * Conv.range_modifier_Kalman;
+    EMIF_mem.write.Kalman[1].harmonic[0].K2 = Kalman_gain[1] * Conv.range_modifier_Kalman;
     for(Uint16 i = 1; i < FPGA_KALMAN_STATES; i++)
     {
         register float modifier = Conv.range_modifier_Kalman;
-        EMIF_mem.write.Kalman[0].harmonic[i].cosine = sincos_table_Kalman[2 * i - 1].cosine * modifier;
-        EMIF_mem.write.Kalman[0].harmonic[i].sine = sincos_table_Kalman[2 * i - 1].sine * modifier;
-        EMIF_mem.write.Kalman[0].harmonic[i].Kalman_gain_1 = Kalman_gain[2 * i] * modifier;
-        EMIF_mem.write.Kalman[0].harmonic[i].Kalman_gain_2 = Kalman_gain[2 * i + 1] * modifier;
-
-        EMIF_mem.write.Kalman[1].harmonic[i].cosine = sincos_table_Kalman[2 * i - 1].cosine * modifier;
-        EMIF_mem.write.Kalman[1].harmonic[i].sine = sincos_table_Kalman[2 * i - 1].sine * modifier;
-        EMIF_mem.write.Kalman[1].harmonic[i].Kalman_gain_1 = Kalman_gain[2 * i] * modifier;
-        EMIF_mem.write.Kalman[1].harmonic[i].Kalman_gain_2 = Kalman_gain[2 * i + 1] * modifier;
+        EMIF_mem.write.Kalman[1].harmonic[i].cos_K =
+        EMIF_mem.write.Kalman[0].harmonic[i].cos_K = sincos_table_Kalman[2 * (i - 1)].cosine * modifier;
+        EMIF_mem.write.Kalman[1].harmonic[i].sin_K =
+        EMIF_mem.write.Kalman[0].harmonic[i].sin_K = sincos_table_Kalman[2 * (i - 1)].sine * modifier;
+        EMIF_mem.write.Kalman[1].harmonic[i].K1 =
+        EMIF_mem.write.Kalman[0].harmonic[i].K1 = Kalman_gain[2 * i] * modifier;
+        EMIF_mem.write.Kalman[1].harmonic[i].K2 =
+        EMIF_mem.write.Kalman[0].harmonic[i].K2 = Kalman_gain[2 * i + 1] * modifier;
     }
     ///////////////////////////////////////////////////////////////////
 

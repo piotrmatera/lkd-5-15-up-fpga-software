@@ -168,10 +168,9 @@ interrupt void SD_AVG_NT()
     GPIO_SET(TRIGGER_CM);
 
     Timer_PWM.CPU_TX_MSG2 = TIMESTAMP_PWM;
-//
-//    Modbus_slave_LCD.RTU->interrupt_task();
-//    Modbus_slave_LCD_OLD.RTU->interrupt_task();
-//    Modbus_slave_EXT.RTU->interrupt_task();
+
+    Modbus_slave_LCD.RTU->interrupt_task();
+    Modbus_slave_EXT.RTU->interrupt_task();
 
     Timer_PWM.CPU_COMM = TIMESTAMP_PWM;//1us
 
@@ -188,16 +187,16 @@ interrupt void SD_AVG_NT()
     float *pointer_dst = (float *)&Kalman_mem;
     for(int i=0; i<sizeof(Kalman_mem)>>1; i++)
     {
-        *pointer_dst++ = (float)*pointer_src++ / (float)(1UL<<31);
+        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman;
     }
 
     static float angle = 0.0f;
-    angle += Conv.Ts * MATH_2PI * 50.0f;
+    angle += Conv.Ts * Conv.w_filter;
     angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
     static volatile int32 zmienna_int;
     static volatile float zmienna;
-    zmienna = 0.02f * (0.0f + sinf(angle));
-    zmienna_int = zmienna * (float)(1UL<<31);
+    zmienna = 0.02f * (1.0f + sinf(angle));
+    zmienna_int = zmienna * Conv.range_modifier_Kalman;
 //    zmienna = 0.002f;
     EMIF_mem.write.Kalman[0].series[0].input = zmienna_int;
     EMIF_mem.write.DSP_start = 4UL;

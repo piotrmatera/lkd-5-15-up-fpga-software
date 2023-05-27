@@ -529,13 +529,38 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 		endcase
 	end
 	
+	reg [35:0] Mem0_data_r;
+	reg [35:0] Mem1_data_r;
 	
-	Slice2 #(.QMATH_SHIFT(2)) Slice2(.CLK0(clk_i), .CE0(1'b1), .CE1(CE1_pip), .CE2(1'b0), .CE3(1'b0), 
-	.RST0(1'b0), .Mem0(Mem0_data_o), .Mem1(Mem1_data_o), .AAMemsel(AAMemsel_pip), .ABMemsel(ABMemsel_pip), 
-	.BAMemsel(BAMemsel_pip), .BBMemsel(BBMemsel_pip), .CMemsel(CMemsel_pip), .SignAA(AAMemsel_pip), .SignAB(ABMemsel_pip),
-	.SignBA(BAMemsel_pip), .SignBB(BBMemsel_pip), .AMuxsel(AMuxsel_pip), .BMuxsel(BMuxsel_pip), .CMuxsel(CMuxsel_pip), 
-	.Opcode(Opcode_pip), .Result(Mem0_data_i), .Result54(CO), .SIGNEDR(SIGNEDCO), .EQZ(), .EQZM(), .EQOM(), .EQPAT(), 
-	.EQPATB(), .OVER(), .UNDER(), .CIN(CIN), .SIGNEDCIN(SIGNEDCIN), .CO());
+	wire [17:0] DataAA [1:0];
+	assign DataAA[0] = Mem0_data_o[17:0];
+	assign DataAA[1] = Mem0_data_o[35:18];
+	wire [17:0] DataAB [1:0];
+	assign DataAB[0] = Mem1_data_o[17:0];
+	assign DataAB[1] = Mem1_data_o[35:18];
+	wire [17:0] DataBA [1:0];
+	assign DataBA[0] = Mem0_data_o[35:18];
+	assign DataBA[1] = Mem0_data_o[35:18];
+	wire [17:0] DataBB [1:0];	
+	assign DataBB[0] = Mem1_data_r[17:0];
+	assign DataBB[1] = Mem1_data_o[35:18];
+	wire [35:0] DataC [1:0];
+	assign DataC[0] = Mem0_data_o;
+	assign DataC[1] = Mem1_data_o;
+
+	reg [35:0] DataC_r;
+	always @(posedge clk_i) begin
+		DataC_r <= DataC[CMemsel_pip];
+		Mem0_data_r <= Mem0_data_o;
+		Mem1_data_r <= Mem1_data_o;
+	end
+	
+	Slice2 #(.QMATH_SHIFT(1)) Slice2(.CLK0(clk_i), .CE0(1'b1), .CE1(CE1_pip), .CE2(1'b0), .CE3(1'b0), .RST0(1'b0),
+	.AA(DataAA[AAMemsel_pip]), .AB(DataAB[ABMemsel_pip]), .BA(DataBA[BAMemsel_pip]), .BB(DataBB[BBMemsel_pip]), .C(DataC_r),
+	.SignAA(AAMemsel_pip), .SignAB(ABMemsel_pip), .SignBA(BAMemsel_pip), .SignBB(BBMemsel_pip),
+	.AMuxsel(AMuxsel_pip), .BMuxsel(BMuxsel_pip), .CMuxsel(CMuxsel_pip), .Opcode(Opcode_pip),
+	.Result(Mem0_data_i), .R(CO), .SIGNEDR(SIGNEDCO), .CIN(CIN), .SIGNEDCIN(SIGNEDCIN),
+	.EQZ(), .EQZM(), .EQOM(), .EQPAT(), .EQPATB(), .OVER(), .UNDER());
 	
 	wire [8:0] addrr_M0_out_series;
 	assign addrr_M0_out_series = {series_cnt_pip,addrr_M0_out[M0_ADDR_WIDTH-1-SERIES_CNT_WIDTH:0]};

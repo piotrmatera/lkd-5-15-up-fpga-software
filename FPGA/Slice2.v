@@ -1,32 +1,35 @@
 `timescale 1 ns / 1 ps
 
-module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, BAMemsel,
-	BBMemsel, CMemsel, SignAA, SignAB, SignBA, SignBB, AMuxsel, BMuxsel, CMuxsel, Opcode, 
-	Result, Result54, SIGNEDR, EQZ, EQZM, EQOM, EQPAT, EQPATB, OVER, UNDER, CIN, SIGNEDCIN, CO);
+module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0,
+	AA, AB, BA, BB, C,
+	SignAA, SignAB, SignBA, SignBB,
+	AMuxsel, BMuxsel, CMuxsel, Opcode, 
+	Result, R, SIGNEDR, CIN, SIGNEDCIN,
+	EQZ, EQZM, EQOM, EQPAT, EQPATB, OVER, UNDER);
     input wire CLK0;
     input wire CE0;
 	input wire CE1;
 	input wire CE2;
 	input wire CE3;
     input wire RST0;
+	input wire [17:0] AA;
+	input wire [17:0] AB;
+	input wire [17:0] BA;
+	input wire [17:0] BB;
+	input wire [35:0] C;
 	input wire SignAA;
 	input wire SignAB;
     input wire SignBA;
 	input wire SignBB;
-	input wire [35:0] Mem0;
-	input wire [35:0] Mem1;
-	input wire [0:0] AAMemsel;
-	input wire [0:0] ABMemsel;
-	input wire [0:0] BAMemsel;
-	input wire [0:0] BBMemsel;
-	input wire CMemsel;
 	input wire [1:0] AMuxsel;
     input wire [1:0] BMuxsel;
     input wire [2:0] CMuxsel;
     input wire [3:0] Opcode;
     output wire [35:0] Result;
-	output wire [53:0] Result54;
+	output wire [53:0] R;
 	output wire SIGNEDR;
+	input wire [53:0] CIN;
+	input wire SIGNEDCIN;
     output wire EQZ;
     output wire EQZM;
     output wire EQOM;
@@ -34,13 +37,10 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
     output wire EQPATB;
     output wire OVER;
     output wire UNDER;
-	input wire [53:0] CIN;
-	input wire SIGNEDCIN;
-	output wire [53:0] CO;
 
 	parameter QMATH_SHIFT = 2;
 	
-    wire [53:0] ALU_O;
+    wire [53:0] ALU_R;
     wire [17:0] ALU_A_H;
     wire [17:0] ALU_A_L;
 	wire [17:0] ALU_B_H;
@@ -51,6 +51,7 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	wire ALU_MA_SIGN;
 	wire ALU_MB_SIGN;
     wire [53:0] ALU_CFB;
+	wire [53:0] ALU_CO;
     
 	
     wire [17:0] MULTA_A;
@@ -80,55 +81,28 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
 	wire scuba_vhi;
     wire scuba_vlo;
 	
-	reg [35:0] Mem0_r;
-	reg [35:0] Mem1_r;
-	
-	wire [17:0] DataAA [1:0];
-	assign DataAA[0] = Mem0[17:0];
-	assign DataAA[1] = Mem0[35:18];
-	wire [17:0] DataAB [1:0];
-	assign DataAB[0] = Mem1[17:0];
-	assign DataAB[1] = Mem1[35:18];
-	wire [17:0] DataBA [1:0];
-	assign DataBA[0] = Mem0[35:18];
-	assign DataBA[1] = Mem0[35:18];
-	wire [17:0] DataBB [1:0];	
-	assign DataBB[0] = Mem1_r[17:0];
-	assign DataBB[1] = Mem1[35:18];
-	wire [35:0] DataC [1:0];
-	
-		
-	assign DataC[0] = Mem0;
-	assign DataC[1] = Mem1;
-	reg [35:0] DataC_r;
-	always @(posedge CLK0) begin
-		DataC_r <= DataC[CMemsel];
-		Mem0_r <= Mem0;
-		Mem1_r <= Mem1;
-	end
-		
 	assign ALU_A_H = MULTA_ROB;
 	assign ALU_A_L = MULTA_ROA;
 	assign ALU_B_H = MULTB_ROB;
 	assign ALU_B_L = MULTB_ROA;
 	if(QMATH_SHIFT)
-		assign ALU_C[54-QMATH_SHIFT +: QMATH_SHIFT] = {QMATH_SHIFT{DataC_r[35]}};
-	assign ALU_C[18-QMATH_SHIFT +: 36] = DataC_r;
-	assign ALU_C[17-QMATH_SHIFT:0] = {18-QMATH_SHIFT{DataC_r[35]}};
+		assign ALU_C[54-QMATH_SHIFT +: QMATH_SHIFT] = {QMATH_SHIFT{C[35]}};
+	assign ALU_C[18-QMATH_SHIFT +: 36] = C;
+	assign ALU_C[17-QMATH_SHIFT:0] = {18-QMATH_SHIFT{C[35]}};
 	assign ALU_MA = MULTA_P;
 	assign ALU_MB = MULTB_P;
 	assign ALU_MA_SIGN = MULTA_P_SIGN;
 	assign ALU_MB_SIGN = MULTB_P_SIGN;
 	assign ALU_CFB = {54{scuba_vlo}};
 	
-	assign MULTA_A = DataAA[AAMemsel];
-	assign MULTA_B = DataAB[ABMemsel];
+	assign MULTA_A = AA;
+	assign MULTA_B = AB;
 	assign MULTA_C = {18{scuba_vlo}};//ALU_C[17:0];
 	assign MULTA_SRIA = {18{scuba_vlo}};
 	assign MULTA_SRIB = {18{scuba_vlo}};
 	
-	assign MULTB_A = DataBA[BAMemsel];
-	assign MULTB_B = DataBB[BBMemsel];
+	assign MULTB_A = BA;
+	assign MULTB_B = BB;
 	assign MULTB_C = {18{scuba_vlo}};//ALU_C[44:27];
 	assign MULTB_SRIA = {18{scuba_vlo}};
 	assign MULTB_SRIB = {18{scuba_vlo}};
@@ -287,39 +261,39 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .CIN3(CIN[3]), .CIN2(CIN[2]), .CIN1(CIN[1]), .CIN0(CIN[0]), .OP10(Opcode[3]), 
         .OP9(Opcode[2]), .OP8(Opcode[1]), .OP7(Opcode[0]), .OP6(CMuxsel[2]), 
         .OP5(CMuxsel[1]), .OP4(CMuxsel[0]), .OP3(BMuxsel[1]), .OP2(BMuxsel[0]), 
-        .OP1(AMuxsel[1]), .OP0(AMuxsel[0]), .R53(ALU_O[53]), 
-        .R52(ALU_O[52]), .R51(ALU_O[51]), 
-        .R50(ALU_O[50]), .R49(ALU_O[49]), 
-        .R48(ALU_O[48]), .R47(ALU_O[47]), 
-        .R46(ALU_O[46]), .R45(ALU_O[45]), 
-        .R44(ALU_O[44]), .R43(ALU_O[43]), 
-        .R42(ALU_O[42]), .R41(ALU_O[41]), 
-        .R40(ALU_O[40]), .R39(ALU_O[39]), 
-        .R38(ALU_O[38]), .R37(ALU_O[37]), 
-        .R36(ALU_O[36]), .R35(ALU_O[35]), 
-        .R34(ALU_O[34]), .R33(ALU_O[33]), 
-        .R32(ALU_O[32]), .R31(ALU_O[31]), 
-        .R30(ALU_O[30]), .R29(ALU_O[29]), 
-        .R28(ALU_O[28]), .R27(ALU_O[27]), 
-        .R26(ALU_O[26]), .R25(ALU_O[25]), 
-        .R24(ALU_O[24]), .R23(ALU_O[23]), 
-        .R22(ALU_O[22]), .R21(ALU_O[21]), 
-        .R20(ALU_O[20]), .R19(ALU_O[19]), 
-        .R18(ALU_O[18]), .R17(ALU_O[17]), 
-        .R16(ALU_O[16]), .R15(ALU_O[15]), 
-        .R14(ALU_O[14]), .R13(ALU_O[13]), 
-        .R12(ALU_O[12]), .R11(ALU_O[11]), 
-        .R10(ALU_O[10]), .R9(ALU_O[9]), 
-        .R8(ALU_O[8]), .R7(ALU_O[7]), .R6(ALU_O[6]), 
-        .R5(ALU_O[5]), .R4(ALU_O[4]), .R3(ALU_O[3]), 
-        .R2(ALU_O[2]), .R1(ALU_O[1]), .R0(ALU_O[0]), 
-		.CO53(CO[53]), .CO52(CO[52]), .CO51(CO[51]), .CO50(CO[50]), .CO49(CO[49]), .CO48(CO[48]), .CO47(CO[47]), .CO46(CO[46]),
-		.CO45(CO[45]), .CO44(CO[44]), .CO43(CO[43]), .CO42(CO[42]), .CO41(CO[41]), .CO40(CO[40]), .CO39(CO[39]), .CO38(CO[38]),
-		.CO37(CO[37]), .CO36(CO[36]), .CO35(CO[35]), .CO34(CO[34]), .CO33(CO[33]), .CO32(CO[32]), .CO31(CO[31]), .CO30(CO[30]),
-		.CO29(CO[29]), .CO28(CO[28]), .CO27(CO[27]), .CO26(CO[26]), .CO25(CO[25]), .CO24(CO[24]), .CO23(CO[23]), .CO22(CO[22]),
-		.CO21(CO[21]), .CO20(CO[20]), .CO19(CO[19]), .CO18(CO[18]), .CO17(CO[17]), .CO16(CO[16]), .CO15(CO[15]), .CO14(CO[14]),
-		.CO13(CO[13]), .CO12(CO[12]), .CO11(CO[11]), .CO10(CO[10]), .CO9(CO[9]), .CO8(CO[8]), .CO7(CO[7]), .CO6(CO[6]),
-		.CO5(CO[5]), .CO4(CO[4]), .CO3(CO[3]), .CO2(CO[2]), .CO1(CO[1]), .CO0(CO[0]), .EQZ(EQZ), .EQZM(EQZM), 
+        .OP1(AMuxsel[1]), .OP0(AMuxsel[0]), .R53(ALU_R[53]), 
+        .R52(ALU_R[52]), .R51(ALU_R[51]), 
+        .R50(ALU_R[50]), .R49(ALU_R[49]), 
+        .R48(ALU_R[48]), .R47(ALU_R[47]), 
+        .R46(ALU_R[46]), .R45(ALU_R[45]), 
+        .R44(ALU_R[44]), .R43(ALU_R[43]), 
+        .R42(ALU_R[42]), .R41(ALU_R[41]), 
+        .R40(ALU_R[40]), .R39(ALU_R[39]), 
+        .R38(ALU_R[38]), .R37(ALU_R[37]), 
+        .R36(ALU_R[36]), .R35(ALU_R[35]), 
+        .R34(ALU_R[34]), .R33(ALU_R[33]), 
+        .R32(ALU_R[32]), .R31(ALU_R[31]), 
+        .R30(ALU_R[30]), .R29(ALU_R[29]), 
+        .R28(ALU_R[28]), .R27(ALU_R[27]), 
+        .R26(ALU_R[26]), .R25(ALU_R[25]), 
+        .R24(ALU_R[24]), .R23(ALU_R[23]), 
+        .R22(ALU_R[22]), .R21(ALU_R[21]), 
+        .R20(ALU_R[20]), .R19(ALU_R[19]), 
+        .R18(ALU_R[18]), .R17(ALU_R[17]), 
+        .R16(ALU_R[16]), .R15(ALU_R[15]), 
+        .R14(ALU_R[14]), .R13(ALU_R[13]), 
+        .R12(ALU_R[12]), .R11(ALU_R[11]), 
+        .R10(ALU_R[10]), .R9(ALU_R[9]), 
+        .R8(ALU_R[8]), .R7(ALU_R[7]), .R6(ALU_R[6]), 
+        .R5(ALU_R[5]), .R4(ALU_R[4]), .R3(ALU_R[3]), 
+        .R2(ALU_R[2]), .R1(ALU_R[1]), .R0(ALU_R[0]), 
+		.CO53(ALU_CO[53]), .CO52(ALU_CO[52]), .CO51(ALU_CO[51]), .CO50(ALU_CO[50]), .CO49(ALU_CO[49]), .CO48(ALU_CO[48]), .CO47(ALU_CO[47]), .CO46(ALU_CO[46]),
+		.CO45(ALU_CO[45]), .CO44(ALU_CO[44]), .CO43(ALU_CO[43]), .CO42(ALU_CO[42]), .CO41(ALU_CO[41]), .CO40(ALU_CO[40]), .CO39(ALU_CO[39]), .CO38(ALU_CO[38]),
+		.CO37(ALU_CO[37]), .CO36(ALU_CO[36]), .CO35(ALU_CO[35]), .CO34(ALU_CO[34]), .CO33(ALU_CO[33]), .CO32(ALU_CO[32]), .CO31(ALU_CO[31]), .CO30(ALU_CO[30]),
+		.CO29(ALU_CO[29]), .CO28(ALU_CO[28]), .CO27(ALU_CO[27]), .CO26(ALU_CO[26]), .CO25(ALU_CO[25]), .CO24(ALU_CO[24]), .CO23(ALU_CO[23]), .CO22(ALU_CO[22]),
+		.CO21(ALU_CO[21]), .CO20(ALU_CO[20]), .CO19(ALU_CO[19]), .CO18(ALU_CO[18]), .CO17(ALU_CO[17]), .CO16(ALU_CO[16]), .CO15(ALU_CO[15]), .CO14(ALU_CO[14]),
+		.CO13(ALU_CO[13]), .CO12(ALU_CO[12]), .CO11(ALU_CO[11]), .CO10(ALU_CO[10]), .CO9(ALU_CO[9]), .CO8(ALU_CO[8]), .CO7(ALU_CO[7]), .CO6(ALU_CO[6]),
+		.CO5(ALU_CO[5]), .CO4(ALU_CO[4]), .CO3(ALU_CO[3]), .CO2(ALU_CO[2]), .CO1(ALU_CO[1]), .CO0(ALU_CO[0]), .EQZ(EQZ), .EQZM(EQZM), 
         .EQOM(EQOM), .EQPAT(EQPAT), .EQPATB(EQPATB), .OVER(OVER), .UNDER(UNDER), 
         .OVERUNDER(), .SIGNEDR(SIGNEDR));
 
@@ -515,6 +489,6 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, Mem0, Mem1, AAMemsel, ABMemsel, B
         .P4(MULTB_P[4]), .P3(MULTB_P[3]), .P2(MULTB_P[2]), 
         .P1(MULTB_P[1]), .P0(MULTB_P[0]), .SIGNEDP(MULTB_P_SIGN));
 
-    assign Result = ALU_O[18-QMATH_SHIFT +: 36];	
-	assign Result54 = ALU_O;
+    assign Result = ALU_R[18-QMATH_SHIFT +: 36];	
+	assign R = ALU_R;
 endmodule

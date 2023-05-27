@@ -82,12 +82,12 @@ struct FPGA_Resonant_M0_struct
 
 struct FPGA_Resonant_M1_struct
 {
-    int32 cosine_A;
-    int32 sine_A;
-    int32 cosine_B;
-    int32 sine_B;
-    int32 cosine_C;
-    int32 sine_C;
+    int32 cos_A;
+    int32 sin_A;
+    int32 cos_B;
+    int32 sin_B;
+    int32 cos_C;
+    int32 sin_C;
 };
 
 #define FPGA_KALMAN_STATES 26
@@ -101,10 +101,10 @@ struct FPGA_Kalman_M0_struct
 
 struct FPGA_Kalman_M1_struct
 {
-    int32 cosine;
-    int32 sine;
-    int32 Kalman_gain_1;
-    int32 Kalman_gain_2;
+    int32 cos_K;
+    int32 sin_K;
+    int32 K1;
+    int32 K2;
 };
 
 union EMIF_union

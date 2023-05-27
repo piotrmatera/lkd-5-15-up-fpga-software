@@ -32,7 +32,7 @@ struct Converter_struct
     float div_range_modifier_Resonant;
     float range_modifier_Kalman;
     float div_range_modifier_Kalman;
-    float Ts_ratio;
+    float Ts_rate;
 
     float w_filter;
     float f_filter;
