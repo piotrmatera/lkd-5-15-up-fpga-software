@@ -10,7 +10,6 @@
 #pragma SET_DATA_SECTION("CLAData")
 
 struct Converter_struct Conv;
-struct Thermistor_struct Therm;
 struct Grid_analyzer_struct Grid;
 struct Grid_analyzer_filter_struct Grid_filter;
 
@@ -60,8 +59,11 @@ volatile union EMIF_union EMIF_mem;
 
 #pragma SET_DATA_SECTION()
 
+struct Thermistor_struct Therm;
+
 struct Kalman_struct Kalman_I_grid[3];
 struct Kalman_struct Kalman_U_grid[3];
+struct Kalman_DC_struct Kalman_U_dc;
 
 struct Energy_meter_struct Energy_meter;
 

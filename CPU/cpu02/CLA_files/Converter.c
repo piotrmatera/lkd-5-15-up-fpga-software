@@ -33,22 +33,22 @@ void Converter_calc()
 //    Conv.U_ref.b += Meas_master.U_grid.b;
 //    Conv.U_ref.c += Meas_master.U_grid.c;
 
-//    register float sum;
-//    sum = fabsf(Conv.Kalman_U_grid_diff.a = Meas_master.U_grid.a - Conv.Kalman_U_grid.a);
-//    sum += fabsf(Conv.Kalman_U_grid_diff.b = Meas_master.U_grid.b - Conv.Kalman_U_grid.b);
-//    sum += fabsf(Conv.Kalman_U_grid_diff.c = Meas_master.U_grid.c - Conv.Kalman_U_grid.c);
-//
-//    static float sag_timer;
-//    sag_timer += Conv.Ts;
-//    if (sum >= 20.0f) sag_timer = 0.0f;
-//    Conv.sag = 0.0f;
-//    if (sag_timer < 20e-3)
-//    {
-//        Conv.sag = 1.0f;
-//        Conv.U_ref.a += Conv.Kalman_U_grid_diff.a;
-//        Conv.U_ref.b += Conv.Kalman_U_grid_diff.b;
-//        Conv.U_ref.c += Conv.Kalman_U_grid_diff.c;
-//    }
+    register float sum;
+    sum =  fabsf(Conv.Kalman_U_grid_diff.a = Meas_master.U_grid.a - Conv.Kalman_U_grid.a);
+    sum += fabsf(Conv.Kalman_U_grid_diff.b = Meas_master.U_grid.b - Conv.Kalman_U_grid.b);
+    sum += fabsf(Conv.Kalman_U_grid_diff.c = Meas_master.U_grid.c - Conv.Kalman_U_grid.c);
+
+    static float sag_timer;
+    sag_timer += Conv.Ts;
+    if (sum >= 20.0f) sag_timer = 0.0f;
+    Conv.sag = 0.0f;
+    if (sag_timer < 20e-3)
+    {
+        Conv.sag = 1.0f;
+        Conv.U_ref.a += Conv.Kalman_U_grid_diff.a;
+        Conv.U_ref.b += Conv.Kalman_U_grid_diff.b;
+        Conv.U_ref.c += Conv.Kalman_U_grid_diff.c;
+    }
 
     register float max = fmaxf(Conv.U_ref.a, fmaxf(Conv.U_ref.b, Conv.U_ref.c));
     register float min = fminf(Conv.U_ref.a, fminf(Conv.U_ref.b, Conv.U_ref.c));

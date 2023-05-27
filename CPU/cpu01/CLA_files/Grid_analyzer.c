@@ -4,32 +4,32 @@
 
 void Grid_analyzer_calc()
 {
-    Resonant_filter_calc_CLAasm(&Grid.Resonant_U_grid[0], Meas_master.U_grid_avg.a);
-    Resonant_filter_calc_CLAasm(&Grid.Resonant_U_grid[1], Meas_master.U_grid_avg.b);
-    Resonant_filter_calc_CLAasm(&Grid.Resonant_U_grid[2], Meas_master.U_grid_avg.c);
+    Resonant_filter_calc_CLAasm(&Grid.Resonant_U_grid[0], Meas_master.U_grid.a);
+    Resonant_filter_calc_CLAasm(&Grid.Resonant_U_grid[1], Meas_master.U_grid.b);
+    Resonant_filter_calc_CLAasm(&Grid.Resonant_U_grid[2], Meas_master.U_grid.c);
 
-    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_grid[0], Meas_master.I_grid_avg.a);
-    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_grid[1], Meas_master.I_grid_avg.b);
-    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_grid[2], Meas_master.I_grid_avg.c);
+    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_grid[0], Meas_master.I_grid.a);
+    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_grid[1], Meas_master.I_grid.b);
+    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_grid[2], Meas_master.I_grid.c);
 
-    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_conv[0], Meas_master.I_conv_avg.a);
-    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_conv[1], Meas_master.I_conv_avg.b);
-    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_conv[2], Meas_master.I_conv_avg.c);
+    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_conv[0], Meas_master.I_conv.a);
+    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_conv[1], Meas_master.I_conv.b);
+    Resonant_filter_calc_CLAasm(&Grid.Resonant_I_conv[2], Meas_master.I_conv.c);
 
     ///////////////////////////////////////////////////////////////////
 
-    Grid.parameters.U_grid.a = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_U_grid[0], Meas_master.U_grid_avg.a*Meas_master.U_grid_avg.a));
-    Grid.parameters.U_grid.b = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_U_grid[1], Meas_master.U_grid_avg.b*Meas_master.U_grid_avg.b));
-    Grid.parameters.U_grid.c = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_U_grid[2], Meas_master.U_grid_avg.c*Meas_master.U_grid_avg.c));
+    Grid.parameters.U_grid.a = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_U_grid[0], Meas_master.U_grid.a*Meas_master.U_grid.a));
+    Grid.parameters.U_grid.b = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_U_grid[1], Meas_master.U_grid.b*Meas_master.U_grid.b));
+    Grid.parameters.U_grid.c = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_U_grid[2], Meas_master.U_grid.c*Meas_master.U_grid.c));
 
-    Grid.parameters.I_grid.a = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_grid[0], Meas_master.I_grid_avg.a*Meas_master.I_grid_avg.a));
-    Grid.parameters.I_grid.b = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_grid[1], Meas_master.I_grid_avg.b*Meas_master.I_grid_avg.b));
-    Grid.parameters.I_grid.c = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_grid[2], Meas_master.I_grid_avg.c*Meas_master.I_grid_avg.c));
+    Grid.parameters.I_grid.a = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_grid[0], Meas_master.I_grid.a*Meas_master.I_grid.a));
+    Grid.parameters.I_grid.b = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_grid[1], Meas_master.I_grid.b*Meas_master.I_grid.b));
+    Grid.parameters.I_grid.c = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_grid[2], Meas_master.I_grid.c*Meas_master.I_grid.c));
 
-    Grid.parameters.I_conv.a = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_conv[0], Meas_master.I_conv_avg.a*Meas_master.I_conv_avg.a));
-    Grid.parameters.I_conv.b = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_conv[1], Meas_master.I_conv_avg.b*Meas_master.I_conv_avg.b));
-    Grid.parameters.I_conv.c = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_conv[2], Meas_master.I_conv_avg.c*Meas_master.I_conv_avg.c));
-    Grid.parameters.I_conv.n = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_conv[3], Meas_master.I_conv_avg.n*Meas_master.I_conv_avg.n));
+    Grid.parameters.I_conv.a = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_conv[0], Meas_master.I_conv.a*Meas_master.I_conv.a));
+    Grid.parameters.I_conv.b = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_conv[1], Meas_master.I_conv.b*Meas_master.I_conv.b));
+    Grid.parameters.I_conv.c = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_conv[2], Meas_master.I_conv.c*Meas_master.I_conv.c));
+    Grid.parameters.I_conv.n = sqrtf(CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Grid.CIC1_I_conv[3], Meas_master.I_conv.n*Meas_master.I_conv.n));
 
     ///////////////////////////////////////////////////////////////////
 

@@ -625,7 +625,7 @@ void Machine_class::Background()
 
         for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
         {
-            register float modifier = Conv.range_modifier_Resonant;
+            register float modifier = Conv.range_modifier_Resonant_coefficients;
             EMIF_mem.write.Resonant[1].harmonic[i].cos_A =
             EMIF_mem.write.Resonant[0].harmonic[i].cos_A = modifier * sincos_table[2 * i].cosine;
             EMIF_mem.write.Resonant[1].harmonic[i].sin_A =
@@ -642,7 +642,7 @@ void Machine_class::Background()
 
         for(Uint16 i = 1; i < FPGA_KALMAN_STATES; i++)
         {
-            register float modifier = Conv.range_modifier_Kalman;
+            register float modifier = Conv.range_modifier_Kalman_coefficients;
             EMIF_mem.write.Kalman[1].harmonic[i].cos_K =
             EMIF_mem.write.Kalman[0].harmonic[i].cos_K = sincos_table_Kalman[2 * (i - 1)].cosine * modifier;
             EMIF_mem.write.Kalman[1].harmonic[i].sin_K =
@@ -1138,52 +1138,52 @@ void Machine_class::calibrate_offsets()
         GPIO_SET(LED2_CM);
         memcpy(&SD_card.calibration.Meas_master_gain, &Meas_master_gain, sizeof(Meas_master_gain));
 
-        CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.a;
+        CIC2_calibration_input.ptr = &Meas_master.I_grid.a;
         DELAY_US(100000);
         Meas_master_offset.I_grid.a += CIC2_calibration.out / Meas_master_gain.I_grid.a;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.b;
+        CIC2_calibration_input.ptr = &Meas_master.I_grid.b;
         DELAY_US(100000);
         Meas_master_offset.I_grid.b += CIC2_calibration.out / Meas_master_gain.I_grid.b;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.c;
+        CIC2_calibration_input.ptr = &Meas_master.I_grid.c;
         DELAY_US(100000);
         Meas_master_offset.I_grid.c += CIC2_calibration.out / Meas_master_gain.I_grid.c;
 
 
-        CIC2_calibration_input.ptr = &Meas_master.U_grid_avg.a;
+        CIC2_calibration_input.ptr = &Meas_master.U_grid.a;
         DELAY_US(100000);
         Meas_master_offset.U_grid.a += CIC2_calibration.out / Meas_master_gain.U_grid.a;
 
-        CIC2_calibration_input.ptr = &Meas_master.U_grid_avg.b;
+        CIC2_calibration_input.ptr = &Meas_master.U_grid.b;
         DELAY_US(100000);
         Meas_master_offset.U_grid.b += CIC2_calibration.out / Meas_master_gain.U_grid.b;
 
-        CIC2_calibration_input.ptr = &Meas_master.U_grid_avg.c;
+        CIC2_calibration_input.ptr = &Meas_master.U_grid.c;
         DELAY_US(100000);
         Meas_master_offset.U_grid.c += CIC2_calibration.out / Meas_master_gain.U_grid.c;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.a;
+        CIC2_calibration_input.ptr = &Meas_master.I_conv.a;
         DELAY_US(100000);
         Meas_master_offset.I_conv.a += CIC2_calibration.out / Meas_master_gain.I_conv.a;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.b;
+        CIC2_calibration_input.ptr = &Meas_master.I_conv.b;
         DELAY_US(100000);
         Meas_master_offset.I_conv.b += CIC2_calibration.out / Meas_master_gain.I_conv.b;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.c;
+        CIC2_calibration_input.ptr = &Meas_master.I_conv.c;
         DELAY_US(100000);
         Meas_master_offset.I_conv.c += CIC2_calibration.out / Meas_master_gain.I_conv.c;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.n;
+        CIC2_calibration_input.ptr = &Meas_master.I_conv.n;
         DELAY_US(100000);
         Meas_master_offset.I_conv.n += CIC2_calibration.out / Meas_master_gain.I_conv.n;
 
-        CIC2_calibration_input.ptr = &Meas_master.U_dc_avg;
+        CIC2_calibration_input.ptr = &Meas_master.U_dc;
         DELAY_US(100000);
         Meas_master_offset.U_dc += CIC2_calibration.out / Meas_master_gain.U_dc;
 
-        CIC2_calibration_input.ptr = &Meas_master.U_dc_n_avg;
+        CIC2_calibration_input.ptr = &Meas_master.U_dc_n;
         DELAY_US(100000);
         Meas_master_offset.U_dc_n += CIC2_calibration.out / Meas_master_gain.U_dc_n;
 
@@ -1241,51 +1241,51 @@ void Machine_class::calibrate_curent_gain()
         GPIO_SET(LED2_CM);
 
         float I_cal = 2.0f;
-        if(fabsf(Meas_master.I_grid_avg.a) > I_cal)
+        if(fabsf(Meas_master.I_grid.a) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.a;
+            CIC2_calibration_input.ptr = &Meas_master.I_grid.a;
             DELAY_US(100000);
             Meas_master_gain.I_grid.a = fabsf(Meas_master_gain.I_grid.a * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<0;
         }
-        if(fabsf(Meas_master.I_grid_avg.b) > I_cal)
+        if(fabsf(Meas_master.I_grid.b) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.b;
+            CIC2_calibration_input.ptr = &Meas_master.I_grid.b;
             DELAY_US(100000);
             Meas_master_gain.I_grid.b = fabsf(Meas_master_gain.I_grid.b * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<1;
         }
-        if(fabsf(Meas_master.I_grid_avg.c) > I_cal)
+        if(fabsf(Meas_master.I_grid.c) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.c;
+            CIC2_calibration_input.ptr = &Meas_master.I_grid.c;
             DELAY_US(100000);
             Meas_master_gain.I_grid.c = fabsf(Meas_master_gain.I_grid.c * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<2;
         }
-        if(fabsf(Meas_master.I_conv_avg.a) > I_cal)
+        if(fabsf(Meas_master.I_conv.a) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.a;
+            CIC2_calibration_input.ptr = &Meas_master.I_conv.a;
             DELAY_US(100000);
             Meas_master_gain.I_conv.a = fabsf(Meas_master_gain.I_conv.a * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<3;
         }
-        if(fabsf(Meas_master.I_conv_avg.b) > I_cal)
+        if(fabsf(Meas_master.I_conv.b) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.b;
+            CIC2_calibration_input.ptr = &Meas_master.I_conv.b;
             DELAY_US(100000);
             Meas_master_gain.I_conv.b = fabsf(Meas_master_gain.I_conv.b * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<4;
         }
-        if(fabsf(Meas_master.I_conv_avg.c) > I_cal)
+        if(fabsf(Meas_master.I_conv.c) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.c;
+            CIC2_calibration_input.ptr = &Meas_master.I_conv.c;
             DELAY_US(100000);
             Meas_master_gain.I_conv.c = fabsf(Meas_master_gain.I_conv.c * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<5;
         }
-//        if(fabsf(Meas_master.I_conv_avg.n) > I_cal)
+//        if(fabsf(Meas_master.I_conv.n) > I_cal)
 //        {
-//            CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.n;
+//            CIC2_calibration_input.ptr = &Meas_master.I_conv.n;
 //            DELAY_US(100000);
 //            Meas_master_gain.I_conv.n = -fabsf(Meas_master_gain.I_conv.n * 5.0f / CIC2_calibration.out);
 //            calib_rdy |= 1<<6;
@@ -1344,23 +1344,23 @@ void Machine_class::calibrate_AC_voltage_gain()
         GPIO_SET(LED2_CM);
 
         float U_cal = 28.0f;
-        if(fabsf(Meas_master.U_grid_avg.a) > U_cal)
+        if(fabsf(Meas_master.U_grid.a) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_grid_avg.a;
+            CIC2_calibration_input.ptr = &Meas_master.U_grid.a;
             DELAY_US(100000);
             Meas_master_gain.U_grid.a = fabsf(Meas_master_gain.U_grid.a * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<0;
         }
-        if(fabsf(Meas_master.U_grid_avg.b) > U_cal)
+        if(fabsf(Meas_master.U_grid.b) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_grid_avg.b;
+            CIC2_calibration_input.ptr = &Meas_master.U_grid.b;
             DELAY_US(100000);
             Meas_master_gain.U_grid.b = fabsf(Meas_master_gain.U_grid.b * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<1;
         }
-        if(fabsf(Meas_master.U_grid_avg.c) > U_cal)
+        if(fabsf(Meas_master.U_grid.c) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_grid_avg.c;
+            CIC2_calibration_input.ptr = &Meas_master.U_grid.c;
             DELAY_US(100000);
             Meas_master_gain.U_grid.c = fabsf(Meas_master_gain.U_grid.c * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<2;
@@ -1409,17 +1409,17 @@ void Machine_class::calibrate_DC_voltage_gain()
         GPIO_SET(LED2_CM);
         float U_cal = 28.0f;
 
-        if(fabsf(Meas_master.U_dc_avg) > U_cal)
+        if(fabsf(Meas_master.U_dc) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_dc_avg;
+            CIC2_calibration_input.ptr = &Meas_master.U_dc;
             DELAY_US(100000);
             Meas_master_gain.U_dc = fabsf(Meas_master_gain.U_dc * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<0;
         }
 
-        if(fabsf(Meas_master.U_dc_n_avg) > U_cal)
+        if(fabsf(Meas_master.U_dc_n) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_dc_n_avg;
+            CIC2_calibration_input.ptr = &Meas_master.U_dc_n;
             DELAY_US(100000);
             Meas_master_gain.U_dc_n = fabsf(Meas_master_gain.U_dc_n * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<1;

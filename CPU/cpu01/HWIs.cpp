@@ -20,6 +20,8 @@ interrupt void SD_AVG_NT()
 {
     Timer_PWM.CPU_SD = TIMESTAMP_PWM;
 
+    GPIO_SET(TRIGGER_CM);
+
     register Uint32 *src;
     register Uint32 *dest;
 
@@ -35,9 +37,36 @@ interrupt void SD_AVG_NT()
 
     Cla1ForceTask1();
 
-    Energy_meter_CPUasm();
+    register float modifier1 = Conv.div_range_modifier_Kalman_values;
+    Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0].series[0].estimate * modifier1;
+    Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman[0].series[1].estimate * modifier1;
+    Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman[0].series[2].estimate * modifier1;
+    Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC.series[0].estimate * modifier1;
+
+//    Grid.parameters.parameters.THD_U_grid.a = Kalman_U_grid[0].THD_total;
+//    Grid.parameters.parameters.THD_U_grid.b = Kalman_U_grid[1].THD_total;
+//    Grid.parameters.parameters.THD_U_grid.c = Kalman_U_grid[2].THD_total;
+//    Grid.parameters.parameters.THD_I_grid.a = Kalman_I_grid[0].THD_total;
+//    Grid.parameters.parameters.THD_I_grid.b = Kalman_I_grid[1].THD_total;
+//    Grid.parameters.parameters.THD_I_grid.c = Kalman_I_grid[2].THD_total;
 
     Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
+
+    Energy_meter_CPUasm();
+
+    while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
+    PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
+
+    register float modifier2 = Conv.range_modifier_Kalman_values;
+    EMIF_mem.write.Kalman[0].series[0].input = Meas_master.U_grid.a * modifier2;
+    EMIF_mem.write.Kalman[0].series[1].input = Meas_master.U_grid.b * modifier2;
+    EMIF_mem.write.Kalman[0].series[2].input = Meas_master.U_grid.c * modifier2;
+    EMIF_mem.write.Kalman[1].series[0].input = Meas_master.I_grid.a * modifier2;
+    EMIF_mem.write.Kalman[1].series[1].input = Meas_master.I_grid.b * modifier2;
+    EMIF_mem.write.Kalman[1].series[2].input = Meas_master.I_grid.c * modifier2;
+    EMIF_mem.write.Kalman_DC.series[0].input = Meas_master.U_dc * modifier2;
+    EMIF_mem.write.DSP_start = 0b1110;
+
     Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,9 +99,9 @@ interrupt void SD_AVG_NT()
 
         if(Meas_master.Supply_24V < 22.0) alarm_master.bit.FLT_SUPPLY_MASTER = 1;
 
-        if(Meas_master.U_dc_avg < Meas_alarm_L.U_dc) alarm_master.bit.U_dc_L = 1;
-        if(Meas_master.U_dc_avg > Meas_alarm_H.U_dc) alarm_master.bit.U_dc_H = 1;
-        if(fabsf(Meas_master.U_dc_avg - 2.0f * Meas_master.U_dc_n_avg) > Meas_alarm_H.U_dc_balance) alarm_master.bit.U_dc_balance = 1;
+        if(Meas_master.U_dc < Meas_alarm_L.U_dc) alarm_master.bit.U_dc_L = 1;
+        if(Meas_master.U_dc > Meas_alarm_H.U_dc) alarm_master.bit.U_dc_H = 1;
+        if(fabsf(Meas_master.U_dc - 2.0f * Meas_master.U_dc_n) > Meas_alarm_H.U_dc_balance) alarm_master.bit.U_dc_balance = 1;
 
         if(Grid.parameters.I_conv.a > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_a = 1;
         if(Grid.parameters.I_conv.b > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_b = 1;
@@ -99,9 +128,9 @@ interrupt void SD_AVG_NT()
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Timer_PWM.CPU_ERROR = TIMESTAMP_PWM;
 
-    Timer_PWM.CPU_ERROR = TIMESTAMP_PWM;//3us
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     {
         static Uint16 first = 0;
@@ -156,51 +185,33 @@ interrupt void SD_AVG_NT()
 
     }
 
-    Timer_PWM.CPU_SCOPE = TIMESTAMP_PWM;//4us
+    Timer_PWM.CPU_SCOPE = TIMESTAMP_PWM;
 
-//    Grid.parameters.parameters.THD_U_grid.a = Kalman_U_grid[0].THD_total;
-//    Grid.parameters.parameters.THD_U_grid.b = Kalman_U_grid[1].THD_total;
-//    Grid.parameters.parameters.THD_U_grid.c = Kalman_U_grid[2].THD_total;
-//    Grid.parameters.parameters.THD_I_grid.a = Kalman_I_grid[0].THD_total;
-//    Grid.parameters.parameters.THD_I_grid.b = Kalman_I_grid[1].THD_total;
-//    Grid.parameters.parameters.THD_I_grid.c = Kalman_I_grid[2].THD_total;
-
-    GPIO_SET(TRIGGER_CM);
-
-    Timer_PWM.CPU_TX_MSG2 = TIMESTAMP_PWM;
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Modbus_slave_LCD.RTU->interrupt_task();
     Modbus_slave_EXT.RTU->interrupt_task();
 
-    Timer_PWM.CPU_COMM = TIMESTAMP_PWM;//1us
+    Timer_PWM.CPU_COMM = TIMESTAMP_PWM;
 
-    static volatile Uint32 Kalman_WIP;
-    Kalman_WIP = EMIF_mem.read.flags.Kalman1_WIP;
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    static volatile struct
     {
-        struct abc_struct harmonic[FPGA_KALMAN_STATES];
-        float estimate;
-        float error;
-    }Kalman_mem;
-    int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman[0];
-    float *pointer_dst = (float *)&Kalman_mem;
-    for(int i=0; i<sizeof(Kalman_mem)>>1; i++)
-    {
-        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman;
+        Therm.Divider_supply += 0.001*( ((float)AdcdResultRegs.ADCRESULT0 + (float)AdcdResultRegs.ADCRESULT1)*(2e3/1e3)*(3.3/4096.0/2.0) - Therm.Divider_supply);
+        Meas_master.Supply_24V = ((float)AdcdResultRegs.ADCRESULT8 + (float)AdcdResultRegs.ADCRESULT9)*(11e3/1e3)*(3.3/4096.0/2.0);
+
+        static float index;
+        register float Thermistor;
+        register Uint16 *adcresult = (Uint16 *)&AdcdResultRegs.ADCRESULT2 + (Uint16)(0x2*index);
+        Thermistor = ( (float)*adcresult + (float)*(adcresult + 1) )*(3.3/256.0/16.0/2.0);
+        Thermistor = (Therm.R_divider * Thermistor) / (3.3 - Thermistor);
+        Thermistor = Therm.B/logf(Thermistor * Therm.DIV_Rinf) - Therm.T_0;
+        register float *Temperature = &Meas_master.Temperature1 + (Uint16)index;
+        *Temperature += 0.02*(Thermistor - *Temperature);
+        if(++index >= 3.0f) index = 0;
     }
 
-    static float angle = 0.0f;
-    angle += Conv.Ts * Conv.w_filter;
-    angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
-    static volatile int32 zmienna_int;
-    static volatile float zmienna;
-    static volatile float zmienna_gain = 0.02;
-    zmienna = zmienna_gain * (1.0f + sinf(angle));
-    zmienna_int = zmienna * Conv.range_modifier_Kalman;
-//    zmienna = 0.002f;
-    EMIF_mem.write.Kalman[0].series[0].input = zmienna_int;
-    EMIF_mem.write.DSP_start = 4UL;
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     static volatile union double_pulse_union
     {
@@ -226,10 +237,10 @@ interrupt void SD_AVG_NT()
 
     GPIO_CLEAR(TRIGGER_CM);
 
-    static Uint64 benchmark_timer_HWI;
-    static volatile float benchmark_HWI;
-    benchmark_HWI = (float)(ReadIpcTimer() - benchmark_timer_HWI)*(1.0f/200000000.0f);
-    benchmark_timer_HWI = ReadIpcTimer();
+//    static Uint64 benchmark_timer_HWI;
+//    static volatile float benchmark_HWI;
+//    benchmark_HWI = (float)(ReadIpcTimer() - benchmark_timer_HWI)*(1.0f/200000000.0f);
+//    benchmark_timer_HWI = ReadIpcTimer();
 
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
     Timer_PWM.CPU_END = TIMESTAMP_PWM;

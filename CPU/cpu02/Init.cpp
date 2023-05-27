@@ -130,8 +130,10 @@ void Init_class::Variables()
     memset(&CPU2toCPU1, 0, sizeof(CPU2toCPU1));
 
     Conv.Ts = 16e-6;
-    Conv.range_modifier_Resonant = 1UL << 30;
-    Conv.div_range_modifier_Resonant = 1.0f / Conv.range_modifier_Resonant;
+    Conv.range_modifier_Resonant_values = 1UL << 21;
+    Conv.div_range_modifier_Resonant_values = 1.0f / Conv.range_modifier_Resonant_values;
+    Conv.range_modifier_Kalman_values = 1UL << 21;
+    Conv.div_range_modifier_Kalman_values = 1.0f / Conv.range_modifier_Kalman_values;
 
     ///////////////////////////////////////////////////////////////////
 

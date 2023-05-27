@@ -50,21 +50,21 @@ struct Modbus_Converter_memory_struct
         Uint16 padding2[256-sizeof(struct Grid_parameters_struct)-sizeof(struct Energy_meter_upper_struct)-4];
         struct
         {
-            float I_grid_a[KALMAN_HARMONICS];
-            float I_grid_b[KALMAN_HARMONICS];
-            float I_grid_c[KALMAN_HARMONICS];
-            float U_grid_a[KALMAN_HARMONICS];
-            float U_grid_b[KALMAN_HARMONICS];
-            float U_grid_c[KALMAN_HARMONICS];
+            float I_grid_a[FPGA_KALMAN_STATES];
+            float I_grid_b[FPGA_KALMAN_STATES];
+            float I_grid_c[FPGA_KALMAN_STATES];
+            float U_grid_a[FPGA_KALMAN_STATES];
+            float U_grid_b[FPGA_KALMAN_STATES];
+            float U_grid_c[FPGA_KALMAN_STATES];
         }harmonic_rms_values;
         struct
         {
-            float I_grid_a[KALMAN_HARMONICS];
-            float I_grid_b[KALMAN_HARMONICS];
-            float I_grid_c[KALMAN_HARMONICS];
-            float U_grid_a[KALMAN_HARMONICS];
-            float U_grid_b[KALMAN_HARMONICS];
-            float U_grid_c[KALMAN_HARMONICS];
+            float I_grid_a[FPGA_KALMAN_STATES];
+            float I_grid_b[FPGA_KALMAN_STATES];
+            float I_grid_c[FPGA_KALMAN_STATES];
+            float U_grid_a[FPGA_KALMAN_STATES];
+            float U_grid_b[FPGA_KALMAN_STATES];
+            float U_grid_c[FPGA_KALMAN_STATES];
         }harmonic_THD_individual;
 
         struct Energy_meter_algebraic_sum_struct

@@ -344,7 +344,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	) COMM_RX_MEM2 (.WrAddress(Comm_rx2_addrw), .WrClock(clk_1x), .WrClockEn(1'b1), .WE(Comm_rx2_we), .Data(Comm_rx2_dataw),
     .RdAddress(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .RdClock(!EMIF_oe_i), .RdClockEn(1'b1), .Reset(1'b0), .Q(COMM_RX_MEM2_data_o));
 	
-	parameter COMM_TX_MEM1_key = 3'd2;
+	parameter COMM_TX_MEM1_key = 3'd1;
 	pmi_ram_dp
 	#(.pmi_wr_addr_depth(512),
 	.pmi_wr_addr_width(9),
@@ -361,7 +361,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	.WrClockEn(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == COMM_TX_MEM1_key[1 +: 2]), .WE(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == COMM_TX_MEM1_key[0]), .Data(EMIF_data_i), 
     .RdAddress(Comm_tx1_addrr), .RdClock(clk_1x), .RdClockEn(1'b1), .Reset(1'b0), .Q(Comm_tx1_mem_datar));  
 
-	parameter COMM_TX_MEM2_key = 3'd3;
+	parameter COMM_TX_MEM2_key = 3'd2;
 	pmi_ram_dp
 	#(.pmi_wr_addr_depth(512),
 	.pmi_wr_addr_width(9),
@@ -396,7 +396,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant1_SIGNEDCIN;
 	wire Resonant1_SIGNEDCO;
 
-	parameter Resonant1_Mem2_key = 3'd4;
+	parameter Resonant1_Mem2_key = 3'd3;
 	Resonant Resonant1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant1_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Resonant1_Mem2_key[0]),
 	.enable_i(Resonant1_START), .Mem2_addrw_o(Resonant1_Mem2_addrw), .Mem2_we_o(Resonant1_Mem2_we), .Mem2_data_o(Resonant1_Mem2_data), .WIP_flag_o(Resonant1_WIP),
@@ -423,7 +423,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant2_SIGNEDCIN;
 	wire Resonant2_SIGNEDCO;
 
-	parameter Resonant2_Mem2_key = 3'd5;
+	parameter Resonant2_Mem2_key = 3'd4;
 	Resonant Resonant2(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant2_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Resonant2_Mem2_key[0]),
 	.enable_i(Resonant2_START), .Mem2_addrw_o(Resonant2_Mem2_addrw), .Mem2_we_o(Resonant2_Mem2_we), .Mem2_data_o(Resonant2_Mem2_data), .WIP_flag_o(Resonant2_WIP),
@@ -436,7 +436,32 @@ module SerDes_master(CPU_io, FPGA_io);
 	)
 	Resonant2_Mem2(.Data(Resonant2_Mem2_data[35:4]), .WrAddress(Resonant2_Mem2_addrw), .RdAddress(EMIF_address_i[8:0]), .WrClock(clk_DSP), .RdClock(!EMIF_oe_i), .WrClockEn(1'b1), .RdClockEn(1'b1), 
 	.WE(Resonant2_Mem2_we), .Reset(1'b0), .Q(Resonant2_data_o));
+	wire Kalman_DC_WIP;
+	wire Kalman_DC_START;
 	
+	wire Kalman_DC_Mem2_we;
+	wire [8:0] Kalman_DC_Mem2_addrw;
+	wire [35:0] Kalman_DC_Mem2_data;
+	wire [31:0] Kalman_DC_data_o;
+	wire [53:0] Kalman_DC_CIN;
+	wire [53:0] Kalman_DC_CO;
+	wire Kalman_DC_SIGNEDCIN;
+	wire Kalman_DC_SIGNEDCO;
+
+	parameter Kalman_DC_Mem2_key = 3'd5;
+	Kalman #(.HARMONICS_NUM(50), .IN_SERIES_NUM(2)) Kalman_DC(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Kalman_DC_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Kalman_DC_Mem2_key[0]),
+	.enable_i(Kalman_DC_START), .Mem2_addrw_o(Kalman_DC_Mem2_addrw), .Mem2_we_o(Kalman_DC_Mem2_we), .Mem2_data_o(Kalman_DC_Mem2_data), .WIP_flag_o(Kalman_DC_WIP),
+	.CIN(Kalman_DC_CIN), .SIGNEDCIN(Kalman_DC_SIGNEDCIN), .CO(Kalman_DC_CO), .SIGNEDCO(Kalman_DC_SIGNEDCO));
+
+	pmi_ram_dp #(.pmi_wr_addr_depth(512), .pmi_wr_addr_width(9), .pmi_wr_data_width(32),
+	.pmi_rd_addr_depth(512), .pmi_rd_addr_width(9), .pmi_rd_data_width(32), .pmi_regmode("noreg"), 
+	.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U"),
+	.pmi_init_file(/*"../Mem2.mem"*/), .pmi_init_file_format(/*"hex"*/)
+	)
+	Kalman_DC_Mem2(.Data(Kalman_DC_Mem2_data[35:4]), .WrAddress(Kalman_DC_Mem2_addrw), .RdAddress(EMIF_address_i[8:0]), .WrClock(clk_DSP), .RdClock(!EMIF_oe_i), .WrClockEn(1'b1), .RdClockEn(1'b1), 
+	.WE(Kalman_DC_Mem2_we), .Reset(1'b0), .Q(Kalman_DC_data_o));
+
 	wire Kalman1_WIP;
 	wire Kalman1_START;
 	
@@ -450,7 +475,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Kalman1_SIGNEDCO;
 
 	parameter Kalman1_Mem2_key = 3'd6;
-	Kalman Kalman1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Kalman #(.HARMONICS_NUM(26), .IN_SERIES_NUM(3)) Kalman1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Kalman1_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Kalman1_Mem2_key[0]),
 	.enable_i(Kalman1_START), .Mem2_addrw_o(Kalman1_Mem2_addrw), .Mem2_we_o(Kalman1_Mem2_we), .Mem2_data_o(Kalman1_Mem2_data), .WIP_flag_o(Kalman1_WIP),
 	.CIN(Kalman1_CIN), .SIGNEDCIN(Kalman1_SIGNEDCIN), .CO(Kalman1_CO), .SIGNEDCO(Kalman1_SIGNEDCO));
@@ -476,7 +501,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Kalman2_SIGNEDCO;
 
 	parameter Kalman2_Mem2_key = 3'd7;
-	Kalman Kalman2(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Kalman #(.HARMONICS_NUM(26), .IN_SERIES_NUM(3)) Kalman2(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Kalman2_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Kalman2_Mem2_key[0]),
 	.enable_i(Kalman2_START), .Mem2_addrw_o(Kalman2_Mem2_addrw), .Mem2_we_o(Kalman2_Mem2_we), .Mem2_data_o(Kalman2_Mem2_data), .WIP_flag_o(Kalman2_WIP),
 	.CIN(Kalman2_CIN), .SIGNEDCIN(Kalman2_SIGNEDCIN), .CO(Kalman2_CO), .SIGNEDCO(Kalman2_SIGNEDCO));
@@ -510,12 +535,14 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign Resonant1_SIGNEDCIN = Dummy1_SIGNEDCO;
 	assign Resonant2_CIN = Resonant1_CO;
 	assign Resonant2_SIGNEDCIN = Resonant1_SIGNEDCO;
-	assign Kalman1_CIN = Resonant2_CO;
-	assign Kalman1_SIGNEDCIN = Resonant2_SIGNEDCO;
+	assign Kalman_DC_CIN = Resonant2_CO;
+	assign Kalman_DC_SIGNEDCIN = Resonant2_SIGNEDCO;
+	assign Kalman1_CIN = Kalman_DC_CO;
+	assign Kalman1_SIGNEDCIN = Kalman_DC_SIGNEDCO;
 	assign Kalman2_CIN = Kalman1_CO;
 	assign Kalman2_SIGNEDCIN = Kalman1_SIGNEDCO;
 	
-	assign {Kalman2_START, Kalman1_START, Resonant2_START, Resonant1_START} = EMIF_RX_reg [9][3:0];
+	assign {Kalman2_START, Kalman1_START, Kalman_DC_START, Resonant2_START, Resonant1_START} = EMIF_RX_reg [9][4:0];
 	
 ///////////////////////////////////////////////////////////////////// 
  
@@ -804,11 +831,11 @@ module SerDes_master(CPU_io, FPGA_io);
 	always @(*) begin
 		case(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3])
 			0 : EMIF_data_o = EMIF_TX_mux[EMIF_address_i[EMIF_MUX_WIDTH-1:0]];
-			1 : EMIF_data_o = 0; 
-			2 : EMIF_data_o = COMM_RX_MEM1_data_o; 
-			3 : EMIF_data_o = COMM_RX_MEM2_data_o;
-			4 : EMIF_data_o = Resonant1_data_o;
-			5 : EMIF_data_o = Resonant2_data_o;
+			1 : EMIF_data_o = COMM_RX_MEM1_data_o; 
+			2 : EMIF_data_o = COMM_RX_MEM2_data_o;
+			3 : EMIF_data_o = Resonant1_data_o;
+			4 : EMIF_data_o = Resonant2_data_o;
+			5 : EMIF_data_o = Kalman_DC_data_o; 
 			6 : EMIF_data_o = Kalman1_data_o;
 			7 : EMIF_data_o = Kalman2_data_o;
 		endcase
@@ -855,7 +882,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign EMIF_TX_mux[31] = Scope_index_last;
 	assign EMIF_TX_mux[32] = {CONTROL_RATE, CYCLE_PERIOD}; 
 	assign EMIF_TX_mux[33] = {OUTPUT_SHIFT, DEF_OSR}; 
-	assign EMIF_TX_mux[34] = {Kalman2_WIP, Kalman1_WIP, Resonant2_WIP, Resonant1_WIP, sync_phase}; 
+	assign EMIF_TX_mux[34] = {Kalman2_WIP, Kalman1_WIP, Kalman_DC_WIP, Resonant2_WIP, Resonant1_WIP, sync_phase}; 
 	
  	FD1P3DX EMIF_RX_reg_0[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 0), .CK(EMIF_we_i), .CD({tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}), .Q(EMIF_RX_reg [0]));
  	FD1P3DX EMIF_RX_reg_1[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 1), .CK(EMIF_we_i), .CD(~{rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}), .Q(EMIF_RX_reg [1]));
@@ -866,7 +893,7 @@ module SerDes_master(CPU_io, FPGA_io);
  	FD1P3DX EMIF_RX_reg_6[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 6), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [6]));
  	FD1P3DX EMIF_RX_reg_7[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 7), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [7]));
  	FD1P3DX EMIF_RX_reg_8[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 8), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [8]));
- 	FD1P3DX EMIF_RX_reg_9[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 9), .CK(EMIF_we_i), .CD({28'b0, Kalman2_WIP, Kalman1_WIP, Resonant2_WIP, Resonant1_WIP}), .Q(EMIF_RX_reg [9]));
+ 	FD1P3DX EMIF_RX_reg_9[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 9), .CK(EMIF_we_i), .CD({27'b0, Kalman2_WIP, Kalman1_WIP, Kalman_DC_WIP, Resonant2_WIP, Resonant1_WIP}), .Q(EMIF_RX_reg [9]));
  	FD1P3DX EMIF_RX_reg_10[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 10), .CK(EMIF_we_i), .CD({32{!rst_faults}}), .Q(EMIF_RX_reg [10]));
  	FD1P3DX EMIF_RX_reg_11[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 11), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [11]));
  	FD1P3DX EMIF_RX_reg_12[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 12), .CK(EMIF_we_i), .CD(1'b0), .Q(EMIF_RX_reg [12]));
