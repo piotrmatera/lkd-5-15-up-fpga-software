@@ -179,7 +179,7 @@ interrupt void SD_AVG_NT()
 
     static volatile struct
     {
-        struct trigonometric_struct harmonic[FPGA_KALMAN_STATES];
+        struct abc_struct harmonic[FPGA_KALMAN_STATES];
         float estimate;
         float error;
     }Kalman_mem;
@@ -195,7 +195,8 @@ interrupt void SD_AVG_NT()
     angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
     static volatile int32 zmienna_int;
     static volatile float zmienna;
-    zmienna = 0.02f * (1.0f + sinf(angle));
+    static volatile float zmienna_gain = 0.02;
+    zmienna = zmienna_gain * (1.0f + sinf(angle));
     zmienna_int = zmienna * Conv.range_modifier_Kalman;
 //    zmienna = 0.002f;
     EMIF_mem.write.Kalman[0].series[0].input = zmienna_int;

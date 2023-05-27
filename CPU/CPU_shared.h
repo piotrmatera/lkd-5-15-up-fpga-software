@@ -97,6 +97,7 @@ struct FPGA_Kalman_M0_struct
 {
     int32 x1;
     int32 x2;
+    int32 A;
 };
 
 struct FPGA_Kalman_M1_struct

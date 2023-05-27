@@ -363,9 +363,6 @@ void Init_class::Variables()
     Conv.compensation2 = 2.0f;
     Conv.w_filter = MATH_2PI * 50.0f;
 
-    Conv.range_modifier_Resonant = 1UL << 30;
-    Conv.div_range_modifier_Resonant = 1.0f / Conv.range_modifier_Resonant;
-
     SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts / Conv.Ts_rate);
     SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation2);
     SINCOS_calc_CPUasm(sincos_table_Kalman, Conv.w_filter * Conv.Ts);
@@ -376,6 +373,9 @@ void Init_class::Variables()
 
     Conv.Kp_I = p_pr_i;
     Conv.Kr_I = r_pr_i;
+
+    Conv.range_modifier_Resonant = 1UL << 30;
+    Conv.div_range_modifier_Resonant = 1.0f / Conv.range_modifier_Resonant;
 
     for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
     {
@@ -413,6 +413,7 @@ void Init_class::Variables()
         EMIF_mem.write.Kalman[1].harmonic[i].K2 =
         EMIF_mem.write.Kalman[0].harmonic[i].K2 = Kalman_gain[2 * i + 1] * modifier;
     }
+
     ///////////////////////////////////////////////////////////////////
 
     float CT_SD_max_value[3];
