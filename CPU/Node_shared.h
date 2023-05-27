@@ -109,32 +109,31 @@ union ALARM_master
         Uint16 U_dc_L:1;
         Uint16 Temperature_H:1;
         Uint16 Temperature_L:1;
-        //48bits
+
         Uint16 U_grid_rms_a_L:1;
         Uint16 U_grid_rms_b_L:1;
         Uint16 U_grid_rms_c_L:1;
-
         Uint16 U_dc_balance:1;
+
         Uint16 FLT_SUPPLY_MASTER:1;
         Uint16 CONV_SOFTSTART : 1;
-        Uint16 FLT_SUPPLY_SLAVE : 1;
+        Uint16 PLL_UNSYNC : 1;
+        Uint16 CT_char_error : 1;
+        //48bits
 
+        Uint16 TZ_CPU1 : 1;
+        Uint16 TZ_CPU2 : 1;
         Uint16 TZ_CLOCKFAIL_CPU1 : 1;
         Uint16 TZ_EMUSTOP_CPU1 : 1;
         Uint16 TZ_CLOCKFAIL_CPU2 : 1;
         Uint16 TZ_EMUSTOP_CPU2 : 1;
 
-        //64bits
-        Uint16 TZ_CPU1 : 1;
-        Uint16 TZ_CPU2 : 1;
-        Uint16 PLL_UNSYNC : 1;
-
         Uint16 Not_enough_data_master : 1;
-        Uint16 CT_char_error : 1;
+        Uint16 rsvd1:9;
+        //64bits
 
-
-        Uint16 rsvd1:16;
         Uint16 rsvd2:16;
+        Uint16 rsvd3:16;
     }bit;
 };
 

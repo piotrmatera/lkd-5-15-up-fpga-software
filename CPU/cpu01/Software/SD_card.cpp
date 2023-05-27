@@ -541,7 +541,6 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
     if(alarm_master_temp.bit.U_dc_L       ) f_puts("\t\tU_dc_L        \n", fil);
 
     if(alarm_master_temp.bit.CONV_SOFTSTART       ) f_puts("\t\tCONV_SOFTSTART \n", fil);
-    if(alarm_master_temp.bit.FLT_SUPPLY_SLAVE     ) f_puts("\t\tFLT_SUPPLY_SLAVE \n", fil);
     //
     if(alarm_master_temp.bit.TZ_CLOCKFAIL_CPU1) f_puts("\t\tTZ_CLOCKFAIL_CPU1 \n", fil);
     if(alarm_master_temp.bit.TZ_EMUSTOP_CPU1  ) f_puts("\t\tTZ_EMUSTOP_CPU1 \n", fil);

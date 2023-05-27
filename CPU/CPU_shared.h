@@ -10,7 +10,6 @@
 
 #include "IO.h"
 #include "Node_shared.h"
-#include "Scope.h"
 
 struct Measurements_alarm_struct
 {
@@ -240,16 +239,12 @@ struct CPU2toCPU1_struct
     float f_filter;
     float sign;
     float PLL_RDY;
+    union ALARM_master alarm_master;
 };
 
 extern struct CPU1toCPU2_struct CPU1toCPU2;
 extern struct CPU2toCPU1_struct CPU2toCPU1;
 
-extern union ALARM_master alarm_master;
-extern union ALARM_master alarm_master_snapshot;
-
 extern volatile union EMIF_union EMIF_mem;
-
-extern struct Scope_v1 Scope;
 
 #endif /* CPU_SHARED_H_ */

@@ -1,4 +1,4 @@
-rvl_alias "clk_DSP" "Kalman1/clk_i";
+rvl_alias "XTAL_20MHz_i2" "XTAL_20MHz_i2";
 BLOCK RESETPATHS ;
 BLOCK ASYNCPATHS ;
 BLOCK JTAGPATHS ;

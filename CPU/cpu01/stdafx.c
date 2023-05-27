@@ -10,7 +10,6 @@
 #pragma SET_DATA_SECTION("CLAData")
 
 struct Converter_struct Conv;
-struct CLA2toCLA1_struct CLA2toCLA1;
 struct Thermistor_struct Therm;
 struct Grid_analyzer_struct Grid;
 struct Grid_analyzer_filter_struct Grid_filter;
@@ -19,6 +18,8 @@ union CONTROL_EXT_MODBUS control_ext_modbus;
 
 struct CONTROL_master control_master;
 struct STATUS_master status_master;
+union ALARM_master alarm_master;
+union ALARM_master alarm_master_snapshot;
 
 struct Timer_PWM_struct Timer_PWM;
 
@@ -53,16 +54,9 @@ struct CPU2toCPU1_struct CPU2toCPU1;
 
 #pragma SET_DATA_SECTION("CPU_shared")
 
-union ALARM_master alarm_master;
-union ALARM_master alarm_master_snapshot;
-
 #pragma SET_DATA_SECTION("EMIF_mem")
 
 volatile union EMIF_union EMIF_mem;
-
-#pragma DATA_SECTION(Scope,"Scope")
-
-struct Scope_v1 Scope;
 
 #pragma SET_DATA_SECTION()
 

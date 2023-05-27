@@ -1,33 +1,201 @@
-<Project ModBy="Inserter" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-05-17">
-    <Core Name="SerDes_master_LA0">
-        <Setting>
-            <Capture SamplesPerTrig="512" NumTrigsCap="1"/>
-            <Event EventCnt="0" CntEnableRun="0"/>
-            <TrigSetting PreTrgSamples="" AND_ALL="0" PostTrgSamples="" TURadix="0"/>
-        </Setting>
-        <Dataset Name="Base">
-            <Trace>
-                <Bus Name="Kalman1/cnt" Radix="0">
-                    <Sig Name="Kalman1/cnt:0"/>
-                    <Sig Name="Kalman1/cnt:1"/>
-                    <Sig Name="Kalman1/cnt:2"/>
-                    <Sig Name="Kalman1/cnt:3"/>
-                    <Sig Name="Kalman1/cnt:4"/>
-                </Bus>
-                <Sig Name="Kalman1/enable_i"/>
-                <Bus Name="Kalman1/harmonics_cnt" Radix="0">
-                    <Sig Name="Kalman1/harmonics_cnt:0"/>
-                    <Sig Name="Kalman1/harmonics_cnt:1"/>
-                    <Sig Name="Kalman1/harmonics_cnt:2"/>
-                    <Sig Name="Kalman1/harmonics_cnt:3"/>
-                    <Sig Name="Kalman1/harmonics_cnt:4"/>
-                </Bus>
-                <Sig Name="Kalman1/wip_flag"/>
-            </Trace>
-            <Trigger>
-                <TU Operator="6" Name="TU1" ID="1" Value="1" Radix="0"/>
-                <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
-            </Trigger>
-        </Dataset>
-    </Core>
+<Project ModBy="Analyzer" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvs" Date="2023-05-27">
+ <Core Name="SerDes_master_LA0">
+  <Setting>
+   <Capture SamplesPerTrig="512" NumTrigsCap="1"/>
+   <Event EventCnt="0" CntEnableRun="0"/>
+   <TrigSetting PreTrgSamples="" AND_ALL="0" PostTrgSamples="" TURadix="0"/>
+  </Setting>
+  <Dataset Name="Base">
+   <Trace>
+    <Bus Name="compare_LH[0]/compare_o" Radix="0">
+     <Sig Name="compare_LH[0]/compare_o:0"/>
+     <Sig Name="compare_LH[0]/compare_o:1"/>
+    </Bus>
+    <Bus Name="compare_LH[0]/compare_value_H_i" Radix="0">
+     <Sig Name="compare_LH[0]/compare_value_H_i:0"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:1"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:2"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:3"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:4"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:5"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:6"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:7"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:8"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:9"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:10"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:11"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:12"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:13"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:14"/>
+     <Sig Name="compare_LH[0]/compare_value_H_i:15"/>
+    </Bus>
+    <Bus Name="compare_LH[0]/compare_value_L_i" Radix="0">
+     <Sig Name="compare_LH[0]/compare_value_L_i:0"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:1"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:2"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:3"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:4"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:5"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:6"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:7"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:8"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:9"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:10"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:11"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:12"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:13"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:14"/>
+     <Sig Name="compare_LH[0]/compare_value_L_i:15"/>
+    </Bus>
+    <Bus Name="compare_LH[0]/compare_value_i" Radix="0">
+     <Sig Name="compare_LH[0]/compare_value_i:0"/>
+     <Sig Name="compare_LH[0]/compare_value_i:1"/>
+     <Sig Name="compare_LH[0]/compare_value_i:2"/>
+     <Sig Name="compare_LH[0]/compare_value_i:3"/>
+     <Sig Name="compare_LH[0]/compare_value_i:4"/>
+     <Sig Name="compare_LH[0]/compare_value_i:5"/>
+     <Sig Name="compare_LH[0]/compare_value_i:6"/>
+     <Sig Name="compare_LH[0]/compare_value_i:7"/>
+     <Sig Name="compare_LH[0]/compare_value_i:8"/>
+     <Sig Name="compare_LH[0]/compare_value_i:9"/>
+     <Sig Name="compare_LH[0]/compare_value_i:10"/>
+     <Sig Name="compare_LH[0]/compare_value_i:11"/>
+     <Sig Name="compare_LH[0]/compare_value_i:12"/>
+     <Sig Name="compare_LH[0]/compare_value_i:13"/>
+     <Sig Name="compare_LH[0]/compare_value_i:14"/>
+     <Sig Name="compare_LH[0]/compare_value_i:15"/>
+     <Sig Name="compare_LH[0]/compare_value_i:16"/>
+     <Sig Name="compare_LH[0]/compare_value_i:17"/>
+     <Sig Name="compare_LH[0]/compare_value_i:18"/>
+     <Sig Name="compare_LH[0]/compare_value_i:19"/>
+     <Sig Name="compare_LH[0]/compare_value_i:20"/>
+     <Sig Name="compare_LH[0]/compare_value_i:21"/>
+     <Sig Name="compare_LH[0]/compare_value_i:22"/>
+     <Sig Name="compare_LH[0]/compare_value_i:23"/>
+     <Sig Name="compare_LH[0]/compare_value_i:24"/>
+     <Sig Name="compare_LH[0]/compare_value_i:25"/>
+     <Sig Name="compare_LH[0]/compare_value_i:26"/>
+     <Sig Name="compare_LH[0]/compare_value_i:27"/>
+     <Sig Name="compare_LH[0]/compare_value_i:28"/>
+     <Sig Name="compare_LH[0]/compare_value_i:29"/>
+     <Sig Name="compare_LH[0]/compare_value_i:30"/>
+     <Sig Name="compare_LH[0]/compare_value_i:31"/>
+    </Bus>
+    <Bus Name="compare_LH[0]/value_i" Radix="0">
+     <Sig Name="compare_LH[0]/value_i:0"/>
+     <Sig Name="compare_LH[0]/value_i:1"/>
+     <Sig Name="compare_LH[0]/value_i:2"/>
+     <Sig Name="compare_LH[0]/value_i:3"/>
+     <Sig Name="compare_LH[0]/value_i:4"/>
+     <Sig Name="compare_LH[0]/value_i:5"/>
+     <Sig Name="compare_LH[0]/value_i:6"/>
+     <Sig Name="compare_LH[0]/value_i:7"/>
+     <Sig Name="compare_LH[0]/value_i:8"/>
+     <Sig Name="compare_LH[0]/value_i:9"/>
+     <Sig Name="compare_LH[0]/value_i:10"/>
+     <Sig Name="compare_LH[0]/value_i:11"/>
+     <Sig Name="compare_LH[0]/value_i:12"/>
+     <Sig Name="compare_LH[0]/value_i:13"/>
+     <Sig Name="compare_LH[0]/value_i:14"/>
+     <Sig Name="compare_LH[0]/value_i:15"/>
+    </Bus>
+    <Bus Name="compare_LH[4]/compare_o" Radix="0">
+     <Sig Name="compare_LH[4]/compare_o:0"/>
+     <Sig Name="compare_LH[4]/compare_o:1"/>
+    </Bus>
+    <Bus Name="compare_LH[4]/compare_value_H_i" Radix="0">
+     <Sig Name="compare_LH[4]/compare_value_H_i:0"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:1"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:2"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:3"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:4"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:5"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:6"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:7"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:8"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:9"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:10"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:11"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:12"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:13"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:14"/>
+     <Sig Name="compare_LH[4]/compare_value_H_i:15"/>
+    </Bus>
+    <Bus Name="compare_LH[4]/compare_value_L_i" Radix="0">
+     <Sig Name="compare_LH[4]/compare_value_L_i:0"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:1"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:2"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:3"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:4"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:5"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:6"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:7"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:8"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:9"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:10"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:11"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:12"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:13"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:14"/>
+     <Sig Name="compare_LH[4]/compare_value_L_i:15"/>
+    </Bus>
+    <Bus Name="compare_LH[4]/compare_value_i" Radix="0">
+     <Sig Name="compare_LH[4]/compare_value_i:0"/>
+     <Sig Name="compare_LH[4]/compare_value_i:1"/>
+     <Sig Name="compare_LH[4]/compare_value_i:2"/>
+     <Sig Name="compare_LH[4]/compare_value_i:3"/>
+     <Sig Name="compare_LH[4]/compare_value_i:4"/>
+     <Sig Name="compare_LH[4]/compare_value_i:5"/>
+     <Sig Name="compare_LH[4]/compare_value_i:6"/>
+     <Sig Name="compare_LH[4]/compare_value_i:7"/>
+     <Sig Name="compare_LH[4]/compare_value_i:8"/>
+     <Sig Name="compare_LH[4]/compare_value_i:9"/>
+     <Sig Name="compare_LH[4]/compare_value_i:10"/>
+     <Sig Name="compare_LH[4]/compare_value_i:11"/>
+     <Sig Name="compare_LH[4]/compare_value_i:12"/>
+     <Sig Name="compare_LH[4]/compare_value_i:13"/>
+     <Sig Name="compare_LH[4]/compare_value_i:14"/>
+     <Sig Name="compare_LH[4]/compare_value_i:15"/>
+     <Sig Name="compare_LH[4]/compare_value_i:16"/>
+     <Sig Name="compare_LH[4]/compare_value_i:17"/>
+     <Sig Name="compare_LH[4]/compare_value_i:18"/>
+     <Sig Name="compare_LH[4]/compare_value_i:19"/>
+     <Sig Name="compare_LH[4]/compare_value_i:20"/>
+     <Sig Name="compare_LH[4]/compare_value_i:21"/>
+     <Sig Name="compare_LH[4]/compare_value_i:22"/>
+     <Sig Name="compare_LH[4]/compare_value_i:23"/>
+     <Sig Name="compare_LH[4]/compare_value_i:24"/>
+     <Sig Name="compare_LH[4]/compare_value_i:25"/>
+     <Sig Name="compare_LH[4]/compare_value_i:26"/>
+     <Sig Name="compare_LH[4]/compare_value_i:27"/>
+     <Sig Name="compare_LH[4]/compare_value_i:28"/>
+     <Sig Name="compare_LH[4]/compare_value_i:29"/>
+     <Sig Name="compare_LH[4]/compare_value_i:30"/>
+     <Sig Name="compare_LH[4]/compare_value_i:31"/>
+    </Bus>
+    <Bus Name="compare_LH[4]/value_i" Radix="0">
+     <Sig Name="compare_LH[4]/value_i:0"/>
+     <Sig Name="compare_LH[4]/value_i:1"/>
+     <Sig Name="compare_LH[4]/value_i:2"/>
+     <Sig Name="compare_LH[4]/value_i:3"/>
+     <Sig Name="compare_LH[4]/value_i:4"/>
+     <Sig Name="compare_LH[4]/value_i:5"/>
+     <Sig Name="compare_LH[4]/value_i:6"/>
+     <Sig Name="compare_LH[4]/value_i:7"/>
+     <Sig Name="compare_LH[4]/value_i:8"/>
+     <Sig Name="compare_LH[4]/value_i:9"/>
+     <Sig Name="compare_LH[4]/value_i:10"/>
+     <Sig Name="compare_LH[4]/value_i:11"/>
+     <Sig Name="compare_LH[4]/value_i:12"/>
+     <Sig Name="compare_LH[4]/value_i:13"/>
+     <Sig Name="compare_LH[4]/value_i:14"/>
+     <Sig Name="compare_LH[4]/value_i:15"/>
+    </Bus>
+   </Trace>
+   <Trigger>
+    <TU Operator="6" Name="TU1" ID="1" Value="1" Radix="0"/>
+    <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
+   </Trigger>
+  </Dataset>
+ </Core>
 </Project>

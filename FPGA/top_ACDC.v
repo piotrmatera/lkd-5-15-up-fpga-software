@@ -524,7 +524,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	localparam SD_NUMBER = 11; 
 	wire [1:0] decimator_pulse; 
 	wire new_value; 
-	wire avg_value; 
+	reg avg_value; 
 	wire new_value_early; 
 	reg SD_sync_pulse; 
 	wire select_SD; 
@@ -539,7 +539,7 @@ module SerDes_master(CPU_io, FPGA_io);
     IDDRX1F SD_IDDR[SD_NUMBER-1:0](.D(SD_DAT), .RST(1'b0), .SCLK(XTAL_20MHz_i), .Q0(SD_DAT_IDDR), .Q1());
  
 	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat; 
-	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i(SD_DAT_IDDR), 
+	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i({~SD_DAT_IDDR[10:8], SD_DAT_IDDR[7:0]}), 
 	.clk_i(XTAL_20MHz_i), .decimator_pulse_i(decimator_pulse), .select_i(select_SD), .data_o(SD_dat)); 
 	
 	wire [SD_WIDTH-1+2:0] SD_dat_In; 
@@ -561,11 +561,12 @@ module SerDes_master(CPU_io, FPGA_io);
 	.compare_value_i({EMIF_RX_reg[17], EMIF_RX_reg[16], EMIF_RX_reg[15], EMIF_RX_reg[14], EMIF_RX_reg[13], EMIF_RX_reg[12], EMIF_RX_reg[11]}),
 	.compare_o(compare_o));
 	
-	reg [`CONTROL_RATE_WIDTH-1:0] avg_counter;
+	wire sync_latch;
+	wire sync;
+	Sync_latch_input #(.OUT_POLARITY(1), .STEPS(2)) Sync_latch_avg(.clk_i(XTAL_20MHz_i), .in(sync), .out(sync_latch), .reset_i(new_value), .set_i(1'b0)); 
+	
 	always @(posedge XTAL_20MHz_i)
-		if(new_value)
-			avg_counter <= avg_counter + 1'b1;
-	assign avg_value = avg_counter[`CONTROL_RATE_WIDTH-1];
+		avg_value <= new_value & sync_latch;
 	
 ///////////////////////////////////////////////////////////////////// 
 	
@@ -610,7 +611,6 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire [15:0] current_period;
 	wire [15:0] next_period;
 	wire sync_phase;
-	wire sync;
 	Local_counter Local_counter(.clk_i(clk_5x), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase), .sync_o(sync),
 	.snapshot_start_i({timestamp_code_rx2, timestamp_code_tx2, timestamp_code_rx1, timestamp_code_tx1}), .snapshot_value_o(snapshot_value)); 
 	assign next_period = `CYCLE_PERIOD - 16'd1;

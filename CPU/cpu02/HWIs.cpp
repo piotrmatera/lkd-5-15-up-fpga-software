@@ -109,9 +109,9 @@ interrupt void SD_NEW_INT()
     CPU2toCPU1.sign = PLL.sign;
     CPU2toCPU1.PLL_RDY = PLL.RDY;
 
-    if(EPwm5Regs.TZFLG.bit.OST) alarm_master.bit.TZ_CPU2 = 1;
-    if(EPwm5Regs.TZOSTFLG.bit.OST5) alarm_master.bit.TZ_CLOCKFAIL_CPU2 = 1;
-    if(EPwm5Regs.TZOSTFLG.bit.OST6) alarm_master.bit.TZ_EMUSTOP_CPU2 = 1;
+    if(EPwm5Regs.TZFLG.bit.OST) CPU2toCPU1.alarm_master.bit.TZ_CPU2 = 1;
+    if(EPwm5Regs.TZOSTFLG.bit.OST5) CPU2toCPU1.alarm_master.bit.TZ_CLOCKFAIL_CPU2 = 1;
+    if(EPwm5Regs.TZOSTFLG.bit.OST6) CPU2toCPU1.alarm_master.bit.TZ_EMUSTOP_CPU2 = 1;
 
     static Uint64 benchmark_timer_HWI;
     static volatile float benchmark_HWI;

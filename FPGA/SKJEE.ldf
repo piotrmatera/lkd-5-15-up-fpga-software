@@ -2,7 +2,7 @@
 <BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381C" default_implementation="ACDC">
     <Options/>
     <Implementation title="ACDC" dir="ACDC" description="ACDC" synthesis="lse" default_strategy="Strategy1">
-        <Options top="SerDes_master"/>
+        <Options def_top="Clarity" top="SerDes_master"/>
         <Source name="comm_core.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
@@ -75,7 +75,7 @@
         <Source name="Reveal_ana_ACDC.rva" type="Reveal Analyzer Project File" type_short="RVA">
             <Options/>
         </Source>
-        <Source name="Reveal_ins_ACDC.rvl" type="Reveal" type_short="Reveal" excluded="TRUE">
+        <Source name="Reveal_ins_ACDC.rvl" type="Reveal" type_short="Reveal">
             <Options/>
         </Source>
         <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">

@@ -1,6 +1,10 @@
 #ifndef _CLA_SHARED_H_
 #define _CLA_SHARED_H_
 
+#define SCOPE_BUFFER 1250
+#define SCOPE_CHANNEL 12
+typedef float scope_data_type;
+
 #define SINCOS_HARMONICS 50
 #define CIC_upsample1 10
 #define CIC_upsample2 10
@@ -118,8 +122,6 @@ union CONTROL_EXT_MODBUS
 //
 extern struct Energy_meter_struct Energy_meter;
 
-extern struct CLA2toCLA1_struct CLA2toCLA1;
-
 extern struct Thermistor_struct Therm;
 
 extern struct Measurements_master_struct Meas_master;
@@ -135,6 +137,8 @@ extern union CONTROL_EXT_MODBUS control_ext_modbus;
 
 extern struct CONTROL_master control_master;
 extern struct STATUS_master status_master;
+extern union ALARM_master alarm_master;
+extern union ALARM_master alarm_master_snapshot;
 
 extern struct CIC2_struct CIC2_calibration;
 extern CLA_FPTR CIC2_calibration_input;

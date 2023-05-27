@@ -7,6 +7,9 @@
 
 #include "Scope.h"
 
+#pragma DATA_SECTION(Scope,"Scope")
+struct Scope_v1 Scope;
+
 #pragma CODE_SECTION(Scope_start, ".TI.ramfunc");
 void Scope_start()
 {

@@ -73,9 +73,9 @@ void CT_char_calc()
     {
         if(CT_char_vars.CT_char.number_of_elements == 1)
         {
-            Meas_master_gain.I_grid.a = CT_char_vars.calibration.Meas_master_gain.I_grid.a * fabs(CT_char_vars.CT_char.CT_ratio_a[0]);
-            Meas_master_gain.I_grid.b = CT_char_vars.calibration.Meas_master_gain.I_grid.b * fabs(CT_char_vars.CT_char.CT_ratio_b[0]);
-            Meas_master_gain.I_grid.c = CT_char_vars.calibration.Meas_master_gain.I_grid.c * fabs(CT_char_vars.CT_char.CT_ratio_c[0]);
+            Meas_master_gain.I_grid.a = CT_char_vars.calibration.Meas_master_gain.I_grid.a * fabsf(CT_char_vars.CT_char.CT_ratio_a[0]);
+            Meas_master_gain.I_grid.b = CT_char_vars.calibration.Meas_master_gain.I_grid.b * fabsf(CT_char_vars.CT_char.CT_ratio_b[0]);
+            Meas_master_gain.I_grid.c = CT_char_vars.calibration.Meas_master_gain.I_grid.c * fabsf(CT_char_vars.CT_char.CT_ratio_c[0]);
             register float degrees_kTs = 0.02f / (360.0f * Conv.Ts);
             CT_char_vars.CT_phase[0] = CT_char_vars.CT_char.phase_a[0] * degrees_kTs;
             CT_char_vars.CT_phase[1] = CT_char_vars.CT_char.phase_b[0] * degrees_kTs;
@@ -114,9 +114,9 @@ void CT_char_calc()
             Y_interp.a = Y_point[0].a + X_ratio.a * (Y_point[1].a - Y_point[0].a);
             Y_interp.b = Y_point[0].b + X_ratio.b * (Y_point[1].b - Y_point[0].b);
             Y_interp.c = Y_point[0].c + X_ratio.c * (Y_point[1].c - Y_point[0].c);
-            Meas_master_gain.I_grid.a = CT_char_vars.calibration.Meas_master_gain.I_grid.a * fabs(Y_interp.a);
-            Meas_master_gain.I_grid.b = CT_char_vars.calibration.Meas_master_gain.I_grid.b * fabs(Y_interp.b);
-            Meas_master_gain.I_grid.c = CT_char_vars.calibration.Meas_master_gain.I_grid.c * fabs(Y_interp.c);
+            Meas_master_gain.I_grid.a = CT_char_vars.calibration.Meas_master_gain.I_grid.a * fabsf(Y_interp.a);
+            Meas_master_gain.I_grid.b = CT_char_vars.calibration.Meas_master_gain.I_grid.b * fabsf(Y_interp.b);
+            Meas_master_gain.I_grid.c = CT_char_vars.calibration.Meas_master_gain.I_grid.c * fabsf(Y_interp.c);
 
             Y_point[0].a = CT_char_vars.CT_char.phase_a[CT_char_vars.CT_char_index[0]];
             Y_point[1].a = CT_char_vars.CT_char.phase_a[CT_char_vars.CT_char_index[0]+1];
@@ -803,20 +803,20 @@ void Machine_class::init()
 
         Meas_master_gain.U_grid.a =
         Meas_master_gain.U_grid.b =
-        Meas_master_gain.U_grid.c = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*3.0 + 0.27)/(0.27)*(1.0 + (0.54/4.9));
+        Meas_master_gain.U_grid.c = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*3.0 + 0.27)/(0.27)*(1.0 + (0.54/4.9));
 
         Meas_master_gain.I_grid.a =
         Meas_master_gain.I_grid.b =
-        Meas_master_gain.I_grid.c = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift/0.005;
+        Meas_master_gain.I_grid.c = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift/0.005;
 
-        Meas_master_gain.U_dc = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*6.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
+        Meas_master_gain.U_dc = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*6.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
 
-        Meas_master_gain.U_dc_n = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*3.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
+        Meas_master_gain.U_dc_n = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*3.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
 
         Meas_master_gain.I_conv.a =
         Meas_master_gain.I_conv.b =
         Meas_master_gain.I_conv.c =
-        Meas_master_gain.I_conv.n = +0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift/0.001;
+        Meas_master_gain.I_conv.n = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift/0.001;
 
         control_ext_modbus.fields.baudrate = 1152;
         control_ext_modbus.fields.ext_server_id = 1;
@@ -1239,46 +1239,46 @@ void Machine_class::calibrate_curent_gain()
         GPIO_SET(LED2_CM);
 
         float I_cal = 2.0f;
-        if(fabs(Meas_master.I_grid_avg.a) > I_cal)
+        if(fabsf(Meas_master.I_grid_avg.a) > I_cal)
         {
             CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.a;
             DELAY_US(100000);
-            Meas_master_gain.I_grid.a = fabs(Meas_master_gain.I_grid.a * 5.0f / CIC2_calibration.out);
+            Meas_master_gain.I_grid.a = fabsf(Meas_master_gain.I_grid.a * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<0;
         }
-        if(fabs(Meas_master.I_grid_avg.b) > I_cal)
+        if(fabsf(Meas_master.I_grid_avg.b) > I_cal)
         {
             CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.b;
             DELAY_US(100000);
-            Meas_master_gain.I_grid.b = fabs(Meas_master_gain.I_grid.b * 5.0f / CIC2_calibration.out);
+            Meas_master_gain.I_grid.b = fabsf(Meas_master_gain.I_grid.b * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<1;
         }
-        if(fabs(Meas_master.I_grid_avg.c) > I_cal)
+        if(fabsf(Meas_master.I_grid_avg.c) > I_cal)
         {
             CIC2_calibration_input.ptr = &Meas_master.I_grid_avg.c;
             DELAY_US(100000);
-            Meas_master_gain.I_grid.c = fabs(Meas_master_gain.I_grid.c * 5.0f / CIC2_calibration.out);
+            Meas_master_gain.I_grid.c = fabsf(Meas_master_gain.I_grid.c * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<2;
         }
         if(fabsf(Meas_master.I_conv_avg.a) > I_cal)
         {
             CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.a;
             DELAY_US(100000);
-            Meas_master_gain.I_conv.a = -fabsf(Meas_master_gain.I_conv.a * 5.0f / CIC2_calibration.out);
+            Meas_master_gain.I_conv.a = fabsf(Meas_master_gain.I_conv.a * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<3;
         }
         if(fabsf(Meas_master.I_conv_avg.b) > I_cal)
         {
             CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.b;
             DELAY_US(100000);
-            Meas_master_gain.I_conv.b = -fabsf(Meas_master_gain.I_conv.b * 5.0f / CIC2_calibration.out);
+            Meas_master_gain.I_conv.b = fabsf(Meas_master_gain.I_conv.b * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<4;
         }
         if(fabsf(Meas_master.I_conv_avg.c) > I_cal)
         {
             CIC2_calibration_input.ptr = &Meas_master.I_conv_avg.c;
             DELAY_US(100000);
-            Meas_master_gain.I_conv.c = -fabsf(Meas_master_gain.I_conv.c * 5.0f / CIC2_calibration.out);
+            Meas_master_gain.I_conv.c = fabsf(Meas_master_gain.I_conv.c * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<5;
         }
 //        if(fabsf(Meas_master.I_conv_avg.n) > I_cal)
@@ -1796,7 +1796,7 @@ void Machine_class::Lgrid_meas()
         L_grid_meas.L_grid[4].c = (L_grid_meas.U_pos[4].c - L_grid_meas.U_neg[4].c) / (L_grid_meas.Iq_diff_c[4] * Conv.w_filter);
         memcpy(L_grid_meas.L_grid_sorted, L_grid_meas.L_grid, sizeof(L_grid_meas.L_grid_sorted));
         qsort(L_grid_meas.L_grid_sorted, 15, sizeof(float), compare_float);
-        L_grid_meas.L_grid_new = fabs(L_grid_meas.L_grid_sorted[7]);
+        L_grid_meas.L_grid_new = fabsf(L_grid_meas.L_grid_sorted[7]);
         Conv.compensation2 = 2.0f * 4000.0f * Saturation(L_grid_meas.L_grid_new, 50e-6, 800e-6) + 1.8f;
 
         qsort(L_grid_meas.Iq_diff_a, 5, sizeof(float), compare_float);

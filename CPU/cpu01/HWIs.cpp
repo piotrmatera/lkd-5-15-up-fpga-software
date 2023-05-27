@@ -8,6 +8,7 @@
 #include <math.h>
 #include "stdafx.h"
 #include "HWIs.h"
+#include "Scope.h"
 #include "State.h"
 #include "SD_card.h"
 #include "Modbus_devices.h"
@@ -78,26 +79,14 @@ interrupt void SD_AVG_NT()
         if(Grid.parameters.I_conv.c > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_c = 1;
         if(Grid.parameters.I_conv.n > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_n = 1;
 
-//        if(Conv.enable)
-//        {
-//            if(fabs(Meas_master.U_grid.a) > CPU1toCPU2.Meas_alarm_H.U_grid_abs) alarm_master.bit.U_grid_abs_a_H = 1;
-//            if(fabs(Meas_master.U_grid.b) > CPU1toCPU2.Meas_alarm_H.U_grid_abs) alarm_master.bit.U_grid_abs_b_H = 1;
-//            if(fabs(Meas_master.U_grid.c) > CPU1toCPU2.Meas_alarm_H.U_grid_abs) alarm_master.bit.U_grid_abs_c_H = 1;
-//        }
-//
-//        if(Meas_master.I_conv.a < CPU1toCPU2.Meas_alarm_L.I_conv) alarm_master.bit.I_conv_a_L = 1;
-//        if(Meas_master.I_conv.a > CPU1toCPU2.Meas_alarm_H.I_conv) alarm_master.bit.I_conv_a_H = 1;
-//        if(Meas_master.I_conv.b < CPU1toCPU2.Meas_alarm_L.I_conv) alarm_master.bit.I_conv_b_L = 1;
-//        if(Meas_master.I_conv.b > CPU1toCPU2.Meas_alarm_H.I_conv) alarm_master.bit.I_conv_b_H = 1;
-//        if(Meas_master.I_conv.c < CPU1toCPU2.Meas_alarm_L.I_conv) alarm_master.bit.I_conv_c_L = 1;
-//        if(Meas_master.I_conv.c > CPU1toCPU2.Meas_alarm_H.I_conv) alarm_master.bit.I_conv_c_H = 1;
-//        if(Meas_master.I_conv.n < CPU1toCPU2.Meas_alarm_L.I_conv) alarm_master.bit.I_conv_n_L = 1;
-//        if(Meas_master.I_conv.n > CPU1toCPU2.Meas_alarm_H.I_conv) alarm_master.bit.I_conv_n_H = 1;
-//
         static volatile float Temp_max = 0;
         Temp_max = fmaxf(Meas_master.Temperature1, fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
         if(Temp_max > Meas_alarm_H.Temp) alarm_master.bit.Temperature_H = 1;
         if(Temp_max < Meas_alarm_L.Temp) alarm_master.bit.Temperature_L = 1;
+
+        alarm_master.all[0] |= CPU2toCPU1.alarm_master.all[0];
+        alarm_master.all[1] |= CPU2toCPU1.alarm_master.all[1];
+        alarm_master.all[2] |= CPU2toCPU1.alarm_master.all[2];
 
         if((alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) && !(alarm_master_snapshot.all[0] | alarm_master_snapshot.all[1] | alarm_master_snapshot.all[2]))
         {
