@@ -6,6 +6,10 @@
 #ifndef GRID_ANALYZER_H_
 #define GRID_ANALYZER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct Grid_parameters_struct
 {
     struct abc_struct I_grid_1h;
@@ -62,8 +66,6 @@ struct Grid_analyzer_struct
     struct CIC1_adaptive_struct CIC1_Q_grid_1h[3];
     struct CIC1_adaptive_struct CIC1_Q_conv_1h[3];
 
-    struct Grid_parameters_struct parameters;
-
     float Accumulator_gain;
     Uint32 input_P_p[3];
     Uint32 input_P_n[3];
@@ -98,14 +100,18 @@ struct Grid_analyzer_filter_struct
 
     struct CIC1_struct CIC1_THD_U_grid[3];
     struct CIC1_struct CIC1_THD_I_grid[3];
-
-    struct Grid_parameters_struct parameters;
 };
 
-extern struct Grid_analyzer_struct Grid;
-extern struct Grid_analyzer_filter_struct Grid_filter;
+extern struct Grid_analyzer_struct Grid_params;
+extern struct Grid_analyzer_filter_struct Grid_filter_params;
+extern struct Grid_parameters_struct Grid;
+extern struct Grid_parameters_struct Grid_filter;
 
 void Grid_analyzer_calc();
 void Grid_analyzer_filter_calc();
+
+#ifdef __cplusplus
+}
+#endif // extern "C"
 
 #endif /* GRID_ANALYZER_H_ */

@@ -36,19 +36,25 @@ struct Converter_struct
     struct abcn_struct I_conv_max;
     struct PI_struct PI_I_harm_ratio[4];
 
-    struct abc_struct Kalman_U_grid;
-    struct abc_struct Kalman_U_grid_diff;
     float sag;
 
     struct abc_struct id_conv, iq_conv;
     struct abc_struct id_load, iq_load;
 
     struct abc_struct tangens_range_local[2];
+    struct abc_Filter1_struct tangens_range_local_prefilter[2];
     struct abc_struct version_Q_comp_local, enable_Q_comp_local;
+    struct abc_Filter1_struct version_Q_comp_local_prefilter, enable_Q_comp_local_prefilter;
     struct abc_struct Q_set_local;
+    struct abc_Filter1_struct Q_set_local_prefilter;
+    struct abc_struct iq_load_ref;
+    struct abcn_struct iq_lim;
+    float Iq_x, Iq_y;
+
     float version_P_sym_local, enable_P_sym_local;
-    struct abc_struct I_ref;
-    struct abc_struct U_coupl;
+    struct Filter1_struct version_P_sym_local_prefilter, enable_P_sym_local_prefilter;
+    struct abcn_struct id_lim;
+    float Id_x, Id_y;
 
     float Kp_I;
     float Kr_I;
@@ -66,6 +72,8 @@ struct Converter_struct
 
     float w_filter;
     float f_filter;
+    float sign;
+    float PLL_RDY;
     float compensation2;
     float Ts;
     float I_lim, I_lim_nominal;

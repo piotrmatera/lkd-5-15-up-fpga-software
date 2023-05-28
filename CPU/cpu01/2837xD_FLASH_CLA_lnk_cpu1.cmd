@@ -6,8 +6,8 @@
 MEMORY
 {
 PAGE 0 :
-   RAMM0           	: origin = 0x000122,   length = 0x0002DE
-   RAMM1            : origin = 0x000400,   length = 0x000400
+   RAMM0_1           	: origin = 0x000122,   length = 0x0006DE
+   //RAMM1            : origin = 0x000400,   length = 0x000400
    RAMD0_1           	: origin = 0x00B000,   length = 0x001000
    //RAMD1           	: origin = 0x00B800,   length = 0x000800
 
@@ -19,25 +19,27 @@ PAGE 0 :
    //RAMLS5           : origin = 0x00A800,   length = 0x000800
 
    RAMGS0_3           : origin = 0x00C000,   length = 0x004000
-   //RAMGS1           : origin = 0x00D000,   length = 0x001000
-   //RAMGS2           : origin = 0x00E000,   length = 0x001000
-   //RAMGS3           : origin = 0x00F000,   length = 0x001000
-   RAMGS4           : origin = 0x010000,   length = 0x001000
-
-   RAMGS5_12        : origin = 0x011000,   length = 0x008000
+   RAMGS4_7           : origin = 0x010000,   length = 0x004000
    /*
+   RAMGS1           : origin = 0x00D000,   length = 0x001000
+   RAMGS2           : origin = 0x00E000,   length = 0x001000
+   RAMGS3           : origin = 0x00F000,   length = 0x001000
+   RAMGS4           : origin = 0x010000,   length = 0x001000
    RAMGS5           : origin = 0x011000,   length = 0x001000
    RAMGS6           : origin = 0x012000,   length = 0x001000
    RAMGS7  			: origin = 0x013000,   length = 0x001000
+   	*/
+   RAMGS8_15  			: origin = 0x014000,   length = 0x008000
+   /*
    RAMGS8  			: origin = 0x014000,   length = 0x001000
    RAMGS9  			: origin = 0x015000,   length = 0x001000
    RAMGS10  		: origin = 0x016000,   length = 0x001000
    RAMGS11	 		: origin = 0x017000,   length = 0x001000
    RAMGS12  		: origin = 0x018000,   length = 0x001000
-	*/
    RAMGS13	 		: origin = 0x019000,   length = 0x001000
    RAMGS14  		: origin = 0x01A000,   length = 0x001000
    RAMGS15	 		: origin = 0x01B000,   length = 0x001000
+	*/
 
    /* Flash sectors */
 	#ifdef _BOOTLOADER
@@ -50,9 +52,9 @@ PAGE 0 :
    FLASHC           : origin = 0x084000,   length = 0x002000
 	#endif
    FLASHD           : origin = 0x086000,   length = 0x002000
-   FLASHE           : origin = 0x088000,   length = 0x010000
+   FLASHE           : origin = 0x088000,   length = 0x018000
    //FLASHF           : origin = 0x090000,   length = 0x008000
-   FLASHG           : origin = 0x098000,   length = 0x008000
+   //FLASHG           : origin = 0x098000,   length = 0x008000
    FLASHH           : origin = 0x0A0000,   length = 0x008000
    FLASHI           : origin = 0x0A8000,   length = 0x008000
    FLASHJ           : origin = 0x0B0000,   length = 0x008000
@@ -98,23 +100,24 @@ SECTIONS
    .files_ro:   >  FLASHJ
 
    /* Allocate uninitalized data sections: */
+
    .stack: 		>  RAMD0_1,   PAGE = 0
-   .ebss:		>>  RAMM0 | RAMGS0_3 | RAMGS4,   PAGE = 0
 
-   .esysmem: 	>  RAMM1,   PAGE = 0
-   .cio: 		>  RAMGS0_3,   PAGE = 0
+   .ebss:		>>  RAMM0_1 | RAMGS0_3 | RAMGS4_7,   PAGE = 0
+   .esysmem: 	>>  RAMM0_1 | RAMGS0_3 | RAMGS4_7,   PAGE = 0
+   .cio: 		>>  RAMM0_1 | RAMGS0_3 | RAMGS4_7,   PAGE = 0
 
-   CPU_shared:	>> RAMGS15, PAGE = 0
-   Scope: 		>  RAMGS5_12,   PAGE = 0
-   EMIF_mem: 	>> EMIF1_CS2n, PAGE = 0
-   CPUTOCLA: 	>> CLA1_MSGRAMHIGH, PAGE = 0
+   Grid: 		>  RAMGS4_7,   PAGE = 0
+   Scope: 		>  RAMGS8_15,   PAGE = 0
+   EMIF_mem: 	>  EMIF1_CS2n, PAGE = 0
+   CPUTOCLA: 	>  CLA1_MSGRAMHIGH, PAGE = 0
 
-   RAM_16BIT_ADDR: >>  RAMM0 | RAMGS0_3,   PAGE = 0
+   RAM_16BIT_ADDR: >  RAMLS3_5,   PAGE = 0
 
 ///////////////////////////////////////////////////////////////////////////////
 
     /* CLA specific sections */
-   CLAData:  	>> RAMLS3_5, PAGE = 0
+   CLAData:  	>  RAMLS3_5, PAGE = 0
 
    Cla1Prog: 	   LOAD = FLASHE, PAGE = 0
                    RUN  = RAMLS0_2, PAGE = 0

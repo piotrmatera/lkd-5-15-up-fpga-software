@@ -34,8 +34,6 @@ interrupt void Cla1Task1 ( void )
 
     Converter_calc();
 
-    Timer_PWM.CLA_CONV = TIMESTAMP_PWM;
-
     PLL_calc();
 
     Timer_PWM.CLA_PLL = TIMESTAMP_PWM;

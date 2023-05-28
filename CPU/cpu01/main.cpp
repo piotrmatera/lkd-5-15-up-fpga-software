@@ -17,7 +17,7 @@
 Rtc rtc;
 FATFS fs;           /* Filesystem object */
 MosfetCtrlApp mosfet_ctrl_app;
-int32 SD_phase = -100;
+int32 SD_phase = -400;
 
 #pragma CODE_SECTION(".TI.ramfunc");
 interrupt void NMI_INT()

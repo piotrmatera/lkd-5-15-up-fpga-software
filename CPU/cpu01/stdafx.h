@@ -7,7 +7,7 @@ typedef float scope_data_type;
 
 #define SINCOS_HARMONICS 50
 #define CIC_upsample1 10
-#define CIC_upsample2 10
+#define CIC_upsample2 100
 
 //
 // Included Files
@@ -38,14 +38,14 @@ struct Timer_PWM_struct
     Uint16 CLA_START_TASK1;
     Uint16 CLA_MEAS_TASK1;
     Uint16 CLA_CONV_TASK1;
-    Uint16 CLA_GRID_TASK1;
+    Uint16 CLA_THERM_TASK1;
     Uint16 CLA_END_TASK1;
     Uint16 CPU_SD;
     Uint16 CPU_COPY1;
     Uint16 CPU_COPY2;
+    Uint16 CPU_GRID;
     Uint16 CPU_ERROR;
     Uint16 CPU_SCOPE;
-    Uint16 CPU_TX_MSG2;
     Uint16 CPU_COMM;
     Uint16 CPU_END;
 };

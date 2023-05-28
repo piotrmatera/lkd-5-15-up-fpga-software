@@ -33,14 +33,16 @@ extern "C" {
 struct Timer_PWM_struct
 {
     Uint16 CLA_START_TASK;
+    Uint16 CLA_IERR;
     Uint16 CLA_CONV;
     Uint16 CLA_PLL;
     Uint16 CLA_ENDTASK;
     Uint16 CPU_SD;
     Uint16 CPU_MEAS;
+    Uint16 CPU_IERR;
     Uint16 CPU_MR_START;
     Uint16 CPU_PWM;
-    Uint16 CPU_SD_end;
+    Uint16 CPU_SD_END;
 };
 
 extern struct Timer_PWM_struct Timer_PWM;

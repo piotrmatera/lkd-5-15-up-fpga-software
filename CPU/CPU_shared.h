@@ -263,6 +263,7 @@ struct CPU2toCPU1_struct
     float f_filter;
     float sign;
     float PLL_RDY;
+    float sag;
     union ALARM_master alarm_master;
 };
 

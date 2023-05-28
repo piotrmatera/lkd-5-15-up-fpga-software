@@ -47,7 +47,7 @@ _Kalman_THD_calc_CPUasm:
         MOV32    R4H, *XAR5++
         MOV32    R5H, *XAR5++
 
-        .loop KALMAN_HARMONICS/4
+        .loop FPGA_KALMAN_STATES/4
 		DIVF32	 R4H, R4H, R0H
 		DIVF32	 R5H, R5H, R0H
         MOV32    *XAR6++, R6H
@@ -80,7 +80,7 @@ _Kalman_THD_calc_CPUasm:
 		MPYF32   R6H, R0H, R0H
 ||		MOV32    R0H, *XAR5++
 
-        .loop KALMAN_HARMONICS/2-1
+        .loop FPGA_KALMAN_STATES/2-1
 		MACF32 R3H, R2H, R2H, R0H, R0H
 ||		MOV32 R0H, *XAR5++
 		MACF32 R7H, R6H, R6H, R0H, R0H

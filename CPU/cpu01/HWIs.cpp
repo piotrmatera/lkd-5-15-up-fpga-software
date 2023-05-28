@@ -38,21 +38,25 @@ interrupt void SD_AVG_NT()
     Cla1ForceTask1();
 
     register float modifier1 = Conv.div_range_modifier_Kalman_values;
-    Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0].series[0].estimate * modifier1;
-    Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman[0].series[1].estimate * modifier1;
-    Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman[0].series[2].estimate * modifier1;
+//    Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0].series[0].estimate * modifier1;
+//    Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman[0].series[1].estimate * modifier1;
+//    Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman[0].series[2].estimate * modifier1;
     Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC.series[0].estimate * modifier1;
 
-//    Grid.parameters.parameters.THD_U_grid.a = Kalman_U_grid[0].THD_total;
-//    Grid.parameters.parameters.THD_U_grid.b = Kalman_U_grid[1].THD_total;
-//    Grid.parameters.parameters.THD_U_grid.c = Kalman_U_grid[2].THD_total;
-//    Grid.parameters.parameters.THD_I_grid.a = Kalman_I_grid[0].THD_total;
-//    Grid.parameters.parameters.THD_I_grid.b = Kalman_I_grid[1].THD_total;
-//    Grid.parameters.parameters.THD_I_grid.c = Kalman_I_grid[2].THD_total;
+    Conv.w_filter = CPU2toCPU1.w_filter;
+    Conv.f_filter = CPU2toCPU1.f_filter;
+    Conv.sign = CPU2toCPU1.sign;
+    Conv.PLL_RDY = CPU2toCPU1.PLL_RDY;
+    Conv.sag = CPU2toCPU1.sag;
+
+//    Grid.THD_U_grid.a = Kalman_U_grid[0].THD_total;
+//    Grid.THD_U_grid.b = Kalman_U_grid[1].THD_total;
+//    Grid.THD_U_grid.c = Kalman_U_grid[2].THD_total;
+//    Grid.THD_I_grid.a = Kalman_I_grid[0].THD_total;
+//    Grid.THD_I_grid.b = Kalman_I_grid[1].THD_total;
+//    Grid.THD_I_grid.c = Kalman_I_grid[2].THD_total;
 
     Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
-
-    Energy_meter_CPUasm();
 
     while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
     PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
@@ -69,6 +73,12 @@ interrupt void SD_AVG_NT()
 
     Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
 
+    Grid_analyzer_calc();
+//    Grid_analyzer_filter_calc();
+//    Energy_meter_CPUasm();
+
+    Timer_PWM.CPU_GRID = TIMESTAMP_PWM;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     if(!status_master.Init_done) Conv.enable = 0;
@@ -84,16 +94,16 @@ interrupt void SD_AVG_NT()
 
         if(Conv.enable)
         {
-            if(!CPU2toCPU1.PLL_RDY) alarm_master.bit.PLL_UNSYNC = 1;
+            if(!Conv.PLL_RDY) alarm_master.bit.PLL_UNSYNC = 1;
 
-            if(Grid.parameters.U_grid.a < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_a_L = 1;
-            if(Grid.parameters.U_grid.b < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_b_L = 1;
-            if(Grid.parameters.U_grid.c < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_c_L = 1;
+            if(Grid.U_grid.a < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_a_L = 1;
+            if(Grid.U_grid.b < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_b_L = 1;
+            if(Grid.U_grid.c < Meas_alarm_L.U_grid_rms) alarm_master.bit.U_grid_rms_c_L = 1;
         }
 
-        status_master.PLL_sync = CPU2toCPU1.PLL_RDY;
+        status_master.PLL_sync = Conv.PLL_RDY;
         float compare_U_rms = Meas_alarm_L.U_grid_rms + 10.0f;
-        if(Grid_filter.parameters.U_grid_1h.a > compare_U_rms && Grid_filter.parameters.U_grid_1h.b > compare_U_rms && Grid_filter.parameters.U_grid_1h.c > compare_U_rms)
+        if(Grid_filter.U_grid_1h.a > compare_U_rms && Grid_filter.U_grid_1h.b > compare_U_rms && Grid_filter.U_grid_1h.c > compare_U_rms)
             status_master.Grid_present = 1;
         else status_master.Grid_present = 0;
 
@@ -103,10 +113,10 @@ interrupt void SD_AVG_NT()
         if(Meas_master.U_dc > Meas_alarm_H.U_dc) alarm_master.bit.U_dc_H = 1;
         if(fabsf(Meas_master.U_dc - 2.0f * Meas_master.U_dc_n) > Meas_alarm_H.U_dc_balance) alarm_master.bit.U_dc_balance = 1;
 
-        if(Grid.parameters.I_conv.a > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_a = 1;
-        if(Grid.parameters.I_conv.b > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_b = 1;
-        if(Grid.parameters.I_conv.c > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_c = 1;
-        if(Grid.parameters.I_conv.n > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_n = 1;
+        if(Grid.I_conv.a > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_a = 1;
+        if(Grid.I_conv.b > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_b = 1;
+        if(Grid.I_conv.c > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_c = 1;
+        if(Grid.I_conv.n > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_n = 1;
 
         static volatile float Temp_max = 0;
         Temp_max = fmaxf(Meas_master.Temperature1, fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
@@ -189,27 +199,10 @@ interrupt void SD_AVG_NT()
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Modbus_slave_LCD.RTU->interrupt_task();
-    Modbus_slave_EXT.RTU->interrupt_task();
+//    Modbus_slave_LCD.RTU->interrupt_task();
+//    Modbus_slave_EXT.RTU->interrupt_task();
 
     Timer_PWM.CPU_COMM = TIMESTAMP_PWM;
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    {
-        Therm.Divider_supply += 0.001*( ((float)AdcdResultRegs.ADCRESULT0 + (float)AdcdResultRegs.ADCRESULT1)*(2e3/1e3)*(3.3/4096.0/2.0) - Therm.Divider_supply);
-        Meas_master.Supply_24V = ((float)AdcdResultRegs.ADCRESULT8 + (float)AdcdResultRegs.ADCRESULT9)*(11e3/1e3)*(3.3/4096.0/2.0);
-
-        static float index;
-        register float Thermistor;
-        register Uint16 *adcresult = (Uint16 *)&AdcdResultRegs.ADCRESULT2 + (Uint16)(0x2*index);
-        Thermistor = ( (float)*adcresult + (float)*(adcresult + 1) )*(3.3/256.0/16.0/2.0);
-        Thermistor = (Therm.R_divider * Thermistor) / (3.3 - Thermistor);
-        Thermistor = Therm.B/logf(Thermistor * Therm.DIV_Rinf) - Therm.T_0;
-        register float *Temperature = &Meas_master.Temperature1 + (Uint16)index;
-        *Temperature += 0.02*(Thermistor - *Temperature);
-        if(++index >= 3.0f) index = 0;
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

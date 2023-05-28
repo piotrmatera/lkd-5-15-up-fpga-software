@@ -15,6 +15,8 @@ void Converter_calc()
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 1;
 
+    Timer_PWM.CLA_IERR = TIMESTAMP_PWM;
+
     ///////////////////////////////////////////////////////////////////
 
     register float wL = PLL.w_filter * MATH_SQRT2;
@@ -62,4 +64,6 @@ void Converter_calc()
 
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 2;
+
+    Timer_PWM.CLA_CONV = TIMESTAMP_PWM;
 }

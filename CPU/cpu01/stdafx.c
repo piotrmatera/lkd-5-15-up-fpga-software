@@ -10,8 +10,9 @@
 #pragma SET_DATA_SECTION("CLAData")
 
 struct Converter_struct Conv;
-struct Grid_analyzer_struct Grid;
-struct Grid_analyzer_filter_struct Grid_filter;
+struct Grid_parameters_struct Grid;
+struct Grid_parameters_struct Grid_filter;
+struct Thermistor_struct Therm;
 
 union CONTROL_EXT_MODBUS control_ext_modbus;
 
@@ -51,15 +52,16 @@ struct CPU1toCPU2_struct CPU1toCPU2;
 
 struct CPU2toCPU1_struct CPU2toCPU1;
 
-#pragma SET_DATA_SECTION("CPU_shared")
-
 #pragma SET_DATA_SECTION("EMIF_mem")
 
 volatile union EMIF_union EMIF_mem;
 
-#pragma SET_DATA_SECTION()
+#pragma SET_DATA_SECTION("Grid")
 
-struct Thermistor_struct Therm;
+struct Grid_analyzer_struct Grid_params;
+struct Grid_analyzer_filter_struct Grid_filter_params;
+
+#pragma SET_DATA_SECTION()
 
 struct Kalman_struct Kalman_I_grid[3];
 struct Kalman_struct Kalman_U_grid[3];

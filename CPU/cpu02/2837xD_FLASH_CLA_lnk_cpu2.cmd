@@ -18,13 +18,13 @@ PAGE 0 :
    //RAMLS4      	    : origin = 0x00A000,   length = 0x000800
    //RAMLS5           : origin = 0x00A800,   length = 0x000800
 
-   RAMGS0           : origin = 0x00C000,   length = 0x001000
-   RAMGS1           : origin = 0x00D000,   length = 0x001000
-   RAMGS2           : origin = 0x00E000,   length = 0x001000
-   RAMGS3           : origin = 0x00F000,   length = 0x001000
-   RAMGS4           : origin = 0x010000,   length = 0x001000
+   //RAMGS0           : origin = 0x00C000,   length = 0x001000
+   //RAMGS1           : origin = 0x00D000,   length = 0x001000
+   //RAMGS2           : origin = 0x00E000,   length = 0x001000
+   //RAMGS3           : origin = 0x00F000,   length = 0x001000
+   //RAMGS4           : origin = 0x010000,   length = 0x001000
 
-   RAMGS5_12        : origin = 0x011000,   length = 0x008000
+   //RAMGS5_12        : origin = 0x011000,   length = 0x008000
    /*
    RAMGS5           : origin = 0x011000,   length = 0x001000
    RAMGS6           : origin = 0x012000,   length = 0x001000
@@ -35,9 +35,9 @@ PAGE 0 :
    RAMGS11	 		: origin = 0x017000,   length = 0x001000
    RAMGS12  		: origin = 0x018000,   length = 0x001000
 	*/
-   RAMGS13	 		: origin = 0x019000,   length = 0x001000
-   RAMGS14  		: origin = 0x01A000,   length = 0x001000
-   RAMGS15	 		: origin = 0x01B000,   length = 0x001000
+   //RAMGS13	 		: origin = 0x019000,   length = 0x001000
+   //RAMGS14  		: origin = 0x01A000,   length = 0x001000
+   //RAMGS15	 		: origin = 0x01B000,   length = 0x001000
 
    /* Flash sectors */
 	#ifdef _BOOTLOADER
@@ -96,13 +96,12 @@ SECTIONS
 
    /* Allocate uninitalized data sections: */
    .stack: 		>  RAMD0,   PAGE = 0
-   .ebss:		>>  RAMGS13 | RAMGS14,   PAGE = 0
+   .ebss:		>>  RAMD1,   PAGE = 0
    						     RUN_START(_ebss_start),
 						     RUN_SIZE(_ebss_size)
    .esysmem: 	>  RAMM1,   PAGE = 0
-   .cio: 		>  RAMGS1,   PAGE = 0
+   .cio: 		>  RAMD1,   PAGE = 0
 
-   CPU_shared:	>> RAMGS15, PAGE = 0
    EMIF_mem: 	>> EMIF1_CS2n, PAGE = 0
    CPUTOCLA: 	>> CLA1_MSGRAMHIGH, PAGE = 0
 

@@ -38,7 +38,7 @@ _SINCOS_kalman_calc_CPUasm:
 
 ;;;;;;;;;;;;;;;;;;;
 
-        .loop KALMAN_HARMONICS/2-1
+        .loop SINCOS_HARMONICS/2-1
         COSPUF32 R7H, R2H
         SINPUF32 R6H, R2H
         ADDF32  R2H, R1H, R0H

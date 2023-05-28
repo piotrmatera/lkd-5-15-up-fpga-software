@@ -63,6 +63,8 @@ interrupt void SD_NEW_INT()
     while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
     PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
 
+    Timer_PWM.CPU_IERR = TIMESTAMP_PWM;
+
     ///////////////////////////////////////////////////////////////////
 
     Conv.zero_error = 1.0f;
@@ -113,6 +115,7 @@ interrupt void SD_NEW_INT()
     CPU2toCPU1.f_filter = PLL.f_filter;
     CPU2toCPU1.sign = PLL.sign;
     CPU2toCPU1.PLL_RDY = PLL.RDY;
+    CPU2toCPU1.sag = Conv.sag;
 
     if(EPwm5Regs.TZFLG.bit.OST) CPU2toCPU1.alarm_master.bit.TZ_CPU2 = 1;
     if(EPwm5Regs.TZOSTFLG.bit.OST5) CPU2toCPU1.alarm_master.bit.TZ_CLOCKFAIL_CPU2 = 1;
@@ -123,6 +126,6 @@ interrupt void SD_NEW_INT()
 //    benchmark_HWI = (float)(ReadIpcTimer() - benchmark_timer_HWI)*(1.0f/200000000.0f);
 //    benchmark_timer_HWI = ReadIpcTimer();
 
-    Timer_PWM.CPU_SD_end = TIMESTAMP_PWM;
+    Timer_PWM.CPU_SD_END = TIMESTAMP_PWM;
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP12;
 }

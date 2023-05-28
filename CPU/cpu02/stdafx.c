@@ -32,8 +32,6 @@ struct CPU1toCPU2_struct CPU1toCPU2;
 
 struct CPU2toCPU1_struct CPU2toCPU1;
 
-#pragma SET_DATA_SECTION("CPU_shared")
-
 #pragma SET_DATA_SECTION("EMIF_mem")
 
 volatile union EMIF_union EMIF_mem;
