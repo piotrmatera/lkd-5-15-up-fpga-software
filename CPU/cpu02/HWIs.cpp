@@ -41,17 +41,17 @@ interrupt void SD_NEW_INT()
     *dest++ = *src++;
 
     register float modifier1 = Conv.div_range_modifier_Resonant_values;
-    Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0].series[0].sum * modifier1;
-    Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0].series[1].sum * modifier1;
-    Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0].series[2].sum * modifier1;
-    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1].series[0].sum * modifier1;
-    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1].series[1].sum * modifier1;
-    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1].series[2].sum * modifier1;
+    Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0][0].sum * modifier1;
+    Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0][1].sum * modifier1;
+    Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0][2].sum * modifier1;
+//    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1][0].sum * modifier1;
+//    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1][1].sum * modifier1;
+//    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1][2].sum * modifier1;
 
     modifier1 = Conv.div_range_modifier_Kalman_values;
-    Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0].series[0].estimate * modifier1;
-    Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman[0].series[1].estimate * modifier1;
-    Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman[0].series[2].estimate * modifier1;
+    Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0][0].estimate * modifier1;
+    Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman[0][1].estimate * modifier1;
+    Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman[0][2].estimate * modifier1;
 
     Conv.cycle_period = EMIF_mem.read.cycle_period;
     Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;
@@ -74,28 +74,36 @@ interrupt void SD_NEW_INT()
     static volatile Uint32 Resonant_WIP;
     Resonant_WIP = EMIF_mem.read.flags.Resonant1_WIP;
 
+    static float angle = 0.0f;
+    angle += Conv.Ts * MATH_2PI * 50.0f * 1.0f;
+    angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
+    static volatile float zmienna;
+    static volatile float zmienna_gain = 100.0f;
+    zmienna = zmienna_gain * (0.0f + sinf(angle));
+
     if(Conv.enable)
     {
         register float modifier2 = Conv.range_modifier_Resonant_values * Conv.zero_error;
-        EMIF_mem.write.Resonant[1].series[0].error =
-        EMIF_mem.write.Resonant[0].series[0].error = Conv.I_err.a * modifier2;
-        EMIF_mem.write.Resonant[1].series[1].error =
-        EMIF_mem.write.Resonant[0].series[1].error = Conv.I_err.b * modifier2;
-        EMIF_mem.write.Resonant[1].series[2].error =
-        EMIF_mem.write.Resonant[0].series[2].error = Conv.I_err.c * modifier2;
+        CPU2toCPU1.Resonant_error[0] =
+        CPU2toCPU1.Resonant_error[3] = Conv.I_err.a * modifier2;
+        CPU2toCPU1.Resonant_error[1] =
+        CPU2toCPU1.Resonant_error[4] = Conv.I_err.b * modifier2;
+        CPU2toCPU1.Resonant_error[2] =
+        CPU2toCPU1.Resonant_error[5] = Conv.I_err.c * modifier2;
     }
     else
     {
         register float modifier2 = Conv.range_modifier_Resonant_values;
-        EMIF_mem.write.Resonant[1].series[0].error =
-        EMIF_mem.write.Resonant[0].series[0].error = (Meas_master.U_grid.a - Conv.MR_ref.a) * modifier2;
-        EMIF_mem.write.Resonant[1].series[1].error =
-        EMIF_mem.write.Resonant[0].series[1].error = (Meas_master.U_grid.b - Conv.MR_ref.b) * modifier2;
-        EMIF_mem.write.Resonant[1].series[2].error =
-        EMIF_mem.write.Resonant[0].series[2].error = (Meas_master.U_grid.c - Conv.MR_ref.c) * modifier2;
+        CPU2toCPU1.Resonant_error[0] =
+        CPU2toCPU1.Resonant_error[3] = (zmienna - Conv.MR_ref.a) * modifier2;
+        CPU2toCPU1.Resonant_error[1] =
+        CPU2toCPU1.Resonant_error[4] = (zmienna - Conv.MR_ref.b) * modifier2;
+        CPU2toCPU1.Resonant_error[2] =
+        CPU2toCPU1.Resonant_error[5] = (zmienna - Conv.MR_ref.c) * modifier2;
     }
+    CPU2toCPU1.Resonant_start = 0b11;
 
-    EMIF_mem.write.DSP_start = 3UL;
+    GPIO_SET(CPU2_DMA_CM);
 
     Timer_PWM.CPU_MR_START = TIMESTAMP_PWM;
 
@@ -104,8 +112,10 @@ interrupt void SD_NEW_INT()
     while(!PieCtrlRegs.PIEIFR11.bit.INTx2);
     PieCtrlRegs.PIEIFR11.bit.INTx2 = 0;
 
-    *(Uint32 *)&EMIF_mem.write.duty[0] = *(Uint32 *)&Conv.duty[0];
-    *(Uint32 *)&EMIF_mem.write.duty[2] = *(Uint32 *)&Conv.duty[2];
+    *(Uint32 *)&CPU2toCPU1.duty[0] = *(Uint32 *)&Conv.duty[0];
+    *(Uint32 *)&CPU2toCPU1.duty[2] = *(Uint32 *)&Conv.duty[2];
+
+    GPIO_CLEAR(CPU2_DMA_CM);
 
     Timer_PWM.CPU_PWM = TIMESTAMP_PWM;
 

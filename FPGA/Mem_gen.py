@@ -41,7 +41,7 @@ def generate_kalman_gains():
         f.write("000000000\n")
 
 def generate_resonant_gains():
-    ts = 16e-6
+    ts = 8e-6
     omega = 2*math.pi*50
     harmonics = np.arange(1, 50, 2)
     L_conv = 200e-6

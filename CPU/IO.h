@@ -207,6 +207,8 @@ GPIO_SetupPinOptions(i, GPIOreg[i].dir, GPIOreg[i].options)
 #define TX_Mod_2_CM  93
 #define RX_Mod_2_CM  94
 
+#define CPU2_DMA_CM  168
+
 //ECAP1 Mod1
 //ECAP2 Mod2
 //ECAP3 Mod3

@@ -129,7 +129,7 @@ void Init_class::Variables()
     memset(&PLL, 0, sizeof(PLL));
     memset(&CPU2toCPU1, 0, sizeof(CPU2toCPU1));
 
-    Conv.Ts = 16e-6;
+    Conv.Ts = (float)EMIF_mem.read.cycle_period * 8e-9;
     Conv.range_modifier_Resonant_values = 1UL << 21;
     Conv.div_range_modifier_Resonant_values = 1.0f / Conv.range_modifier_Resonant_values;
     Conv.range_modifier_Kalman_values = 1UL << 21;

@@ -45,10 +45,10 @@ struct Timer_PWM_struct
     Uint16 CPU_SD;
     Uint16 CPU_COPY1;
     Uint16 CPU_COPY2;
-    Uint16 CPU_GRID;
     Uint16 CPU_ERROR;
     Uint16 CPU_SCOPE;
     Uint16 CPU_COMM;
+    Uint16 CPU_GRID;
     Uint16 CPU_END;
 };
 

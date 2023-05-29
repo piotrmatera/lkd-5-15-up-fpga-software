@@ -120,7 +120,7 @@
 `define SS_DClink_FM  `C+11
 //`define DClink_DSCH_FM  `D+12
 
-`define FAN_AC_FM  `B+16
+`define FAN_FM  `B+16
 
 `define IN1_ISO_FM  `C+14
 `define IN2_ISO_FM  `D+14
@@ -397,7 +397,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant1_SIGNEDCO;
 
 	parameter Resonant1_Mem2_key = 3'd3;
-	Resonant Resonant1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Resonant #(.HARMONICS_NUM(25), .IN_SERIES_NUM(3)) Resonant1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant1_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Resonant1_Mem2_key[0]),
 	.enable_i(Resonant1_START), .Mem2_addrw_o(Resonant1_Mem2_addrw), .Mem2_we_o(Resonant1_Mem2_we), .Mem2_data_o(Resonant1_Mem2_data), .WIP_flag_o(Resonant1_WIP),
 	.CIN(Resonant1_CIN), .SIGNEDCIN(Resonant1_SIGNEDCIN), .CO(Resonant1_CO), .SIGNEDCO(Resonant1_SIGNEDCO));
@@ -424,7 +424,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant2_SIGNEDCO;
 
 	parameter Resonant2_Mem2_key = 3'd4;
-	Resonant Resonant2(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Resonant #(.HARMONICS_NUM(25), .IN_SERIES_NUM(3)) Resonant2(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant2_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Resonant2_Mem2_key[0]),
 	.enable_i(Resonant2_START), .Mem2_addrw_o(Resonant2_Mem2_addrw), .Mem2_we_o(Resonant2_Mem2_we), .Mem2_data_o(Resonant2_Mem2_data), .WIP_flag_o(Resonant2_WIP),
 	.CIN(Resonant2_CIN), .SIGNEDCIN(Resonant2_SIGNEDCIN), .CO(Resonant2_CO), .SIGNEDCO(Resonant2_SIGNEDCO));
@@ -1099,6 +1099,10 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire on_off; 
 	BB BB_ON_OFF_FPGA(.I(1'b0), .T(1'b1), .O(on_off), .B(FPGA_io[`ON_OFF_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
 	BB BB_ON_OFF_CPU(.I(on_off), .T(1'b0), .O(), .B(CPU_io[`ON_OFF_CM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	
+	wire FAN; 
+	BB BB_FAN_CPU(.I(1'b0), .T(1'b1), .O(FAN), .B(CPU_io[`FAN_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
+	BB BB_FAN_FPGA(.I(FAN), .T(1'b0), .O(), .B(FPGA_io[`FAN_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 
 	wire Modbus_EN; 
 	wire Modbus_TX; 

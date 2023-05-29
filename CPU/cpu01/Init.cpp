@@ -450,18 +450,19 @@ void Init_class::Variables()
     for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
     {
         register float modifier = Conv.range_modifier_Resonant_coefficients;
-        EMIF_mem.write.Resonant[1].harmonic[i].cos_A =
         EMIF_mem.write.Resonant[0].harmonic[i].cos_A = modifier * sincos_table[2 * i].cosine;
-        EMIF_mem.write.Resonant[1].harmonic[i].sin_A =
         EMIF_mem.write.Resonant[0].harmonic[i].sin_A = modifier * sincos_table[2 * i].sine;
-        EMIF_mem.write.Resonant[1].harmonic[i].cos_B =
         EMIF_mem.write.Resonant[0].harmonic[i].cos_B = modifier * (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I;
-        EMIF_mem.write.Resonant[1].harmonic[i].sin_B =
         EMIF_mem.write.Resonant[0].harmonic[i].sin_B = modifier * sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I;
-        EMIF_mem.write.Resonant[1].harmonic[i].cos_C =
         EMIF_mem.write.Resonant[0].harmonic[i].cos_C = modifier * sincos_table_comp[2 * i].cosine;
-        EMIF_mem.write.Resonant[1].harmonic[i].sin_C =
         EMIF_mem.write.Resonant[0].harmonic[i].sin_C = modifier * sincos_table_comp[2 * i].sine;
+
+        EMIF_mem.write.Resonant[1].harmonic[i].cos_A = modifier * sincos_table[2 * i + 1].cosine;
+        EMIF_mem.write.Resonant[1].harmonic[i].sin_A = modifier * sincos_table[2 * i + 1].sine;
+        EMIF_mem.write.Resonant[1].harmonic[i].cos_B = modifier * (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I;
+        EMIF_mem.write.Resonant[1].harmonic[i].sin_B = modifier * sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I;
+        EMIF_mem.write.Resonant[1].harmonic[i].cos_C = modifier * sincos_table_comp[2 * i + 1].cosine;
+        EMIF_mem.write.Resonant[1].harmonic[i].sin_C = modifier * sincos_table_comp[2 * i + 1].sine;
     }
 
     Conv.range_modifier_Kalman_coefficients = 1UL << 31;
@@ -491,8 +492,8 @@ void Init_class::Variables()
     for(Uint16 i = 1; i < FPGA_KALMAN_DC_STATES; i++)
     {
         register float modifier = Conv.range_modifier_Kalman_coefficients;
-        EMIF_mem.write.Kalman_DC.harmonic[i].cos_K = sincos_table_Kalman[i - 1].cosine * modifier;
-        EMIF_mem.write.Kalman_DC.harmonic[i].sin_K = sincos_table_Kalman[i - 1].sine * modifier;
+        EMIF_mem.write.Kalman_DC.harmonic[i].cos_K = sincos_table_Kalman[i].cosine * modifier;
+        EMIF_mem.write.Kalman_DC.harmonic[i].sin_K = sincos_table_Kalman[i].sine * modifier;
         EMIF_mem.write.Kalman_DC.harmonic[i].K1 = Kalman_gain_dc[2 * i] * modifier;
         EMIF_mem.write.Kalman_DC.harmonic[i].K2 = Kalman_gain_dc[2 * i + 1] * modifier;
     }
@@ -776,6 +777,48 @@ void Init_class::Fan_speed()
     }
 }
 
+void Init_class::DMA()
+{
+    EALLOW;
+    CpuSysRegs.PCLKCR0.bit.DMA = 1;
+    EDIS;
+
+    EALLOW;
+    InputXbarRegs.INPUT13SELECT = CPU2_DMA_CM;
+    InputXbarRegs.INPUT14SELECT = CPU2_DMA_CM;
+    XintRegs.XINT4CR.bit.POLARITY = 1;
+    XintRegs.XINT4CR.bit.ENABLE = 1;
+    XintRegs.XINT5CR.bit.POLARITY = 2;
+    XintRegs.XINT5CR.bit.ENABLE = 1;
+    EDIS;
+
+    DMAInitialize();
+
+    DMACH1AddrConfig((volatile Uint16 *)&EMIF_mem.write.Resonant[0].series[0].error, (volatile Uint16 *)&CPU2toCPU1.Resonant_error);
+    DMACH1BurstConfig(6-1,2,sizeof(struct FPGA_Resonant_series_M1_struct));
+    DMACH1TransferConfig(2-1,2,sizeof(struct FPGA_Resonant_M1_struct) - 2*sizeof(struct FPGA_Resonant_series_M1_struct));
+    DMACH1ModeConfig(DMA_XINT4,PERINT_ENABLE,ONESHOT_ENABLE,CONT_ENABLE,
+                     SYNC_DISABLE,SYNC_SRC,OVRFLOW_DISABLE,THIRTYTWO_BIT,
+                     CHINT_END,CHINT_DISABLE);
+    StartDMACH1();
+
+    DMACH2AddrConfig((volatile Uint16 *)&EMIF_mem.write.DSP_start, (volatile Uint16 *)&CPU2toCPU1.Resonant_start);
+    DMACH2BurstConfig(2-1,0,0);
+    DMACH2TransferConfig(0,0,0);
+    DMACH2ModeConfig(DMA_XINT4,PERINT_ENABLE,ONESHOT_DISABLE,CONT_ENABLE,
+                     SYNC_DISABLE,SYNC_SRC,OVRFLOW_DISABLE,THIRTYTWO_BIT,
+                     CHINT_END,CHINT_DISABLE);
+    StartDMACH2();
+
+    DMACH3AddrConfig((volatile Uint16 *)&EMIF_mem.write.duty, (volatile Uint16 *)&CPU2toCPU1.duty);
+    DMACH3BurstConfig(4-1,2,2);
+    DMACH3TransferConfig(0,0,0);
+    DMACH3ModeConfig(DMA_XINT5,PERINT_ENABLE,ONESHOT_DISABLE,CONT_ENABLE,
+                     SYNC_DISABLE,SYNC_SRC,OVRFLOW_DISABLE,THIRTYTWO_BIT,
+                     CHINT_END,CHINT_DISABLE);
+    StartDMACH3();
+}
+
 void Init_class::EMIF()
 {
     EALLOW;
@@ -885,7 +928,7 @@ const struct GPIO_struct GPIOreg[169] =
 [SD_AVG_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
 [SD_NEW_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
 [SYNC_PWM_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
-[FAN_CM]  = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
+[FAN_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [TZ_EN_CPU1_CM] = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
 [PWM_EN_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [TZ_EN_CPU2_CM] = {LOW, MUX1, CPU2_IO, OUTPUT, PUSHPULL},
@@ -916,6 +959,8 @@ const struct GPIO_struct GPIOreg[169] =
 //[DClink_DSCH_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 
 [ON_OFF_CM] = {LOW, MUX0, CPU1_IO, INPUT, QUAL6 | PULLUP},
+
+[CPU2_DMA_CM] = {HIGH, MUX0, CPU2_IO, OUTPUT, PUSHPULL},
 
 [EN_Mod_1_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [EN_Mod_2_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
@@ -1014,4 +1059,6 @@ void Init_class::GPIO()
     GPIO_Setup(I2CA_SCL_PIN);
     GPIO_Setup(I2CB_SDA_PIN);
     GPIO_Setup(I2CB_SCL_PIN);
+
+    GPIO_Setup(CPU2_DMA_CM);
 }

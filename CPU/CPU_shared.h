@@ -74,13 +74,13 @@ union FPGA_master_sync_flags_union
 #define FPGA_RESONANT_STATES 25
 #define FPGA_RESONANT_SERIES 4
 
-struct FPGA_Resonant_M0_struct
+struct FPGA_Resonant_states_M0_struct
 {
     int32 x1;
     int32 x2;
 };
 
-struct FPGA_Resonant_M1_struct
+struct FPGA_Resonant_states_M1_struct
 {
     int32 cos_A;
     int32 sin_A;
@@ -90,25 +90,76 @@ struct FPGA_Resonant_M1_struct
     int32 sin_C;
 };
 
+struct FPGA_Resonant_series_M1_struct
+{
+    int32 error;
+    int32 harmonics;
+};
+
+struct FPGA_Resonant_series_M0_struct
+{
+    struct FPGA_Resonant_states_M0_struct harmonic[FPGA_RESONANT_STATES];
+    int32 sum;
+    int32 error;
+    Uint32 rsvd[512/FPGA_RESONANT_SERIES - 2 - FPGA_RESONANT_STATES*sizeof(struct FPGA_Resonant_states_M0_struct)/sizeof(Uint32)];
+};
+
+struct FPGA_Resonant_M1_struct
+{
+    struct FPGA_Resonant_states_M1_struct harmonic[FPGA_RESONANT_STATES];
+    struct FPGA_Resonant_series_M1_struct series[FPGA_RESONANT_SERIES];
+    Uint32 rsvd[512 - FPGA_RESONANT_STATES*sizeof(struct FPGA_Resonant_states_M1_struct)/sizeof(Uint32) - FPGA_RESONANT_SERIES*sizeof(struct FPGA_Resonant_series_M1_struct)/sizeof(Uint32)];
+};
+
 #define FPGA_KALMAN_STATES 26
 #define FPGA_KALMAN_SERIES 4
 
 #define FPGA_KALMAN_DC_STATES 50
 #define FPGA_KALMAN_DC_SERIES 2
 
-struct FPGA_Kalman_M0_struct
+struct FPGA_Kalman_states_M0_struct
 {
     int32 x1;
     int32 x2;
     int32 A;
 };
 
-struct FPGA_Kalman_M1_struct
+struct FPGA_Kalman_states_M1_struct
 {
     int32 cos_K;
     int32 sin_K;
     int32 K1;
     int32 K2;
+};
+
+struct FPGA_Kalman_series_M0_struct
+{
+    struct FPGA_Kalman_states_M0_struct harmonic[FPGA_KALMAN_STATES];
+    int32 estimate;
+    int32 error;
+    Uint32 rsvd[512/FPGA_KALMAN_SERIES - 2 - FPGA_KALMAN_STATES*sizeof(struct FPGA_Kalman_states_M0_struct)/sizeof(Uint32)];
+};
+
+struct FPGA_Kalman_DC_series_M0_struct
+{
+    struct FPGA_Kalman_states_M0_struct harmonic[FPGA_KALMAN_DC_STATES];
+    int32 estimate;
+    int32 error;
+    Uint32 rsvd[512/FPGA_KALMAN_DC_SERIES - 2 - FPGA_KALMAN_DC_STATES*sizeof(struct FPGA_Kalman_states_M0_struct)/sizeof(Uint32)];
+};
+
+struct FPGA_Kalman_M1_struct
+{
+    struct FPGA_Kalman_states_M1_struct harmonic[FPGA_KALMAN_STATES];
+    int32 input[FPGA_KALMAN_SERIES];
+    Uint32 rsvd[512 - FPGA_KALMAN_SERIES - FPGA_KALMAN_STATES*sizeof(struct FPGA_Kalman_states_M1_struct)/sizeof(Uint32)];
+};
+
+struct FPGA_Kalman_DC_M1_struct
+{
+    struct FPGA_Kalman_states_M1_struct harmonic[FPGA_KALMAN_DC_STATES];
+    int32 input[FPGA_KALMAN_DC_SERIES];
+    Uint32 rsvd[512 - FPGA_KALMAN_DC_SERIES - FPGA_KALMAN_DC_STATES*sizeof(struct FPGA_Kalman_states_M1_struct)/sizeof(Uint32)];
 };
 
 union EMIF_union
@@ -149,36 +200,9 @@ union EMIF_union
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];
         Uint32 rx2_hipri_msg[8][32];
-        struct
-        {
-            struct
-            {
-                struct FPGA_Resonant_M0_struct harmonic[FPGA_RESONANT_STATES];
-                int32 error;
-                int32 sum;
-                Uint32 rsvd[512/FPGA_RESONANT_SERIES - 2 - FPGA_RESONANT_STATES*sizeof(struct FPGA_Resonant_M0_struct)/sizeof(Uint32)];
-            }series[FPGA_RESONANT_SERIES];
-        }Resonant[2];
-        struct
-        {
-            struct
-            {
-                struct FPGA_Kalman_M0_struct harmonic[FPGA_KALMAN_DC_STATES];
-                int32 estimate;
-                int32 error;
-                Uint32 rsvd[512/FPGA_KALMAN_DC_SERIES - 2 - FPGA_KALMAN_DC_STATES*sizeof(struct FPGA_Kalman_M0_struct)/sizeof(Uint32)];
-            }series[FPGA_KALMAN_DC_SERIES];
-        }Kalman_DC;
-        struct
-        {
-            struct
-            {
-                struct FPGA_Kalman_M0_struct harmonic[FPGA_KALMAN_STATES];
-                int32 estimate;
-                int32 error;
-                Uint32 rsvd[512/FPGA_KALMAN_SERIES - 2 - FPGA_KALMAN_STATES*sizeof(struct FPGA_Kalman_M0_struct)/sizeof(Uint32)];
-            }series[FPGA_KALMAN_SERIES];
-        }Kalman[2];
+        struct FPGA_Resonant_series_M0_struct Resonant[2][FPGA_RESONANT_SERIES];
+        struct FPGA_Kalman_DC_series_M0_struct Kalman_DC[FPGA_KALMAN_DC_SERIES];
+        struct FPGA_Kalman_series_M0_struct Kalman[2][FPGA_KALMAN_SERIES];
     }read;
     struct
     {
@@ -204,34 +228,9 @@ union EMIF_union
         Uint32 tx1_hipri_msg[8][32];
         Uint32 tx2_lopri_msg[8][32];
         Uint32 tx2_hipri_msg[8][32];
-        struct
-        {
-            struct FPGA_Resonant_M1_struct harmonic[FPGA_RESONANT_STATES];
-            struct
-            {
-                int32 error;
-                int32 harmonics;
-            }series[FPGA_RESONANT_SERIES];
-            Uint32 rsvd[512 - FPGA_RESONANT_SERIES*2 - FPGA_RESONANT_STATES*sizeof(struct FPGA_Resonant_M1_struct)/sizeof(Uint32)];
-        }Resonant[2];
-        struct
-        {
-            struct FPGA_Kalman_M1_struct harmonic[FPGA_KALMAN_DC_STATES];
-            struct
-            {
-                int32 input;
-            }series[FPGA_KALMAN_DC_SERIES];
-            Uint32 rsvd[512 - FPGA_KALMAN_DC_SERIES - FPGA_KALMAN_DC_STATES*sizeof(struct FPGA_Kalman_M1_struct)/sizeof(Uint32)];
-        }Kalman_DC;
-        struct
-        {
-            struct FPGA_Kalman_M1_struct harmonic[FPGA_KALMAN_STATES];
-            struct
-            {
-                int32 input;
-            }series[FPGA_KALMAN_SERIES];
-            Uint32 rsvd[512 - FPGA_KALMAN_SERIES - FPGA_KALMAN_STATES*sizeof(struct FPGA_Kalman_M1_struct)/sizeof(Uint32)];
-        }Kalman[2];
+        struct FPGA_Resonant_M1_struct Resonant[2];
+        struct FPGA_Kalman_DC_M1_struct Kalman_DC;
+        struct FPGA_Kalman_M1_struct Kalman[2];
     }write;
 };
 
@@ -265,6 +264,9 @@ struct CPU2toCPU1_struct
     float PLL_RDY;
     float sag;
     union ALARM_master alarm_master;
+    int32 Resonant_error[6];
+    Uint32 Resonant_start;
+    int16 duty[4];
 };
 
 extern struct CPU1toCPU2_struct CPU1toCPU2;

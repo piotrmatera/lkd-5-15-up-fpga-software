@@ -18,6 +18,7 @@ public:
     void CLA();
     void Variables();
     void EMIF();
+    void DMA();
     void PWMs();
     void ADC();
     void Fan_speed();

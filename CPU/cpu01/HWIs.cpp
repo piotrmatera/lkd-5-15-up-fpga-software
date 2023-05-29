@@ -38,19 +38,54 @@ interrupt void SD_AVG_NT()
     Cla1ForceTask1();
 
     register float modifier1 = Conv.div_range_modifier_Kalman_values;
-    Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC.series[0].estimate * modifier1;
-//    Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0].series[0].estimate * modifier1;
-//    Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman[0].series[1].estimate * modifier1;
-//    Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman[0].series[2].estimate * modifier1;
-//    Grid.THD_U_grid.a = Kalman_U_grid[0].THD_total;
-//    Grid.THD_U_grid.b = Kalman_U_grid[1].THD_total;
-//    Grid.THD_U_grid.c = Kalman_U_grid[2].THD_total;
-//    Grid.THD_I_grid.a = Kalman_I_grid[0].THD_total;
-//    Grid.THD_I_grid.b = Kalman_I_grid[1].THD_total;
-//    Grid.THD_I_grid.c = Kalman_I_grid[2].THD_total;
+    Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC[0].harmonic[0].x1 * modifier1;
 
-    Conv.w_filter = CPU2toCPU1.w_filter;
-    Conv.f_filter = CPU2toCPU1.f_filter;
+    static volatile struct
+    {
+        struct trigonometric_struct harmonic[5];
+        float sum;
+        float error;
+    }Resonant_mem;
+    int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0][0];
+    float *pointer_dst = (float *)&Resonant_mem;
+    for(int i=0; i<5; i++)
+    {
+        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+    }
+
+    pointer_src = (int32 *)&EMIF_mem.read.Resonant[0][0].sum;
+    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+
+//    static volatile struct
+//    {
+//        struct abc_struct harmonic[5];
+//        float estimate;
+//        float error;
+//    }Kalman_mem;
+//    int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman_DC[0];
+//    float *pointer_dst = (float *)&Kalman_mem;
+//    for(int i=0; i<5; i++)
+//    {
+//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values * Conv.div_range_modifier_Kalman_values * Conv.range_modifier_Kalman_coefficients;
+//    }
+//
+//    pointer_src = (int32 *)&EMIF_mem.read.Kalman_DC[0].estimate;
+//    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+//    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+
+//    static float angle = 0.0f;
+//    angle += Conv.Ts * Conv.w_filter * 3.0f;
+//    angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
+//    static volatile float zmienna;
+//    static volatile float zmienna_gain = 100.0f;
+//    zmienna = zmienna_gain * (1.0f + sinf(angle));
+
+//    Conv.w_filter = CPU2toCPU1.w_filter;
+//    Conv.f_filter = CPU2toCPU1.f_filter;
     Conv.sign = CPU2toCPU1.sign;
     Conv.PLL_RDY = CPU2toCPU1.PLL_RDY;
     Conv.sag = CPU2toCPU1.sag;
@@ -65,28 +100,49 @@ interrupt void SD_AVG_NT()
     CPU1toCPU2.CLA1toCLA2.iq_ref.b = Conv.iq_lim.b;
     CPU1toCPU2.CLA1toCLA2.iq_ref.c = Conv.iq_lim.c;
 
+//    static volatile Uint16 do_once = 0;
+//    static volatile Uint16 do_cont = 0;
+//    if(do_once || do_cont)
+//    {
+//        struct abc_struct MR_ref;
+//        register float modifier1 = Conv.div_range_modifier_Resonant_values;
+//        MR_ref.a = (float)EMIF_mem.read.Resonant[0][0].sum * modifier1;
+//        MR_ref.b = (float)EMIF_mem.read.Resonant[0][1].sum * modifier1;
+//        MR_ref.c = (float)EMIF_mem.read.Resonant[0][2].sum * modifier1;
+//
+//        do_once = 0;
+//        static float angle = 0.0f;
+//        angle += Conv.Ts * MATH_2PI * 50.0f * 0.25f;
+//        angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
+//        static volatile float zmienna;
+//        static volatile float zmienna_gain = 1.0f;
+//        static volatile float zmienna_gain2 = 1.0f;
+//        zmienna = zmienna_gain * (0.0f + sinf(angle));
+//        register float modifier2 = Conv.range_modifier_Resonant_values * zmienna_gain2;
+//        EMIF_mem.write.Resonant[1].series[0].error =
+//        EMIF_mem.write.Resonant[0].series[0].error = (zmienna - MR_ref.a) * modifier2;
+//        EMIF_mem.write.Resonant[1].series[1].error =
+//        EMIF_mem.write.Resonant[0].series[1].error = (zmienna - MR_ref.b) * modifier2;
+//        EMIF_mem.write.Resonant[1].series[2].error =
+//        EMIF_mem.write.Resonant[0].series[2].error = (zmienna - MR_ref.c) * modifier2;
+//        EMIF_mem.write.DSP_start = 3UL;
+//    }
     Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
 
     while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
     PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
 
     register float modifier2 = Conv.range_modifier_Kalman_values;
-    EMIF_mem.write.Kalman[0].series[0].input = Meas_master.U_grid.a * modifier2;
-    EMIF_mem.write.Kalman[0].series[1].input = Meas_master.U_grid.b * modifier2;
-    EMIF_mem.write.Kalman[0].series[2].input = Meas_master.U_grid.c * modifier2;
-    EMIF_mem.write.Kalman[1].series[0].input = Meas_master.I_grid.a * modifier2;
-    EMIF_mem.write.Kalman[1].series[1].input = Meas_master.I_grid.b * modifier2;
-    EMIF_mem.write.Kalman[1].series[2].input = Meas_master.I_grid.c * modifier2;
-    EMIF_mem.write.Kalman_DC.series[0].input = Meas_master.U_dc * modifier2;
-    EMIF_mem.write.DSP_start = 0b1110;
+    EMIF_mem.write.Kalman[0].input[0] = Meas_master.U_grid.a * modifier2;
+    EMIF_mem.write.Kalman[0].input[1] = Meas_master.U_grid.b * modifier2;
+    EMIF_mem.write.Kalman[0].input[2] = Meas_master.U_grid.c * modifier2;
+    EMIF_mem.write.Kalman[1].input[0] = Meas_master.I_grid.a * modifier2;
+    EMIF_mem.write.Kalman[1].input[1] = Meas_master.I_grid.b * modifier2;
+    EMIF_mem.write.Kalman[1].input[2] = Meas_master.I_grid.c * modifier2;
+    EMIF_mem.write.Kalman_DC.input[0] = Meas_master.U_dc * modifier2;
+    EMIF_mem.write.DSP_start = 0b11100;
 
     Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
-
-    Grid_analyzer_calc();
-//    Grid_analyzer_filter_calc();
-    Energy_meter_CPUasm();
-
-    Timer_PWM.CPU_GRID = TIMESTAMP_PWM;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -214,6 +270,12 @@ interrupt void SD_AVG_NT()
     Timer_PWM.CPU_COMM = TIMESTAMP_PWM;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    Grid_analyzer_calc();
+//    Grid_analyzer_filter_calc();
+    Energy_meter_CPUasm();
+
+    Timer_PWM.CPU_GRID = TIMESTAMP_PWM;
 
 //    static volatile union double_pulse_union
 //    {

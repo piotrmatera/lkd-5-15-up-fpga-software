@@ -71,6 +71,8 @@ void main()
 
     Init.GPIO();
 
+    Init.DMA();
+
     Init.EMIF();
 
     Init.CLA();
