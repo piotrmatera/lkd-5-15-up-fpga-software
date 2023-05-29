@@ -175,6 +175,7 @@
 					<fileInfo id="com.ti.ccstudio.buildDefinitions.C2000.Debug.913780970.1341087863" name="Grid_analyzer.c" rcbsApplicability="disable" resourcePath="Software/Grid_analyzer.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.C2000_22.6.exe.compilerDebug.212420001.662070599">
 						<tool id="com.ti.ccstudio.buildDefinitions.C2000_22.6.exe.compilerDebug.212420001.662070599" name="C2000 Compiler" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.exe.compilerDebug.212420001">
 							<option id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.CLA_DEFAULT.1990335481" name="Treat C files as CLA files (--cla_default)" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.CLA_DEFAULT" value="false" valueType="boolean"/>
+							<option id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.OPT_LEVEL.1491277583" name="Optimization level (--opt_level, -O)" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.OPT_LEVEL" value="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.OPT_LEVEL.4" valueType="enumerated"/>
 							<inputType id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compiler.inputType__C_SRCS.278500126" name="C Sources" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compiler.inputType__C_SRCS"/>
 							<inputType id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compiler.inputType__CPP_SRCS.947568487" name="C++ Sources" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compiler.inputType__CPP_SRCS"/>
 							<inputType id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compiler.inputType__ASM_SRCS.649910544" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compiler.inputType__ASM_SRCS"/>
@@ -196,7 +197,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="F2837xD/Initializer_cpu02.asm|F2837xD/F2837xD_Headers_nonBIOS_cpu2.cmd|Software/Modbus/Modbus_ADU_master.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Software/CIC1_adaptive_filter_CPU.asm|F2837xD/Initializer_cpu02.asm|F2837xD/F2837xD_Headers_nonBIOS_cpu2.cmd|Software/Modbus/Modbus_ADU_master.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

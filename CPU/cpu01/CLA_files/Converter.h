@@ -23,6 +23,18 @@ struct abc_Filter1_struct
 
 struct Converter_struct
 {
+    float P_conv;
+    struct Filter1_struct P_conv_filter;
+
+    struct trigonometric_struct I_grid_rot[3];
+    struct trigonometric_struct zero_rot;
+
+    struct Resonant_struct Resonant_U_grid[3];
+    struct Resonant_struct Resonant_I_grid[3];
+    struct Resonant_struct Resonant_I_conv[3];
+
+    //////////////////////////////
+
     float U_grid_phph_max;
 
     float div_U_dc;
@@ -31,12 +43,6 @@ struct Converter_struct
     float U_dc_filter;
     float U_dc_kalman;
     struct PI_struct PI_U_dc;
-
-    float enable_H_comp_local;
-    struct abcn_struct I_conv_max;
-    struct PI_struct PI_I_harm_ratio[4];
-
-    float sag;
 
     struct abc_struct id_conv, iq_conv;
     struct abc_struct id_load, iq_load;
@@ -56,9 +62,34 @@ struct Converter_struct
     struct abcn_struct id_lim;
     float Id_x, Id_y;
 
+    struct PI_struct PI_Iq[3];
+    struct PI_struct PI_Id[3];
+
+    float sag;
+    float enable_H_comp_local;
+    struct abcn_struct I_conv_max;
+    struct PI_struct PI_I_harm_ratio[4];
+
     float Kp_I;
     float Kr_I;
+    float compensation2;
+    float I_lim, I_lim_nominal;
+
+    float w_filter;
+    float f_filter;
+    float sign;
+    float PLL_RDY;
+
+    float Ts;
     float Ts_rate;
+    float C_dc;
+    float L_conv;
+    float C_conv;
+
+    float RDY, RDY2;
+
+    float enable;
+    enum Converter_state_enum state, state_last;
 
     float range_modifier_Resonant_coefficients;
     float div_range_modifier_Resonant_coefficients;
@@ -69,22 +100,6 @@ struct Converter_struct
     float div_range_modifier_Kalman_coefficients;
     float range_modifier_Kalman_values;
     float div_range_modifier_Kalman_values;
-
-    float w_filter;
-    float f_filter;
-    float sign;
-    float PLL_RDY;
-    float compensation2;
-    float Ts;
-    float I_lim, I_lim_nominal;
-    float C_dc;
-    float L_conv;
-
-    float C_conv;
-    float RDY, RDY2;
-
-    float enable;
-    enum Converter_state_enum state, state_last;
 };
 
 extern struct Converter_struct Conv;

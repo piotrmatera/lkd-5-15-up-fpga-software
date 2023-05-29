@@ -1038,38 +1038,48 @@ module SerDes_master(CPU_io, FPGA_io);
  	assign TZ_CLR = !(TZ_EN_CPU1 & TZ_EN_CPU2 & PWM_EN & TZ_FPGA);
 	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg [1] ^ sync_reg [0]), .CK(clk_5x), .CD(TZ_CLR), .Q(PWM_EN_r)); 
  
-	//Symmetrical_PWM #(.DEADTIME(65))
-	//Symmetrical_PWM[3:0](.clk_i(clk_5x), .enable_output_i(PWM_EN_r), .override_i(EMIF_RX_reg [10][7:0]), .duty_i({EMIF_RX_reg [7], EMIF_RX_reg [6]}),
-	//.next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
+	Symmetrical_PWM #(.DEADTIME(65))
+	Symmetrical_PWM[3:0](.clk_i(clk_5x), .enable_output_i(PWM_EN_r), .override_i(EMIF_RX_reg [10][7:0]), .duty_i({EMIF_RX_reg [7], EMIF_RX_reg [6]}),
+	.next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
 
-	wire PWM_dp; 
-	wire [7:0] PWM_dp_dt; 
-	double_pulse double_pulse(.clk_i(XTAL_20MHz_i), .start_i(PWM_EN_r), .length0_i(EMIF_RX_reg [8][15:0]), .length1_i(EMIF_RX_reg [8][31:16]), .PWM_o(PWM_dp)); 
-	deadtime deadtime[3:0](.clk_i(XTAL_20MHz_i), .PWM_i({4{PWM_dp}}), .enable_i({PWM_EN_r, 3'b0}), .override_i(EMIF_RX_reg [10][7:0]), .PWM_o(PWM_o)); 
+	//wire PWM_dp; 
+	//wire [7:0] PWM_dp_dt; 
+	//double_pulse double_pulse(.clk_i(XTAL_20MHz_i), .start_i(PWM_EN_r), .length0_i(EMIF_RX_reg [8][15:0]), .length1_i(EMIF_RX_reg [8][31:16]), .PWM_o(PWM_dp)); 
+	//deadtime deadtime[3:0](.clk_i(XTAL_20MHz_i), .PWM_i({4{PWM_dp}}), .enable_i({PWM_EN_r, 3'b0}), .override_i(EMIF_RX_reg [10][7:0]), .PWM_o(PWM_o)); 
 
 
-	wire [8:0] REL_i; 
-	wire [8:0] REL_o; 
-	assign REL_o = (TZ_EN_CPU1 & TZ_EN_CPU2 & TZ_FPGA) ? REL_i : 9'b0; 
+	wire [7:0] REL_i; 
+	wire [7:0] REL_o; 
+	assign REL_o = (TZ_EN_CPU1 & TZ_EN_CPU2 & TZ_FPGA) ? REL_i : 8'b0; 
 	BB BB_REL_CPU0(.I(1'b0), .T(1'b1), .O(REL_i[0]), .B(CPU_io[`C_SS_RLY_L1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU1(.I(1'b0), .T(1'b1), .O(REL_i[1]), .B(CPU_io[`GR_RLY_L1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU2(.I(1'b0), .T(1'b1), .O(REL_i[2]), .B(CPU_io[`C_SS_RLY_L2_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU3(.I(1'b0), .T(1'b1), .O(REL_i[3]), .B(CPU_io[`GR_RLY_L2_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU4(.I(1'b0), .T(1'b1), .O(REL_i[4]), .B(CPU_io[`C_SS_RLY_L3_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
-	BB BB_REL_CPU5(.I(1'b0), .T(1'b1), .O(REL_i[5]), .B(CPU_io[`GR_RLY_L3_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
-	//BB BB_REL_CPU6(.I(1'b0), .T(1'b1), .O(REL_i[6]), .B(CPU_io[`DClink_DSCH_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
-	BB BB_REL_CPU7(.I(1'b0), .T(1'b1), .O(REL_i[7]), .B(CPU_io[`GR_RLY_N_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
-	BB BB_REL_CPU8(.I(1'b0), .T(1'b1), .O(REL_i[8]), .B(CPU_io[`SS_DClink_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
+	BB BB_REL_CPU5(.I(1'b0), .T(1'b1), .O(REL_i[5]), .B(CPU_io[`GR_RLY_L3_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;
+	BB BB_REL_CPU8(.I(1'b0), .T(1'b1), .O(REL_i[6]), .B(CPU_io[`SS_DClink_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
+	BB BB_REL_CPU7(.I(1'b0), .T(1'b1), .O(REL_i[7]), .B(CPU_io[`GR_RLY_N_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;  
+	//BB BB_REL_CPU6(.I(1'b0), .T(1'b1), .O(REL_i[8]), .B(CPU_io[`DClink_DSCH_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
  
-	BB BB_REL_FPGA0(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA1(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA2(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA3(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA4(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA5(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	//BB BB_REL_FPGA6(.I(REL_o[6]), .T(1'b0), .O(), .B(FPGA_io[`DClink_DSCH_CM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA7(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_REL_FPGA8(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`SS_DClink_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+ 	BB BB_REL_FPGA0(.I(REL_o[0]), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA1(.I(REL_o[1]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA2(.I(REL_o[2]), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA3(.I(REL_o[3]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA4(.I(REL_o[4]), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA5(.I(REL_o[5]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */;
+	BB BB_REL_FPGA8(.I(REL_o[6]), .T(1'b0), .O(), .B(FPGA_io[`SS_DClink_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_REL_FPGA7(.I(REL_o[7]), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
+	//BB BB_REL_FPGA6(.I(REL_o[8]), .T(1'b0), .O(), .B(FPGA_io[`DClink_DSCH_CM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+  
+	//BB BB_REL_FPGA0(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	//BB BB_REL_FPGA1(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	//BB BB_REL_FPGA2(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	//BB BB_REL_FPGA3(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	//BB BB_REL_FPGA4(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`C_SS_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	//BB BB_REL_FPGA5(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */;
+	//BB BB_REL_FPGA8(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`SS_DClink_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
+	//BB BB_REL_FPGA7(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	//BB BB_REL_FPGA6(.I(REL_o[8]), .T(1'b0), .O(), .B(FPGA_io[`DClink_DSCH_CM]))/*synthesis IO_TYPE="LVCMOS33" */; 
  
 	wire [5:1] LED_BUS; 
 	BB BB_LED_CPU1(.I(1'b0), .T(1'b1), .O(LED_BUS[1]), .B(CPU_io[`LED1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 

@@ -153,16 +153,16 @@ void CT_char_calc()
     }
 
     float rotation;
-    float wTs = Conv.w_filter * Grid_params.Ts;
+    float wTs = Conv.w_filter * Conv.Ts;
     rotation = CT_char_vars.CT_phase[0] * wTs;
-    Grid_params.I_grid_rot[0].sine = sinf(rotation);
-    Grid_params.I_grid_rot[0].cosine = cosf(rotation);
+    Conv.I_grid_rot[0].sine = sinf(rotation);
+    Conv.I_grid_rot[0].cosine = cosf(rotation);
     rotation = CT_char_vars.CT_phase[1] * wTs;
-    Grid_params.I_grid_rot[1].sine = sinf(rotation);
-    Grid_params.I_grid_rot[1].cosine = cosf(rotation);
+    Conv.I_grid_rot[1].sine = sinf(rotation);
+    Conv.I_grid_rot[1].cosine = cosf(rotation);
     rotation = CT_char_vars.CT_phase[2] * wTs;
-    Grid_params.I_grid_rot[2].sine = sinf(rotation);
-    Grid_params.I_grid_rot[2].cosine = cosf(rotation);
+    Conv.I_grid_rot[2].sine = sinf(rotation);
+    Conv.I_grid_rot[2].cosine = cosf(rotation);
 
     CPU1toCPU2.Meas_master_gain = Meas_master_gain;
     CPU1toCPU2.Meas_master_offset = Meas_master_offset;
@@ -647,6 +647,13 @@ void Machine_class::Background()
             EMIF_mem.write.Kalman[1].harmonic[i].sin_K =
             EMIF_mem.write.Kalman[0].harmonic[i].sin_K = sincos_table_Kalman[2 * (i - 1)].sine * modifier;
         }
+
+        for(Uint16 i = 1; i < FPGA_KALMAN_DC_STATES; i++)
+        {
+            register float modifier = Conv.range_modifier_Kalman_coefficients;
+            EMIF_mem.write.Kalman_DC.harmonic[i].cos_K = sincos_table_Kalman[i - 1].cosine * modifier;
+            EMIF_mem.write.Kalman_DC.harmonic[i].sin_K = sincos_table_Kalman[i - 1].sine * modifier;
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -756,6 +763,8 @@ void Machine_class::init()
     memset(&Energy_meter, 0, sizeof(Energy_meter));
     memset(&Grid, 0, sizeof(Grid));
     memset(&Grid_filter, 0, sizeof(Grid_filter));
+    memset(&Grid_params, 0, sizeof(Grid_params));
+    memset(&Grid_filter_params, 0, sizeof(Grid_filter_params));
 
     memset(&control_master, 0, sizeof(control_master));
     memset(&control_ext_modbus, 0, sizeof(control_ext_modbus));
@@ -1070,7 +1079,6 @@ void Machine_class::idle()
     {
         delay_timer = ReadIpcTimer();
         Machine.state_last = Machine.state;
-        Machine.look_for_errors = 0;
         Conv.enable = 0;
     }
 
@@ -1085,8 +1093,9 @@ void Machine_class::idle()
 
     if(Machine.ONOFF)
     {
+        float Temp = fmaxf(Meas_master.Temperature1, fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
         if(status_master.SD_no_calibration) Machine.state = state_calibrate_offsets;
-        else if(status_master.PLL_sync && status_master.Grid_present)
+        else if(status_master.PLL_sync && status_master.Grid_present && Temp < Meas_alarm_H.Temp - 15.0f)
         {
             static const float delay_table[] =
             {
@@ -1472,8 +1481,23 @@ void Machine_class::start()
         memset(&Timer_total, 0, sizeof(Timer_total));
         timer_update(&Timer_total, 0);
 
-        Machine.look_for_errors = 1;
-
+        Conv.tangens_range_local_prefilter[0].a.out =
+        Conv.tangens_range_local_prefilter[0].b.out =
+        Conv.tangens_range_local_prefilter[0].c.out =
+        Conv.tangens_range_local_prefilter[1].a.out =
+        Conv.tangens_range_local_prefilter[1].b.out =
+        Conv.tangens_range_local_prefilter[1].c.out =
+        Conv.Q_set_local_prefilter.a.out =
+        Conv.Q_set_local_prefilter.b.out =
+        Conv.Q_set_local_prefilter.c.out =
+        Conv.version_Q_comp_local_prefilter.a.out =
+        Conv.version_Q_comp_local_prefilter.b.out =
+        Conv.version_Q_comp_local_prefilter.c.out =
+        Conv.enable_Q_comp_local_prefilter.a.out =
+        Conv.enable_Q_comp_local_prefilter.b.out =
+        Conv.enable_Q_comp_local_prefilter.c.out =
+        Conv.version_P_sym_local_prefilter.out =
+        Conv.enable_P_sym_local_prefilter.out =
         Conv.Q_set_local.a =
         Conv.Q_set_local.b =
         Conv.Q_set_local.c =
@@ -1483,11 +1507,42 @@ void Machine_class::start()
         Conv.enable_P_sym_local =
         Conv.enable_H_comp_local = 0.0f;
 
-//        scope_global.scope_trigger = 0;//#TODO do usuniecia, bo oscyl sie sam restartuje w SD_card zapis error
+        Conv.PI_U_dc.integrator =
+        Conv.PI_Id[0].integrator =
+        Conv.PI_Id[1].integrator =
+        Conv.PI_Id[2].integrator =
+        Conv.PI_Iq[0].integrator =
+        Conv.PI_Iq[1].integrator =
+        Conv.PI_Iq[2].integrator = 0.0f;
 
         Init.clear_alarms();
 
         DELAY_US(100);
+
+        Scope_start();
+
+        if( mosfet_ctrl_app.getState() != MosfetCtrlApp::state_idle ){
+            uint16_t mosfet_errors = mosfet_ctrl_app.getErrorsGetStatus();
+            mosfet_errors |= mosfet_ctrl_app.getErrorsConfig();
+            mosfet_errors |= mosfet_ctrl_app.getErrorsAtPoint(MosfetCtrlApp::logpoint_softreset);
+
+            if( (mosfet_errors & 0xFF) == 0 )
+                mosfet_errors = 0xFF;
+
+            alarm_master.bit.Driver_soft_error = 1;
+        }
+
+        CIC2_calibration_input.ptr = &Meas_master.I_conv.a;
+        DELAY_US(50000);
+        Meas_master_offset.I_conv.a += CIC2_calibration.out / Meas_master_gain.I_conv.a;
+
+        CIC2_calibration_input.ptr = &Meas_master.I_conv.b;
+        DELAY_US(50000);
+        Meas_master_offset.I_conv.b += CIC2_calibration.out / Meas_master_gain.I_conv.b;
+
+        CIC2_calibration_input.ptr = &Meas_master.I_conv.c;
+        DELAY_US(50000);
+        Meas_master_offset.I_conv.c += CIC2_calibration.out / Meas_master_gain.I_conv.c;
 
         Conv.enable = 1;
     }

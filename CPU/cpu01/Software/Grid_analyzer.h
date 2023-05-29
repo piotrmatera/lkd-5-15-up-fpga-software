@@ -1,4 +1,4 @@
-// Tomasz Œwiêchowicz swiechowicz.tomasz@gmail.com
+// Tomasz ï¿½wiï¿½chowicz swiechowicz.tomasz@gmail.com
 
 #include "stdafx.h"
 
@@ -48,9 +48,9 @@ struct Grid_parameters_struct
 struct Grid_analyzer_struct
 {
     float Ts;
-    struct trigonometric_struct I_grid_rot[3];
-    struct trigonometric_struct zero_rot;
-
+//    struct trigonometric_struct I_grid_rot[3];
+//    struct trigonometric_struct zero_rot;
+//
     struct Resonant_struct Resonant_U_grid[3];
     struct Resonant_struct Resonant_I_grid[3];
     struct Resonant_struct Resonant_I_conv[3];

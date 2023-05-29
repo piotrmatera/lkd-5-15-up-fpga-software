@@ -368,6 +368,26 @@ void Converter_calc()
             if(ratio_p_min != 1.0f && Conv.enable_P_sym_local_prefilter.out == 1.0f) status_master.in_limit_P = 1;
             else status_master.in_limit_P = 0;
 
+            PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[0], Conv.iq_lim.a - Conv.iq_conv.a);
+            PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[1], Conv.iq_lim.b - Conv.iq_conv.b);
+            PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[2], Conv.iq_lim.c - Conv.iq_conv.c);
+
+            register float average1 = (Conv.id_lim.a + Conv.id_lim.b + Conv.id_lim.c - Conv.id_conv.a - Conv.id_conv.b - Conv.id_conv.c) * MATH_1_3;
+            PI_antiwindup_fast_CLAasm(&Conv.PI_Id[0], Conv.id_lim.a - Conv.id_conv.a - average1);
+            PI_antiwindup_fast_CLAasm(&Conv.PI_Id[1], Conv.id_lim.b - Conv.id_conv.b - average1);
+            PI_antiwindup_fast_CLAasm(&Conv.PI_Id[2], Conv.id_lim.c - Conv.id_conv.c - average1);
+            register float average2 = (Conv.PI_Id[0].integrator + Conv.PI_Id[1].integrator + Conv.PI_Id[2].integrator) * MATH_1_3;
+            Conv.PI_Id[0].integrator -= average2;
+            Conv.PI_Id[1].integrator -= average2;
+            Conv.PI_Id[2].integrator -= average2;
+//            Conv.PI_Id[0].out += -Conv.PI_U_dc.out;
+//            Conv.PI_Id[1].out += -Conv.PI_U_dc.out;
+//            Conv.PI_Id[2].out += -Conv.PI_U_dc.out;
+
+            Conv.id_lim.a += -Conv.PI_U_dc.out;
+            Conv.id_lim.b += -Conv.PI_U_dc.out;
+            Conv.id_lim.c += -Conv.PI_U_dc.out;
+
             //////////////////////////////////////////////////////////////////////////////////
 
             if (Conv.enable_H_comp_local)

@@ -144,8 +144,10 @@ void Init_class::Variables()
     PLL.PI.lim_H = 400.0f;
     PLL.PI.lim_L = -400.0f;
 
-    float decimation_PLL = 16.0f;
-    float OSR_PLL = (Uint16)(0.02f / (Conv.Ts * decimation_PLL) + 0.5f);
+    float full_OSR_PLL = (Uint16)(0.02f / Conv.Ts + 0.5f);
+    float decimation_PLL = 1.0f;
+    while (full_OSR_PLL / decimation_PLL > 160.0f) decimation_PLL++;
+    Uint16 OSR_PLL = full_OSR_PLL / decimation_PLL + 0.5f;
     CIC2_filter(&PLL.CIC_w, 410.0f, OSR_PLL, decimation_PLL);
 
     PLL.state = PLL_omega_init;

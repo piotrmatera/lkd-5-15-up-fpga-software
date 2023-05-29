@@ -37,6 +37,8 @@ struct Timer_PWM_struct
 {
     Uint16 CLA_START_TASK1;
     Uint16 CLA_MEAS_TASK1;
+    Uint16 CLA_GRID1_TASK1;
+    Uint16 CLA_GRID2_TASK1;
     Uint16 CLA_CONV_TASK1;
     Uint16 CLA_THERM_TASK1;
     Uint16 CLA_END_TASK1;

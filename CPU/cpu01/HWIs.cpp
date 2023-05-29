@@ -38,10 +38,16 @@ interrupt void SD_AVG_NT()
     Cla1ForceTask1();
 
     register float modifier1 = Conv.div_range_modifier_Kalman_values;
+    Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC.series[0].estimate * modifier1;
 //    Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0].series[0].estimate * modifier1;
 //    Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman[0].series[1].estimate * modifier1;
 //    Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman[0].series[2].estimate * modifier1;
-    Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC.series[0].estimate * modifier1;
+//    Grid.THD_U_grid.a = Kalman_U_grid[0].THD_total;
+//    Grid.THD_U_grid.b = Kalman_U_grid[1].THD_total;
+//    Grid.THD_U_grid.c = Kalman_U_grid[2].THD_total;
+//    Grid.THD_I_grid.a = Kalman_I_grid[0].THD_total;
+//    Grid.THD_I_grid.b = Kalman_I_grid[1].THD_total;
+//    Grid.THD_I_grid.c = Kalman_I_grid[2].THD_total;
 
     Conv.w_filter = CPU2toCPU1.w_filter;
     Conv.f_filter = CPU2toCPU1.f_filter;
@@ -49,12 +55,15 @@ interrupt void SD_AVG_NT()
     Conv.PLL_RDY = CPU2toCPU1.PLL_RDY;
     Conv.sag = CPU2toCPU1.sag;
 
-//    Grid.THD_U_grid.a = Kalman_U_grid[0].THD_total;
-//    Grid.THD_U_grid.b = Kalman_U_grid[1].THD_total;
-//    Grid.THD_U_grid.c = Kalman_U_grid[2].THD_total;
-//    Grid.THD_I_grid.a = Kalman_I_grid[0].THD_total;
-//    Grid.THD_I_grid.b = Kalman_I_grid[1].THD_total;
-//    Grid.THD_I_grid.c = Kalman_I_grid[2].THD_total;
+    CPU1toCPU2.CLA1toCLA2.enable = Conv.RDY;
+    CPU1toCPU2.CLA1toCLA2.L_conv = Conv.L_conv;
+    CPU1toCPU2.CLA1toCLA2.Kp_I = Conv.Kp_I;
+    CPU1toCPU2.CLA1toCLA2.id_ref.a = Conv.id_lim.a;
+    CPU1toCPU2.CLA1toCLA2.id_ref.b = Conv.id_lim.b;
+    CPU1toCPU2.CLA1toCLA2.id_ref.c = Conv.id_lim.c;
+    CPU1toCPU2.CLA1toCLA2.iq_ref.a = Conv.iq_lim.a;
+    CPU1toCPU2.CLA1toCLA2.iq_ref.b = Conv.iq_lim.b;
+    CPU1toCPU2.CLA1toCLA2.iq_ref.c = Conv.iq_lim.c;
 
     Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
 
@@ -75,7 +84,7 @@ interrupt void SD_AVG_NT()
 
     Grid_analyzer_calc();
 //    Grid_analyzer_filter_calc();
-//    Energy_meter_CPUasm();
+    Energy_meter_CPUasm();
 
     Timer_PWM.CPU_GRID = TIMESTAMP_PWM;
 
@@ -199,42 +208,48 @@ interrupt void SD_AVG_NT()
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//    Modbus_slave_LCD.RTU->interrupt_task();
-//    Modbus_slave_EXT.RTU->interrupt_task();
+    Modbus_slave_LCD.RTU->interrupt_task();
+    Modbus_slave_EXT.RTU->interrupt_task();
 
     Timer_PWM.CPU_COMM = TIMESTAMP_PWM;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    static volatile union double_pulse_union
-    {
-       Uint32 u32;
-       Uint16 u16[2];
-    }double_pulse = {.u16 = {620, 15}};
-    EMIF_mem.write.double_pulse = double_pulse.u32;
-
-    static volatile float counter = 0;
-    if(Machine.ONOFF != Machine.ONOFF_last)
-    {
-        counter = 0;
-        GPIO_SET(PWM_EN_CM);
-    }
-    counter += Conv.Ts;
-    if(counter >= 1.0f)
-    {
-       GPIO_CLEAR(PWM_EN_CM);
-    }
+//    static volatile union double_pulse_union
+//    {
+//       Uint32 u32;
+//       Uint16 u16[2];
+//    }double_pulse = {.u16 = {620, 15}};
+//    EMIF_mem.write.double_pulse = double_pulse.u32;
+//
+//    static volatile float counter = 0;
+//    if(Machine.ONOFF != Machine.ONOFF_last)
+//    {
+//        counter = 0;
+//        GPIO_SET(PWM_EN_CM);
+//    }
+//    counter += Conv.Ts;
+//    if(counter >= 1.0f)
+//    {
+//       GPIO_CLEAR(PWM_EN_CM);
+//    }
 
 //    GPIO_SET(RST_CM);
 //    EMIF_mem.write.PWM_control = 0xAA;
-
-    GPIO_CLEAR(TRIGGER_CM);
 
 //    static Uint64 benchmark_timer_HWI;
 //    static volatile float benchmark_HWI;
 //    benchmark_HWI = (float)(ReadIpcTimer() - benchmark_timer_HWI)*(1.0f/200000000.0f);
 //    benchmark_timer_HWI = ReadIpcTimer();
 
+    GPIO_CLEAR(TRIGGER_CM);
+
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
     Timer_PWM.CPU_END = TIMESTAMP_PWM;
+
+    static volatile Uint16 timer_max = 0;
+    if(Timer_PWM.CPU_END < 1000)
+    {
+        if(Timer_PWM.CPU_END > timer_max) timer_max = Timer_PWM.CPU_END;
+    }
 }

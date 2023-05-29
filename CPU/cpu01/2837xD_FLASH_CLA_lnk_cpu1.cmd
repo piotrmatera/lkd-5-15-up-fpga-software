@@ -104,7 +104,7 @@ SECTIONS
    .stack: 		>  RAMD0_1,   PAGE = 0
 
    .ebss:		>>  RAMM0_1 | RAMGS0_3 | RAMGS4_7,   PAGE = 0
-   .esysmem: 	>>  RAMM0_1 | RAMGS0_3 | RAMGS4_7,   PAGE = 0
+   .esysmem: 	>  RAMM0_1 | RAMGS0_3 | RAMGS4_7,   PAGE = 0
    .cio: 		>>  RAMM0_1 | RAMGS0_3 | RAMGS4_7,   PAGE = 0
 
    Grid: 		>  RAMGS4_7,   PAGE = 0

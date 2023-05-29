@@ -129,7 +129,8 @@ union ALARM_master
         Uint16 TZ_EMUSTOP_CPU2 : 1;
 
         Uint16 Not_enough_data_master : 1;
-        Uint16 rsvd1:9;
+        Uint16 Driver_soft_error : 1;
+        Uint16 rsvd1:8;
         //64bits
 
         Uint16 rsvd2:16;

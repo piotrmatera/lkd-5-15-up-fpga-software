@@ -12,6 +12,7 @@
 struct Converter_struct Conv;
 struct Grid_parameters_struct Grid;
 struct Grid_parameters_struct Grid_filter;
+struct Grid_analyzer_filter_struct Grid_filter_params;
 struct Thermistor_struct Therm;
 
 union CONTROL_EXT_MODBUS control_ext_modbus;
@@ -59,7 +60,6 @@ volatile union EMIF_union EMIF_mem;
 #pragma SET_DATA_SECTION("Grid")
 
 struct Grid_analyzer_struct Grid_params;
-struct Grid_analyzer_filter_struct Grid_filter_params;
 
 #pragma SET_DATA_SECTION()
 
