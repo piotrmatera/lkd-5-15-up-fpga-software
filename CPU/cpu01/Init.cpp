@@ -324,7 +324,7 @@ void Init_class::Variables()
     Meas_alarm_H.Temp = 95.0f;
     Meas_alarm_L.Temp = 0.0f;
 
-    Meas_alarm_H.U_dc = 760.0f;
+    Meas_alarm_H.U_dc = 125.0f;
     Meas_alarm_L.U_dc = -5.0f;
     Meas_alarm_H.U_dc_balance = 30.0f;
 
@@ -384,7 +384,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.I_lim = Conv.I_lim_nominal;
-    Conv.U_dc_ref = 675.0f;
+    Conv.U_dc_ref = 100.0f;
 
     CIC1_adaptive_filter(&Conv.CIC1_U_dc, 1000.0f, full_OSR);
 
@@ -430,13 +430,15 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.compensation2 = 2.0f;
+    Conv.resonant_odd_number = 25-1;
+    Conv.resonant_even_number = 2-1;
 
     SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts / Conv.Ts_rate);
     SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation2);
     SINCOS_calc_CPUasm(sincos_table_Kalman, Conv.w_filter * Conv.Ts);
 
-    register float p_pr_i = Conv.L_conv / (3.0f * Conv.Ts);
-    register float r_pr_i = Conv.L_conv * MATH_PI / Conv.Ts;
+    register float p_pr_i = Conv.L_conv / (3.0f * Conv.Ts) * Conv.Ts_rate;
+    register float r_pr_i = Conv.L_conv * MATH_PI / Conv.Ts * Conv.Ts_rate;
     r_pr_i /= MATH_2PI * 50.0f;
 
     Conv.Kp_I = p_pr_i;
@@ -623,7 +625,7 @@ void Init_class::Variables()
     Conv.Resonant_I_grid[2].trigonometric.ptr =
     Conv.Resonant_I_conv[0].trigonometric.ptr =
     Conv.Resonant_I_conv[1].trigonometric.ptr =
-    Conv.Resonant_I_conv[2].trigonometric.ptr = &sincos_table[0];
+    Conv.Resonant_I_conv[2].trigonometric.ptr = &sincos_table_Kalman[0];
 
     Conv.Resonant_U_grid[0].trigonometric_comp.ptr =
     Conv.Resonant_U_grid[1].trigonometric_comp.ptr =

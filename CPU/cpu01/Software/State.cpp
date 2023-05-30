@@ -563,6 +563,8 @@ void Machine_class::Background()
 
     rtc.process(); // wywolywanie cykliczne konieczne do dzialania Rtc
 
+    mosfet_ctrl_app.process(); //jw
+
     ////////////////////////////////////////////////////////////////////////////////////////
 
     static class Blink_class Blink_idle(1.0f);
@@ -832,8 +834,8 @@ void Machine_class::init()
         control_ext_modbus.fields.baudrate = 1152;
         control_ext_modbus.fields.ext_server_id = 1;
 
-        SD_card.settings.C_dc = 1e-3;
-        SD_card.settings.L_conv = 200e-6;
+        SD_card.settings.C_dc = 990e-6;
+        SD_card.settings.L_conv = 265e-6;
         SD_card.settings.I_lim = 24.0f;
     }
     else

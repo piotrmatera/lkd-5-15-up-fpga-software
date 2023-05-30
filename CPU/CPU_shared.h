@@ -93,7 +93,7 @@ struct FPGA_Resonant_states_M1_struct
 struct FPGA_Resonant_series_M1_struct
 {
     int32 error;
-    int32 harmonics;
+    Uint32 harmonics;
 };
 
 struct FPGA_Resonant_series_M0_struct

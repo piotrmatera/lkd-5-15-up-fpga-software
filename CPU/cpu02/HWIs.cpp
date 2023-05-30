@@ -74,16 +74,10 @@ interrupt void SD_NEW_INT()
     static volatile Uint32 Resonant_WIP;
     Resonant_WIP = EMIF_mem.read.flags.Resonant1_WIP;
 
-    static float angle = 0.0f;
-    angle += Conv.Ts * MATH_2PI * 50.0f * 1.0f;
-    angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
-    static volatile float zmienna;
-    static volatile float zmienna_gain = 100.0f;
-    zmienna = zmienna_gain * (0.0f + sinf(angle));
-
+    register float modifier2 = Conv.range_modifier_Resonant_values;
     if(Conv.enable)
     {
-        register float modifier2 = Conv.range_modifier_Resonant_values * Conv.zero_error;
+        modifier2 *= Conv.zero_error;
         CPU2toCPU1.Resonant_error[0] =
         CPU2toCPU1.Resonant_error[3] = Conv.I_err.a * modifier2;
         CPU2toCPU1.Resonant_error[1] =
@@ -93,15 +87,13 @@ interrupt void SD_NEW_INT()
     }
     else
     {
-        register float modifier2 = Conv.range_modifier_Resonant_values;
         CPU2toCPU1.Resonant_error[0] =
-        CPU2toCPU1.Resonant_error[3] = (zmienna - Conv.MR_ref.a) * modifier2;
+        CPU2toCPU1.Resonant_error[3] = (Meas_master.U_grid.a - Conv.MR_ref.a) * modifier2;
         CPU2toCPU1.Resonant_error[1] =
-        CPU2toCPU1.Resonant_error[4] = (zmienna - Conv.MR_ref.b) * modifier2;
+        CPU2toCPU1.Resonant_error[4] = (Meas_master.U_grid.b - Conv.MR_ref.b) * modifier2;
         CPU2toCPU1.Resonant_error[2] =
-        CPU2toCPU1.Resonant_error[5] = (zmienna - Conv.MR_ref.c) * modifier2;
+        CPU2toCPU1.Resonant_error[5] = (Meas_master.U_grid.c - Conv.MR_ref.c) * modifier2;
     }
-    CPU2toCPU1.Resonant_start = 0b11;
 
     GPIO_SET(CPU2_DMA_CM);
 
@@ -121,6 +113,7 @@ interrupt void SD_NEW_INT()
 
     ///////////////////////////////////////////////////////////////////
 
+    CPU2toCPU1.Resonant_start = 0b11;
     CPU2toCPU1.w_filter = PLL.w_filter;
     CPU2toCPU1.f_filter = PLL.f_filter;
     CPU2toCPU1.sign = PLL.sign;
@@ -130,11 +123,6 @@ interrupt void SD_NEW_INT()
     if(EPwm5Regs.TZFLG.bit.OST) CPU2toCPU1.alarm_master.bit.TZ_CPU2 = 1;
     if(EPwm5Regs.TZOSTFLG.bit.OST5) CPU2toCPU1.alarm_master.bit.TZ_CLOCKFAIL_CPU2 = 1;
     if(EPwm5Regs.TZOSTFLG.bit.OST6) CPU2toCPU1.alarm_master.bit.TZ_EMUSTOP_CPU2 = 1;
-
-//    static Uint64 benchmark_timer_HWI;
-//    static volatile float benchmark_HWI;
-//    benchmark_HWI = (float)(ReadIpcTimer() - benchmark_timer_HWI)*(1.0f/200000000.0f);
-//    benchmark_timer_HWI = ReadIpcTimer();
 
     Timer_PWM.CPU_SD_END = TIMESTAMP_PWM;
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP12;

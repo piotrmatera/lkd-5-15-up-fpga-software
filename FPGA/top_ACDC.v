@@ -566,7 +566,7 @@ module SerDes_master(CPU_io, FPGA_io);
     IDDRX1F SD_IDDR[SD_NUMBER-1:0](.D(SD_DAT), .RST(1'b0), .SCLK(XTAL_20MHz_i), .Q0(SD_DAT_IDDR), .Q1());
  
 	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat; 
-	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i({~SD_DAT_IDDR[10:8], SD_DAT_IDDR[7:0]}), 
+	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i({~SD_DAT_IDDR[10:8], SD_DAT_IDDR[7:3], ~SD_DAT_IDDR[2:0]}), 
 	.clk_i(XTAL_20MHz_i), .decimator_pulse_i(decimator_pulse), .select_i(select_SD), .data_o(SD_dat)); 
 	
 	wire [SD_WIDTH-1+2:0] SD_dat_In; 
@@ -621,7 +621,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign FLT_bus[27] = !sed_err;
  
  	wire rst_faults;
-	FD1P3BX FLT_ff[FAULT_NUMBER-1:0](.D(1'b0), .SP(rst_faults), .CK(clk_5x), .PD(~FLT_bus), .Q(FLT_REG_O)); 
+	FD1P3BX FLT_ff[FAULT_NUMBER-1:0](.D(1'b0), .SP(rst_faults), .CK(clk_1x), .PD(~FLT_bus), .Q(FLT_REG_O)); 
 
 	wire TZ_FPGA;
 	assign TZ_FPGA = !(|FLT_REG_O);

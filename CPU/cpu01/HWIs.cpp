@@ -40,52 +40,8 @@ interrupt void SD_AVG_NT()
     register float modifier1 = Conv.div_range_modifier_Kalman_values;
     Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC[0].harmonic[0].x1 * modifier1;
 
-    static volatile struct
-    {
-        struct trigonometric_struct harmonic[5];
-        float sum;
-        float error;
-    }Resonant_mem;
-    int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0][0];
-    float *pointer_dst = (float *)&Resonant_mem;
-    for(int i=0; i<5; i++)
-    {
-        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-    }
-
-    pointer_src = (int32 *)&EMIF_mem.read.Resonant[0][0].sum;
-    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-
-//    static volatile struct
-//    {
-//        struct abc_struct harmonic[5];
-//        float estimate;
-//        float error;
-//    }Kalman_mem;
-//    int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman_DC[0];
-//    float *pointer_dst = (float *)&Kalman_mem;
-//    for(int i=0; i<5; i++)
-//    {
-//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
-//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
-//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values * Conv.div_range_modifier_Kalman_values * Conv.range_modifier_Kalman_coefficients;
-//    }
-//
-//    pointer_src = (int32 *)&EMIF_mem.read.Kalman_DC[0].estimate;
-//    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
-//    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
-
-//    static float angle = 0.0f;
-//    angle += Conv.Ts * Conv.w_filter * 3.0f;
-//    angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
-//    static volatile float zmienna;
-//    static volatile float zmienna_gain = 100.0f;
-//    zmienna = zmienna_gain * (1.0f + sinf(angle));
-
-//    Conv.w_filter = CPU2toCPU1.w_filter;
-//    Conv.f_filter = CPU2toCPU1.f_filter;
+    Conv.w_filter = CPU2toCPU1.w_filter;
+    Conv.f_filter = CPU2toCPU1.f_filter;
     Conv.sign = CPU2toCPU1.sign;
     Conv.PLL_RDY = CPU2toCPU1.PLL_RDY;
     Conv.sag = CPU2toCPU1.sag;
@@ -100,33 +56,6 @@ interrupt void SD_AVG_NT()
     CPU1toCPU2.CLA1toCLA2.iq_ref.b = Conv.iq_lim.b;
     CPU1toCPU2.CLA1toCLA2.iq_ref.c = Conv.iq_lim.c;
 
-//    static volatile Uint16 do_once = 0;
-//    static volatile Uint16 do_cont = 0;
-//    if(do_once || do_cont)
-//    {
-//        struct abc_struct MR_ref;
-//        register float modifier1 = Conv.div_range_modifier_Resonant_values;
-//        MR_ref.a = (float)EMIF_mem.read.Resonant[0][0].sum * modifier1;
-//        MR_ref.b = (float)EMIF_mem.read.Resonant[0][1].sum * modifier1;
-//        MR_ref.c = (float)EMIF_mem.read.Resonant[0][2].sum * modifier1;
-//
-//        do_once = 0;
-//        static float angle = 0.0f;
-//        angle += Conv.Ts * MATH_2PI * 50.0f * 0.25f;
-//        angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
-//        static volatile float zmienna;
-//        static volatile float zmienna_gain = 1.0f;
-//        static volatile float zmienna_gain2 = 1.0f;
-//        zmienna = zmienna_gain * (0.0f + sinf(angle));
-//        register float modifier2 = Conv.range_modifier_Resonant_values * zmienna_gain2;
-//        EMIF_mem.write.Resonant[1].series[0].error =
-//        EMIF_mem.write.Resonant[0].series[0].error = (zmienna - MR_ref.a) * modifier2;
-//        EMIF_mem.write.Resonant[1].series[1].error =
-//        EMIF_mem.write.Resonant[0].series[1].error = (zmienna - MR_ref.b) * modifier2;
-//        EMIF_mem.write.Resonant[1].series[2].error =
-//        EMIF_mem.write.Resonant[0].series[2].error = (zmienna - MR_ref.c) * modifier2;
-//        EMIF_mem.write.DSP_start = 3UL;
-//    }
     Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
 
     while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
@@ -141,6 +70,13 @@ interrupt void SD_AVG_NT()
     EMIF_mem.write.Kalman[1].input[2] = Meas_master.I_grid.c * modifier2;
     EMIF_mem.write.Kalman_DC.input[0] = Meas_master.U_dc * modifier2;
     EMIF_mem.write.DSP_start = 0b11100;
+
+    EMIF_mem.write.Resonant[0].series[0].harmonics =
+    EMIF_mem.write.Resonant[0].series[1].harmonics =
+    EMIF_mem.write.Resonant[0].series[2].harmonics = Conv.resonant_odd_number;
+    EMIF_mem.write.Resonant[1].series[0].harmonics =
+    EMIF_mem.write.Resonant[1].series[1].harmonics =
+    EMIF_mem.write.Resonant[1].series[2].harmonics = Conv.resonant_even_number;
 
     Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
 
@@ -220,6 +156,12 @@ interrupt void SD_AVG_NT()
         static volatile float edge = 1;
         static volatile float trigger_last;
 
+        static volatile float duty_temp[4];
+        duty_temp[0] = CPU2toCPU1.duty[0];
+        duty_temp[1] = CPU2toCPU1.duty[1];
+        duty_temp[2] = CPU2toCPU1.duty[2];
+        duty_temp[3] = CPU2toCPU1.duty[3];
+
         if(!first)
         {
             first = 1;
@@ -272,46 +214,13 @@ interrupt void SD_AVG_NT()
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Grid_analyzer_calc();
-//    Grid_analyzer_filter_calc();
     Energy_meter_CPUasm();
 
     Timer_PWM.CPU_GRID = TIMESTAMP_PWM;
 
-//    static volatile union double_pulse_union
-//    {
-//       Uint32 u32;
-//       Uint16 u16[2];
-//    }double_pulse = {.u16 = {620, 15}};
-//    EMIF_mem.write.double_pulse = double_pulse.u32;
-//
-//    static volatile float counter = 0;
-//    if(Machine.ONOFF != Machine.ONOFF_last)
-//    {
-//        counter = 0;
-//        GPIO_SET(PWM_EN_CM);
-//    }
-//    counter += Conv.Ts;
-//    if(counter >= 1.0f)
-//    {
-//       GPIO_CLEAR(PWM_EN_CM);
-//    }
-
-//    GPIO_SET(RST_CM);
-//    EMIF_mem.write.PWM_control = 0xAA;
-
-//    static Uint64 benchmark_timer_HWI;
-//    static volatile float benchmark_HWI;
-//    benchmark_HWI = (float)(ReadIpcTimer() - benchmark_timer_HWI)*(1.0f/200000000.0f);
-//    benchmark_timer_HWI = ReadIpcTimer();
 
     GPIO_CLEAR(TRIGGER_CM);
 
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
     Timer_PWM.CPU_END = TIMESTAMP_PWM;
-
-    static volatile Uint16 timer_max = 0;
-    if(Timer_PWM.CPU_END < 1000)
-    {
-        if(Timer_PWM.CPU_END > timer_max) timer_max = Timer_PWM.CPU_END;
-    }
 }

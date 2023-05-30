@@ -153,7 +153,7 @@ void Converter_calc()
                 GPIO_CLEAR(C_SS_RLY_N_CM);
             }
 
-            if (counter_ss > 2.0f || (Conv.U_dc_filter > 620.0f && counter_ss > 1.75f))
+            if (counter_ss > 2.0f)
             {
                 Conv.state++;
             }
@@ -384,6 +384,10 @@ void Converter_calc()
 //            Conv.PI_Id[1].out += -Conv.PI_U_dc.out;
 //            Conv.PI_Id[2].out += -Conv.PI_U_dc.out;
 
+            static volatile float Iq_ref;
+            Conv.iq_lim.a =
+            Conv.iq_lim.b =
+            Conv.iq_lim.c = Iq_ref;
             Conv.id_lim.a += -Conv.PI_U_dc.out;
             Conv.id_lim.b += -Conv.PI_U_dc.out;
             Conv.id_lim.c += -Conv.PI_U_dc.out;

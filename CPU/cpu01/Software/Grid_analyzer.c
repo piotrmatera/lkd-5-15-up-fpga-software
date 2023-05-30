@@ -74,26 +74,26 @@ void Grid_analyzer_calc()
 //    Resonant_filter_calc_CPU(&Grid_params.Resonant_I_conv[1], Meas_master.I_conv.b);
 //    Resonant_filter_calc_CPU(&Grid_params.Resonant_I_conv[2], Meas_master.I_conv.c);
 
-    Conv.Resonant_U_grid[0].x0 = Grid_params.Resonant_U_grid[0].x0;
-    Conv.Resonant_U_grid[1].x0 = Grid_params.Resonant_U_grid[1].x0;
-    Conv.Resonant_U_grid[2].x0 = Grid_params.Resonant_U_grid[2].x0;
-    Conv.Resonant_U_grid[0].x1 = Grid_params.Resonant_U_grid[0].x1;
-    Conv.Resonant_U_grid[1].x1 = Grid_params.Resonant_U_grid[1].x1;
-    Conv.Resonant_U_grid[2].x1 = Grid_params.Resonant_U_grid[2].x1;
+    Grid_params.Resonant_U_grid[0].x0 = Conv.Resonant_U_grid[0].x0;
+    Grid_params.Resonant_U_grid[1].x0 = Conv.Resonant_U_grid[1].x0;
+    Grid_params.Resonant_U_grid[2].x0 = Conv.Resonant_U_grid[2].x0;
+    Grid_params.Resonant_U_grid[0].x1 = Conv.Resonant_U_grid[0].x1;
+    Grid_params.Resonant_U_grid[1].x1 = Conv.Resonant_U_grid[1].x1;
+    Grid_params.Resonant_U_grid[2].x1 = Conv.Resonant_U_grid[2].x1;
 
-    Conv.Resonant_I_grid[0].x0 = Grid_params.Resonant_I_grid[0].x0;
-    Conv.Resonant_I_grid[1].x0 = Grid_params.Resonant_I_grid[1].x0;
-    Conv.Resonant_I_grid[2].x0 = Grid_params.Resonant_I_grid[2].x0;
-    Conv.Resonant_I_grid[0].x1 = Grid_params.Resonant_I_grid[0].x1;
-    Conv.Resonant_I_grid[1].x1 = Grid_params.Resonant_I_grid[1].x1;
-    Conv.Resonant_I_grid[2].x1 = Grid_params.Resonant_I_grid[2].x1;
+    Grid_params.Resonant_I_grid[0].y0 = Conv.Resonant_I_grid[0].y0;
+    Grid_params.Resonant_I_grid[1].y0 = Conv.Resonant_I_grid[1].y0;
+    Grid_params.Resonant_I_grid[2].y0 = Conv.Resonant_I_grid[2].y0;
+    Grid_params.Resonant_I_grid[0].y1 = Conv.Resonant_I_grid[0].y1;
+    Grid_params.Resonant_I_grid[1].y1 = Conv.Resonant_I_grid[1].y1;
+    Grid_params.Resonant_I_grid[2].y1 = Conv.Resonant_I_grid[2].y1;
 
-    Conv.Resonant_I_conv[0].x0 = Grid_params.Resonant_I_conv[0].x0;
-    Conv.Resonant_I_conv[1].x0 = Grid_params.Resonant_I_conv[1].x0;
-    Conv.Resonant_I_conv[2].x0 = Grid_params.Resonant_I_conv[2].x0;
-    Conv.Resonant_I_conv[0].x1 = Grid_params.Resonant_I_conv[0].x1;
-    Conv.Resonant_I_conv[1].x1 = Grid_params.Resonant_I_conv[1].x1;
-    Conv.Resonant_I_conv[2].x1 = Grid_params.Resonant_I_conv[2].x1;
+    Grid_params.Resonant_I_conv[0].y0 = Conv.Resonant_I_conv[0].y0;
+    Grid_params.Resonant_I_conv[1].y0 = Conv.Resonant_I_conv[1].y0;
+    Grid_params.Resonant_I_conv[2].y0 = Conv.Resonant_I_conv[2].y0;
+    Grid_params.Resonant_I_conv[0].y1 = Conv.Resonant_I_conv[0].y1;
+    Grid_params.Resonant_I_conv[1].y1 = Conv.Resonant_I_conv[1].y1;
+    Grid_params.Resonant_I_conv[2].y1 = Conv.Resonant_I_conv[2].y1;
 
     ///////////////////////////////////////////////////////////////////
 

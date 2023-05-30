@@ -27,10 +27,9 @@ struct Converter_struct
     struct abc_struct Kalman_U_grid;
     struct abc_struct Kalman_U_grid_diff;
     struct abc_struct MR_ref;
-    float div_U_dc;
     struct abcn_struct U_ref;
     float cycle_period;
-    int32 duty[4];
+    int16 duty[4];
 
     float RDY;
 

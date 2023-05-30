@@ -123,8 +123,18 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 
 
 	reg [4:0] cnt;
+	reg [3:0] harm_save_r;
+	reg [HARMONICS_CNT_WIDTH-1:0] harmonics_cmp;
+	
+	reg [HARMONICS_CNT_WIDTH-1:0] harmonics_cnt;	
+	reg harmonics_inc;
+	reg harmonics_rst;
+	reg harmonics_end;
+	
 	reg [SERIES_CNT_WIDTH-1:0] series_cnt;
-	reg [HARMONICS_CNT_WIDTH-1:0] harmonics_cnt;
+	reg series_inc;
+	reg series_rst;
+	reg series_end;
 	
 	reg[OPCODE_WIDTH-1:0]Opcode;
 	reg[AMUX_WIDTH-1:0]AMuxsel;
@@ -171,14 +181,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	wire [M0_ADDR_WIDTH-1:0] Mem0_addrw_pip;
 	wire Mem0_we_pip;
 	
-	reg harmonics_inc;
-	reg harmonics_rst;
-	reg harmonics_end;
-	
-	reg series_inc;
-	reg series_rst;
-	reg series_end;
-	
 	Sync_latch_input #(.OUT_POLARITY(1), .STEPS(2)) 
 	code_start(.clk_i(clk_i), .in(enable_i), .out(WIP_flag_o), .reset_i(cnt == 30), .set_i(1'b0));
 	
@@ -202,8 +204,10 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 		addrw_M0_sel = 0;
 		addrw_M0_ptr = 0;
 		Mem0_we = 0;
+		harmonics_cmp = 2;
+		harm_save_r = 0;
 	end
-
+	
 	always @(posedge clk_i) begin
 		Opcode <= OPCODE_NAND_BC;
 		AMuxsel <= AMUX_GND;
@@ -223,9 +227,12 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 		addrw_M0_ptr <= 0;
 		Mem0_we <= 0;
 		
+		harm_save_r <= {cnt == 1, harm_save_r[3:1]};
+		if(harm_save_r[0]) harmonics_cmp <= Mem1_data_o[4 +: HARMONICS_CNT_WIDTH];
+			
 		if(harmonics_inc) harmonics_cnt <= harmonics_cnt + 1'b1;
 		if(harmonics_rst) harmonics_cnt <= 0;
-		harmonics_end <= harmonics_cnt == HARMONICS_NUM-1;
+		harmonics_end <= harmonics_cnt == harmonics_cmp;
 		harmonics_inc <= 0;
 		harmonics_rst <= 0;
 		
