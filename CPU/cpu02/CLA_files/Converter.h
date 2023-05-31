@@ -29,7 +29,11 @@ struct Converter_struct
     struct abc_struct MR_ref;
     struct abcn_struct U_ref;
     float cycle_period;
+    float duty_float[4];
     int16 duty[4];
+
+    float correction;
+    float correction_switch;
 
     float RDY;
 

@@ -171,9 +171,9 @@ interrupt void SD_AVG_NT()
             Scope.data_in[0] = &Meas_master.U_grid.a;
             Scope.data_in[1] = &Meas_master.U_grid.b;
             Scope.data_in[2] = &Meas_master.U_grid.c;
-            Scope.data_in[3] = &Meas_master.I_grid.a;
-            Scope.data_in[4] = &Meas_master.I_grid.b;
-            Scope.data_in[5] = &Meas_master.I_grid.c;
+            Scope.data_in[3] = (float *)&duty_temp[0];
+            Scope.data_in[4] = (float *)&duty_temp[1];
+            Scope.data_in[5] = (float *)&duty_temp[2];
             Scope.data_in[6] = &Meas_master.U_dc;
             Scope.data_in[7] = &Meas_master.U_dc_n;
             Scope.data_in[8] = &Meas_master.I_conv.a;

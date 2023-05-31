@@ -68,6 +68,7 @@ module Symmetrical_PWM(clk_i, enable_output_i, override_i, duty_i, next_period_i
 		deadtime2_counter_r = 0;
 		duty_r = 0;
 		local_counter_r = 0;
+		sync_phase_r = 0;
 		PWM_r = 0;
 		PWM_r2[0] = 0;
 		PWM_r2[1] = 0;

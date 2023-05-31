@@ -18,37 +18,37 @@ module SerDes_tb;
 		forever begin
 			#20
 			i <= i+1;
-			if(i>=400) $stop;
+			if(i>=10000) $stop;
 		end
 	end
 
-	//wire[15:0] next_period;
-	//assign next_period = `CYCLE_PERIOD-1;
-	//wire[15:0] current_period;
-	//wire[15:0] local_counter;
-	//wire sync_phase;
-	//Local_clock	#(.INITIAL_PHASE(0)) Local_clock(.clk_i(XTAL1_25MHz_i), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase),
-	//.snapshot_start_i(4'b0), .snapshot_value_o()); 
+	wire[15:0] next_period;
+	assign next_period = `CYCLE_PERIOD-1;
+	wire[15:0] current_period;
+	wire[15:0] local_counter;
+	wire sync_phase;
+	Local_counter	#(.INITIAL_PHASE(0)) Local_counter(.clk_i(XTAL1_25MHz_i), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase),
+	.snapshot_start_i(4'b0), .snapshot_value_o()); 
 	
 	
-	//reg[15:0] duty_r; 
-	//reg[1:0] sync_reg; 
-	//always @(posedge XTAL1_25MHz_i) begin
-		//sync_reg <= {sync_phase, sync_reg[1]};
-		//if(sync_phase)
-			//duty_r <= 16'd2024;
-		//else
-			//duty_r <= -16'd2023;
+	reg[15:0] duty_r; 
+	reg[1:0] sync_reg; 
+	always @(posedge XTAL1_25MHz_i) begin
+		sync_reg <= {sync_phase, sync_reg[1]};
+		if(sync_phase)
+			duty_r <= 16'd1000;
+		else
+			duty_r <= -16'd1000;
 			
-		//duty_r <= 16'd0;
-	//end
+		duty_r <= 16'd1001;
+	end
 	
-	//wire PWM_EN;
-	//assign PWM_EN = 1'b1;
-	//wire PWM_EN_r; 
-	//FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg[1] ^ sync_reg[0]), .CK(XTAL1_25MHz_i), .CD(!(TZ_EN & PWM_EN)), .Q(PWM_EN_r)); 
+	wire PWM_EN;
+	assign PWM_EN = 1'b1;
+	wire PWM_EN_r; 
+	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg[1] ^ sync_reg[0]), .CK(XTAL1_25MHz_i), .CD(!(TZ_EN & PWM_EN)), .Q(PWM_EN_r)); 
 
-	//Symmetrical_PWM Symmetrical_PWM(.clk_i(XTAL1_25MHz_i), .enable_output_i(PWM_EN_r), .duty_i(duty_r), .next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
+	Symmetrical_PWM Symmetrical_PWM(.clk_i(XTAL1_25MHz_i), .enable_output_i(PWM_EN_r), .override_i(2'b0), .duty_i(duty_r), .next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
 	
 	localparam EMIF_MEMORY_WIDTH = `COMM_MEMORY_EMIF_WIDTH+3;//$clog2(2x COMM_MEMORY + MUX) = $clog2(3) = 2 
 	wire EMIF_oe_i; 

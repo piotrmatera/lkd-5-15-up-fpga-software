@@ -47,15 +47,62 @@ void Converter_calc()
 //        Conv.U_ref.c += Conv.Kalman_U_grid_diff.c;
     }
 
-    register float max = fmaxf(Conv.U_ref.a, fmaxf(Conv.U_ref.b, Conv.U_ref.c));
-    register float min = fminf(Conv.U_ref.a, fminf(Conv.U_ref.b, Conv.U_ref.c));
-    register float correction = (min + max) * (-0.5f);
-
     register float ref_scaling = Conv.cycle_period * 2.0f / fmaxf(Meas_master.U_dc_avg, 1.0f);
-    Conv.duty[0] = ref_scaling * (Conv.U_ref.a + correction);
-    Conv.duty[1] = ref_scaling * (Conv.U_ref.b + correction);
-    Conv.duty[2] = ref_scaling * (Conv.U_ref.c + correction);
-    Conv.duty[3] = ref_scaling * (Conv.U_ref.n + correction);
+    Conv.duty_float[0] = Conv.U_ref.a * ref_scaling;
+    Conv.duty_float[1] = Conv.U_ref.b * ref_scaling;
+    Conv.duty_float[2] = Conv.U_ref.c * ref_scaling;
+    Conv.duty_float[3] = Conv.U_ref.n * ref_scaling;
+
+    static volatile float select_modulation;
+    static volatile float switcher;
+    static volatile float switcher_val;
+    register float correction;
+    if(select_modulation)
+    {
+        register float max = fmaxf(Conv.duty_float[0], fmaxf(Conv.duty_float[1], Conv.duty_float[2]));
+        register float min = fminf(Conv.duty_float[0], fminf(Conv.duty_float[1], Conv.duty_float[2]));
+        correction = (min + max) * (-0.5f);
+    }
+    else
+    {
+        Uint32 index_max = 0;
+        if (Conv.duty_float[1] > Conv.duty_float[0]) index_max = 1;
+        if (Conv.duty_float[2] > Conv.duty_float[index_max]) index_max = 2;
+        Uint32 index_min = 0;
+        if (Conv.duty_float[1] < Conv.duty_float[0]) index_min = 1;
+        if (Conv.duty_float[2] < Conv.duty_float[index_min]) index_min = 2;
+
+        register float correction_switch;
+        correction_switch = Conv.correction_switch;
+        if(switcher++ > switcher_val)
+        {
+            switcher = 0.0f;
+            correction_switch = 0.0f;
+            if (fabsf(*(&Conv.I_ref.a + index_max)) > fabsf(*(&Conv.I_ref.a + index_min))) correction_switch = 1.0f;
+        }
+
+        if (correction_switch) correction = Conv.cycle_period - Conv.duty_float[index_max];
+        else correction = -Conv.cycle_period - Conv.duty_float[index_min];
+
+        if (Conv.correction_switch != correction_switch) correction = (Conv.correction + correction) * 0.5f;
+        Conv.correction_switch = correction_switch;
+    }
+
+    Conv.correction = correction;
+    Conv.duty[0] = Conv.duty_float[0] + correction;
+    Conv.duty[1] = Conv.duty_float[1] + correction;
+    Conv.duty[2] = Conv.duty_float[2] + correction;
+    Conv.duty[3] = Conv.duty_float[3] + correction;
+
+    static volatile int32 add_val;
+    if((float)Conv.duty[0] == Conv.cycle_period) Conv.duty[0] += add_val;
+    if((float)Conv.duty[1] == Conv.cycle_period) Conv.duty[1] += add_val;
+    if((float)Conv.duty[2] == Conv.cycle_period) Conv.duty[2] += add_val;
+    if((float)Conv.duty[3] == Conv.cycle_period) Conv.duty[3] += add_val;
+    if((float)Conv.duty[0] == -Conv.cycle_period) Conv.duty[0] -= add_val;
+    if((float)Conv.duty[1] == -Conv.cycle_period) Conv.duty[1] -= add_val;
+    if((float)Conv.duty[2] == -Conv.cycle_period) Conv.duty[2] -= add_val;
+    if((float)Conv.duty[3] == -Conv.cycle_period) Conv.duty[3] -= add_val;
 
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 2;
