@@ -1,5 +1,86 @@
 `include "global.v" 
  
+module Symmetrical_PWM_full(clk_i, enable_output_i, override_i, duty_i, next_period_i, current_period_i, local_counter_i, sync_phase_i, PWM_o);
+	parameter[15:0] DEADTIME = 65;
+	parameter NEGATE_OUTPUT = 0;
+	localparam DEADTIME_WIDTH = $clog2(DEADTIME+2);
+	input clk_i;
+	input enable_output_i;
+	input[1:0] override_i;
+	input[15:0] duty_i;
+	input[15:0] next_period_i;
+	input[15:0] current_period_i;
+	input[15:0] local_counter_i;
+	input sync_phase_i;
+	output[1:0] PWM_o;
+
+	reg[1:0] PWM_r[1:0];
+	reg[1:0] PWM_r2[1:0];
+
+	reg[15:0] duty_r[1:0];
+	reg[15:0] local_counter_r;
+	
+	reg[DEADTIME_WIDTH-1:0] deadtime1_counter_r;
+	reg[DEADTIME_WIDTH-1:0] deadtime2_counter_r;
+	
+	reg sync_phase_r;
+
+	always @(posedge clk_i) begin 
+		sync_phase_r <= sync_phase_i; 
+		 
+		if(sync_phase_i ^ sync_phase_r) begin 
+			duty_r[0] = duty_i - (DEADTIME>>1); 
+			duty_r[1] = duty_i + (DEADTIME>>1); 
+		end 
+ 
+		PWM_r[0][0] <= $signed(duty_r[0]) >= $signed({local_counter_r[15:1], ~sync_phase_r}); 
+		PWM_r[0][1] <= $signed(duty_r[0]) >= $signed({local_counter_r[15:1], sync_phase_r}); 
+		PWM_r[1][0] <= $signed(duty_r[1]) >= $signed({local_counter_r[15:1], ~sync_phase_r}); 
+		PWM_r[1][1] <= $signed(duty_r[1]) >= $signed({local_counter_r[15:1], sync_phase_r}); 
+		 
+		if(sync_phase_i) 
+			local_counter_r <= {local_counter_i[14:0], 1'b1} - current_period_i;
+		else
+			local_counter_r <= current_period_i - {local_counter_i[14:0], 1'b1} ; 
+		 
+		if(PWM_r[0] == 2'b11 || PWM_r[0] == 2'b10) 
+			deadtime1_counter_r <= {DEADTIME_WIDTH{1'b0}}; 
+		else if(deadtime1_counter_r < DEADTIME) 
+			deadtime1_counter_r <= deadtime1_counter_r + {{DEADTIME_WIDTH-1{1'b0}}, ~PWM_r[0][0]} + {{DEADTIME_WIDTH-1{1'b0}}, ~PWM_r[0][1]}; 
+			 
+		if(PWM_r[1] == 2'b00 || PWM_r[1] == 2'b01) 
+			deadtime2_counter_r <= {DEADTIME_WIDTH{1'b0}}; 
+		else if(deadtime2_counter_r < DEADTIME) 
+			deadtime2_counter_r <= deadtime2_counter_r + {{DEADTIME_WIDTH-1{1'b0}}, PWM_r[1][0]} + {{DEADTIME_WIDTH-1{1'b0}}, PWM_r[1][1]}; 
+			 
+		PWM_r2[0][0] <= deadtime2_counter_r >= DEADTIME && PWM_r[0][0];
+		PWM_r2[0][1] <= deadtime2_counter_r + PWM_r[0][0] >= DEADTIME && PWM_r[0][1];
+		PWM_r2[1][0] <= deadtime1_counter_r >= DEADTIME && !PWM_r[1][0];
+		PWM_r2[1][1] <= deadtime1_counter_r + !PWM_r[1][0] >= DEADTIME && !PWM_r[1][1];  
+	end 
+	
+	if(NEGATE_OUTPUT) begin	
+		ODDRX1F PWM_ODDR1(.D0(!PWM_r2[0][0] || !enable_output_i), .D1(!PWM_r2[0][1] || !enable_output_i), .SCLK(clk_i), .RST(override_i[0]), .Q(PWM_o[0]));
+		ODDRX1F PWM_ODDR2(.D0(!PWM_r2[1][0] || !enable_output_i), .D1(!PWM_r2[1][1] || !enable_output_i), .SCLK(clk_i), .RST(override_i[1]), .Q(PWM_o[1]));
+ 	end else begin
+		ODDRX1F PWM_ODDR1(.D0(PWM_r2[0][0] || override_i[0]), .D1(PWM_r2[0][1] || override_i[0]), .SCLK(clk_i), .RST(!enable_output_i && !override_i[0]), .Q(PWM_o[0]));
+		ODDRX1F PWM_ODDR2(.D0(PWM_r2[1][0] || override_i[1]), .D1(PWM_r2[1][1] || override_i[1]), .SCLK(clk_i), .RST(!enable_output_i && !override_i[1]), .Q(PWM_o[1]));		
+	end
+
+	initial begin
+		deadtime1_counter_r = 0;
+		deadtime2_counter_r = 0;
+		duty_r[0] = 0;
+		duty_r[1] = 0;
+		local_counter_r = 0;
+		sync_phase_r = 0;
+		PWM_r[0] = 0;
+		PWM_r[1] = 0;
+		PWM_r2[0] = 0;
+		PWM_r2[1] = 0;
+	end
+endmodule 
+
 module Symmetrical_PWM(clk_i, enable_output_i, override_i, duty_i, next_period_i, current_period_i, local_counter_i, sync_phase_i, PWM_o);
 	parameter[15:0] DEADTIME = 50;
 	parameter NEGATE_OUTPUT = 0;

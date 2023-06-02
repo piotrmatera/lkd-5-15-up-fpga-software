@@ -30,7 +30,7 @@ extern struct Kalman_struct Kalman_I_grid[3];
 extern struct Kalman_struct Kalman_U_grid[3];
 extern struct Kalman_DC_struct Kalman_U_dc;
 
-extern const float Kalman_gain[2 * FPGA_KALMAN_STATES];
-extern const float Kalman_gain_dc[2 * FPGA_KALMAN_DC_STATES];
+extern float Kalman_gain[2 * FPGA_KALMAN_STATES];
+extern float Kalman_gain_dc[2 * FPGA_KALMAN_DC_STATES];
 
 #endif /* Kalman_H_ */

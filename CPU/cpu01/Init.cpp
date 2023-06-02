@@ -467,6 +467,14 @@ void Init_class::Variables()
         EMIF_mem.write.Resonant[1].harmonic[i].sin_C = modifier * sincos_table_comp[2 * i + 1].sine;
     }
 
+    if(Conv.Ts - 10e-6  < 1e-7 && 10e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_10US;
+    if(Conv.Ts - 16e-6  < 1e-7 && 16e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_16US;
+    if(Conv.Ts - 20e-6  < 1e-7 && 20e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_20US;
+    if(Conv.Ts - 25e-6  < 1e-7 && 25e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_25US;
+    if(Conv.Ts - 32e-6  < 1e-7 && 32e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_32US;
+    if(Conv.Ts - 50e-6  < 1e-7 && 50e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_50US;
+    if(Conv.Ts - 100e-6 < 1e-7 && 100e-6 - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_100US;
+
     Conv.range_modifier_Kalman_coefficients = 1UL << 31;
     Conv.div_range_modifier_Kalman_coefficients = 1.0f / Conv.range_modifier_Kalman_coefficients;
     Conv.range_modifier_Kalman_values = 1UL << 21;
@@ -507,8 +515,9 @@ void Init_class::Variables()
     CT_SD_max_value[0] = CT_char_vars.CT_char.CT_ratio_a[0] * 5.0f;
     CT_SD_max_value[1] = CT_char_vars.CT_char.CT_ratio_b[0] * 5.0f;
     CT_SD_max_value[2] = CT_char_vars.CT_char.CT_ratio_c[0] * 5.0f;
+    //#TODO zrobi� skalowanie filtru Kalmana I_grid
 
-    float decimation_grid = 625.0f;
+    float decimation_grid = full_OSR;
     float OSR = 50.0f;
 
     static const float U_grid_max = 230.0f;

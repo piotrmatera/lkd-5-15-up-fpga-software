@@ -54,8 +54,6 @@ void Converter_calc()
     Conv.duty_float[3] = Conv.U_ref.n * ref_scaling;
 
     static volatile float select_modulation;
-    static volatile float switcher;
-    static volatile float switcher_val;
     register float correction;
     if(select_modulation)
     {
@@ -65,26 +63,28 @@ void Converter_calc()
     }
     else
     {
-        Uint32 index_max = 0;
-        if (Conv.duty_float[1] > Conv.duty_float[0]) index_max = 1;
-        if (Conv.duty_float[2] > Conv.duty_float[index_max]) index_max = 2;
-        Uint32 index_min = 0;
-        if (Conv.duty_float[1] < Conv.duty_float[0]) index_min = 1;
-        if (Conv.duty_float[2] < Conv.duty_float[index_min]) index_min = 2;
+        float I_ref_max = Conv.I_ref.a;
+        register float duty_max = Conv.duty_float[0];
+        if (Conv.duty_float[1] > duty_max) I_ref_max = Conv.I_ref.b, duty_max = Conv.duty_float[1];
+        if (Conv.duty_float[2] > duty_max) I_ref_max = Conv.I_ref.c, duty_max = Conv.duty_float[2];
+        float I_ref_min = Conv.I_ref.a;
+        register float duty_min = Conv.duty_float[0];
+        if (Conv.duty_float[1] < duty_min) I_ref_min = Conv.I_ref.b, duty_min = Conv.duty_float[1];
+        if (Conv.duty_float[2] < duty_min) I_ref_min = Conv.I_ref.c, duty_min = Conv.duty_float[2];
 
-        register float correction_switch;
-        correction_switch = Conv.correction_switch;
-        if(switcher++ > switcher_val)
+        register float correction_switch_new = 0.0f;
+        if (fabsf(I_ref_max) > fabsf(I_ref_min)) correction_switch_new = 1.0f;
+        static volatile float switcher;
+        register float switcher_temp = switcher = 1.0f - switcher;
+        register float correction_switch = (switcher_temp) * Conv.correction_switch + (1.0f - switcher_temp) * correction_switch_new;
+
+        correction = (correction_switch) * (1.5f + Conv.cycle_period - duty_max) + (1.0f - correction_switch) * (-0.5f - Conv.cycle_period - duty_min);//1.5f,-0.5f
+
+        if (Conv.correction_switch != correction_switch)
         {
-            switcher = 0.0f;
-            correction_switch = 0.0f;
-            if (fabsf(*(&Conv.I_ref.a + index_max)) > fabsf(*(&Conv.I_ref.a + index_min))) correction_switch = 1.0f;
+            correction = (Conv.correction + correction) * 0.5f;
+//            switcher = 1.0f - switcher;
         }
-
-        if (correction_switch) correction = Conv.cycle_period - Conv.duty_float[index_max];
-        else correction = -Conv.cycle_period - Conv.duty_float[index_min];
-
-        if (Conv.correction_switch != correction_switch) correction = (Conv.correction + correction) * 0.5f;
         Conv.correction_switch = correction_switch;
     }
 
@@ -94,15 +94,30 @@ void Converter_calc()
     Conv.duty[2] = Conv.duty_float[2] + correction;
     Conv.duty[3] = Conv.duty_float[3] + correction;
 
-    static volatile int32 add_val;
-    if((float)Conv.duty[0] == Conv.cycle_period) Conv.duty[0] += add_val;
-    if((float)Conv.duty[1] == Conv.cycle_period) Conv.duty[1] += add_val;
-    if((float)Conv.duty[2] == Conv.cycle_period) Conv.duty[2] += add_val;
-    if((float)Conv.duty[3] == Conv.cycle_period) Conv.duty[3] += add_val;
-    if((float)Conv.duty[0] == -Conv.cycle_period) Conv.duty[0] -= add_val;
-    if((float)Conv.duty[1] == -Conv.cycle_period) Conv.duty[1] -= add_val;
-    if((float)Conv.duty[2] == -Conv.cycle_period) Conv.duty[2] -= add_val;
-    if((float)Conv.duty[3] == -Conv.cycle_period) Conv.duty[3] -= add_val;
+    struct abc_struct PR_err;
+    if(Conv.enable)
+    {
+        PR_err.a = Conv.I_err.a * Conv.zero_error;
+        PR_err.b = Conv.I_err.b * Conv.zero_error;
+        PR_err.c = Conv.I_err.c * Conv.zero_error;
+    }
+    else
+    {
+        PR_err.a = Meas_master.U_grid.a - Conv.MR_ref_CPU.a;
+        PR_err.b = Meas_master.U_grid.b - Conv.MR_ref_CPU.b;
+        PR_err.c = Meas_master.U_grid.c - Conv.MR_ref_CPU.c;
+    }
+
+    Conv.MR_ref_CPU.a = Resonant_mult_calc_CLAasm(Conv.Resonant_I_a_odd, PR_err.a, Conv.resonant_odd_number);
+    Conv.MR_ref_CPU.b = Resonant_mult_calc_CLAasm(Conv.Resonant_I_b_odd, PR_err.b, Conv.resonant_odd_number);
+    Conv.MR_ref_CPU.c = Resonant_mult_calc_CLAasm(Conv.Resonant_I_c_odd, PR_err.c, Conv.resonant_odd_number);
+
+    if (Conv.resonant_even_number)
+    {
+        Conv.MR_ref_CPU.a += Resonant_mult_calc_CLAasm(Conv.Resonant_I_a_even, PR_err.a, Conv.resonant_even_number);
+        Conv.MR_ref_CPU.b += Resonant_mult_calc_CLAasm(Conv.Resonant_I_b_even, PR_err.b, Conv.resonant_even_number);
+        Conv.MR_ref_CPU.c += Resonant_mult_calc_CLAasm(Conv.Resonant_I_c_even, PR_err.c, Conv.resonant_even_number);
+    }
 
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 2;

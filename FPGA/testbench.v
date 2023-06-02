@@ -13,12 +13,12 @@ module SerDes_tb;
 	always begin
 		TZ_EN = 0;
 		i = 0;
-		#100
+		#20
 		TZ_EN = 1;
 		forever begin
-			#20
+			#4
 			i <= i+1;
-			if(i>=10000) $stop;
+			if(i>=20000) $stop;
 		end
 	end
 
@@ -36,11 +36,11 @@ module SerDes_tb;
 	always @(posedge XTAL1_25MHz_i) begin
 		sync_reg <= {sync_phase, sync_reg[1]};
 		if(sync_phase)
-			duty_r <= 16'd1000;
+			duty_r <= 16'd1033;
 		else
-			duty_r <= -16'd1000;
+			duty_r <= -16'd1033;
 			
-		duty_r <= 16'd1001;
+		//duty_r <= 16'd1032;
 	end
 	
 	wire PWM_EN;
@@ -48,7 +48,7 @@ module SerDes_tb;
 	wire PWM_EN_r; 
 	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg[1] ^ sync_reg[0]), .CK(XTAL1_25MHz_i), .CD(!(TZ_EN & PWM_EN)), .Q(PWM_EN_r)); 
 
-	Symmetrical_PWM Symmetrical_PWM(.clk_i(XTAL1_25MHz_i), .enable_output_i(PWM_EN_r), .override_i(2'b0), .duty_i(duty_r), .next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
+	Symmetrical_PWM_full Symmetrical_PWM(.clk_i(XTAL1_25MHz_i), .enable_output_i(PWM_EN_r), .override_i(2'b0), .duty_i(duty_r), .next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
 	
 	localparam EMIF_MEMORY_WIDTH = `COMM_MEMORY_EMIF_WIDTH+3;//$clog2(2x COMM_MEMORY + MUX) = $clog2(3) = 2 
 	wire EMIF_oe_i; 
@@ -111,25 +111,25 @@ module SerDes_tb;
 	always begin
 		XTAL1_25MHz_i = 0;
 		forever
-			#(20*(1+0e-6)) XTAL1_25MHz_i = !XTAL1_25MHz_i;
+			#(4*(1+0e-6)) XTAL1_25MHz_i = !XTAL1_25MHz_i;
 	end
 
 	always begin
 		XTAL2_25MHz_i = 0;
 		forever
-			#(20*(1-0e-6)) XTAL2_25MHz_i = !XTAL2_25MHz_i;
+			#(4*(1+0e-6)) XTAL2_25MHz_i = !XTAL2_25MHz_i;
 	end
 
 	always begin
 		XTAL3_25MHz_i = 0;
 		forever
-			#(20*(1+50e-6)) XTAL3_25MHz_i = !XTAL3_25MHz_i;
+			#(4*(1+0e-6)) XTAL3_25MHz_i = !XTAL3_25MHz_i;
 	end
 
 	always begin
 		XTAL1_200MHz_i = 0;
 		forever
-			#(2.5*(1+0e-6)) XTAL1_200MHz_i = !XTAL1_200MHz_i;
+			#(4*(1+0e-6)) XTAL1_200MHz_i = !XTAL1_200MHz_i;
 	end
 
 endmodule

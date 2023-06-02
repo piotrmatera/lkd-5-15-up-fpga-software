@@ -22,6 +22,7 @@ typedef float scope_data_type;
 #include "Converter.h"
 #include "CPU_shared.h"
 #include "Node_shared.h"
+#include "Kalman_gains.h"
 #include "Kalman.h"
 #include "Grid_analyzer.h"
 

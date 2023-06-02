@@ -100,7 +100,10 @@ module Local_counter(clk_i, next_period_i, current_period_o, local_counter_o, sy
 			avg_counter <= avg_counter + 1'b1;
 			current_period_o <= next_period_i;			
 			sync_phase_o <= ~sync_phase_o;
-			sync_o <= &avg_counter;
+			if(`CONTROL_RATE > 1)
+				sync_o <= &avg_counter;
+			else
+				sync_o <= 1'b1;
 			local_counter_o <= 0; 
 		end
 		else 

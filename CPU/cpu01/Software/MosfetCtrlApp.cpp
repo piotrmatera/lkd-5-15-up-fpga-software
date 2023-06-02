@@ -52,9 +52,9 @@ const uint16_t driver_mosfet_cfg[CHIP1ED389_CONFIG_REGS_COUNT] = {
         //zmiana w sosunku do default: wlaczenie pomiarow napiec przez ADC (Vcc2, Vee2, GND2)
     0,      //0a: VEXTCFG: CLAMP pin voltage compare limit (0)
     0,      //0b: OTWCFG: Over-temperature warning level and action (0)
-    21,   //0c: D1LVL: DESAT disable and DESAT1 voltage theshold level (0x1f)
+    21,   //0c: D1LVL: DESAT disable and DESAT1 voltage theshold level (0x1f)//8
     8,      //0d: D1FILT: DESAT1 filter time and type (8)
-    21,   //0e: D2LVL: DESAT2 enable during TLTOff, influence on fault off, and volt. threshold level (0x10)
+    21,   //0e: D2LVL: DESAT2 enable during TLTOff, influence on fault off, and volt. threshold level (0x10)//8
     8,   //0f: D2FILT: DESAT2 filter time and type  (0x3F)
     1,      //10: CNTLIM: DESAT2 event counter limit (1)
 

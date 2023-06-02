@@ -4,7 +4,7 @@
 #include "stdafx.h" 
 
 //R = 0.005/(Ts*Ts)
-const float Kalman_gain[2 * FPGA_KALMAN_STATES] =
+float Kalman_gain[2 * FPGA_KALMAN_STATES] =
 {
  0.000448842521485309 ,
  0                    ,
@@ -61,7 +61,7 @@ const float Kalman_gain[2 * FPGA_KALMAN_STATES] =
 };
 
 //R = 0.0000125/(Ts*Ts)
-const float Kalman_gain_dc[2 * FPGA_KALMAN_DC_STATES] =
+float Kalman_gain_dc[2 * FPGA_KALMAN_DC_STATES] =
 {
  0.00716336207421019  ,
  0                    ,

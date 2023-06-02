@@ -70,8 +70,8 @@ struct Converter_struct
     struct abcn_struct I_conv_max;
     struct PI_struct PI_I_harm_ratio[4];
 
-    Uint32 resonant_even_number;
-    Uint32 resonant_odd_number;
+    float resonant_even_number;
+    float resonant_odd_number;
     float Kp_I;
     float Kr_I;
     float compensation2;

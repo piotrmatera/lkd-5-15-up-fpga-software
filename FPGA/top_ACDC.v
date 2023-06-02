@@ -569,15 +569,20 @@ module SerDes_master(CPU_io, FPGA_io);
 	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i({~SD_DAT_IDDR[10:8], SD_DAT_IDDR[7:3], ~SD_DAT_IDDR[2:0]}), 
 	.clk_i(XTAL_20MHz_i), .decimator_pulse_i(decimator_pulse), .select_i(select_SD), .data_o(SD_dat)); 
 	
+	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat_avg;
+	if(`CONTROL_RATE > 1) begin
+		MovingAverage #(.N(`CONTROL_RATE)) SD_average[SD_NUMBER-1:0](.clk(XTAL_20MHz_i), .enable(new_value), .in(SD_dat), .out(SD_dat_avg));
+	end
+	else begin
+		assign SD_dat_avg = SD_dat;
+	end
+	
 	wire [SD_WIDTH-1+2:0] SD_dat_In; 
 	assign SD_dat_In = 
-	{{`CONTROL_RATE_WIDTH{SD_dat[8*16+15]}}, SD_dat[8*16 +: 16]} +
-	{{`CONTROL_RATE_WIDTH{SD_dat[9*16+15]}}, SD_dat[9*16 +: 16]} +
-	{{`CONTROL_RATE_WIDTH{SD_dat[10*16+15]}}, SD_dat[10*16 +: 16]};
+	{{2{SD_dat[8*16+15]}}, SD_dat[8*16 +: 16]} +
+	{{2{SD_dat[9*16+15]}}, SD_dat[9*16 +: 16]} +
+	{{2{SD_dat[10*16+15]}}, SD_dat[10*16 +: 16]};
 	
-	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat_avg;
-	MovingAverage #(.N(`CONTROL_RATE)) SD_average[SD_NUMBER-1:0](.clk(XTAL_20MHz_i), .enable(new_value), .in(SD_dat), .out(SD_dat_avg));
-
 	localparam COMPARE_NUMBER = 7;
 	wire [COMPARE_NUMBER*2-1:0] compare_o;
 	wire [COMPARE_NUMBER*SD_WIDTH-1:0] compare_dat;

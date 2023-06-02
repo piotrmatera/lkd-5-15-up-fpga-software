@@ -19,6 +19,7 @@ struct Converter_struct
     float div_range_modifier_Kalman_values;
 
     float Kp_I;
+    float Kr_I;
     float L_conv;
     float Ts;
 
@@ -27,6 +28,7 @@ struct Converter_struct
     struct abc_struct Kalman_U_grid;
     struct abc_struct Kalman_U_grid_diff;
     struct abc_struct MR_ref;
+    struct abc_struct MR_ref_CPU;
     struct abcn_struct U_ref;
     float cycle_period;
     float duty_float[4];
@@ -34,6 +36,17 @@ struct Converter_struct
 
     float correction;
     float correction_switch;
+
+    float compensation2;
+    float resonant_odd_number;
+    float resonant_even_number;
+    struct Resonant_struct Resonant_I_a_odd[25];
+    struct Resonant_struct Resonant_I_b_odd[25];
+    struct Resonant_struct Resonant_I_c_odd[25];
+
+    struct Resonant_struct Resonant_I_a_even[2];
+    struct Resonant_struct Resonant_I_b_even[2];
+    struct Resonant_struct Resonant_I_c_even[2];
 
     float RDY;
 

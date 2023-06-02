@@ -152,6 +152,58 @@ void Init_class::Variables()
 
     PLL.state = PLL_omega_init;
     PLL.state_last = PLL_active;
+
+    ///////////////////////////////////////////////////////////////////
+
+    Conv.cycle_period = EMIF_mem.read.cycle_period;
+    Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;
+    Conv.Kr_I = CPU1toCPU2.CLA1toCLA2.Kr_I;
+    Conv.compensation2 = CPU1toCPU2.CLA1toCLA2.compensation2;
+    Conv.L_conv = CPU1toCPU2.CLA1toCLA2.L_conv;
+
+    register float r_pr_i = Conv.Kr_I;
+
+    Conv.resonant_odd_number = 1.0f;
+    Conv.resonant_even_number = 0.0f;
+
+    Uint16 i;
+    for (i = 0; i < sizeof(Conv.Resonant_I_a_odd) / sizeof(Conv.Resonant_I_a_odd[0]); i++)
+    {
+       Conv.Resonant_I_a_odd[i].gain =
+       Conv.Resonant_I_b_odd[i].gain =
+       Conv.Resonant_I_c_odd[i].gain = 1.0f * r_pr_i / (float)(2 * i + 1);
+
+       Conv.Resonant_I_a_odd[i].trigonometric.ptr =
+       Conv.Resonant_I_b_odd[i].trigonometric.ptr =
+       Conv.Resonant_I_c_odd[i].trigonometric.ptr = &sincos_table[2 * i];
+
+       Conv.Resonant_I_a_odd[i].trigonometric_comp.ptr =
+       Conv.Resonant_I_b_odd[i].trigonometric_comp.ptr =
+       Conv.Resonant_I_c_odd[i].trigonometric_comp.ptr = &sincos_table_comp[2 * i];
+    }
+
+    for (i = 0; i < sizeof(Conv.Resonant_I_a_even) / sizeof(Conv.Resonant_I_a_even[0]); i++)
+    {
+       Conv.Resonant_I_a_even[i].gain =
+       Conv.Resonant_I_b_even[i].gain =
+       Conv.Resonant_I_c_even[i].gain = 1.0f * r_pr_i / (float)(2 * i + 2);
+
+       Conv.Resonant_I_a_even[i].trigonometric.ptr =
+       Conv.Resonant_I_b_even[i].trigonometric.ptr =
+       Conv.Resonant_I_c_even[i].trigonometric.ptr = &sincos_table[2 * i + 1];
+
+       Conv.Resonant_I_a_even[i].trigonometric_comp.ptr =
+       Conv.Resonant_I_b_even[i].trigonometric_comp.ptr =
+       Conv.Resonant_I_c_even[i].trigonometric_comp.ptr = &sincos_table_comp[2 * i + 1];
+    }
+
+    for (i = 0; i < SINCOS_HARMONICS; i++)
+    {
+        sincos_table[i].cosine = cosf(PLL.w_filter * PLL.Ts * (float)(i + 1));
+        sincos_table[i].sine = sinf(PLL.w_filter * PLL.Ts * (float)(i + 1));
+        sincos_table_comp[i].cosine = cosf(Conv.compensation2 * PLL.w_filter * PLL.Ts * (float)(i + 1));
+        sincos_table_comp[i].sine = sinf(Conv.compensation2 * PLL.w_filter * PLL.Ts * (float)(i + 1));
+    }
 }
 
 void Init_class::PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg)

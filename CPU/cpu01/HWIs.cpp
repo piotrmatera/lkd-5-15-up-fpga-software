@@ -40,6 +40,24 @@ interrupt void SD_AVG_NT()
     register float modifier1 = Conv.div_range_modifier_Kalman_values;
     Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC[0].harmonic[0].x1 * modifier1;
 
+//    static volatile struct
+//    {
+//        struct trigonometric_struct harmonic[5];
+//        float sum;
+//        float error;
+//    }Resonant_mem;
+//    int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[1][0];
+//    float *pointer_dst = (float *)&Resonant_mem;
+//    for(int i=0; i<5; i++)
+//    {
+//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//    }
+//
+//    pointer_src = (int32 *)&EMIF_mem.read.Resonant[1][0].sum;
+//    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+
     Conv.w_filter = CPU2toCPU1.w_filter;
     Conv.f_filter = CPU2toCPU1.f_filter;
     Conv.sign = CPU2toCPU1.sign;
@@ -49,6 +67,8 @@ interrupt void SD_AVG_NT()
     CPU1toCPU2.CLA1toCLA2.enable = Conv.RDY;
     CPU1toCPU2.CLA1toCLA2.L_conv = Conv.L_conv;
     CPU1toCPU2.CLA1toCLA2.Kp_I = Conv.Kp_I;
+    CPU1toCPU2.CLA1toCLA2.Kr_I = Conv.Kr_I;
+    CPU1toCPU2.CLA1toCLA2.compensation2 = Conv.compensation2;
     CPU1toCPU2.CLA1toCLA2.id_ref.a = Conv.id_lim.a;
     CPU1toCPU2.CLA1toCLA2.id_ref.b = Conv.id_lim.b;
     CPU1toCPU2.CLA1toCLA2.id_ref.c = Conv.id_lim.c;
@@ -73,10 +93,10 @@ interrupt void SD_AVG_NT()
 
     EMIF_mem.write.Resonant[0].series[0].harmonics =
     EMIF_mem.write.Resonant[0].series[1].harmonics =
-    EMIF_mem.write.Resonant[0].series[2].harmonics = Conv.resonant_odd_number;
+    EMIF_mem.write.Resonant[0].series[2].harmonics = fmaxf(Conv.resonant_odd_number, 0.0f);
     EMIF_mem.write.Resonant[1].series[0].harmonics =
     EMIF_mem.write.Resonant[1].series[1].harmonics =
-    EMIF_mem.write.Resonant[1].series[2].harmonics = Conv.resonant_even_number;
+    EMIF_mem.write.Resonant[1].series[2].harmonics = fmaxf(Conv.resonant_even_number, 0.0f);
 
     Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
 
@@ -218,6 +238,24 @@ interrupt void SD_AVG_NT()
 
     Timer_PWM.CPU_GRID = TIMESTAMP_PWM;
 
+//    static volatile union double_pulse_union
+//    {
+//       Uint32 u32;
+//       Uint16 u16[2];
+//    }double_pulse = {.u16 = {700, 15}};
+//    EMIF_mem.write.double_pulse = double_pulse.u32;
+//
+//    static volatile float counter = 0;
+//    if(Machine.ONOFF != Machine.ONOFF_last)
+//    {
+//        counter = 0;
+//        GPIO_SET(PWM_EN_CM);
+//    }
+//    counter += Conv.Ts;
+//    if(counter >= 1.0f)
+//    {
+//       GPIO_CLEAR(PWM_EN_CM);
+//    }
 
     GPIO_CLEAR(TRIGGER_CM);
 

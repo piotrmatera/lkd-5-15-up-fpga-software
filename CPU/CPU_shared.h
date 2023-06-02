@@ -238,6 +238,8 @@ struct CLA1toCLA2_struct
 {
     struct abc_struct id_ref, iq_ref;
     float Kp_I;
+    float Kr_I;
+    float compensation2;
     float L_conv;
     float enable;
 };

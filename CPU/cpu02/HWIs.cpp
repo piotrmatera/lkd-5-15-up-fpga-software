@@ -44,9 +44,9 @@ interrupt void SD_NEW_INT()
     Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0][0].sum * modifier1;
     Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0][1].sum * modifier1;
     Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0][2].sum * modifier1;
-//    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1][0].sum * modifier1;
-//    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1][1].sum * modifier1;
-//    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1][2].sum * modifier1;
+    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1][0].sum * modifier1;
+    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1][1].sum * modifier1;
+    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1][2].sum * modifier1;
 
     modifier1 = Conv.div_range_modifier_Kalman_values;
     Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0][0].estimate * modifier1;
@@ -55,6 +55,8 @@ interrupt void SD_NEW_INT()
 
     Conv.cycle_period = EMIF_mem.read.cycle_period;
     Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;
+    Conv.Kr_I = CPU1toCPU2.CLA1toCLA2.Kr_I;
+    Conv.compensation2 = CPU1toCPU2.CLA1toCLA2.compensation2;
     Conv.L_conv = CPU1toCPU2.CLA1toCLA2.L_conv;
     Conv.enable = CPU1toCPU2.CLA1toCLA2.enable;
 
