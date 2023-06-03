@@ -13,7 +13,7 @@ module addr_gen(clk, addr_sel, addr_ptr, addr_out, series_inc, series_rst);
 	input clk;
 	input [3:0] addr_sel;
 	input [OFFSET_WIDTH-1:0] addr_ptr;
-	output [ADDR_WIDTH-1:0] addr_out;
+	output reg [ADDR_WIDTH-1:0] addr_out;
 	input series_inc;
 	input series_rst;
 	
@@ -30,8 +30,6 @@ module addr_gen(clk, addr_sel, addr_ptr, addr_out, series_inc, series_rst);
 		series_r = 0;
 	end
 	
-	assign addr_out = addr_reg[1] + addr_ptr_r[1][OFFSET_WIDTH-2:0];
-	
 	always @(posedge clk) begin
 		series_inc_r <= series_inc;
 		series_rst_r <= series_rst;
@@ -41,6 +39,7 @@ module addr_gen(clk, addr_sel, addr_ptr, addr_out, series_inc, series_rst);
 		addr_ptr_r[1] <= addr_ptr_r[0];
 		addr_reg[0] <= cnt[addr_ptr[OFFSET_WIDTH-1]];
 		addr_reg[1] <= addr_reg[0] + series_r;
+		addr_out <= addr_reg[1] + addr_ptr_r[1][OFFSET_WIDTH-2:0];
 		if(addr_sel[0]) cnt[0] <= cnt[0] + ADDR_INC_STATES;
 		if(addr_sel[1]) cnt[0] <= ADDR_START_STATES;
 		if(addr_sel[2]) cnt[1] <= cnt[1] + ADDR_INC_COMMON;

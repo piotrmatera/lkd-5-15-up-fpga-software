@@ -653,10 +653,8 @@ void Machine_class::Background()
         for(Uint16 i = 1; i < FPGA_KALMAN_STATES; i++)
         {
             register float modifier = Conv.range_modifier_Kalman_coefficients;
-            EMIF_mem.write.Kalman[1].states[i].cos_K =
-            EMIF_mem.write.Kalman[0].states[i].cos_K = sincos_table_Kalman[2 * (i - 1)].cosine * modifier;
-            EMIF_mem.write.Kalman[1].states[i].sin_K =
-            EMIF_mem.write.Kalman[0].states[i].sin_K = sincos_table_Kalman[2 * (i - 1)].sine * modifier;
+            EMIF_mem.write.Kalman.states[i].cos_K = sincos_table_Kalman[2 * (i - 1)].cosine * modifier;
+            EMIF_mem.write.Kalman.states[i].sin_K = sincos_table_Kalman[2 * (i - 1)].sine * modifier;
         }
 
         for(Uint16 i = 1; i < FPGA_KALMAN_DC_STATES; i++)

@@ -47,7 +47,7 @@ interrupt void SD_AVG_NT()
             float estimate;
             float error;
         }Kalman_mem;
-        int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman[0].series[1].states[0];
+        int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman.series[1].states[0];
         float *pointer_dst = (float *)&Kalman_mem;
         for(int i=0; i<5; i++)
         {
@@ -56,7 +56,7 @@ interrupt void SD_AVG_NT()
             *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values * Conv.div_range_modifier_Kalman_values * Conv.range_modifier_Kalman_coefficients;
         }
 
-        pointer_src = (int32 *)&EMIF_mem.read.Kalman[0].series[1].estimate;
+        pointer_src = (int32 *)&EMIF_mem.read.Kalman.series[1].estimate;
         *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
         *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
     }
@@ -105,12 +105,12 @@ interrupt void SD_AVG_NT()
     PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
 
     register float modifier2 = Conv.range_modifier_Kalman_values;
-    EMIF_mem.write.Kalman[0].input[0] = Meas_master.U_grid.a * modifier2;
-    EMIF_mem.write.Kalman[0].input[1] = Meas_master.U_grid.b * modifier2;
-    EMIF_mem.write.Kalman[0].input[2] = Meas_master.U_grid.c * modifier2;
-    EMIF_mem.write.Kalman[1].input[0] = Meas_master.I_grid.a * modifier2;
-    EMIF_mem.write.Kalman[1].input[1] = Meas_master.I_grid.b * modifier2;
-    EMIF_mem.write.Kalman[1].input[2] = Meas_master.I_grid.c * modifier2;
+    EMIF_mem.write.Kalman.input[0] = Meas_master.U_grid.a * modifier2;
+    EMIF_mem.write.Kalman.input[1] = Meas_master.U_grid.b * modifier2;
+    EMIF_mem.write.Kalman.input[2] = Meas_master.U_grid.c * modifier2;
+    EMIF_mem.write.Kalman.input[3] = Meas_master.I_grid.a * modifier2;
+    EMIF_mem.write.Kalman.input[4] = Meas_master.I_grid.b * modifier2;
+    EMIF_mem.write.Kalman.input[5] = Meas_master.I_grid.c * modifier2;
     EMIF_mem.write.Kalman_DC.input[0] = Meas_master.U_dc * modifier2;
     EMIF_mem.write.DSP_start = 0b11100;
 

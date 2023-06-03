@@ -72,7 +72,7 @@ union FPGA_master_sync_flags_union
 };
 
 #define FPGA_RESONANT_STATES 25
-#define FPGA_RESONANT_SERIES 4
+#define FPGA_RESONANT_SERIES 3
 
 struct FPGA_Resonant_states_M0_struct
 {
@@ -117,10 +117,10 @@ struct FPGA_Resonant_M1_struct
 };
 
 #define FPGA_KALMAN_STATES 26
-#define FPGA_KALMAN_SERIES 4
+#define FPGA_KALMAN_SERIES 6
 
 #define FPGA_KALMAN_DC_STATES 50
-#define FPGA_KALMAN_DC_SERIES 2
+#define FPGA_KALMAN_DC_SERIES 1
 
 struct FPGA_Kalman_states_M0_struct
 {
@@ -217,7 +217,7 @@ union EMIF_union
         Uint32 rx2_hipri_msg[8][32];
         struct FPGA_Resonant_M0_struct Resonant[2];
         struct FPGA_Kalman_DC_M0_struct Kalman_DC;
-        struct FPGA_Kalman_M0_struct Kalman[2];
+        struct FPGA_Kalman_M0_struct Kalman;
     }read;
     struct
     {
@@ -245,7 +245,7 @@ union EMIF_union
         Uint32 tx2_hipri_msg[8][32];
         struct FPGA_Resonant_M1_struct Resonant[2];
         struct FPGA_Kalman_DC_M1_struct Kalman_DC;
-        struct FPGA_Kalman_M1_struct Kalman[2];
+        struct FPGA_Kalman_M1_struct Kalman;
     }write;
 };
 
