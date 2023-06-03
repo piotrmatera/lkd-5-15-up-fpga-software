@@ -810,7 +810,7 @@ Uint16 SD_card_class::read_settings()
     if(settings.control.tangens_range[1].a < -1.0f || settings.control.tangens_range[1].a > 1.0f) return fresult;
     if(settings.control.tangens_range[1].b < -1.0f || settings.control.tangens_range[1].b > 1.0f) return fresult;
     if(settings.control.tangens_range[1].c < -1.0f || settings.control.tangens_range[1].c > 1.0f) return fresult;
-    if(settings.C_dc < 0.3e-3 || settings.C_dc > 5e-3) return fresult;
+    if(settings.C_dc < 0.25e-3 || settings.C_dc > 5e-3) return fresult;
     if(settings.L_conv < 100e-6 || settings.L_conv > 2.5e-3) return fresult;
     if(settings.I_lim < 8.0f || settings.I_lim > 40.0f) return fresult;
 

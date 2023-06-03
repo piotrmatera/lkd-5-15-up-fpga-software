@@ -18,7 +18,7 @@ module SerDes_tb;
 		forever begin
 			#4
 			i <= i+1;
-			if(i>=20000) $stop;
+			if(i>=5000) $stop;
 		end
 	end
 
@@ -72,12 +72,12 @@ module SerDes_tb;
 	wire Kalman1_SIGNEDCO;
 
 	parameter Kalman1_Mem2_key = 3'd6;
-	Kalman #(.DEBUG(1)) Kalman1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Resonant #(.DEBUG(1)) Kalman1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Kalman1_Mem2_key[1 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-3] == Kalman1_Mem2_key[0]),
 	.enable_i(Kalman1_START), .Mem2_addrw_o(Kalman1_Mem2_addrw), .Mem2_we_o(Kalman1_Mem2_we), .Mem2_data_o(Kalman1_Mem2_data), .WIP_flag_o(Kalman1_WIP),
 	.CIN(Kalman1_CIN), .SIGNEDCIN(Kalman1_SIGNEDCIN), .CO(Kalman1_CO), .SIGNEDCO(Kalman1_SIGNEDCO));
 
-	assign Kalman1_START = i[6];
+	assign Kalman1_START = i[10];
 	assign Kalman1_SIGNEDCIN = 1;
 	assign Kalman1_CIN = 0;
 	
@@ -98,7 +98,7 @@ module SerDes_tb;
 	.enable_i(Resonant1_START), .Mem2_addrw_o(Resonant1_Mem2_addrw), .Mem2_we_o(Resonant1_Mem2_we), .Mem2_data_o(Resonant1_Mem2_data), .WIP_flag_o(Resonant1_WIP),
 	.CIN(Resonant1_CIN), .SIGNEDCIN(Resonant1_SIGNEDCIN), .CO(Resonant1_CO), .SIGNEDCO(Resonant1_SIGNEDCO));
 
-	assign Resonant1_START = i[6];
+	assign Resonant1_START = i[10];
 	assign Resonant1_SIGNEDCIN = 1;
 	assign Resonant1_CIN = 0;
 	

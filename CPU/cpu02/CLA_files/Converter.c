@@ -55,7 +55,7 @@ void Converter_calc()
 
     static volatile float select_modulation;
     register float correction;
-    if(select_modulation)
+    if(!select_modulation)
     {
         register float max = fmaxf(Conv.duty_float[0], fmaxf(Conv.duty_float[1], Conv.duty_float[2]));
         register float min = fminf(Conv.duty_float[0], fminf(Conv.duty_float[1], Conv.duty_float[2]));

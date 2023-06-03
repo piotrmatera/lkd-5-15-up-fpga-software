@@ -107,6 +107,8 @@ void main()
 
     mosfet_ctrl_app.init();
 
+    if(EMIF_mem.read.cycle_period != CYCLE_PERIOD) while(1);
+
     Machine.state = Machine_class::state_init;
     while(1)
     {

@@ -1,18 +1,21 @@
 `timescale 1ns/1ps
 
-module addr_gen_Kalman(clk, addr_sel, addr_ptr, addr_out);
-	parameter ADDR_START_STATES = 9'd0;
-	parameter ADDR_START_COMMON = 9'd0;
-	parameter ADDR_INC_STATES = 1'b1;
-	parameter ADDR_INC_COMMON = 1'b1;
+module addr_gen(clk, addr_sel, addr_ptr, addr_out, series_inc, series_rst);
 	parameter ADDR_WIDTH = 9;
+	parameter [ADDR_WIDTH-1:0] ADDR_START_STATES = 9'd0;
+	parameter [ADDR_WIDTH-1:0] ADDR_START_COMMON = 9'd0;
+	parameter [ADDR_WIDTH-1:0] ADDR_INC_STATES = 1'b1;
+	parameter [ADDR_WIDTH-1:0] ADDR_INC_COMMON = 1'b1;
+	parameter [ADDR_WIDTH-1:0] ADDR_INC_SERIES = 9'd0;
 
 	localparam OFFSET_WIDTH = ($clog2(ADDR_INC_STATES) > $clog2(ADDR_INC_COMMON) ? $clog2(ADDR_INC_STATES) : $clog2(ADDR_INC_COMMON))+1;
 
 	input clk;
 	input [3:0] addr_sel;
 	input [OFFSET_WIDTH-1:0] addr_ptr;
-	output [ADDR_WIDTH-1:0] addr_out;
+	output reg [ADDR_WIDTH-1:0] addr_out;
+	input series_inc;
+	input series_rst;
 	
 	reg [ADDR_WIDTH-1:0] cnt[1:0];
 	
@@ -23,10 +26,12 @@ module addr_gen_Kalman(clk, addr_sel, addr_ptr, addr_out);
 	
 	reg addr_sel_r;
 	reg [ADDR_WIDTH-1:0] addr_reg[1:0];
-	
-	assign addr_out = addr_reg[addr_sel_r];
-	
+	reg [ADDR_WIDTH-1:0] series_r;
+		
 	always @(posedge clk) begin
+		addr_out <= addr_reg[addr_sel_r];
+		if(series_inc) series_r <= series_r + ADDR_INC_SERIES;
+		if(series_rst) series_r <= 0;
 		addr_sel_r <= addr_ptr[OFFSET_WIDTH-1];
 		addr_reg[0] <= cnt[0] + addr_ptr[OFFSET_WIDTH-2:0];
 		addr_reg[1] <= cnt[1] + addr_ptr[OFFSET_WIDTH-2:0];

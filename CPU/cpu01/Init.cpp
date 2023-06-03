@@ -324,7 +324,7 @@ void Init_class::Variables()
     Meas_alarm_H.Temp = 95.0f;
     Meas_alarm_L.Temp = 0.0f;
 
-    Meas_alarm_H.U_dc = 125.0f;
+    Meas_alarm_H.U_dc = 400.0f;
     Meas_alarm_L.U_dc = -5.0f;
     Meas_alarm_H.U_dc_balance = 30.0f;
 
@@ -384,7 +384,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.I_lim = Conv.I_lim_nominal;
-    Conv.U_dc_ref = 100.0f;
+    Conv.U_dc_ref = 350.0f;
 
     CIC1_adaptive_filter(&Conv.CIC1_U_dc, 1000.0f, full_OSR);
 
@@ -397,6 +397,8 @@ void Init_class::Variables()
     Conv.PI_U_dc.Kp = kp_dc;
     Conv.PI_U_dc.lim_H = Conv.I_lim * 0.2f;
     Conv.PI_U_dc.lim_L = -Conv.I_lim * 0.2f;
+
+    Conv.U_dc_prefilter.Ts_Ti = Conv.Ts / STC2;
 
     ///////////////////////////////////////////////////////////////////
 
@@ -431,7 +433,7 @@ void Init_class::Variables()
 
     Conv.compensation2 = 2.0f;
     Conv.resonant_odd_number = 25-1;
-    Conv.resonant_even_number = 2-1;
+    Conv.resonant_even_number = 0-1;
 
     SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts / Conv.Ts_rate);
     SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation2);

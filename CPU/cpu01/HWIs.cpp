@@ -40,23 +40,46 @@ interrupt void SD_AVG_NT()
     register float modifier1 = Conv.div_range_modifier_Kalman_values;
     Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC[0].harmonic[0].x1 * modifier1;
 
-//    static volatile struct
-//    {
-//        struct trigonometric_struct harmonic[5];
-//        float sum;
-//        float error;
-//    }Resonant_mem;
-//    int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[1][0];
-//    float *pointer_dst = (float *)&Resonant_mem;
-//    for(int i=0; i<5; i++)
-//    {
-//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//    }
-//
-//    pointer_src = (int32 *)&EMIF_mem.read.Resonant[1][0].sum;
-//    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//    *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+    {
+        static volatile struct
+        {
+            struct abc_struct harmonic[5];
+            float estimate;
+            float error;
+        }Kalman_mem;
+        int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman[0][0];
+        float *pointer_dst = (float *)&Kalman_mem;
+        for(int i=0; i<5; i++)
+        {
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values * Conv.div_range_modifier_Kalman_values * Conv.range_modifier_Kalman_coefficients;
+        }
+
+        pointer_src = (int32 *)&EMIF_mem.read.Kalman[0][0].estimate;
+        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+    }
+
+    {
+        static volatile struct
+        {
+            struct trigonometric_struct harmonic[5];
+            float sum;
+            float error;
+        }Resonant_mem;
+        int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0][0];
+        float *pointer_dst = (float *)&Resonant_mem;
+        for(int i=0; i<5; i++)
+        {
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+        }
+
+        pointer_src = (int32 *)&EMIF_mem.read.Resonant[0][0].sum;
+        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+    }
 
     Conv.w_filter = CPU2toCPU1.w_filter;
     Conv.f_filter = CPU2toCPU1.f_filter;
@@ -130,8 +153,8 @@ interrupt void SD_AVG_NT()
 
         if(Meas_master.Supply_24V < 22.0) alarm_master.bit.FLT_SUPPLY_MASTER = 1;
 
-        if(Meas_master.U_dc < Meas_alarm_L.U_dc) alarm_master.bit.U_dc_L = 1;
-        if(Meas_master.U_dc > Meas_alarm_H.U_dc) alarm_master.bit.U_dc_H = 1;
+        if(Meas_master.U_dc_avg < Meas_alarm_L.U_dc) alarm_master.bit.U_dc_L = 1;
+        if(Meas_master.U_dc_avg > Meas_alarm_H.U_dc) alarm_master.bit.U_dc_H = 1;
         if(fabsf(Meas_master.U_dc - 2.0f * Meas_master.U_dc_n) > Meas_alarm_H.U_dc_balance) alarm_master.bit.U_dc_balance = 1;
 
         if(Grid.I_conv.a > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_a = 1;
