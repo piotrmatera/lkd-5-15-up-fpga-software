@@ -125,7 +125,7 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 
 
 	reg [4:0] cnt;
-	reg [3:0] harm_save_r;
+	reg [4:0] harm_save_r;
 	reg [HARMONICS_CNT_WIDTH-1:0] harmonics_cmp;
 	
 	reg [HARMONICS_CNT_WIDTH-1:0] harmonics_cnt;	
@@ -165,8 +165,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	wire [M1_ADDR_WIDTH-1:0] addrr_M1_out;
 	wire [35:0] Mem1_data_o;
 	
-
-	wire [SERIES_CNT_WIDTH-1:0] series_cnt_pip;
 	
 	wire[OPCODE_WIDTH-1:0]Opcode_pip;
 	wire[AMUX_WIDTH-1:0]AMuxsel_pip;
@@ -229,7 +227,7 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 		addrw_M0_ptr <= 0;
 		Mem0_we <= 0;
 		
-		harm_save_r <= {cnt == 1, harm_save_r[3:1]};
+		harm_save_r <= {cnt == 1, harm_save_r[4:1]};
 		if(harm_save_r[0]) harmonics_cmp <= Mem1_data_o[4 +: HARMONICS_CNT_WIDTH];
 			
 		if(harmonics_inc) harmonics_cnt <= harmonics_cnt + 1'b1;
@@ -579,14 +577,12 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	.Result(Mem0_data_i), .R(CO), .SIGNEDR(SIGNEDCO), .CIN(CIN), .SIGNEDCIN(SIGNEDCIN),
 	.EQZ(), .EQZM(), .EQOM(), .EQPAT(), .EQPATB(), .OVER(), .UNDER());
 	
-	wire [8:0] addrr_M0_out_series;
-	assign addrr_M0_out_series = {series_cnt_pip,addrr_M0_out[M0_ADDR_WIDTH-1-SERIES_CNT_WIDTH:0]};
 	pmi_ram_dp #(.pmi_wr_addr_depth(M0_ADDR_NUM), .pmi_wr_addr_width(M0_ADDR_WIDTH), .pmi_wr_data_width(36),
 	.pmi_rd_addr_depth(M0_ADDR_NUM), .pmi_rd_addr_width(M0_ADDR_WIDTH), .pmi_rd_data_width(36), .pmi_regmode("reg"), 
 	.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U"),
 	.pmi_init_file("../Mem0.mem"), .pmi_init_file_format("hex")
 	)
-	Mem0(.Data(Mem0_data_i), .WrAddress(Mem0_addrw_pip), .RdAddress(addrr_M0_out_series), .WrClock(clk_i),
+	Mem0(.Data(Mem0_data_i), .WrAddress(Mem0_addrw_pip), .RdAddress(addrr_M0_out), .WrClock(clk_i),
 	.RdClock(clk_i), .WrClockEn(1'b1), .RdClockEn(1'b1), .WE(Mem0_we_pip), .Reset(1'b0), 
 	.Q(Mem0_data_o));
 	
@@ -609,13 +605,13 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 		.Q(Mem1_data_o));
 		
 	addr_gen #(.ADDR_START_STATES(0), .ADDR_START_COMMON(M0_START_COMMON), .ADDR_INC_STATES(M0_STATES_OFFSET_NUMBER),
-	.ADDR_INC_COMMON(M0_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M0_ADDR_WIDTH), .ADDR_INC_SERIES(M0_SERIES_LENGTH))
+	.ADDR_INC_COMMON(M0_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M0_ADDR_WIDTH), .ADDR_INC_SERIES(128))
 	addrr_M0_gen (.clk(clk_i), .addr_sel(addrr_M0_sel),
 	.addr_ptr(addrr_M0_ptr), .addr_out(addrr_M0_out),
 	.series_inc(series_inc), .series_rst(series_rst));
 	
 	addr_gen #(.ADDR_START_STATES(0), .ADDR_START_COMMON(M0_START_COMMON), .ADDR_INC_STATES(M0_STATES_OFFSET_NUMBER),
-	.ADDR_INC_COMMON(M0_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M0_ADDR_WIDTH), .ADDR_INC_SERIES(M0_SERIES_LENGTH))
+	.ADDR_INC_COMMON(M0_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M0_ADDR_WIDTH), .ADDR_INC_SERIES(128))
 	addrw_M0_gen (.clk(clk_i), .addr_sel(addrw_M0_sel),
 	.addr_ptr(addrw_M0_ptr), .addr_out(addrw_M0_out),
 	.series_inc(series_inc), .series_rst(series_rst));
@@ -624,12 +620,9 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	.ADDR_INC_COMMON(M1_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M1_ADDR_WIDTH), .ADDR_INC_SERIES(0))
 	addrr_M1_gen (.clk(clk_i), .addr_sel(addrr_M1_sel),
 	.addr_ptr(addrr_M1_ptr), .addr_out(addrr_M1_out),
-	.series_inc(1'b0), .series_rst(1'b1));
+	.series_inc(series_inc), .series_rst(series_rst));
 
-				
-	pipeline_delay #(.WIDTH(SERIES_CNT_WIDTH),.CYCLES(2),.SHIFT_MEM(0)) 
-	series_cnt_delay (.clk(clk_i), .in(series_cnt), .out(series_cnt_pip));
-	
+					
 	pipeline_delay #(.WIDTH(OPCODE_WIDTH),.CYCLES(4),.SHIFT_MEM(0)) 
 	opcode_delay (.clk(clk_i), .in(Opcode), .out(Opcode_pip));
 	
@@ -665,7 +658,7 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	
 	
 	pipeline_delay #(.WIDTH(9),.CYCLES(5),.SHIFT_MEM(0)) 
-	addrw_M0_delay (.clk(clk_i), .in({series_cnt_pip, addrw_M0_out[M0_ADDR_WIDTH-1-SERIES_CNT_WIDTH:0]}), .out(Mem0_addrw_pip));
+	addrw_M0_delay (.clk(clk_i), .in(addrw_M0_out), .out(Mem0_addrw_pip));
 	
 	wire [4:0] cnt_pip2;
 	wire [SERIES_CNT_WIDTH-1:0] series_cnt_pip2;
@@ -739,10 +732,10 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 		
 		
 		pipeline_delay #(.WIDTH(9),.CYCLES(5),.SHIFT_MEM(0)) 
-		addrw_M0_delay2 (.clk(clk_i), .in({series_cnt_pip, addrw_M0_out[M0_ADDR_WIDTH-1-SERIES_CNT_WIDTH:0]}), .out(Mem0_addrw_pip2));
+		addrw_M0_delay2 (.clk(clk_i), .in(addrw_M0_out), .out(Mem0_addrw_pip2));
 		
 		pipeline_delay #(.WIDTH(9),.CYCLES(5),.SHIFT_MEM(0)) 
-		addrr_M0_delay2 (.clk(clk_i), .in(addrr_M0_out_series), .out(addrr_M0_out_pip2));
+		addrr_M0_delay2 (.clk(clk_i), .in(addrr_M0_out), .out(addrr_M0_out_pip2));
 		
 		pipeline_delay #(.WIDTH(9),.CYCLES(5),.SHIFT_MEM(0)) 
 		addrr_M1_delay2 (.clk(clk_i), .in(addrr_M1_out), .out(addrr_M1_out_pip2));

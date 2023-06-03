@@ -324,7 +324,7 @@ void Init_class::Variables()
     Meas_alarm_H.Temp = 95.0f;
     Meas_alarm_L.Temp = 0.0f;
 
-    Meas_alarm_H.U_dc = 400.0f;
+    Meas_alarm_H.U_dc = 125.0f;
     Meas_alarm_L.U_dc = -5.0f;
     Meas_alarm_H.U_dc_balance = 30.0f;
 
@@ -384,7 +384,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.I_lim = Conv.I_lim_nominal;
-    Conv.U_dc_ref = 350.0f;
+    Conv.U_dc_ref = 100.0f;
 
     CIC1_adaptive_filter(&Conv.CIC1_U_dc, 1000.0f, full_OSR);
 
@@ -469,13 +469,15 @@ void Init_class::Variables()
         EMIF_mem.write.Resonant[1].harmonic[i].sin_C = modifier * sincos_table_comp[2 * i + 1].sine;
     }
 
-    if(Conv.Ts - 10e-6  < 1e-7 && 10e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_10US;
-    if(Conv.Ts - 16e-6  < 1e-7 && 16e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_16US;
-    if(Conv.Ts - 20e-6  < 1e-7 && 20e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_20US;
-    if(Conv.Ts - 25e-6  < 1e-7 && 25e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_25US;
-    if(Conv.Ts - 32e-6  < 1e-7 && 32e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_32US;
-    if(Conv.Ts - 50e-6  < 1e-7 && 50e-6  - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_50US;
-    if(Conv.Ts - 100e-6 < 1e-7 && 100e-6 - Conv.Ts < 1e-7) KALMAN_GAIN_INIT_100US;
+    float difference = 1.0f;
+    float compare;
+    if((compare = fabsf(Conv.Ts - 10e-6)) < difference) KALMAN_GAIN_INIT_10US, difference = compare;
+    if((compare = fabsf(Conv.Ts - 16e-6)) < difference) KALMAN_GAIN_INIT_16US, difference = compare;
+    if((compare = fabsf(Conv.Ts - 20e-6)) < difference) KALMAN_GAIN_INIT_20US, difference = compare;
+    if((compare = fabsf(Conv.Ts - 25e-6)) < difference) KALMAN_GAIN_INIT_25US, difference = compare;
+    if((compare = fabsf(Conv.Ts - 32e-6)) < difference) KALMAN_GAIN_INIT_32US, difference = compare;
+    if((compare = fabsf(Conv.Ts - 50e-6)) < difference) KALMAN_GAIN_INIT_50US, difference = compare;
+    if((compare = fabsf(Conv.Ts - 100e-6)) < difference) KALMAN_GAIN_INIT_100US, difference = compare;
 
     Conv.range_modifier_Kalman_coefficients = 1UL << 31;
     Conv.div_range_modifier_Kalman_coefficients = 1.0f / Conv.range_modifier_Kalman_coefficients;
