@@ -41,17 +41,17 @@ interrupt void SD_NEW_INT()
     *dest++ = *src++;
 
     register float modifier1 = Conv.div_range_modifier_Resonant_values;
-    Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0][0].sum * modifier1;
-    Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0][1].sum * modifier1;
-    Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0][2].sum * modifier1;
-    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1][0].sum * modifier1;
-    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1][1].sum * modifier1;
-    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1][2].sum * modifier1;
+    Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0].series[0].sum * modifier1;
+    Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0].series[1].sum * modifier1;
+    Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0].series[2].sum * modifier1;
+    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1].series[0].sum * modifier1;
+    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1].series[1].sum * modifier1;
+    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1].series[2].sum * modifier1;
 
     modifier1 = Conv.div_range_modifier_Kalman_values;
-    Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0][0].estimate * modifier1;
-    Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman[0][1].estimate * modifier1;
-    Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman[0][2].estimate * modifier1;
+    Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman[0].series[0].estimate * modifier1;
+    Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman[0].series[1].estimate * modifier1;
+    Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman[0].series[2].estimate * modifier1;
 
     Conv.cycle_period = EMIF_mem.read.cycle_period;
     Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;

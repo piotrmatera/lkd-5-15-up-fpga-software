@@ -21,7 +21,7 @@ module Kalman(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_clk_
 	localparam CM0_ERR = 3'b101;
 	
 	localparam M0_PTR_WIDTH = ($clog2(M0_COMMON_OFFSET_NUMBER) > $clog2(M0_STATES_OFFSET_NUMBER) ? $clog2(M0_COMMON_OFFSET_NUMBER) : $clog2(M0_STATES_OFFSET_NUMBER))+1;
-	localparam M0_SERIES_LENGTH = M0_STATES_OFFSET_NUMBER*HARMONICS_NUM + M0_COMMON_OFFSET_NUMBER*IN_SERIES_NUM;
+	localparam M0_SERIES_LENGTH = M0_STATES_OFFSET_NUMBER*HARMONICS_NUM + M0_COMMON_OFFSET_NUMBER;
 	
 	localparam M1_ADDR_WIDTH = 9;
 	localparam M1_ADDR_NUM = 2**M1_ADDR_WIDTH;
@@ -37,7 +37,7 @@ module Kalman(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_clk_
 	localparam CM1_INP = 3'b100;
 	
 	localparam M1_PTR_WIDTH = ($clog2(M1_COMMON_OFFSET_NUMBER) > $clog2(M1_STATES_OFFSET_NUMBER) ? $clog2(M1_COMMON_OFFSET_NUMBER) : $clog2(M1_STATES_OFFSET_NUMBER))+1;
-	localparam M1_SERIES_LENGTH = M1_STATES_OFFSET_NUMBER*HARMONICS_NUM + M1_COMMON_OFFSET_NUMBER*IN_SERIES_NUM;
+	localparam M1_SERIES_LENGTH = M1_STATES_OFFSET_NUMBER*HARMONICS_NUM + M1_COMMON_OFFSET_NUMBER;
 	
 	localparam SEL_WIDTH = 4;
 	localparam SEL_NONE = 4'b0000;
@@ -633,13 +633,13 @@ module Kalman(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_clk_
 		.Q(Mem1_data_o));
 		
 	addr_gen #(.ADDR_START_STATES(0), .ADDR_START_COMMON(M0_START_COMMON), .ADDR_INC_STATES(M0_STATES_OFFSET_NUMBER),
-	.ADDR_INC_COMMON(M0_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M0_ADDR_WIDTH), .ADDR_INC_SERIES(128))
+	.ADDR_INC_COMMON(M0_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M0_ADDR_WIDTH), .ADDR_INC_SERIES(M0_SERIES_LENGTH))
 	addrr_M0_gen (.clk(clk_i), .addr_sel(addrr_M0_sel),
 	.addr_ptr(addrr_M0_ptr), .addr_out(addrr_M0_out),
 	.series_inc(series_inc), .series_rst(series_rst));
 	
 	addr_gen #(.ADDR_START_STATES(0), .ADDR_START_COMMON(M0_START_COMMON), .ADDR_INC_STATES(M0_STATES_OFFSET_NUMBER),
-	.ADDR_INC_COMMON(M0_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M0_ADDR_WIDTH), .ADDR_INC_SERIES(128))
+	.ADDR_INC_COMMON(M0_COMMON_OFFSET_NUMBER), .ADDR_WIDTH(M0_ADDR_WIDTH), .ADDR_INC_SERIES(M0_SERIES_LENGTH))
 	addrw_M0_gen (.clk(clk_i), .addr_sel(addrw_M0_sel),
 	.addr_ptr(addrw_M0_ptr), .addr_out(addrw_M0_out),
 	.series_inc(series_inc), .series_rst(series_rst));

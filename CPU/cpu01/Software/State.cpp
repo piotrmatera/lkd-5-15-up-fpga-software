@@ -633,37 +633,37 @@ void Machine_class::Background()
             register float modifier;
             modifier = Conv.range_modifier_Resonant_coefficients;
             if(Conv.resonant_odd_number < 0.0) modifier = 0.0f;
-            EMIF_mem.write.Resonant[0].harmonic[i].cos_A = modifier * sincos_table[2 * i].cosine;
-            EMIF_mem.write.Resonant[0].harmonic[i].sin_A = modifier * sincos_table[2 * i].sine;
-            EMIF_mem.write.Resonant[0].harmonic[i].cos_B = modifier * (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I;
-            EMIF_mem.write.Resonant[0].harmonic[i].sin_B = modifier * sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I;
-            EMIF_mem.write.Resonant[0].harmonic[i].cos_C = modifier * sincos_table_comp[2 * i].cosine;
-            EMIF_mem.write.Resonant[0].harmonic[i].sin_C = modifier * sincos_table_comp[2 * i].sine;
+            EMIF_mem.write.Resonant[0].states[i].cos_A = modifier * sincos_table[2 * i].cosine;
+            EMIF_mem.write.Resonant[0].states[i].sin_A = modifier * sincos_table[2 * i].sine;
+            EMIF_mem.write.Resonant[0].states[i].cos_B = modifier * (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I;
+            EMIF_mem.write.Resonant[0].states[i].sin_B = modifier * sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I;
+            EMIF_mem.write.Resonant[0].states[i].cos_C = modifier * sincos_table_comp[2 * i].cosine;
+            EMIF_mem.write.Resonant[0].states[i].sin_C = modifier * sincos_table_comp[2 * i].sine;
 
             modifier = Conv.range_modifier_Resonant_coefficients;
             if(Conv.resonant_even_number < 0.0) modifier = 0.0f;
-            EMIF_mem.write.Resonant[1].harmonic[i].cos_A = modifier * sincos_table[2 * i + 1].cosine;
-            EMIF_mem.write.Resonant[1].harmonic[i].sin_A = modifier * sincos_table[2 * i + 1].sine;
-            EMIF_mem.write.Resonant[1].harmonic[i].cos_B = modifier * (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I;
-            EMIF_mem.write.Resonant[1].harmonic[i].sin_B = modifier * sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I;
-            EMIF_mem.write.Resonant[1].harmonic[i].cos_C = modifier * sincos_table_comp[2 * i + 1].cosine;
-            EMIF_mem.write.Resonant[1].harmonic[i].sin_C = modifier * sincos_table_comp[2 * i + 1].sine;
+            EMIF_mem.write.Resonant[1].states[i].cos_A = modifier * sincos_table[2 * i + 1].cosine;
+            EMIF_mem.write.Resonant[1].states[i].sin_A = modifier * sincos_table[2 * i + 1].sine;
+            EMIF_mem.write.Resonant[1].states[i].cos_B = modifier * (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I;
+            EMIF_mem.write.Resonant[1].states[i].sin_B = modifier * sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I;
+            EMIF_mem.write.Resonant[1].states[i].cos_C = modifier * sincos_table_comp[2 * i + 1].cosine;
+            EMIF_mem.write.Resonant[1].states[i].sin_C = modifier * sincos_table_comp[2 * i + 1].sine;
         }
 
         for(Uint16 i = 1; i < FPGA_KALMAN_STATES; i++)
         {
             register float modifier = Conv.range_modifier_Kalman_coefficients;
-            EMIF_mem.write.Kalman[1].harmonic[i].cos_K =
-            EMIF_mem.write.Kalman[0].harmonic[i].cos_K = sincos_table_Kalman[2 * (i - 1)].cosine * modifier;
-            EMIF_mem.write.Kalman[1].harmonic[i].sin_K =
-            EMIF_mem.write.Kalman[0].harmonic[i].sin_K = sincos_table_Kalman[2 * (i - 1)].sine * modifier;
+            EMIF_mem.write.Kalman[1].states[i].cos_K =
+            EMIF_mem.write.Kalman[0].states[i].cos_K = sincos_table_Kalman[2 * (i - 1)].cosine * modifier;
+            EMIF_mem.write.Kalman[1].states[i].sin_K =
+            EMIF_mem.write.Kalman[0].states[i].sin_K = sincos_table_Kalman[2 * (i - 1)].sine * modifier;
         }
 
         for(Uint16 i = 1; i < FPGA_KALMAN_DC_STATES; i++)
         {
             register float modifier = Conv.range_modifier_Kalman_coefficients;
-            EMIF_mem.write.Kalman_DC.harmonic[i].cos_K = sincos_table_Kalman[i].cosine * modifier;
-            EMIF_mem.write.Kalman_DC.harmonic[i].sin_K = sincos_table_Kalman[i].sine * modifier;
+            EMIF_mem.write.Kalman_DC.states[i].cos_K = sincos_table_Kalman[i].cosine * modifier;
+            EMIF_mem.write.Kalman_DC.states[i].sin_K = sincos_table_Kalman[i].sine * modifier;
         }
     }
 

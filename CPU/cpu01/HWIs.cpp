@@ -38,7 +38,7 @@ interrupt void SD_AVG_NT()
     Cla1ForceTask1();
 
     register float modifier1 = Conv.div_range_modifier_Kalman_values;
-    Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC[0].harmonic[0].x1 * modifier1;
+    Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC.series[0].states[0].x1 * modifier1;
 
     {
         static volatile struct
@@ -47,7 +47,7 @@ interrupt void SD_AVG_NT()
             float estimate;
             float error;
         }Kalman_mem;
-        int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman[0][0];
+        int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman[0].series[1].states[0];
         float *pointer_dst = (float *)&Kalman_mem;
         for(int i=0; i<5; i++)
         {
@@ -56,7 +56,7 @@ interrupt void SD_AVG_NT()
             *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values * Conv.div_range_modifier_Kalman_values * Conv.range_modifier_Kalman_coefficients;
         }
 
-        pointer_src = (int32 *)&EMIF_mem.read.Kalman[0][0].estimate;
+        pointer_src = (int32 *)&EMIF_mem.read.Kalman[0].series[1].estimate;
         *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
         *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
     }
@@ -68,7 +68,7 @@ interrupt void SD_AVG_NT()
             float sum;
             float error;
         }Resonant_mem;
-        int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0][0];
+        int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[1].states[0];
         float *pointer_dst = (float *)&Resonant_mem;
         for(int i=0; i<5; i++)
         {
@@ -76,7 +76,7 @@ interrupt void SD_AVG_NT()
             *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
         }
 
-        pointer_src = (int32 *)&EMIF_mem.read.Resonant[0][0].sum;
+        pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[1].sum;
         *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
         *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
     }
@@ -114,12 +114,12 @@ interrupt void SD_AVG_NT()
     EMIF_mem.write.Kalman_DC.input[0] = Meas_master.U_dc * modifier2;
     EMIF_mem.write.DSP_start = 0b11100;
 
-    EMIF_mem.write.Resonant[0].series[0].harmonics =
-    EMIF_mem.write.Resonant[0].series[1].harmonics =
-    EMIF_mem.write.Resonant[0].series[2].harmonics = fmaxf(Conv.resonant_odd_number, 0.0f);
-    EMIF_mem.write.Resonant[1].series[0].harmonics =
-    EMIF_mem.write.Resonant[1].series[1].harmonics =
-    EMIF_mem.write.Resonant[1].series[2].harmonics = fmaxf(Conv.resonant_even_number, 0.0f);
+    EMIF_mem.write.Resonant[0].series[0].harmonics_number =
+    EMIF_mem.write.Resonant[0].series[1].harmonics_number =
+    EMIF_mem.write.Resonant[0].series[2].harmonics_number = fmaxf(Conv.resonant_odd_number, 0.0f);
+    EMIF_mem.write.Resonant[1].series[0].harmonics_number =
+    EMIF_mem.write.Resonant[1].series[1].harmonics_number =
+    EMIF_mem.write.Resonant[1].series[2].harmonics_number = fmaxf(Conv.resonant_even_number, 0.0f);
 
     Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
 
