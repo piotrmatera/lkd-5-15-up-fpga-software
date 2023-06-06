@@ -77,8 +77,8 @@ Modbus_error_enum_t Modbus_ADU_slave_translated::Fcn_before_processed(){
                 Modbus_Converter.input_registers.file_number_logs = SD_card.file_number_logs;
                 Modbus_Converter.input_registers.file_number_errors = SD_card.file_number_errors;
                 Modbus_Converter.input_registers.status_master = status_master;
-                Modbus_Converter.input_registers.alarm_master = alarm_master;
-                Modbus_Converter.input_registers.alarm_master_snapshot = alarm_master_snapshot;
+//                Modbus_Converter.input_registers.alarm_master = alarm_master;
+//                Modbus_Converter.input_registers.alarm_master_snapshot = alarm_master_snapshot;
                 Modbus_Converter.input_registers.L_grid_previous[0] = L_grid_meas.L_grid_previous[0];
                 Modbus_Converter.input_registers.L_grid_previous[1] = L_grid_meas.L_grid_previous[1];
                 Modbus_Converter.input_registers.L_grid_previous[2] = L_grid_meas.L_grid_previous[2];

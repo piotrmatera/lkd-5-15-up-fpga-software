@@ -17,7 +17,7 @@
 #define SW_ID 0x0301
 
 //tutaj ustawiac moc
-#define DEVICE_TYPE "Master-25-50"
+#define DEVICE_TYPE "SKJEE-5-25"
 
 //L=Loaded_FW, B=Basic_FW(no BLD)
 

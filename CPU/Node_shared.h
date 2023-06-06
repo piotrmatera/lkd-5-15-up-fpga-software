@@ -142,16 +142,18 @@ struct STATUS_master
 {
     Uint16 Init_done:1;
     Uint16 ONOFF:1;
+    Uint16 dummy1:8;
     Uint16 calibration_procedure_error:1;
     Uint16 L_grid_measured:1;
     Uint16 Scope_snapshot_pending:1;
     Uint16 Scope_snapshot_error:1;
     Uint16 SD_card_not_enough_data:1;
     Uint16 SD_no_CT_characteristic : 1;
-
+    //16
     Uint16 SD_no_calibration : 1;
     Uint16 SD_no_harmonic_settings : 1;
     Uint16 SD_no_settings : 1;
+    Uint16 dummy2:5;
     Uint16 in_limit_Q : 1;
     Uint16 in_limit_P : 1;
     Uint16 in_limit_H : 1;
@@ -160,23 +162,20 @@ struct STATUS_master
 
     Uint16 Grid_present : 1;
     Uint16 SD_no_meter : 1;
-
+    Uint16 wifi_on : 1;
+    //32
+    Uint16 no_CT_connected_a : 1;
+    Uint16 no_CT_connected_b : 1;
+    Uint16 no_CT_connected_c : 1;
     Uint16 CT_connection_a : 2;
     Uint16 CT_connection_b : 2;
     Uint16 CT_connection_c : 2;
 
-    Uint16 no_CT_connected_a : 1;
-    Uint16 no_CT_connected_b : 1;
-    Uint16 no_CT_connected_c : 1;
-    Uint16 wifi_on : 1;
+    Uint16 dummy3 : 4;
     Uint16 error_retry : 4;
-    //kolejne slowo od tego miejsca, inaczej pole bitowe error_retry by sie podzielilo na dwa slowa Uint16
-    Uint16 ONOFF_current:1;
-    Uint16 recent_error:1;
-    Uint16 Conv_enable:1;
+    //error retry jest teraz podzielone
 
-    Uint16 rsvd1 : 13;
-    Uint16 rsvd2 : 16;
+    Uint16 rsvd : 15;
 };
 
 struct CONTROL_master
@@ -208,13 +207,14 @@ struct CONTROL_master
         struct
         {
             Uint16 Scope_snapshot:1;
+            Uint16 dummy:1;
             Uint16 SD_save_H_settings:1;
             Uint16 SD_save_settings:1;
             Uint16 CPU_reset:1;
             Uint16 SD_reset_energy_meter:1;
             Uint16 ONOFF_set:1;
             Uint16 ONOFF_reset:1;
-            Uint16 rsvd1:9;
+            Uint16 rsvd1:8;
         }bit;
     }triggers;
     struct abc_struct tangens_range[2];

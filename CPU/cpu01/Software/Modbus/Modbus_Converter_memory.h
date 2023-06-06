@@ -26,8 +26,9 @@ struct Modbus_Converter_memory_struct
     struct
     {
         Uint16 FatFS_response[128];
-        union ALARM_master alarm_master;
-        union ALARM_master alarm_master_snapshot;
+        Uint32 dummy[2];
+//        union ALARM_master alarm_master;
+//        union ALARM_master alarm_master_snapshot;
         struct STATUS_master status_master;
         Uint32 Machine_state;//32bit
         Uint32 Converter_state;//32bit
@@ -40,7 +41,7 @@ struct Modbus_Converter_memory_struct
         struct time_BCD_struct RTC_current_time;//48bit
         Uint16 file_number_logs;
         Uint16 reserved_02; //kompilator wyrownuje nastepna unie do parzystego adresu (chyba dlatego, ze jest w niej Uint32 all[2])
-        Uint16 padding1[128-32-2*sizeof(union ALARM_master)-sizeof(struct STATUS_master)-2];
+        Uint16 padding1[128-32-2*2-sizeof(struct STATUS_master)-2];
         struct Grid_parameters_struct Grid_filter;
         float frequency;
         Uint16 rtu_port_id;
