@@ -209,7 +209,7 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 	end
 	
 	always @(posedge clk_i) begin
-		Opcode <= OPCODE_NAND_BC;
+		Opcode <= OPCODE_SUM_A_B_C;
 		AMuxsel <= AMUX_GND;
 		BMuxsel <= BMUX_GND;
 		CMuxsel <= CMUX_GND;
@@ -252,8 +252,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 								
 				CMuxsel <= CMUX_C_ALU;
 				
-				Opcode <= OPCODE_SUM_A_B_C;
-				
 				addrw_M0_ptr <= CM0_ERR;
 				Mem0_we <= 1'b1;
 			end
@@ -263,8 +261,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				CMemsel <= C_M1;
 								
 				CMuxsel <= CMUX_C_ALU;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
 				
 				addrr_M1_sel <= SEL_C_INC;
 			end 
@@ -282,8 +278,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
-				
-				Opcode <= OPCODE_SUM_A_B_NC;
 				
 				CE1 <= 1'b0;
 			end
@@ -314,8 +308,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
 				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
 			end
 			6: begin
 				addrr_M0_ptr <= CM0_ERR;
@@ -330,8 +322,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				BMuxsel <= BMUX_MULTB_L18;
 				CMuxsel <= CMUX_ALU_FB;
 				
-				Opcode <= OPCODE_SUM_A_B_C;
-				
 				CE1 <= 1'b0;
 			end
 			7: begin
@@ -340,8 +330,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				
 				BMuxsel <= BMUX_MULTB;
 				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
 				
 				addrw_M0_ptr <= SM0_X1;				
 				Mem0_we <= 1'b1;
@@ -357,8 +345,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 								
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
-			
-				Opcode <= OPCODE_SUM_A_B_C;
 				
 				CE1 <= 1'b0;
 			end
@@ -374,8 +360,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB;
 				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
 			end 
 			10: begin
 				addrr_M0_ptr <= SM0_X2;
@@ -389,8 +373,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
 				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
 			end
 			11: begin
 				addrr_M0_ptr <= CM0_ERR;
@@ -405,8 +387,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				BMuxsel <= BMUX_MULTB_L18;
 				CMuxsel <= CMUX_ALU_FB;
 				
-				Opcode <= OPCODE_SUM_A_B_C;
-				
 				CE1 <= 1'b0;
 			end
 			12: begin
@@ -415,8 +395,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				
 				BMuxsel <= BMUX_MULTB;
 				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
 				
 				addrw_M0_ptr <= SM0_X2;
 				Mem0_we <= 1'b1;
@@ -482,8 +460,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 				BMuxsel <= BMUX_MULTB_L18;
 				CMuxsel <= CMUX_ALU_FB;
 				
-				Opcode <= OPCODE_SUM_A_B_C;
-				
 				addrr_M0_sel <= SEL_S_INC;
 				addrr_M1_sel <= SEL_S_INC;
 				addrw_M0_sel <= SEL_S_INC;
@@ -494,8 +470,6 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 //-------------------------------------------------
 			17: begin
 				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_B_C;
 				
 				addrw_M0_ptr <= CM0_SUM;				
 				Mem0_we <= 1'b1;
@@ -570,7 +544,7 @@ module Resonant(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Mem1_cl
 		Mem1_data_r <= Mem1_data_o;
 	end
 	
-	Slice2 #(.QMATH_SHIFT(2)) Slice2(.CLK0(clk_i), .CE0(1'b1), .CE1(CE1_pip), .CE2(1'b0), .CE3(1'b0), .RST0(1'b0),
+	Slice2 #(.QMATH_SHIFT(2)) Slice2(.CLK0(clk_i), .CE0(1'b1), .CE1(CE1_pip), .CE2(1'b0), .CE3(1'b0), .RST0(1'b0), .RST1(1'b0), .RST2(1'b0), .RST3(1'b0),
 	.AA(DataAA[AAMemsel_pip]), .AB(DataAB[ABMemsel_pip]), .BA(DataBA[BAMemsel_pip]), .BB(DataBB[BBMemsel_pip]), .C(DataC_r),
 	.SignAA(AAMemsel_pip[0]), .SignAB(ABMemsel_pip[0]), .SignBA(BAMemsel_pip[0]), .SignBB(BBMemsel_pip[0]),
 	.AMuxsel(AMuxsel_pip), .BMuxsel(BMuxsel_pip), .CMuxsel(CMuxsel_pip), .Opcode(Opcode_pip),

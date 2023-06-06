@@ -54,6 +54,9 @@
         <Source name="DSP.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="Resonant_grid.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="ACDC/ACDC.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>

@@ -1,6 +1,6 @@
 `timescale 1 ns / 1 ps
 
-module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0,
+module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0, RST1, RST2, RST3,
 	AA, AB, BA, BB, C,
 	SignAA, SignAB, SignBA, SignBB,
 	AMuxsel, BMuxsel, CMuxsel, Opcode, 
@@ -12,6 +12,9 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0,
 	input wire CE2;
 	input wire CE3;
     input wire RST0;
+    input wire RST1;
+    input wire RST2;
+    input wire RST3;
 	input wire [17:0] AA;
 	input wire [17:0] AB;
 	input wire [17:0] BA;
@@ -211,8 +214,8 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0,
         .C10(ALU_C[10]), .C9(ALU_C[9]), .C8(ALU_C[8]), .C7(ALU_C[7]), .C6(ALU_C[6]), .C5(ALU_C[5]), 
         .C4(ALU_C[4]), .C3(ALU_C[3]), .C2(ALU_C[2]), .C1(ALU_C[1]), .C0(ALU_C[0]), .CE0(CE0), 
         .CE1(scuba_vhi), .CE2(scuba_vhi), .CE3(scuba_vhi), .CLK0(CLK0), 
-        .CLK1(CLK0), .CLK2(scuba_vlo), .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), 
-        .RST2(scuba_vlo), .RST3(scuba_vlo), .SIGNEDIA(ALU_MA_SIGN), 
+        .CLK1(CLK0), .CLK2(scuba_vlo), .CLK3(scuba_vlo), .RST0(RST0), .RST1(RST1), 
+        .RST2(RST2), .RST3(RST3), .SIGNEDIA(ALU_MA_SIGN), 
         .SIGNEDIB(ALU_MB_SIGN), .SIGNEDCIN(SIGNEDCIN), .MA35(ALU_MA[35]), 
         .MA34(ALU_MA[34]), .MA33(ALU_MA[33]), 
         .MA32(ALU_MA[32]), .MA31(ALU_MA[31]), 
@@ -342,8 +345,8 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0,
         .C0(MULTA_C[0]), .SIGNEDA(SignAA), .SIGNEDB(SignAB), .SOURCEA(scuba_vlo), 
         .SOURCEB(scuba_vlo), .CE0(CE0), .CE1(CE1), .CE2(scuba_vhi), 
         .CE3(scuba_vhi), .CLK0(CLK0), .CLK1(scuba_vlo), .CLK2(scuba_vlo), 
-        .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), .RST2(scuba_vlo), 
-        .RST3(scuba_vlo), .SRIA17(MULTA_SRIA[17]), .SRIA16(MULTA_SRIA[16]), .SRIA15(MULTA_SRIA[15]), 
+        .CLK3(scuba_vlo), .RST0(RST0), .RST1(RST1), .RST2(RST2), 
+        .RST3(RST3), .SRIA17(MULTA_SRIA[17]), .SRIA16(MULTA_SRIA[16]), .SRIA15(MULTA_SRIA[15]), 
         .SRIA14(MULTA_SRIA[14]), .SRIA13(MULTA_SRIA[13]), .SRIA12(MULTA_SRIA[12]), .SRIA11(MULTA_SRIA[11]), 
         .SRIA10(MULTA_SRIA[10]), .SRIA9(MULTA_SRIA[9]), .SRIA8(MULTA_SRIA[8]), .SRIA7(MULTA_SRIA[7]), 
         .SRIA6(MULTA_SRIA[6]), .SRIA5(MULTA_SRIA[5]), .SRIA4(MULTA_SRIA[4]), .SRIA3(MULTA_SRIA[3]), 
@@ -440,8 +443,8 @@ module Slice2 (CLK0, CE0, CE1, CE2, CE3, RST0,
         .C0(MULTB_C[0]), .SIGNEDA(SignBA), .SIGNEDB(SignBB), .SOURCEA(scuba_vlo), 
         .SOURCEB(scuba_vlo), .CE0(CE0), .CE1(CE1), .CE2(scuba_vhi), 
         .CE3(scuba_vhi), .CLK0(CLK0), .CLK1(scuba_vlo), .CLK2(scuba_vlo), 
-        .CLK3(scuba_vlo), .RST0(RST0), .RST1(scuba_vlo), .RST2(scuba_vlo), 
-        .RST3(scuba_vlo), .SRIA17(MULTB_SRIA[17]), .SRIA16(MULTB_SRIA[16]), .SRIA15(MULTB_SRIA[15]), 
+        .CLK3(scuba_vlo), .RST0(RST0), .RST1(RST1), .RST2(RST2), 
+        .RST3(RST3), .SRIA17(MULTB_SRIA[17]), .SRIA16(MULTB_SRIA[16]), .SRIA15(MULTB_SRIA[15]), 
         .SRIA14(MULTB_SRIA[14]), .SRIA13(MULTB_SRIA[13]), .SRIA12(MULTB_SRIA[12]), .SRIA11(MULTB_SRIA[11]), 
         .SRIA10(MULTB_SRIA[10]), .SRIA9(MULTB_SRIA[9]), .SRIA8(MULTB_SRIA[8]), .SRIA7(MULTB_SRIA[7]), 
         .SRIA6(MULTB_SRIA[6]), .SRIA5(MULTB_SRIA[5]), .SRIA4(MULTB_SRIA[4]), .SRIA3(MULTB_SRIA[3]), 
