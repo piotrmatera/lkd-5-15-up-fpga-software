@@ -641,7 +641,7 @@ void Machine_class::Background()
 
             EMIF_mem.write.Resonant[0].states[i].GCB =
             EMIF_mem.write.Resonant[1].states[i].GCB =
-            EMIF_mem.write.Resonant[2].states[i].GCB = modifier * sincos_table[2 * i].cosine - 1.0f;
+            EMIF_mem.write.Resonant[2].states[i].GCB = modifier * (sincos_table[2 * i].cosine - 1.0f);
             EMIF_mem.write.Resonant[0].states[i].GSB =
             EMIF_mem.write.Resonant[1].states[i].GSB =
             EMIF_mem.write.Resonant[2].states[i].GSB = modifier * sincos_table[2 * i].sine;
@@ -1572,12 +1572,15 @@ void Machine_class::start()
         Conv.enable = 1;
     }
 
-    if(status_master.CT_connection_a != 1 || status_master.CT_connection_b != 2 || status_master.CT_connection_c != 3)
-        Machine.state = state_CT_test;
-    else if(status_master.L_grid_measured)
-        Machine.state = state_operational;
-    else
-        Machine.state = state_Lgrid_meas;
+    if(Conv.RDY2)
+    {
+        if(status_master.CT_connection_a != 1 || status_master.CT_connection_b != 2 || status_master.CT_connection_c != 3)
+            Machine.state = state_CT_test;
+        else if(status_master.L_grid_measured)
+            Machine.state = state_operational;
+        else
+            Machine.state = state_Lgrid_meas;
+    }
 
     if(!Machine.ONOFF) Machine.state = state_idle;
     if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) Machine.state = state_cleanup;

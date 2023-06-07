@@ -67,30 +67,29 @@ interrupt void SD_NEW_INT()
     ///////////////////////////////////////////////////////////////////
 
     Conv.zero_error = 1.0f;
+    Uint32 ZR = (1UL<<30);
     if (fmaxf(fmaxf(fabsf(Conv.duty[0]), fabsf(Conv.duty[1])), fabsf(Conv.duty[2])) > Conv.cycle_period)
-        Conv.zero_error = 0;
+        Conv.zero_error = 0, ZR = 0;
+
+    if(!Conv.enable)
+    {
+        ZR = (1UL<<30);
+        Conv.I_err.a = Meas_master.U_grid.a - Conv.MR_ref.a;
+        Conv.I_err.b = Meas_master.U_grid.b - Conv.MR_ref.b;
+        Conv.I_err.c = Meas_master.U_grid.c - Conv.MR_ref.c;
+    }
+
+    register float modifier2 = Conv.range_modifier_Resonant_values;
+    CPU2toCPU1.Resonant_error[0] = Conv.I_err.a * modifier2;
+    CPU2toCPU1.Resonant_error[2] = Conv.I_err.b * modifier2;
+    CPU2toCPU1.Resonant_error[4] = Conv.I_err.c * modifier2;
+    CPU2toCPU1.Resonant_error[1] = Meas_master.I_grid.a * modifier2;
+    CPU2toCPU1.Resonant_error[3] = Meas_master.I_grid.b * modifier2;
+    CPU2toCPU1.Resonant_error[5] = Meas_master.I_grid.c * modifier2;
+    CPU2toCPU1.ZR = ZR;
 
     static volatile Uint32 Resonant_WIP;
     Resonant_WIP = EMIF_mem.read.flags.Resonant1_WIP;
-
-//    if(!Conv.enable)
-//    {
-//        Conv.I_err.a = Meas_master.U_grid.a - Conv.MR_ref.a;
-//        Conv.I_err.b = Meas_master.U_grid.b - Conv.MR_ref.b;
-//        Conv.I_err.c = Meas_master.U_grid.c - Conv.MR_ref.c;
-//    }
-
-    register float modifier2 = Conv.range_modifier_Resonant_values;
-    CPU2toCPU1.Resonant_error[0] = (Meas_master.U_grid.a - Conv.MR_ref.a) * modifier2;
-    CPU2toCPU1.Resonant_error[2] = (Meas_master.U_grid.b - Conv.MR_ref.b) * modifier2;
-    CPU2toCPU1.Resonant_error[4] = (Meas_master.U_grid.c - Conv.MR_ref.c) * modifier2;
-    CPU2toCPU1.Resonant_error[1] = Meas_master.I_grid.a * modifier2*0;
-    CPU2toCPU1.Resonant_error[3] = Meas_master.I_grid.b * modifier2*0;
-    CPU2toCPU1.Resonant_error[5] = Meas_master.I_grid.c * modifier2*0;
-
-    register Uint32 ZR = 0;
-    if(Conv.zero_error) ZR = (1UL<<30);
-    CPU2toCPU1.ZR = ZR;
 
     GPIO_SET(CPU2_DMA_CM);
 

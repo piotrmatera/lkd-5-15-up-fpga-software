@@ -268,24 +268,12 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 		case(cnt)
 			0: begin
 				addrr_M1_ptr <= CM1_HC;
-											
-				CMemsel <= C_M1;
-								
-				CMuxsel <= CMUX_C_ALU;
 			end
 			1: begin
 				addrr_M1_ptr <= CM1_HG;
-											
-				CMemsel <= C_M1;
-								
-				CMuxsel <= CMUX_C_ALU;
 			end 
 			2: begin
 				addrr_M1_ptr <= CM1_ZR;
-											
-				CMemsel <= C_M1;
-								
-				CMuxsel <= CMUX_C_ALU;
 			end 
 			3: begin
 				addrr_M1_ptr <= CM1_IC;
@@ -548,7 +536,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 			end
 //-------------------------------------------------
 			22: begin
-				addrr_M0_ptr <= SM0_ERR;
+				addrr_M0_ptr <= CM0_IC;
 				addrr_M1_ptr <= CM1_RT;
 																
 				AAMemsel <= AA_M0L;
@@ -562,7 +550,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				CE1 <= 1'b0;
 			end
 			23: begin
-				addrr_M0_ptr <= CM0_IC;
+				addrr_M0_ptr <= SM0_ERR;
 				addrr_M1_ptr <= CM1_RT;
 
 				AAMemsel <= AA_M0H;
@@ -573,9 +561,11 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB;
 				CMuxsel <= CMUX_ALU_FB;
+				
+				Opcode <= OPCODE_SUM_A_NB_NC;
 			end
 			24: begin
-				addrr_M0_ptr <= CM0_IC;
+				addrr_M0_ptr <= SM0_ERR;
 				addrr_M1_ptr <= CM1_RT;
 				
 				AAMemsel <= AA_M0L;
@@ -833,6 +823,8 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				addrr_M0_sel <= SEL_C_RST;
 				addrr_M1_sel <= SEL_C_RST;
 				addrw_M0_sel <= SEL_C_RST;
+				
+				series_rst <= 1'b1;
 			end
 			43: begin
 			end

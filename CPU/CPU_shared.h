@@ -160,7 +160,7 @@ struct FPGA_Resonant_grid_series_M1_struct
     Uint32 HC;
     Uint32 HG;
     Uint32 ZR;
-    Uint32 RT;
+    int32 RT;
     int32 IC;
     int32 IG;
 };

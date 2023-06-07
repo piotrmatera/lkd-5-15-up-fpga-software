@@ -95,12 +95,12 @@ interrupt void SD_AVG_NT()
     CPU1toCPU2.CLA1toCLA2.Kp_I = Conv.Kp_I;
     CPU1toCPU2.CLA1toCLA2.Kr_I = Conv.Kr_I;
     CPU1toCPU2.CLA1toCLA2.compensation = Conv.compensation;
-    CPU1toCPU2.CLA1toCLA2.id_ref.a = Conv.id_lim.a;
-    CPU1toCPU2.CLA1toCLA2.id_ref.b = Conv.id_lim.b;
-    CPU1toCPU2.CLA1toCLA2.id_ref.c = Conv.id_lim.c;
-    CPU1toCPU2.CLA1toCLA2.iq_ref.a = Conv.iq_lim.a;
-    CPU1toCPU2.CLA1toCLA2.iq_ref.b = Conv.iq_lim.b;
-    CPU1toCPU2.CLA1toCLA2.iq_ref.c = Conv.iq_lim.c;
+    CPU1toCPU2.CLA1toCLA2.id_ref.a = Conv.PI_Id[0].out;
+    CPU1toCPU2.CLA1toCLA2.id_ref.b = Conv.PI_Id[1].out;
+    CPU1toCPU2.CLA1toCLA2.id_ref.c = Conv.PI_Id[2].out;
+    CPU1toCPU2.CLA1toCLA2.iq_ref.a = Conv.PI_Iq[0].out;
+    CPU1toCPU2.CLA1toCLA2.iq_ref.b = Conv.PI_Iq[1].out;
+    CPU1toCPU2.CLA1toCLA2.iq_ref.c = Conv.PI_Iq[2].out;
 
     Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
 
@@ -117,13 +117,13 @@ interrupt void SD_AVG_NT()
     EMIF_mem.write.Kalman_DC.input[0] = Meas_master.U_dc * modifier2;
     EMIF_mem.write.DSP_start = 0b11000;
 
-    register float modifier3 = Conv.range_modifier_Resonant_values;
     EMIF_mem.write.Resonant[0].series[0].HC =
     EMIF_mem.write.Resonant[1].series[0].HC =
     EMIF_mem.write.Resonant[2].series[0].HC = fmaxf(Conv.resonant_odd_number, 0.0f);
     EMIF_mem.write.Resonant[0].series[0].HG = *(Uint32 *)&control_master.H_odd_a;
     EMIF_mem.write.Resonant[1].series[0].HG = *(Uint32 *)&control_master.H_odd_b;
     EMIF_mem.write.Resonant[2].series[0].HG = *(Uint32 *)&control_master.H_odd_c;
+    register float modifier3 = Conv.range_modifier_Resonant_coefficients;
     EMIF_mem.write.Resonant[0].series[0].RT = Conv.PI_I_harm_ratio[0].out * modifier3;
     EMIF_mem.write.Resonant[1].series[0].RT = Conv.PI_I_harm_ratio[1].out * modifier3;
     EMIF_mem.write.Resonant[2].series[0].RT = Conv.PI_I_harm_ratio[2].out * modifier3;
@@ -221,9 +221,9 @@ interrupt void SD_AVG_NT()
             Scope.data_in[0] = &Meas_master.U_grid.a;
             Scope.data_in[1] = &Meas_master.U_grid.b;
             Scope.data_in[2] = &Meas_master.U_grid.c;
-            Scope.data_in[3] = (float *)&duty_temp[0];
-            Scope.data_in[4] = (float *)&duty_temp[1];
-            Scope.data_in[5] = (float *)&duty_temp[2];
+            Scope.data_in[3] = &Meas_master.I_grid.a;
+            Scope.data_in[4] = &Meas_master.I_grid.b;
+            Scope.data_in[5] = &Meas_master.I_grid.c;
             Scope.data_in[6] = &Meas_master.U_dc;
             Scope.data_in[7] = &Meas_master.U_dc_n;
             Scope.data_in[8] = &Meas_master.I_conv.a;

@@ -382,17 +382,9 @@ void Converter_calc()
             Conv.PI_Id[0].integrator -= average2;
             Conv.PI_Id[1].integrator -= average2;
             Conv.PI_Id[2].integrator -= average2;
-//            Conv.PI_Id[0].out += -Conv.PI_U_dc.out;
-//            Conv.PI_Id[1].out += -Conv.PI_U_dc.out;
-//            Conv.PI_Id[2].out += -Conv.PI_U_dc.out;
-
-            static volatile float Iq_ref;
-            Conv.iq_lim.a =
-            Conv.iq_lim.b =
-            Conv.iq_lim.c = Iq_ref;
-            Conv.id_lim.a += -Conv.PI_U_dc.out;
-            Conv.id_lim.b += -Conv.PI_U_dc.out;
-            Conv.id_lim.c += -Conv.PI_U_dc.out;
+            Conv.PI_Id[0].out += -Conv.PI_U_dc.out;
+            Conv.PI_Id[1].out += -Conv.PI_U_dc.out;
+            Conv.PI_Id[2].out += -Conv.PI_U_dc.out;
 
             //////////////////////////////////////////////////////////////////////////////////
 

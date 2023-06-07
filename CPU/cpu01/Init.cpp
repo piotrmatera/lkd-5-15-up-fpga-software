@@ -324,7 +324,7 @@ void Init_class::Variables()
     Meas_alarm_H.Temp = 95.0f;
     Meas_alarm_L.Temp = 0.0f;
 
-    Meas_alarm_H.U_dc = 125.0f;
+    Meas_alarm_H.U_dc = 400.0f;
     Meas_alarm_L.U_dc = -5.0f;
     Meas_alarm_H.U_dc_balance = 30.0f;
 
@@ -384,7 +384,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.I_lim = Conv.I_lim_nominal;
-    Conv.U_dc_ref = 100.0f;
+    Conv.U_dc_ref = 350.0f;
 
     CIC1_adaptive_filter(&Conv.CIC1_U_dc, 1000.0f, full_OSR);
 
@@ -465,7 +465,7 @@ void Init_class::Variables()
 
         EMIF_mem.write.Resonant[0].states[i].GCB =
         EMIF_mem.write.Resonant[1].states[i].GCB =
-        EMIF_mem.write.Resonant[2].states[i].GCB = modifier * sincos_table[2 * i].cosine - 1.0f;
+        EMIF_mem.write.Resonant[2].states[i].GCB = modifier * (sincos_table[2 * i].cosine - 1.0f);
         EMIF_mem.write.Resonant[0].states[i].GSB =
         EMIF_mem.write.Resonant[1].states[i].GSB =
         EMIF_mem.write.Resonant[2].states[i].GSB = modifier * sincos_table[2 * i].sine;

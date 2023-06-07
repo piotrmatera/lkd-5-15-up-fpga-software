@@ -883,7 +883,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign EMIF_TX_mux[31] = Scope_index_last;
 	assign EMIF_TX_mux[32] = {CONTROL_RATE, CYCLE_PERIOD}; 
 	assign EMIF_TX_mux[33] = {OUTPUT_SHIFT, DEF_OSR}; 
-	assign EMIF_TX_mux[34] = {Kalman1_WIP, Kalman_DC_WIP, Resonant2_WIP, Resonant1_WIP, sync_phase}; 
+	assign EMIF_TX_mux[34] = {Kalman1_WIP, Kalman_DC_WIP, Resonant3_WIP, Resonant2_WIP, Resonant1_WIP, sync_phase}; 
 	
  	FD1P3DX EMIF_RX_reg_0[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 0), .CK(EMIF_we_i), .CD({tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}), .Q(EMIF_RX_reg [0]));
  	FD1P3DX EMIF_RX_reg_1[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-3 +: 3] == 3'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 1), .CK(EMIF_we_i), .CD(~{rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}), .Q(EMIF_RX_reg [1]));

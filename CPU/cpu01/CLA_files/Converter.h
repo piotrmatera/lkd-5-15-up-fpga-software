@@ -37,7 +37,6 @@ struct Converter_struct
 
     float U_grid_phph_max;
 
-    float div_U_dc;
     float U_dc_ref;
     struct CIC1_adaptive_struct CIC1_U_dc;
     float U_dc_filter;
