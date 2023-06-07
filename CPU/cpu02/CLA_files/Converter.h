@@ -37,7 +37,7 @@ struct Converter_struct
     float correction;
     float correction_switch;
 
-    float compensation2;
+    float compensation;
     float resonant_odd_number;
     float resonant_even_number;
     struct Resonant_struct Resonant_I_a_odd[25];

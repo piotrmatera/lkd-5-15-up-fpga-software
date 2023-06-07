@@ -41,12 +41,9 @@ interrupt void SD_NEW_INT()
     *dest++ = *src++;
 
     register float modifier1 = Conv.div_range_modifier_Resonant_values;
-    Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0].series[0].sum * modifier1;
-    Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[0].series[1].sum * modifier1;
-    Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[0].series[2].sum * modifier1;
-    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[1].series[0].sum * modifier1;
-    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[1].series[1].sum * modifier1;
-    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[1].series[2].sum * modifier1;
+    Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0].series[0].SUM * modifier1;
+    Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[1].series[0].SUM * modifier1;
+    Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[2].series[0].SUM * modifier1;
 
     modifier1 = Conv.div_range_modifier_Kalman_values;
     Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman.series[0].estimate * modifier1;
@@ -56,7 +53,7 @@ interrupt void SD_NEW_INT()
     Conv.cycle_period = EMIF_mem.read.cycle_period;
     Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;
     Conv.Kr_I = CPU1toCPU2.CLA1toCLA2.Kr_I;
-    Conv.compensation2 = CPU1toCPU2.CLA1toCLA2.compensation2;
+    Conv.compensation = CPU1toCPU2.CLA1toCLA2.compensation;
     Conv.L_conv = CPU1toCPU2.CLA1toCLA2.L_conv;
     Conv.enable = CPU1toCPU2.CLA1toCLA2.enable;
 
@@ -76,26 +73,24 @@ interrupt void SD_NEW_INT()
     static volatile Uint32 Resonant_WIP;
     Resonant_WIP = EMIF_mem.read.flags.Resonant1_WIP;
 
+//    if(!Conv.enable)
+//    {
+//        Conv.I_err.a = Meas_master.U_grid.a - Conv.MR_ref.a;
+//        Conv.I_err.b = Meas_master.U_grid.b - Conv.MR_ref.b;
+//        Conv.I_err.c = Meas_master.U_grid.c - Conv.MR_ref.c;
+//    }
+
     register float modifier2 = Conv.range_modifier_Resonant_values;
-    if(Conv.enable)
-    {
-        modifier2 *= Conv.zero_error;
-        CPU2toCPU1.Resonant_error[0] =
-        CPU2toCPU1.Resonant_error[3] = Conv.I_err.a * modifier2;
-        CPU2toCPU1.Resonant_error[1] =
-        CPU2toCPU1.Resonant_error[4] = Conv.I_err.b * modifier2;
-        CPU2toCPU1.Resonant_error[2] =
-        CPU2toCPU1.Resonant_error[5] = Conv.I_err.c * modifier2;
-    }
-    else
-    {
-        CPU2toCPU1.Resonant_error[0] =
-        CPU2toCPU1.Resonant_error[3] = (Meas_master.U_grid.a - Conv.MR_ref.a) * modifier2;
-        CPU2toCPU1.Resonant_error[1] =
-        CPU2toCPU1.Resonant_error[4] = (Meas_master.U_grid.b - Conv.MR_ref.b) * modifier2;
-        CPU2toCPU1.Resonant_error[2] =
-        CPU2toCPU1.Resonant_error[5] = (Meas_master.U_grid.c - Conv.MR_ref.c) * modifier2;
-    }
+    CPU2toCPU1.Resonant_error[0] = (Meas_master.U_grid.a - Conv.MR_ref.a) * modifier2;
+    CPU2toCPU1.Resonant_error[2] = (Meas_master.U_grid.b - Conv.MR_ref.b) * modifier2;
+    CPU2toCPU1.Resonant_error[4] = (Meas_master.U_grid.c - Conv.MR_ref.c) * modifier2;
+    CPU2toCPU1.Resonant_error[1] = Meas_master.I_grid.a * modifier2*0;
+    CPU2toCPU1.Resonant_error[3] = Meas_master.I_grid.b * modifier2*0;
+    CPU2toCPU1.Resonant_error[5] = Meas_master.I_grid.c * modifier2*0;
+
+    register Uint32 ZR = 0;
+    if(Conv.zero_error) ZR = (1UL<<30);
+    CPU2toCPU1.ZR = ZR;
 
     GPIO_SET(CPU2_DMA_CM);
 
@@ -115,7 +110,7 @@ interrupt void SD_NEW_INT()
 
     ///////////////////////////////////////////////////////////////////
 
-    CPU2toCPU1.Resonant_start = 0b11;
+    CPU2toCPU1.Resonant_start = 0b111;
     CPU2toCPU1.w_filter = PLL.w_filter;
     CPU2toCPU1.f_filter = PLL.f_filter;
     CPU2toCPU1.sign = PLL.sign;

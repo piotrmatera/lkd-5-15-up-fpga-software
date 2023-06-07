@@ -19,8 +19,8 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	
 	localparam M0_COMMON_OFFSET_NUMBER = 9'd2;
 	localparam M0_START_COMMON = M0_STATES_OFFSET_NUMBER*HARMONICS_NUM;
-	localparam CM0_SUM = 2'b10;
-	localparam CM0_IC = 2'b11;
+	localparam CM0_SUM = 4'b1000;
+	localparam CM0_IC = 4'b1001;
 	
 	localparam M0_PTR_WIDTH = ($clog2(M0_COMMON_OFFSET_NUMBER) > $clog2(M0_STATES_OFFSET_NUMBER) ? $clog2(M0_COMMON_OFFSET_NUMBER) : $clog2(M0_STATES_OFFSET_NUMBER))+1;
 	localparam M0_SERIES_LENGTH = M0_STATES_OFFSET_NUMBER*HARMONICS_NUM + M0_COMMON_OFFSET_NUMBER;
@@ -42,12 +42,12 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	
 	localparam M1_COMMON_OFFSET_NUMBER = 9'd6;
 	localparam M1_START_COMMON = M1_STATES_OFFSET_NUMBER*HARMONICS_NUM;
-	localparam CM1_HC = 4'b1000;
-	localparam CM1_HG = 4'b1001;
-	localparam CM1_ZR = 4'b1010;
-	localparam CM1_RT = 4'b1011;
-	localparam CM1_IC = 4'b1100;
-	localparam CM1_IG = 4'b1101;
+	localparam CM1_HC = 5'b10000;
+	localparam CM1_HG = 5'b10001;
+	localparam CM1_ZR = 5'b10010;
+	localparam CM1_RT = 5'b10011;
+	localparam CM1_IC = 5'b10100;
+	localparam CM1_IG = 5'b10101;
 	
 	localparam M1_PTR_WIDTH = ($clog2(M1_COMMON_OFFSET_NUMBER) > $clog2(M1_STATES_OFFSET_NUMBER) ? $clog2(M1_COMMON_OFFSET_NUMBER) : $clog2(M1_STATES_OFFSET_NUMBER))+1;
 	localparam M1_SERIES_LENGTH = M1_STATES_OFFSET_NUMBER*HARMONICS_NUM + M1_COMMON_OFFSET_NUMBER;
@@ -136,6 +136,10 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 
 	localparam CNT_WIDTH = 6;
 	reg [CNT_WIDTH-1:0] cnt;
+	
+	reg [31:0] harmonics_grid;
+	reg zero_error;
+	
 	reg [5:0] harm_save_r;
 	reg [HARMONICS_CNT_WIDTH-1:0] harmonics_cmp;
 	
@@ -159,8 +163,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	reg[BBMEM_WIDTH-1:0]BBMemsel;
 	reg[CMEM_WIDTH-1:0]CMemsel;
     reg CE1;
-    reg RST1;
-    reg RST2;
 			
 	wire [35:0] Mem0_data_i;
 	reg Mem0_we;				
@@ -190,8 +192,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	wire[CMEM_WIDTH-1:0]CMemsel_pip;
 		
 	wire CE1_pip;
-	wire RST1_pip;
-	wire RST2_pip;
 	
 	wire [M0_ADDR_WIDTH-1:0] Mem0_addrw_pip;
 	wire Mem0_we_pip;
@@ -206,14 +206,14 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	initial begin
 		cnt = -1;
 		harmonics_cnt = 0;
+		harmonics_grid = 0;
+		zero_error = 0;		
 		series_cnt = 0;
 		Opcode = OPCODE_SUM_A_B_C;
 		AMuxsel = AMUX_GND;
 		BMuxsel = BMUX_GND;
 		CMuxsel = CMUX_GND;
 		CE1 = 0;
-		RST1 = 0;
-		RST2 = 0;
 		addrr_M0_sel = 0;
 		addrr_M0_ptr = 0;
 		addrr_M1_sel = 0;
@@ -236,8 +236,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 		BBMemsel <= BB_M1H;
 		CMemsel <= C_M1;
 		CE1 <= 1'b1;
-		RST1 <= 1'b0;
-		RST2 <= 1'b0;
 		addrr_M0_sel <= 0;
 		addrr_M0_ptr <= 0;
 		addrr_M1_sel <= 0;
@@ -246,8 +244,12 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 		addrw_M0_ptr <= 0;
 		Mem0_we <= 0;
 		
-		harm_save_r <= {cnt == 1, harm_save_r[5:1]};
-		if(harm_save_r[0]) harmonics_cmp <= Mem1_data_o[4 +: HARMONICS_CNT_WIDTH];
+		if(cnt == 25) harmonics_grid <= {1'b0, harmonics_grid[31:1]};
+			
+		harm_save_r <= {cnt == 2, harm_save_r[5:1]};
+		if(harm_save_r[2]) harmonics_cmp <= Mem1_data_o[4 +: HARMONICS_CNT_WIDTH];
+		if(harm_save_r[1]) harmonics_grid <= Mem1_data_o[4 +: 32];
+		if(harm_save_r[0]) zero_error <= Mem1_data_o[4+30];
 			
 		if(harmonics_inc) harmonics_cnt <= harmonics_cnt + 1'b1;
 		if(harmonics_rst) harmonics_cnt <= 0;
@@ -294,6 +296,8 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				
 				addrw_M0_ptr <= CM0_IC;
 				Mem0_we <= 1'b1;
+				
+				harmonics_inc <= 1'b1;		
 			end
 //-------------------------------------------------
 			4: begin
@@ -302,8 +306,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				CMemsel <= C_M1;
 								
 				CMuxsel <= CMUX_C_ALU;
-				
-				harmonics_inc <= 1'b1;
 			end
 			5: begin
 				addrr_M0_ptr <= SM0_GX1;
@@ -322,6 +324,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				addrr_M1_sel <= SEL_S_INC;
 				addrw_M0_sel <= SEL_S_INC;
 				
+				harmonics_inc <= 1'b1;				
 				if(!harmonics_end) cnt <= 6'd4;
 			end
 //-------------------------------------------------
@@ -456,8 +459,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				CMuxsel <= CMUX_ALU_FB;
 				
 				CE1 <= 1'b0;
-				
-				harmonics_inc <= 1'b1;
 			end
 			16: begin
 				BAMemsel <= BA_M0H;
@@ -473,6 +474,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				addrr_M1_sel <= SEL_S_INC;
 				addrw_M0_sel <= SEL_S_INC;
 				
+				harmonics_inc <= 1'b1;				
 				if(!harmonics_end) cnt <= 6'd7;
 			end
 //-------------------------------------------------
@@ -512,8 +514,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				CMuxsel <= CMUX_ALU_FB;
 				
 				Opcode <= OPCODE_SUM_A_NB_NC;
-				
-				harmonics_inc <= 1'b1;
 			end
 			20: begin
 				addrr_M0_ptr <= SM0_GX1;
@@ -535,6 +535,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				addrr_M1_sel <= SEL_S_INC;
 				addrw_M0_sel <= SEL_S_INC;
 				
+				harmonics_inc <= 1'b1;				
 				if(!harmonics_end) cnt <= 6'd18;
 			end
 //-------------------------------------------------
@@ -572,8 +573,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB;
 				CMuxsel <= CMUX_ALU_FB;
-				
-				Opcode <= OPCODE_SUM_A_NB_NC;
 			end
 			24: begin
 				addrr_M0_ptr <= CM0_IC;
@@ -587,16 +586,16 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
 				CMuxsel <= CMUX_ALU_FB;
-				
-				harmonics_inc <= 1'b1;
 			end
 			25: begin
 				addrr_M0_ptr <= CM0_IC;
 											
 				CMemsel <= C_M0;
 								
-				AMuxsel <= AMUX_ALU_FB;
-				CMuxsel <= CMUX_C_ALU;
+				if(zero_error) begin
+					if(harmonics_grid[0]) AMuxsel <= AMUX_ALU_FB;
+					CMuxsel <= CMUX_C_ALU;			
+				end
 				
 				addrw_M0_ptr <= SM0_ERR;
 				Mem0_we <= 1'b1;
@@ -605,6 +604,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				addrr_M1_sel <= SEL_S_INC;
 				addrw_M0_sel <= SEL_S_INC;
 				
+				harmonics_inc <= 1'b1;				
 				if(!harmonics_end) cnt <= 6'd22;
 			end
 //-------------------------------------------------
@@ -627,8 +627,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				
 				AMuxsel <= AMUX_MULTA;
 				BMuxsel <= BMUX_MULTB_L18;
-				
-				Opcode <= OPCODE_SUM_A_B_NC;
 				
 				CE1 <= 1'b0;
 			end
@@ -739,8 +737,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				CMuxsel <= CMUX_ALU_FB;
 				
 				CE1 <= 1'b0;
-				
-				harmonics_inc <= 1'b1;
 			end
 			36: begin
 				BAMemsel <= BA_M0H;
@@ -756,6 +752,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				addrr_M1_sel <= SEL_S_INC;
 				addrw_M0_sel <= SEL_S_INC;
 				
+				harmonics_inc <= 1'b1;				
 				if(!harmonics_end) cnt <= 6'd27;
 			end
 //-------------------------------------------------
@@ -798,8 +795,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				CMuxsel <= CMUX_ALU_FB;
 				
 				Opcode <= OPCODE_SUM_A_NB_NC;
-				
-				harmonics_inc <= 1'b1;
 			end
 			40: begin
 				addrr_M0_ptr <= SM0_CX1;
@@ -818,6 +813,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 				addrr_M1_sel <= SEL_S_INC;
 				addrw_M0_sel <= SEL_S_INC;
 				
+				harmonics_inc <= 1'b1;				
 				if(!harmonics_end) cnt <= 6'd38;
 			end
 //-------------------------------------------------
@@ -909,7 +905,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 		Mem1_data_r <= Mem1_data_o;
 	end
 	
-	Slice2 #(.QMATH_SHIFT(2)) Slice2(.CLK0(clk_i), .CE0(1'b1), .CE1(CE1_pip), .CE2(1'b0), .CE3(1'b0), .RST0(1'b0), .RST1(RST1_pip), .RST2(RST2_pip), .RST3(1'b0),
+	Slice2 #(.QMATH_SHIFT(2)) Slice2(.CLK0(clk_i), .CE0(1'b1), .CE1(CE1_pip), .CE2(1'b0), .CE3(1'b0), .RST0(1'b0), .RST1(1'b0), .RST2(1'b0), .RST3(1'b0),
 	.AA(DataAA[AAMemsel_pip]), .AB(DataAB[ABMemsel_pip]), .BA(DataBA[BAMemsel_pip]), .BB(DataBB[BBMemsel_pip]), .C(DataC_r),
 	.SignAA(AAMemsel_pip[0]), .SignAB(ABMemsel_pip[0]), .SignBA(BAMemsel_pip[0]), .SignBB(BBMemsel_pip[0]),
 	.AMuxsel(AMuxsel_pip), .BMuxsel(BMuxsel_pip), .CMuxsel(CMuxsel_pip), .Opcode(Opcode_pip),
@@ -929,7 +925,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 		pmi_ram_dp #(.pmi_wr_addr_depth(M1_ADDR_NUM), .pmi_wr_addr_width(M1_ADDR_WIDTH), .pmi_wr_data_width(36),
 		.pmi_rd_addr_depth(M1_ADDR_NUM), .pmi_rd_addr_width(M1_ADDR_WIDTH), .pmi_rd_data_width(36), .pmi_regmode("reg"), 
 		.pmi_gsr("enable"), .pmi_resetmode("sync"), .pmi_optimization("speed"), .pmi_family("ECP5U"),
-		.pmi_init_file("../Mem1_R.mem"), .pmi_init_file_format("hex")
+		.pmi_init_file("../Mem1_RG.mem"), .pmi_init_file_format("hex")
 		)
 		Mem1(.Data({Mem1_data_i,{4{Mem1_data_i[31]}}}), .WrAddress(Mem1_addrw_i), .RdAddress(addrr_M1_out), .WrClock(Mem1_clk_w),
 		.RdClock(clk_i), .WrClockEn(Mem1_clk_en_w), .RdClockEn(1'b1), .WE(Mem1_we_i), .Reset(1'b0), 
@@ -991,12 +987,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 		
 	pipeline_delay #(.WIDTH(1),.CYCLES(6),.SHIFT_MEM(0)) 
 	ce_delay (.clk(clk_i), .in(CE1), .out(CE1_pip));
-		
-	pipeline_delay #(.WIDTH(1),.CYCLES(6),.SHIFT_MEM(0)) 
-	rst1_delay (.clk(clk_i), .in(RST1), .out(RST1_pip));
-		
-	pipeline_delay #(.WIDTH(1),.CYCLES(6),.SHIFT_MEM(0)) 
-	rst2_delay (.clk(clk_i), .in(RST2), .out(RST2_pip));
 	
 	pipeline_delay #(.WIDTH(1),.CYCLES(8),.SHIFT_MEM(0)) 
 	we_delay (.clk(clk_i), .in(Mem0_we), .out(Mem0_we_pip));
@@ -1020,8 +1010,6 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	wire[CMEM_WIDTH-1:0]CMemsel_pip2;
 		
 	wire CE1_pip2;
-	wire RST1_pip2;
-	wire RST2_pip2;
 	
 	wire [M0_ADDR_WIDTH-1:0] addrr_M0_out_pip2;
 	wire [35:0] Mem0_data_o_pip2;
@@ -1073,13 +1061,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 			
 		pipeline_delay #(.WIDTH(1),.CYCLES(8),.SHIFT_MEM(0)) 
 		ce_delay2 (.clk(clk_i), .in(CE1), .out(CE1_pip2));
-			
-		pipeline_delay #(.WIDTH(1),.CYCLES(8),.SHIFT_MEM(0)) 
-		rst1_delay2 (.clk(clk_i), .in(RST1), .out(RST1_pip2));
-			
-		pipeline_delay #(.WIDTH(1),.CYCLES(8),.SHIFT_MEM(0)) 
-		rst2_delay2 (.clk(clk_i), .in(RST2), .out(RST2_pip2));
-		
+					
 		pipeline_delay #(.WIDTH(1),.CYCLES(8),.SHIFT_MEM(0)) 
 		we_delay2 (.clk(clk_i), .in(Mem0_we), .out(Mem0_we_pip2));
 		

@@ -38,6 +38,7 @@ struct Measurements_alarm_struct Meas_alarm_L;
 
 struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
+struct trigonometric_struct sincos_table_comp2[SINCOS_HARMONICS];
 struct trigonometric_struct sincos_table_Kalman[SINCOS_HARMONICS];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

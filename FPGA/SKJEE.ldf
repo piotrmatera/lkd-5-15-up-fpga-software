@@ -3,16 +3,19 @@
     <Options/>
     <Implementation title="ACDC" dir="ACDC" description="ACDC" synthesis="lse" default_strategy="Strategy1">
         <Options top="SerDes_master"/>
-        <Source name="comm_core.v" type="Verilog" type_short="Verilog">
+        <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
+            <Options top_module="SerDes_master"/>
+        </Source>
+        <Source name="testbench.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
             <Options/>
         </Source>
-        <Source name="crc_generator.v" type="Verilog" type_short="Verilog">
+        <Source name="Clarity/Clarity.sbx" type="sbx" type_short="SBX">
             <Options/>
         </Source>
         <Source name="global.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="miscellanous.v" type="Verilog" type_short="Verilog">
+        <Source name="version.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="PWM.v" type="Verilog" type_short="Verilog">
@@ -24,34 +27,31 @@
         <Source name="sed.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="miscellanous.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="crc_generator.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="SerDes.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="comm_core.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="synchronization.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="testbench.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+        <Source name="Slice2.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
-            <Options top_module="SerDes_master"/>
-        </Source>
-        <Source name="version.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="Clarity/Clarity.sbx" type="sbx" type_short="SBX">
+        <Source name="DSP.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="Kalman.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="Slice2.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
         <Source name="Resonant.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="DSP.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="Resonant_grid.v" type="Verilog" type_short="Verilog">
@@ -70,6 +70,9 @@
             <Options/>
         </Source>
         <Source name="Mem1_R.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_RG.mem" type="Unknown Type" type_short="Unknown">
             <Options/>
         </Source>
         <Source name="Power.pcf" type="Power Calculator" type_short="PCF" excluded="TRUE">

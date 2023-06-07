@@ -156,6 +156,7 @@ extern struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
 
 extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 extern struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
+extern struct trigonometric_struct sincos_table_comp2[SINCOS_HARMONICS];
 extern struct trigonometric_struct sincos_table_Kalman[SINCOS_HARMONICS];
 
 extern void Fast_copy_modbus_CPUasm();

@@ -73,6 +73,43 @@ def generate_resonant_gains():
     for i in range(512 - len(harmonics) * 6):
         f.write("000000000\n")
 
+def generate_resonant_grid_gains():
+    ts = 8e-6
+    omega = 2*math.pi*50
+    harmonics = np.arange(1, 50, 2)
+    L_conv = 200e-6
+    gain = 11 * L_conv * np.pi / ts /omega
+    compensation2 = 0
+
+    cosine = np.zeros(len(harmonics))
+    sine = np.zeros(len(harmonics))
+    cosineC = np.zeros(len(harmonics))
+    sineC = np.zeros(len(harmonics))
+    for i in range(len(harmonics)):
+        sine[i] = np.sin(omega * ts * harmonics[i])
+        cosine[i] = np.cos(omega * ts * harmonics[i])
+        sineC[i] = np.sin(omega * ts * harmonics[i] * compensation2)
+        cosineC[i] = np.cos(omega * ts * harmonics[i] * compensation2)
+
+
+    f = open("Mem1_RG.mem", "w+")
+    for i in range(int(len(harmonics))):
+        f.write(float_to_mem(cosine[i]) + " //CA " + str(harmonics[i]) + " harmonic [" + str(cosine[i]) + "] \n")
+        f.write(float_to_mem(sine[i]) + " //SA " + str(harmonics[i]) + " harmonic [" + str(sine[i]) + "] \n")
+        f.write(float_to_mem(cosine[i]-1) + " //GCB " + str(harmonics[i]) + " harmonic [" + str(cosine[i]-1) + "] \n")
+        f.write(float_to_mem(sine[i]) + " //GSB " + str(harmonics[i]) + " harmonic [" + str(sine[i]) + "] \n")
+        temp = gain/harmonics[i]*(cosine[i]-1)
+        f.write(float_to_mem(temp) + " //CCB " + str(harmonics[i]) + " harmonic [" + str(temp) + "] \n")
+        temp = gain/harmonics[i]*sine[i]
+        f.write(float_to_mem(temp) + " //CSB " + str(harmonics[i]) + " harmonic [" + str(temp) + "] \n")
+        f.write(float_to_mem(cosine[i]) + " //GCC " + str(harmonics[i]) + " harmonic [" + str(cosine[i]) + "] \n")
+        f.write(float_to_mem(sine[i]) + " //GSC " + str(harmonics[i]) + " harmonic [" + str(sine[i]) + "] \n")
+        f.write(float_to_mem(cosineC[i]) + " //CCC " + str(harmonics[i]) + " harmonic [" + str(cosineC[i]) + "] \n")
+        f.write(float_to_mem(sineC[i]) + " //CSC " + str(harmonics[i]) + " harmonic [" + str(sineC[i]) + "] \n")
+
+    for i in range(512 - len(harmonics) * 6):
+        f.write("000000000\n")
+
 def float_to_mem(float_data):
     int_data = int(float_data * (2 ** (36 - QMATH_SHIFT)))
     string = "{:09X}".format((int_data & 0xFFFFFFFFF), '09X')
@@ -82,3 +119,4 @@ QMATH_SHIFT = 1
 generate_kalman_gains()
 QMATH_SHIFT = 2
 generate_resonant_gains()
+generate_resonant_grid_gains()

@@ -158,7 +158,7 @@ void Init_class::Variables()
     Conv.cycle_period = EMIF_mem.read.cycle_period;
     Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;
     Conv.Kr_I = CPU1toCPU2.CLA1toCLA2.Kr_I;
-    Conv.compensation2 = CPU1toCPU2.CLA1toCLA2.compensation2;
+    Conv.compensation = CPU1toCPU2.CLA1toCLA2.compensation;
     Conv.L_conv = CPU1toCPU2.CLA1toCLA2.L_conv;
 
     register float r_pr_i = Conv.Kr_I;
@@ -201,8 +201,8 @@ void Init_class::Variables()
     {
         sincos_table[i].cosine = cosf(PLL.w_filter * PLL.Ts * (float)(i + 1));
         sincos_table[i].sine = sinf(PLL.w_filter * PLL.Ts * (float)(i + 1));
-        sincos_table_comp[i].cosine = cosf(Conv.compensation2 * PLL.w_filter * PLL.Ts * (float)(i + 1));
-        sincos_table_comp[i].sine = sinf(Conv.compensation2 * PLL.w_filter * PLL.Ts * (float)(i + 1));
+        sincos_table_comp[i].cosine = cosf(Conv.compensation * PLL.w_filter * PLL.Ts * (float)(i + 1));
+        sincos_table_comp[i].sine = sinf(Conv.compensation * PLL.w_filter * PLL.Ts * (float)(i + 1));
     }
 }
 

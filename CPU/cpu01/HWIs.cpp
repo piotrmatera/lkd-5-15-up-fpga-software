@@ -64,19 +64,22 @@ interrupt void SD_AVG_NT()
     {
         static volatile struct
         {
-            struct trigonometric_struct harmonic[5];
+            float harmonic[5][5];
             float sum;
             float error;
         }Resonant_mem;
-        int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[1].states[0];
+        int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].states[0];
         float *pointer_dst = (float *)&Resonant_mem;
         for(int i=0; i<5; i++)
         {
             *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
             *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
         }
 
-        pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[1].sum;
+        pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].SUM;
         *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
         *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
     }
@@ -91,7 +94,7 @@ interrupt void SD_AVG_NT()
     CPU1toCPU2.CLA1toCLA2.L_conv = Conv.L_conv;
     CPU1toCPU2.CLA1toCLA2.Kp_I = Conv.Kp_I;
     CPU1toCPU2.CLA1toCLA2.Kr_I = Conv.Kr_I;
-    CPU1toCPU2.CLA1toCLA2.compensation2 = Conv.compensation2;
+    CPU1toCPU2.CLA1toCLA2.compensation = Conv.compensation;
     CPU1toCPU2.CLA1toCLA2.id_ref.a = Conv.id_lim.a;
     CPU1toCPU2.CLA1toCLA2.id_ref.b = Conv.id_lim.b;
     CPU1toCPU2.CLA1toCLA2.id_ref.c = Conv.id_lim.c;
@@ -112,14 +115,18 @@ interrupt void SD_AVG_NT()
     EMIF_mem.write.Kalman.input[4] = Meas_master.I_grid.b * modifier2;
     EMIF_mem.write.Kalman.input[5] = Meas_master.I_grid.c * modifier2;
     EMIF_mem.write.Kalman_DC.input[0] = Meas_master.U_dc * modifier2;
-    EMIF_mem.write.DSP_start = 0b11100;
+    EMIF_mem.write.DSP_start = 0b11000;
 
-    EMIF_mem.write.Resonant[0].series[0].harmonics_number =
-    EMIF_mem.write.Resonant[0].series[1].harmonics_number =
-    EMIF_mem.write.Resonant[0].series[2].harmonics_number = fmaxf(Conv.resonant_odd_number, 0.0f);
-    EMIF_mem.write.Resonant[1].series[0].harmonics_number =
-    EMIF_mem.write.Resonant[1].series[1].harmonics_number =
-    EMIF_mem.write.Resonant[1].series[2].harmonics_number = fmaxf(Conv.resonant_even_number, 0.0f);
+    register float modifier3 = Conv.range_modifier_Resonant_values;
+    EMIF_mem.write.Resonant[0].series[0].HC =
+    EMIF_mem.write.Resonant[1].series[0].HC =
+    EMIF_mem.write.Resonant[2].series[0].HC = fmaxf(Conv.resonant_odd_number, 0.0f);
+    EMIF_mem.write.Resonant[0].series[0].HG = *(Uint32 *)&control_master.H_odd_a;
+    EMIF_mem.write.Resonant[1].series[0].HG = *(Uint32 *)&control_master.H_odd_b;
+    EMIF_mem.write.Resonant[2].series[0].HG = *(Uint32 *)&control_master.H_odd_c;
+    EMIF_mem.write.Resonant[0].series[0].RT = Conv.PI_I_harm_ratio[0].out * modifier3;
+    EMIF_mem.write.Resonant[1].series[0].RT = Conv.PI_I_harm_ratio[1].out * modifier3;
+    EMIF_mem.write.Resonant[2].series[0].RT = Conv.PI_I_harm_ratio[2].out * modifier3;
 
     Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;
 

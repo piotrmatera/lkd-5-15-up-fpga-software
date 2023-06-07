@@ -75,6 +75,7 @@ struct Converter_struct
     float resonant_odd_number;
     float Kp_I;
     float Kr_I;
+    float compensation;
     float compensation2;
     float I_lim, I_lim_nominal;
 

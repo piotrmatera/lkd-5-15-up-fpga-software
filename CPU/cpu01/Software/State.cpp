@@ -625,29 +625,45 @@ void Machine_class::Background()
         ////////////////////////////////////////////////////////////////////////////////////////
 
         SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts / Conv.Ts_rate);
-        SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation2);
+        SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation);
+        SINCOS_calc_CPUasm(sincos_table_comp2, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation2);
         SINCOS_calc_CPUasm(sincos_table_Kalman, Conv.w_filter * Conv.Ts);
 
         for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
         {
-            register float modifier;
-            modifier = Conv.range_modifier_Resonant_coefficients;
-            if(Conv.resonant_odd_number < 0.0) modifier = 0.0f;
-            EMIF_mem.write.Resonant[0].states[i].cos_A = modifier * sincos_table[2 * i].cosine;
-            EMIF_mem.write.Resonant[0].states[i].sin_A = modifier * sincos_table[2 * i].sine;
-            EMIF_mem.write.Resonant[0].states[i].cos_B = modifier * (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I;
-            EMIF_mem.write.Resonant[0].states[i].sin_B = modifier * sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I;
-            EMIF_mem.write.Resonant[0].states[i].cos_C = modifier * sincos_table_comp[2 * i].cosine;
-            EMIF_mem.write.Resonant[0].states[i].sin_C = modifier * sincos_table_comp[2 * i].sine;
+            register float modifier = Conv.range_modifier_Resonant_coefficients;
+            EMIF_mem.write.Resonant[0].states[i].CA =
+            EMIF_mem.write.Resonant[1].states[i].CA =
+            EMIF_mem.write.Resonant[2].states[i].CA = modifier * sincos_table[2 * i].cosine;
+            EMIF_mem.write.Resonant[0].states[i].SA =
+            EMIF_mem.write.Resonant[1].states[i].SA =
+            EMIF_mem.write.Resonant[2].states[i].SA = modifier * sincos_table[2 * i].sine;
 
-            modifier = Conv.range_modifier_Resonant_coefficients;
-            if(Conv.resonant_even_number < 0.0) modifier = 0.0f;
-            EMIF_mem.write.Resonant[1].states[i].cos_A = modifier * sincos_table[2 * i + 1].cosine;
-            EMIF_mem.write.Resonant[1].states[i].sin_A = modifier * sincos_table[2 * i + 1].sine;
-            EMIF_mem.write.Resonant[1].states[i].cos_B = modifier * (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I;
-            EMIF_mem.write.Resonant[1].states[i].sin_B = modifier * sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I;
-            EMIF_mem.write.Resonant[1].states[i].cos_C = modifier * sincos_table_comp[2 * i + 1].cosine;
-            EMIF_mem.write.Resonant[1].states[i].sin_C = modifier * sincos_table_comp[2 * i + 1].sine;
+            EMIF_mem.write.Resonant[0].states[i].GCB =
+            EMIF_mem.write.Resonant[1].states[i].GCB =
+            EMIF_mem.write.Resonant[2].states[i].GCB = modifier * sincos_table[2 * i].cosine - 1.0f;
+            EMIF_mem.write.Resonant[0].states[i].GSB =
+            EMIF_mem.write.Resonant[1].states[i].GSB =
+            EMIF_mem.write.Resonant[2].states[i].GSB = modifier * sincos_table[2 * i].sine;
+            EMIF_mem.write.Resonant[0].states[i].GCC =
+            EMIF_mem.write.Resonant[1].states[i].GCC =
+            EMIF_mem.write.Resonant[2].states[i].GCC = modifier * sincos_table_comp2[2 * i].cosine;
+            EMIF_mem.write.Resonant[0].states[i].GSC =
+            EMIF_mem.write.Resonant[1].states[i].GSC =
+            EMIF_mem.write.Resonant[2].states[i].GSC = modifier * sincos_table_comp2[2 * i].sine;
+
+            EMIF_mem.write.Resonant[0].states[i].CCB =
+            EMIF_mem.write.Resonant[1].states[i].CCB =
+            EMIF_mem.write.Resonant[2].states[i].CCB = modifier * (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I;
+            EMIF_mem.write.Resonant[0].states[i].CSB =
+            EMIF_mem.write.Resonant[1].states[i].CSB =
+            EMIF_mem.write.Resonant[2].states[i].CSB = modifier * sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I;
+            EMIF_mem.write.Resonant[0].states[i].CCC =
+            EMIF_mem.write.Resonant[1].states[i].CCC =
+            EMIF_mem.write.Resonant[2].states[i].CCC = modifier * sincos_table_comp[2 * i].cosine;
+            EMIF_mem.write.Resonant[0].states[i].CSC =
+            EMIF_mem.write.Resonant[1].states[i].CSC =
+            EMIF_mem.write.Resonant[2].states[i].CSC = modifier * sincos_table_comp[2 * i].sine;
         }
 
         for(Uint16 i = 1; i < FPGA_KALMAN_STATES; i++)

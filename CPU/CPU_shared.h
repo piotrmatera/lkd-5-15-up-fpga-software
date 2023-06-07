@@ -116,6 +116,62 @@ struct FPGA_Resonant_M1_struct
     Uint32 rsvd[512 - FPGA_RESONANT_STATES*sizeof(struct FPGA_Resonant_states_M1_struct)/sizeof(Uint32) - FPGA_RESONANT_SERIES*sizeof(struct FPGA_Resonant_series_M1_struct)/sizeof(Uint32)];
 };
 
+#define FPGA_RESONANT_GRID_STATES 25
+#define FPGA_RESONANT_GRID_SERIES 1
+
+struct FPGA_Resonant_grid_states_M0_struct
+{
+    int32 GX1;
+    int32 GX2;
+    int32 CX1;
+    int32 CX2;
+    int32 ERR;
+};
+
+struct FPGA_Resonant_grid_series_M0_struct
+{
+    struct FPGA_Resonant_grid_states_M0_struct states[FPGA_RESONANT_GRID_STATES];
+    int32 SUM;
+    int32 IC;
+};
+
+struct FPGA_Resonant_grid_M0_struct
+{
+    struct FPGA_Resonant_grid_series_M0_struct series[FPGA_RESONANT_GRID_SERIES];
+    Uint32 rsvd[512 - FPGA_RESONANT_GRID_SERIES*sizeof(struct FPGA_Resonant_grid_series_M0_struct)/sizeof(Uint32)];
+};
+
+struct FPGA_Resonant_grid_states_M1_struct
+{
+    int32 CA;
+    int32 SA;
+    int32 GCB;
+    int32 GSB;
+    int32 CCB;
+    int32 CSB;
+    int32 GCC;
+    int32 GSC;
+    int32 CCC;
+    int32 CSC;
+};
+
+struct FPGA_Resonant_grid_series_M1_struct
+{
+    Uint32 HC;
+    Uint32 HG;
+    Uint32 ZR;
+    Uint32 RT;
+    int32 IC;
+    int32 IG;
+};
+
+struct FPGA_Resonant_grid_M1_struct
+{
+    struct FPGA_Resonant_grid_states_M1_struct states[FPGA_RESONANT_GRID_STATES];
+    struct FPGA_Resonant_grid_series_M1_struct series[FPGA_RESONANT_GRID_SERIES];
+    Uint32 rsvd[512 - FPGA_RESONANT_GRID_STATES*sizeof(struct FPGA_Resonant_grid_states_M1_struct)/sizeof(Uint32) - FPGA_RESONANT_GRID_SERIES*sizeof(struct FPGA_Resonant_grid_series_M1_struct)/sizeof(Uint32)];
+};
+
 #define FPGA_KALMAN_STATES 26
 #define FPGA_KALMAN_SERIES 6
 
@@ -206,16 +262,16 @@ union EMIF_union
             Uint32 sync_phase:1;
             Uint32 Resonant1_WIP:1;
             Uint32 Resonant2_WIP:1;
+            Uint32 Resonant3_WIP:1;
             Uint32 Kalman_DC_WIP:1;
             Uint32 Kalman1_WIP:1;
-            Uint32 Kalman2_WIP:1;
         }flags;
         Uint32 mux_rsvd[512-35];
         Uint32 rx1_lopri_msg[8][32];
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];
         Uint32 rx2_hipri_msg[8][32];
-        struct FPGA_Resonant_M0_struct Resonant[2];
+        struct FPGA_Resonant_grid_M0_struct Resonant[3];
         struct FPGA_Kalman_DC_M0_struct Kalman_DC;
         struct FPGA_Kalman_M0_struct Kalman;
     }read;
@@ -243,7 +299,7 @@ union EMIF_union
         Uint32 tx1_hipri_msg[8][32];
         Uint32 tx2_lopri_msg[8][32];
         Uint32 tx2_hipri_msg[8][32];
-        struct FPGA_Resonant_M1_struct Resonant[2];
+        struct FPGA_Resonant_grid_M1_struct Resonant[3];
         struct FPGA_Kalman_DC_M1_struct Kalman_DC;
         struct FPGA_Kalman_M1_struct Kalman;
     }write;
@@ -254,7 +310,7 @@ struct CLA1toCLA2_struct
     struct abc_struct id_ref, iq_ref;
     float Kp_I;
     float Kr_I;
-    float compensation2;
+    float compensation;
     float L_conv;
     float enable;
 };
@@ -282,6 +338,7 @@ struct CPU2toCPU1_struct
     float sag;
     union ALARM_master alarm_master;
     int32 Resonant_error[6];
+    Uint32 ZR;
     Uint32 Resonant_start;
     int16 duty[4];
 };

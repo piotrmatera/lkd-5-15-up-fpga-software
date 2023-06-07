@@ -431,12 +431,14 @@ void Init_class::Variables()
 
     ///////////////////////////////////////////////////////////////////
 
+    Conv.compensation = 0.0f;
     Conv.compensation2 = 2.0f;
     Conv.resonant_odd_number = 25-1;
     Conv.resonant_even_number = 0-1;
 
     SINCOS_calc_CPUasm(sincos_table, Conv.w_filter * Conv.Ts / Conv.Ts_rate);
-    SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation2);
+    SINCOS_calc_CPUasm(sincos_table_comp, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation);
+    SINCOS_calc_CPUasm(sincos_table_comp2, Conv.w_filter * Conv.Ts / Conv.Ts_rate * Conv.compensation2);
     SINCOS_calc_CPUasm(sincos_table_Kalman, Conv.w_filter * Conv.Ts);
 
     register float p_pr_i = Conv.L_conv / (3.0f * Conv.Ts) * Conv.Ts_rate;
@@ -451,22 +453,41 @@ void Init_class::Variables()
     Conv.range_modifier_Resonant_values = 1UL << 21;
     Conv.div_range_modifier_Resonant_values = 1.0f / Conv.range_modifier_Resonant_values;
 
-    for(Uint16 i = 0; i < FPGA_RESONANT_STATES; i++)
+    for(Uint16 i = 0; i < FPGA_RESONANT_GRID_STATES; i++)
     {
         register float modifier = Conv.range_modifier_Resonant_coefficients;
-        EMIF_mem.write.Resonant[0].states[i].cos_A = modifier * sincos_table[2 * i].cosine;
-        EMIF_mem.write.Resonant[0].states[i].sin_A = modifier * sincos_table[2 * i].sine;
-        EMIF_mem.write.Resonant[0].states[i].cos_B = modifier * (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I;
-        EMIF_mem.write.Resonant[0].states[i].sin_B = modifier * sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I;
-        EMIF_mem.write.Resonant[0].states[i].cos_C = modifier * sincos_table_comp[2 * i].cosine;
-        EMIF_mem.write.Resonant[0].states[i].sin_C = modifier * sincos_table_comp[2 * i].sine;
+        EMIF_mem.write.Resonant[0].states[i].CA =
+        EMIF_mem.write.Resonant[1].states[i].CA =
+        EMIF_mem.write.Resonant[2].states[i].CA = modifier * sincos_table[2 * i].cosine;
+        EMIF_mem.write.Resonant[0].states[i].SA =
+        EMIF_mem.write.Resonant[1].states[i].SA =
+        EMIF_mem.write.Resonant[2].states[i].SA = modifier * sincos_table[2 * i].sine;
 
-        EMIF_mem.write.Resonant[1].states[i].cos_A = modifier * sincos_table[2 * i + 1].cosine;
-        EMIF_mem.write.Resonant[1].states[i].sin_A = modifier * sincos_table[2 * i + 1].sine;
-        EMIF_mem.write.Resonant[1].states[i].cos_B = modifier * (sincos_table[2 * i + 1].cosine - 1.0f) / (float)(2 * i + 2) * Conv.Kr_I;
-        EMIF_mem.write.Resonant[1].states[i].sin_B = modifier * sincos_table[2 * i + 1].sine / (float)(2 * i + 2) * Conv.Kr_I;
-        EMIF_mem.write.Resonant[1].states[i].cos_C = modifier * sincos_table_comp[2 * i + 1].cosine;
-        EMIF_mem.write.Resonant[1].states[i].sin_C = modifier * sincos_table_comp[2 * i + 1].sine;
+        EMIF_mem.write.Resonant[0].states[i].GCB =
+        EMIF_mem.write.Resonant[1].states[i].GCB =
+        EMIF_mem.write.Resonant[2].states[i].GCB = modifier * sincos_table[2 * i].cosine - 1.0f;
+        EMIF_mem.write.Resonant[0].states[i].GSB =
+        EMIF_mem.write.Resonant[1].states[i].GSB =
+        EMIF_mem.write.Resonant[2].states[i].GSB = modifier * sincos_table[2 * i].sine;
+        EMIF_mem.write.Resonant[0].states[i].GCC =
+        EMIF_mem.write.Resonant[1].states[i].GCC =
+        EMIF_mem.write.Resonant[2].states[i].GCC = modifier * sincos_table_comp2[2 * i].cosine;
+        EMIF_mem.write.Resonant[0].states[i].GSC =
+        EMIF_mem.write.Resonant[1].states[i].GSC =
+        EMIF_mem.write.Resonant[2].states[i].GSC = modifier * sincos_table_comp2[2 * i].sine;
+
+        EMIF_mem.write.Resonant[0].states[i].CCB =
+        EMIF_mem.write.Resonant[1].states[i].CCB =
+        EMIF_mem.write.Resonant[2].states[i].CCB = modifier * (sincos_table[2 * i].cosine - 1.0f) / (float)(2 * i + 1) * Conv.Kr_I;
+        EMIF_mem.write.Resonant[0].states[i].CSB =
+        EMIF_mem.write.Resonant[1].states[i].CSB =
+        EMIF_mem.write.Resonant[2].states[i].CSB = modifier * sincos_table[2 * i].sine / (float)(2 * i + 1) * Conv.Kr_I;
+        EMIF_mem.write.Resonant[0].states[i].CCC =
+        EMIF_mem.write.Resonant[1].states[i].CCC =
+        EMIF_mem.write.Resonant[2].states[i].CCC = modifier * sincos_table_comp[2 * i].cosine;
+        EMIF_mem.write.Resonant[0].states[i].CSC =
+        EMIF_mem.write.Resonant[1].states[i].CSC =
+        EMIF_mem.write.Resonant[2].states[i].CSC = modifier * sincos_table_comp[2 * i].sine;
     }
 
     float difference = 1.0f;
@@ -803,29 +824,37 @@ void Init_class::DMA()
 
     DMAInitialize();
 
-    DMACH1AddrConfig((volatile Uint16 *)&EMIF_mem.write.Resonant[0].series[0].error, (volatile Uint16 *)&CPU2toCPU1.Resonant_error);
-    DMACH1BurstConfig(6-1,2,sizeof(struct FPGA_Resonant_series_M1_struct));
-    DMACH1TransferConfig(2-1,2,sizeof(struct FPGA_Resonant_M1_struct) - 2*sizeof(struct FPGA_Resonant_series_M1_struct));
+    DMACH1AddrConfig((volatile Uint16 *)&EMIF_mem.write.Resonant[0].series[0].IC, (volatile Uint16 *)&CPU2toCPU1.Resonant_error);
+    DMACH1BurstConfig(4-1,2,2);
+    DMACH1TransferConfig(3-1,2,sizeof(struct FPGA_Resonant_grid_M1_struct) - 2);
     DMACH1ModeConfig(DMA_XINT4,PERINT_ENABLE,ONESHOT_ENABLE,CONT_ENABLE,
                      SYNC_DISABLE,SYNC_SRC,OVRFLOW_DISABLE,THIRTYTWO_BIT,
                      CHINT_END,CHINT_DISABLE);
     StartDMACH1();
 
-    DMACH2AddrConfig((volatile Uint16 *)&EMIF_mem.write.DSP_start, (volatile Uint16 *)&CPU2toCPU1.Resonant_start);
-    DMACH2BurstConfig(2-1,0,0);
-    DMACH2TransferConfig(0,0,0);
+    DMACH2AddrConfig((volatile Uint16 *)&EMIF_mem.write.Resonant[0].series[0].ZR, (volatile Uint16 *)&CPU2toCPU1.ZR);
+    DMACH2BurstConfig(6-1,0,sizeof(struct FPGA_Resonant_grid_M1_struct));
+    DMACH2TransferConfig(1-1,0,0);
     DMACH2ModeConfig(DMA_XINT4,PERINT_ENABLE,ONESHOT_DISABLE,CONT_ENABLE,
                      SYNC_DISABLE,SYNC_SRC,OVRFLOW_DISABLE,THIRTYTWO_BIT,
                      CHINT_END,CHINT_DISABLE);
     StartDMACH2();
 
-    DMACH3AddrConfig((volatile Uint16 *)&EMIF_mem.write.duty, (volatile Uint16 *)&CPU2toCPU1.duty);
-    DMACH3BurstConfig(4-1,2,2);
-    DMACH3TransferConfig(0,0,0);
-    DMACH3ModeConfig(DMA_XINT5,PERINT_ENABLE,ONESHOT_DISABLE,CONT_ENABLE,
+    DMACH3AddrConfig((volatile Uint16 *)&EMIF_mem.write.DSP_start, (volatile Uint16 *)&CPU2toCPU1.Resonant_start);
+    DMACH3BurstConfig(2-1,0,0);
+    DMACH3TransferConfig(1-1,0,0);
+    DMACH3ModeConfig(DMA_XINT4,PERINT_ENABLE,ONESHOT_DISABLE,CONT_ENABLE,
                      SYNC_DISABLE,SYNC_SRC,OVRFLOW_DISABLE,THIRTYTWO_BIT,
                      CHINT_END,CHINT_DISABLE);
     StartDMACH3();
+
+    DMACH4AddrConfig((volatile Uint16 *)&EMIF_mem.write.duty, (volatile Uint16 *)&CPU2toCPU1.duty);
+    DMACH4BurstConfig(4-1,2,2);
+    DMACH4TransferConfig(1-1,0,0);
+    DMACH4ModeConfig(DMA_XINT5,PERINT_ENABLE,ONESHOT_DISABLE,CONT_ENABLE,
+                     SYNC_DISABLE,SYNC_SRC,OVRFLOW_DISABLE,THIRTYTWO_BIT,
+                     CHINT_END,CHINT_DISABLE);
+    StartDMACH4();
 }
 
 void Init_class::EMIF()
