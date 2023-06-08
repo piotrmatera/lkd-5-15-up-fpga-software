@@ -133,10 +133,96 @@
 //H18 -> D12
 //C17 -> D17
 
-module SerDes_master(CPU_io, FPGA_io);
-	inout[168:0] CPU_io/*synthesis IO_TYPE="LVCMOS33" */; 
+module SerDes_master(FPGA_io);
 	inout[400:1] FPGA_io/*synthesis IO_TYPE="LVCMOS33" */;
  
+	wire[168:0] CPU_io;
+	/////////////////////////////////////// IO
+	assign CPU_io[0] = FPGA_io[`T+1];
+	assign CPU_io[1] = FPGA_io[`U+1];
+	assign CPU_io[2] = FPGA_io[`P+3];
+	assign CPU_io[3] = FPGA_io[`R+1];
+	assign CPU_io[4] = FPGA_io[`U+2];
+	assign CPU_io[5] = FPGA_io[`V+1];
+	assign CPU_io[6] = FPGA_io[`P+2];
+	assign CPU_io[7] = FPGA_io[`P+1];
+	assign CPU_io[8] = FPGA_io[`J+1];
+	assign CPU_io[9] = FPGA_io[`H+1];
+	assign CPU_io[10] = FPGA_io[`N+1];
+	assign CPU_io[11] = FPGA_io[`L+2];
+	assign CPU_io[12] = FPGA_io[`M+1];
+	assign CPU_io[13] = FPGA_io[`K+3];
+	assign CPU_io[14] = FPGA_io[`L+1];
+	assign CPU_io[15] = FPGA_io[`N+2];
+	//assign CPU_io[16] = FPGA_io[`W+2];
+	//assign CPU_io[17] = FPGA_io[`V+2];
+	//assign CPU_io[18] = FPGA_io[`U+3];
+	//assign CPU_io[19] = FPGA_io[`R+2];
+	assign CPU_io[20] = FPGA_io[`K+1];
+	assign CPU_io[21] = FPGA_io[`K+2];
+	assign CPU_io[22] = FPGA_io[`H+2];
+	assign CPU_io[23] = FPGA_io[`G+1];
+	assign CPU_io[36] = FPGA_io[`D+19];
+	assign CPU_io[84] = FPGA_io[`W+1];
+	assign CPU_io[133] = FPGA_io[`L+18];
+	/////////////////////////////////////// EMIF_DATA
+	assign CPU_io[85] = FPGA_io[`U+18];
+	assign CPU_io[83] = FPGA_io[`T+18];
+	assign CPU_io[82] = FPGA_io[`U+19];
+	assign CPU_io[81] = FPGA_io[`U+20];
+	assign CPU_io[80] = FPGA_io[`R+17];
+	assign CPU_io[79] = FPGA_io[`R+20];
+	assign CPU_io[78] = FPGA_io[`T+19];
+	assign CPU_io[77] = FPGA_io[`T+20];
+	assign CPU_io[76] = FPGA_io[`R+18];
+	assign CPU_io[75] = FPGA_io[`R+16];
+	assign CPU_io[74] = FPGA_io[`P+18];
+	assign CPU_io[73] = FPGA_io[`P+19];
+	assign CPU_io[72] = FPGA_io[`P+20];
+	assign CPU_io[71] = FPGA_io[`N+20];
+	assign CPU_io[70] = FPGA_io[`N+19];
+	assign CPU_io[69] = FPGA_io[`P+17];
+	assign CPU_io[68] = FPGA_io[`M+20];
+	assign CPU_io[67] = FPGA_io[`M+19];
+	assign CPU_io[66] = FPGA_io[`M+18];
+	assign CPU_io[65] = FPGA_io[`P+16];
+	assign CPU_io[64] = FPGA_io[`M+17];
+	assign CPU_io[63] = FPGA_io[`N+18];
+	assign CPU_io[62] = FPGA_io[`K+19];
+	assign CPU_io[61] = FPGA_io[`N+17];
+	assign CPU_io[60] = FPGA_io[`N+16];
+	assign CPU_io[59] = FPGA_io[`L+17];
+	assign CPU_io[58] = FPGA_io[`G+20];
+	assign CPU_io[57] = FPGA_io[`H+20];
+	assign CPU_io[56] = FPGA_io[`L+16];
+	assign CPU_io[55] = FPGA_io[`G+19];
+	assign CPU_io[54] = FPGA_io[`F+20];
+	assign CPU_io[53] = FPGA_io[`H+16];
+	/////////////////////////// EMIF_CONTROL
+	// assign CPU_io[31] = FPGA_io[`F+16];
+	// assign CPU_io[37] = FPGA_io[`H+18];
+	assign CPU_io[37] = FPGA_io[`F+3];
+	assign CPU_io[31] = FPGA_io[`D+12];
+	assign CPU_io[32] = FPGA_io[`G+18];
+	assign CPU_io[33] = FPGA_io[`G+16];
+	/////////////////////////// EMIF_ADDRESS
+	assign CPU_io[38] = FPGA_io[`E+19];
+	assign CPU_io[39] = FPGA_io[`D+20];
+	assign CPU_io[40] = FPGA_io[`H+17];
+	assign CPU_io[41] = FPGA_io[`J+18];
+	assign CPU_io[44] = FPGA_io[`J+19];
+	assign CPU_io[45] = FPGA_io[`J+20];
+	assign CPU_io[46] = FPGA_io[`L+19];
+	assign CPU_io[47] = FPGA_io[`L+20];
+	assign CPU_io[48] = FPGA_io[`K+18];
+	assign CPU_io[49] = FPGA_io[`J+17];
+	assign CPU_io[50] = FPGA_io[`E+20];
+	assign CPU_io[51] = FPGA_io[`F+19];
+	assign CPU_io[52] = FPGA_io[`J+16];
+	assign CPU_io[86] = FPGA_io[`U+17];
+	assign CPU_io[87] = FPGA_io[`T+17];
+	assign CPU_io[88] = FPGA_io[`U+16];
+	
 	integer i; 
 
 	BB BB_XTAL_25MHz(.I(1'b0), .T(1'b1), .O(XTAL_25MHz_i), .B(FPGA_io[`G+2]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;
@@ -463,7 +549,8 @@ module SerDes_master(CPU_io, FPGA_io);
 	Resonant3_Mem2(.Data(Resonant3_Mem2_data[35:4]), .WrAddress(Resonant3_Mem2_addrw), .RdAddress(EMIF_address_i[8:0]), .WrClock(clk_DSP), .RdClock(!EMIF_oe_i), .WrClockEn(1'b1), .RdClockEn(1'b1), 
 	.WE(Resonant3_Mem2_we), .Reset(1'b0), .Q(Resonant3_data_o));
 	
-		wire Kalman_DC_WIP;
+	
+	wire Kalman_DC_WIP;
 	wire Kalman_DC_START;
 	
 	wire Kalman_DC_Mem2_we;
@@ -726,7 +813,8 @@ module SerDes_master(CPU_io, FPGA_io);
 
 	localparam DEB_WRITE_WIDTH_MULTIPLY = 2;
 	localparam DEB_WADDR_WIDTH = 8;
-		localparam DEB_READ_WIDTH = 36;
+	
+	localparam DEB_READ_WIDTH = 36;
 	localparam DEB_WRITE_WIDTH = DEB_WRITE_WIDTH_MULTIPLY*DEB_READ_WIDTH;
 	localparam DEB_WADDR_DEPTH = 2**DEB_WADDR_WIDTH;
 	localparam DEB_RADDR_DEPTH = DEB_WRITE_WIDTH_MULTIPLY*DEB_WADDR_DEPTH;
