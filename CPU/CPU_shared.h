@@ -308,11 +308,14 @@ union EMIF_union
 struct CLA1toCLA2_struct
 {
     struct abc_struct id_ref, iq_ref;
+    float Ts;
     float Kp_I;
-    float Kr_I;
-    float compensation;
     float L_conv;
     float enable;
+    float range_modifier_Resonant_values;
+    float range_modifier_Kalman_values;
+    float range_modifier_Resonant_coefficients;
+    float range_modifier_Kalman_coefficients;
 };
 
 struct CLA2toCLA1_struct

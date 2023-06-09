@@ -4,7 +4,8 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	parameter HARMONICS_NUM = 25;
 	parameter IN_SERIES_NUM = 1;
 	parameter DEBUG = 0;
-		
+	localparam QMATH_SHIFT = 2;
+	
 	localparam SERIES_CNT_WIDTH = $clog2(IN_SERIES_NUM);
 	localparam HARMONICS_CNT_WIDTH = $clog2(HARMONICS_NUM);
 	
@@ -249,7 +250,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 		harm_save_r <= {cnt == 2, harm_save_r[5:1]};
 		if(harm_save_r[2]) harmonics_cmp <= Mem1_data_o[4 +: HARMONICS_CNT_WIDTH];
 		if(harm_save_r[1]) harmonics_grid <= Mem1_data_o[4 +: 32];
-		if(harm_save_r[0]) zero_error <= Mem1_data_o[4+30];
+		if(harm_save_r[0]) zero_error <= Mem1_data_o[4+32-QMATH_SHIFT];
 			
 		if(harmonics_inc) harmonics_cnt <= harmonics_cnt + 1'b1;
 		if(harmonics_rst) harmonics_cnt <= 0;
@@ -897,7 +898,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 		Mem1_data_r <= Mem1_data_o;
 	end
 	
-	Slice2 #(.QMATH_SHIFT(2)) Slice2(.CLK0(clk_i), .CE0(1'b1), .CE1(CE1_pip), .CE2(1'b0), .CE3(1'b0), .RST0(1'b0), .RST1(1'b0), .RST2(1'b0), .RST3(1'b0),
+	Slice2 #(.QMATH_SHIFT(QMATH_SHIFT)) Slice2(.CLK0(clk_i), .CE0(1'b1), .CE1(CE1_pip), .CE2(1'b0), .CE3(1'b0), .RST0(1'b0), .RST1(1'b0), .RST2(1'b0), .RST3(1'b0),
 	.AA(DataAA[AAMemsel_pip]), .AB(DataAB[ABMemsel_pip]), .BA(DataBA[BAMemsel_pip]), .BB(DataBB[BBMemsel_pip]), .C(DataC_r),
 	.SignAA(AAMemsel_pip[0]), .SignAB(ABMemsel_pip[0]), .SignBA(BAMemsel_pip[0]), .SignBB(BBMemsel_pip[0]),
 	.AMuxsel(AMuxsel_pip), .BMuxsel(BMuxsel_pip), .CMuxsel(CMuxsel_pip), .Opcode(Opcode_pip),

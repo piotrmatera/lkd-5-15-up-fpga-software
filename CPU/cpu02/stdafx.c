@@ -19,9 +19,6 @@ struct Measurements_master_struct Meas_master;
 struct Measurements_master_gain_offset_struct Meas_master_gain;
 struct Measurements_master_gain_offset_struct Meas_master_offset;
 
-struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
-struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma SET_DATA_SECTION("CPUTOCLA")
 

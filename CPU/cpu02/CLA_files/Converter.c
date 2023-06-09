@@ -41,7 +41,8 @@ void Converter_calc()
     Conv.sag = 0.0f;
     if (sag_timer < 20e-3)
     {
-        Conv.sag = 1.0f;
+//        Conv.sag = 1.0f;
+//#TODO wykrywanie zapadu
 //        Conv.U_ref.a += Conv.Kalman_U_grid_diff.a;
 //        Conv.U_ref.b += Conv.Kalman_U_grid_diff.b;
 //        Conv.U_ref.c += Conv.Kalman_U_grid_diff.c;
@@ -93,31 +94,6 @@ void Converter_calc()
     Conv.duty[1] = Conv.duty_float[1] + correction;
     Conv.duty[2] = Conv.duty_float[2] + correction;
     Conv.duty[3] = Conv.duty_float[3] + correction;
-
-    struct abc_struct PR_err;
-    if(Conv.enable)
-    {
-        PR_err.a = Conv.I_err.a * Conv.zero_error;
-        PR_err.b = Conv.I_err.b * Conv.zero_error;
-        PR_err.c = Conv.I_err.c * Conv.zero_error;
-    }
-    else
-    {
-        PR_err.a = Meas_master.U_grid.a - Conv.MR_ref_CPU.a;
-        PR_err.b = Meas_master.U_grid.b - Conv.MR_ref_CPU.b;
-        PR_err.c = Meas_master.U_grid.c - Conv.MR_ref_CPU.c;
-    }
-
-    Conv.MR_ref_CPU.a = Resonant_mult_calc_CLAasm(Conv.Resonant_I_a_odd, PR_err.a, Conv.resonant_odd_number);
-    Conv.MR_ref_CPU.b = Resonant_mult_calc_CLAasm(Conv.Resonant_I_b_odd, PR_err.b, Conv.resonant_odd_number);
-    Conv.MR_ref_CPU.c = Resonant_mult_calc_CLAasm(Conv.Resonant_I_c_odd, PR_err.c, Conv.resonant_odd_number);
-
-    if (Conv.resonant_even_number)
-    {
-        Conv.MR_ref_CPU.a += Resonant_mult_calc_CLAasm(Conv.Resonant_I_a_even, PR_err.a, Conv.resonant_even_number);
-        Conv.MR_ref_CPU.b += Resonant_mult_calc_CLAasm(Conv.Resonant_I_b_even, PR_err.b, Conv.resonant_even_number);
-        Conv.MR_ref_CPU.c += Resonant_mult_calc_CLAasm(Conv.Resonant_I_c_even, PR_err.c, Conv.resonant_even_number);
-    }
 
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 2;

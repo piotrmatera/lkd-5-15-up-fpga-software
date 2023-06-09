@@ -130,7 +130,8 @@ union ALARM_master
 
         Uint16 Not_enough_data_master : 1;
         Uint16 Driver_soft_error : 1;
-        Uint16 rsvd1:8;
+        Uint16 FPGA_parameters : 1;
+        Uint16 rsvd1:7;
         //64bits
 
         Uint16 rsvd2:16;

@@ -52,8 +52,6 @@ interrupt void SD_NEW_INT()
 
     Conv.cycle_period = EMIF_mem.read.cycle_period;
     Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;
-    Conv.Kr_I = CPU1toCPU2.CLA1toCLA2.Kr_I;
-    Conv.compensation = CPU1toCPU2.CLA1toCLA2.compensation;
     Conv.L_conv = CPU1toCPU2.CLA1toCLA2.L_conv;
     Conv.enable = CPU1toCPU2.CLA1toCLA2.enable;
 
@@ -67,13 +65,12 @@ interrupt void SD_NEW_INT()
     ///////////////////////////////////////////////////////////////////
 
     Conv.zero_error = 1.0f;
-    Uint32 ZR = (1UL<<30);
     if (fmaxf(fmaxf(fabsf(Conv.duty[0]), fabsf(Conv.duty[1])), fabsf(Conv.duty[2])) > Conv.cycle_period)
-        Conv.zero_error = 0, ZR = 0;
+        Conv.zero_error = 0;
 
     if(!Conv.enable)
     {
-        ZR = (1UL<<30);
+        Conv.zero_error = 1.0f;
         Conv.I_err.a = Meas_master.U_grid.a - Conv.MR_ref.a;
         Conv.I_err.b = Meas_master.U_grid.b - Conv.MR_ref.b;
         Conv.I_err.c = Meas_master.U_grid.c - Conv.MR_ref.c;
@@ -86,7 +83,7 @@ interrupt void SD_NEW_INT()
     CPU2toCPU1.Resonant_error[1] = Meas_master.I_grid.a * modifier2;
     CPU2toCPU1.Resonant_error[3] = Meas_master.I_grid.b * modifier2;
     CPU2toCPU1.Resonant_error[5] = Meas_master.I_grid.c * modifier2;
-    CPU2toCPU1.ZR = ZR;
+    CPU2toCPU1.ZR = Conv.zero_error * Conv.range_modifier_Resonant_coefficients;
 
     static volatile Uint32 Resonant_WIP;
     Resonant_WIP = EMIF_mem.read.flags.Resonant1_WIP;

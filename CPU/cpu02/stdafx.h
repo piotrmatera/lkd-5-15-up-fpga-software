@@ -60,9 +60,6 @@ extern struct Measurements_master_gain_offset_struct Meas_master_gain;
 extern struct Measurements_master_gain_offset_struct Meas_master_offset;
 extern struct EMIF_SD_struct EMIF_CLA;
 
-extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
-extern struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
-
 //
 //Task 2 (C) Variables
 //

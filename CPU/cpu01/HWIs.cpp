@@ -93,8 +93,6 @@ interrupt void SD_AVG_NT()
     CPU1toCPU2.CLA1toCLA2.enable = Conv.RDY;
     CPU1toCPU2.CLA1toCLA2.L_conv = Conv.L_conv;
     CPU1toCPU2.CLA1toCLA2.Kp_I = Conv.Kp_I;
-    CPU1toCPU2.CLA1toCLA2.Kr_I = Conv.Kr_I;
-    CPU1toCPU2.CLA1toCLA2.compensation = Conv.compensation;
     CPU1toCPU2.CLA1toCLA2.id_ref.a = Conv.PI_Id[0].out;
     CPU1toCPU2.CLA1toCLA2.id_ref.b = Conv.PI_Id[1].out;
     CPU1toCPU2.CLA1toCLA2.id_ref.c = Conv.PI_Id[2].out;

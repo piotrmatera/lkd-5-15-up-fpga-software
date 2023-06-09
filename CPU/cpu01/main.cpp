@@ -107,7 +107,8 @@ void main()
 
     mosfet_ctrl_app.init();
 
-    if(EMIF_mem.read.cycle_period != CYCLE_PERIOD) while(1);
+    if(EMIF_mem.read.cycle_period != CYCLE_PERIOD) alarm_master.bit.FPGA_parameters = 1;
+    if(EMIF_mem.read.control_rate != CONTROL_RATE) alarm_master.bit.FPGA_parameters = 1;
 
     Machine.state = Machine_class::state_init;
     while(1)

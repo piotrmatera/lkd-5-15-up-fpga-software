@@ -41,7 +41,6 @@ struct Converter_struct
     struct CIC1_adaptive_struct CIC1_U_dc;
     float U_dc_filter;
     float U_dc_kalman;
-    struct Filter1_struct U_dc_prefilter;
     struct PI_struct PI_U_dc;
 
     struct abc_struct id_conv, iq_conv;

@@ -5,7 +5,6 @@
 void Converter_calc()
 {
     Conv.U_dc_filter = CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Conv.CIC1_U_dc, Meas_master.U_dc);
-    Filter1_calc_CLAasm(&Conv.U_dc_prefilter, Meas_master.U_dc);
 
     ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -183,7 +182,6 @@ void Converter_calc()
             else if(fabsf(Conv.U_dc_filter - Conv.U_dc_ref) < 1.0f)
                 Conv.RDY2 = 1.0f;
 
-            Conv.U_dc_kalman = Conv.U_dc_prefilter.out;
             float U_grid_1h_avg_div = 1.0f / (Grid.average.U_grid_1h);
             register float error_U_dc = (Conv.U_dc_ref - Conv.U_dc_kalman) * Conv.U_dc_filter * U_grid_1h_avg_div * MATH_1_3;
             PI_antiwindup_fast_CLAasm(&Conv.PI_U_dc, error_U_dc);

@@ -354,7 +354,7 @@ void convert_harmonics_to_floats()
         register float *dest_harmonic_a = on_off_odd_a;
         register float *dest_harmonic_b = on_off_odd_b;
         register float *dest_harmonic_c = on_off_odd_c;
-        for(i = 0; i<sizeof(on_off_odd_a)/sizeof(on_off_odd_a[0]); i++)
+        for(i = 1; i<sizeof(on_off_odd_a)/sizeof(on_off_odd_a[0]); i++)
         {
             *dest_harmonic_a++ = (temp_harmonic_a >> i) & 0x01;
             *dest_harmonic_b++ = (temp_harmonic_b >> i) & 0x01;
@@ -381,11 +381,18 @@ void convert_harmonics_to_floats()
 
 void update_harmonics()
 {
+    on_off_odd_a[0] =
+    on_off_odd_b[0] =
+    on_off_odd_c[0] = 0.0f;
+    *(Uint32 *)&control_master.H_odd_a &= 0xFFFFFFFE;
+    *(Uint32 *)&control_master.H_odd_b &= 0xFFFFFFFE;
+    *(Uint32 *)&control_master.H_odd_c &= 0xFFFFFFFE;
+
     if(Machine.harmonics_odd_last != Machine.harmonics_odd)
     {
         Machine.harmonics_odd_last = Machine.harmonics_odd;
         if(Machine.harmonics_odd > 24) Machine.harmonics_odd = 24;
-        Uint16 count = 0;
+        Uint16 count = 1;
         while(count < Machine.harmonics_odd + 1)
         {
             on_off_odd_a[count] =

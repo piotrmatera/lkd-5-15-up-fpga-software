@@ -71,26 +71,15 @@ void Init_class::clear_alarms()
     CPU1toCPU2.clear_alarms = 0.0f;
 
     DELAY_US(1000);
-
-    if(alarm_master.bit.Not_enough_data_master)
-    {
-        alarm_master_snapshot.all[0] =
-        alarm_master_snapshot.all[1] =
-        alarm_master_snapshot.all[2] =
-        alarm_master.all[0] =
-        alarm_master.all[1] =
-        alarm_master.all[2] = 0;
-        alarm_master.bit.Not_enough_data_master = 1;
-    }
-    else
-    {
-        alarm_master_snapshot.all[0] =
-        alarm_master_snapshot.all[1] =
-        alarm_master_snapshot.all[2] =
-        alarm_master.all[0] =
-        alarm_master.all[1] =
-        alarm_master.all[2] = 0;
-    }
+    union ALARM_master alarm_temp = alarm_master;
+    alarm_master_snapshot.all[0] =
+    alarm_master_snapshot.all[1] =
+    alarm_master_snapshot.all[2] =
+    alarm_master.all[0] =
+    alarm_master.all[1] =
+    alarm_master.all[2] = 0;
+    alarm_master.bit.Not_enough_data_master = alarm_temp.bit.Not_enough_data_master;
+    alarm_master.bit.FPGA_parameters = alarm_temp.bit.FPGA_parameters;
 }
 
 void Init_class::ADC()
@@ -312,8 +301,8 @@ void Init_class::CIC1_adaptive_filter(struct CIC1_adaptive_struct *CIC, float ma
 
 void Init_class::Variables()
 {
-    Conv.Ts_rate = EMIF_mem.read.control_rate;
-    Conv.Ts = Conv.Ts_rate * (float)EMIF_mem.read.cycle_period * 8e-9;
+    Conv.Ts_rate = CONTROL_RATE;
+    Conv.Ts = Conv.Ts_rate * (float)CYCLE_PERIOD / (float)PWM_CLOCK;
     Conv.w_filter = MATH_2PI * 50.0f;
     Conv.f_filter = 50.0f;
     float full_OSR = (Uint16)(1.0f / Conv.f_filter / Conv.Ts + 0.5f);
@@ -398,8 +387,6 @@ void Init_class::Variables()
     Conv.PI_U_dc.lim_H = Conv.I_lim * 0.2f;
     Conv.PI_U_dc.lim_L = -Conv.I_lim * 0.2f;
 
-    Conv.U_dc_prefilter.Ts_Ti = Conv.Ts / STC2;
-
     ///////////////////////////////////////////////////////////////////
 
     Conv.PI_Iq[0].Ts_Ti = Conv.Ts / 0.011f;
@@ -448,9 +435,16 @@ void Init_class::Variables()
     Conv.Kp_I = p_pr_i;
     Conv.Kr_I = r_pr_i;
 
+    float CT_SD_max_value[3];
+    CT_SD_max_value[0] = CT_char_vars.CT_char.CT_ratio_a[0] * 5.0f;
+    CT_SD_max_value[1] = CT_char_vars.CT_char.CT_ratio_b[0] * 5.0f;
+    CT_SD_max_value[2] = CT_char_vars.CT_char.CT_ratio_c[0] * 5.0f;
+    float CT_SD_max = fmaxf(CT_SD_max_value[0], fmaxf(CT_SD_max_value[1], CT_SD_max_value[2]));
+    CT_SD_max = 1024.0f / fmaxf(CT_SD_max * 2.0f, 1024.0f);
+
     Conv.range_modifier_Resonant_coefficients = 1UL << 30;
     Conv.div_range_modifier_Resonant_coefficients = 1.0f / Conv.range_modifier_Resonant_coefficients;
-    Conv.range_modifier_Resonant_values = 1UL << 21;
+    Conv.range_modifier_Resonant_values = (float)(1UL << 21) * CT_SD_max;
     Conv.div_range_modifier_Resonant_values = 1.0f / Conv.range_modifier_Resonant_values;
 
     for(Uint16 i = 0; i < FPGA_RESONANT_GRID_STATES; i++)
@@ -502,7 +496,7 @@ void Init_class::Variables()
 
     Conv.range_modifier_Kalman_coefficients = 1UL << 31;
     Conv.div_range_modifier_Kalman_coefficients = 1.0f / Conv.range_modifier_Kalman_coefficients;
-    Conv.range_modifier_Kalman_values = 1UL << 21;
+    Conv.range_modifier_Kalman_values = (float)(1UL << 21) * CT_SD_max;
     Conv.div_range_modifier_Kalman_values = 1.0f / Conv.range_modifier_Kalman_values;
 
     EMIF_mem.write.Kalman.states[0].K1 = Kalman_gain[0] * Conv.range_modifier_Kalman_coefficients;
@@ -527,14 +521,15 @@ void Init_class::Variables()
         EMIF_mem.write.Kalman_DC.states[i].K2 = Kalman_gain_dc[2 * i + 1] * modifier;
     }
 
+    CPU1toCPU2.CLA1toCLA2.Ts = Conv.Ts / Conv.Ts_rate;
+    CPU1toCPU2.CLA1toCLA2.range_modifier_Resonant_values = Conv.range_modifier_Resonant_values;
+    CPU1toCPU2.CLA1toCLA2.range_modifier_Kalman_values = Conv.range_modifier_Kalman_values;
+    CPU1toCPU2.CLA1toCLA2.range_modifier_Resonant_coefficients = Conv.range_modifier_Resonant_coefficients;
+    CPU1toCPU2.CLA1toCLA2.range_modifier_Kalman_coefficients = Conv.range_modifier_Kalman_coefficients;
+
     ///////////////////////////////////////////////////////////////////
 
     Grid_params.Ts = Conv.Ts;
-    float CT_SD_max_value[3];
-    CT_SD_max_value[0] = CT_char_vars.CT_char.CT_ratio_a[0] * 5.0f;
-    CT_SD_max_value[1] = CT_char_vars.CT_char.CT_ratio_b[0] * 5.0f;
-    CT_SD_max_value[2] = CT_char_vars.CT_char.CT_ratio_c[0] * 5.0f;
-    //#TODO zrobi� skalowanie filtru Kalmana I_grid
 
     float decimation_grid = full_OSR;
     float OSR = 50.0f;
