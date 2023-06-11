@@ -38,6 +38,7 @@ component Clarity is
         IDDR_sync_reset: in std_logic;
         PLL_DSP_CLKI: in std_logic;
         PLL_DSP_CLKOP: out std_logic;
+        PLL_DSP_CLKOS: out std_logic;
         PLL_SerDes_CLKI: in std_logic;
         PLL_SerDes_CLKOP: out std_logic;
         PLL_SerDes_CLKOS: out std_logic;
@@ -50,18 +51,18 @@ component Clarity is
     );
     
 end component Clarity; -- sbp_module=true 
-_inst: Clarity port map (Dummy_slice_AA => __,Dummy_slice_AB => __,Dummy_slice_AMuxsel => __,
-            Dummy_slice_BA => __,Dummy_slice_BB => __,Dummy_slice_BMuxsel => __,
-            Dummy_slice_C => __,Dummy_slice_CMuxsel => __,Dummy_slice_Cin => __,
-            Dummy_slice_Opcode => __,Dummy_slice_Result => __,Dummy_slice_SROA => __,
-            Dummy_slice_SROB => __,Dummy_slice_CE0 => __,Dummy_slice_CLK0 => __,
-            Dummy_slice_EQOM => __,Dummy_slice_EQPAT => __,Dummy_slice_EQPATB => __,
-            Dummy_slice_EQZ => __,Dummy_slice_EQZM => __,Dummy_slice_OVER => __,
-            Dummy_slice_RST0 => __,Dummy_slice_SignCin => __,Dummy_slice_SignR => __,
-            Dummy_slice_UNDER => __,IDDR_datain => __,IDDR_q => __,IDDR_alignwd => __,
+_inst: Clarity port map (IDDR_datain => __,IDDR_q => __,IDDR_alignwd => __,
             IDDR_clkin => __,IDDR_ready => __,IDDR_sclk => __,IDDR_start => __,
             IDDR_sync_clk => __,IDDR_sync_reset => __,PLL_SerDes_PHASESEL => __,
             PLL_SerDes_CLKI => __,PLL_SerDes_CLKOP => __,PLL_SerDes_CLKOS => __,
             PLL_SerDes_CLKOS2 => __,PLL_SerDes_CLKOS3 => __,PLL_SerDes_LOCK => __,
             PLL_SerDes_PHASEDIR => __,PLL_SerDes_PHASELOADREG => __,PLL_SerDes_PHASESTEP => __,
-            PLL_DSP_CLKI => __,PLL_DSP_CLKOP => __);
+            PLL_DSP_CLKI => __,PLL_DSP_CLKOP => __,PLL_DSP_CLKOS => __,Dummy_slice_AA => __,
+            Dummy_slice_AB => __,Dummy_slice_AMuxsel => __,Dummy_slice_BA => __,
+            Dummy_slice_BB => __,Dummy_slice_BMuxsel => __,Dummy_slice_C => __,
+            Dummy_slice_CMuxsel => __,Dummy_slice_Cin => __,Dummy_slice_Opcode => __,
+            Dummy_slice_Result => __,Dummy_slice_SROA => __,Dummy_slice_SROB => __,
+            Dummy_slice_CE0 => __,Dummy_slice_CLK0 => __,Dummy_slice_EQOM => __,
+            Dummy_slice_EQPAT => __,Dummy_slice_EQPATB => __,Dummy_slice_EQZ => __,
+            Dummy_slice_EQZM => __,Dummy_slice_OVER => __,Dummy_slice_RST0 => __,
+            Dummy_slice_SignCin => __,Dummy_slice_SignR => __,Dummy_slice_UNDER => __);

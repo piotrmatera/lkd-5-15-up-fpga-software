@@ -84,7 +84,7 @@ void Converter_calc()
         if (Conv.correction_switch != correction_switch)
         {
             correction = (Conv.correction + correction) * 0.5f;
-//            switcher = 1.0f - switcher;
+            switcher = 1.0f - switcher;
         }
         Conv.correction_switch = correction_switch;
     }

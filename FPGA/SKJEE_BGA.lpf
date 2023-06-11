@@ -101,8 +101,8 @@ DEFINE PORT GROUP "EMIF_address" "CPU_io[38]"
 "CPU_io[48]" 
 "CPU_io[49]" 
 "CPU_io[50]"
-"CPU_io[51]" ;
-//"CPU_io[52]"
+"CPU_io[51]"
+"CPU_io[52]" ;
 //"CPU_io[86]"
 //"CPU_io[87]"
 //"CPU_io[88]" ;

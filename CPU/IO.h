@@ -152,6 +152,7 @@ GPIO_SetupPinOptions(i, GPIOreg[i].dir, GPIOreg[i].options)
 #define EM1A9   49
 #define EM1A10  50
 #define EM1A11  51
+#define EM1A12  52
 
 #define FPGA_CS 92
 #define FPGA_PROGRAMN 90

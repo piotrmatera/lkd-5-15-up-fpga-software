@@ -271,7 +271,7 @@ union EMIF_union
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];
         Uint32 rx2_hipri_msg[8][32];
-        struct FPGA_Resonant_grid_M0_struct Resonant[3];
+        struct FPGA_Resonant_grid_M0_struct Resonant[6];
         struct FPGA_Kalman_DC_M0_struct Kalman_DC;
         struct FPGA_Kalman_M0_struct Kalman;
     }read;
@@ -299,7 +299,7 @@ union EMIF_union
         Uint32 tx1_hipri_msg[8][32];
         Uint32 tx2_lopri_msg[8][32];
         Uint32 tx2_hipri_msg[8][32];
-        struct FPGA_Resonant_grid_M1_struct Resonant[3];
+        struct FPGA_Resonant_grid_M1_struct Resonant[6];
         struct FPGA_Kalman_DC_M1_struct Kalman_DC;
         struct FPGA_Kalman_M1_struct Kalman;
     }write;

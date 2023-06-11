@@ -113,7 +113,7 @@ interrupt void SD_AVG_NT()
     EMIF_mem.write.Kalman.input[4] = Meas_master.I_grid.b * modifier2;
     EMIF_mem.write.Kalman.input[5] = Meas_master.I_grid.c * modifier2;
     EMIF_mem.write.Kalman_DC.input[0] = Meas_master.U_dc * modifier2;
-    EMIF_mem.write.DSP_start = 0b11000;
+    EMIF_mem.write.DSP_start = 0b11000000;
 
     EMIF_mem.write.Resonant[0].series[0].HC =
     EMIF_mem.write.Resonant[1].series[0].HC =
@@ -121,9 +121,18 @@ interrupt void SD_AVG_NT()
     EMIF_mem.write.Resonant[0].series[0].HG = *(Uint32 *)&control_master.H_odd_a;
     EMIF_mem.write.Resonant[1].series[0].HG = *(Uint32 *)&control_master.H_odd_b;
     EMIF_mem.write.Resonant[2].series[0].HG = *(Uint32 *)&control_master.H_odd_c;
+    EMIF_mem.write.Resonant[3].series[0].HC =
+    EMIF_mem.write.Resonant[4].series[0].HC =
+    EMIF_mem.write.Resonant[5].series[0].HC = fmaxf(Conv.resonant_even_number, 0.0f);
+    EMIF_mem.write.Resonant[3].series[0].HG = *(Uint32 *)&control_master.H_even_a;
+    EMIF_mem.write.Resonant[4].series[0].HG = *(Uint32 *)&control_master.H_even_b;
+    EMIF_mem.write.Resonant[5].series[0].HG = *(Uint32 *)&control_master.H_even_c;
     register float modifier3 = Conv.range_modifier_Resonant_coefficients;
+    EMIF_mem.write.Resonant[3].series[0].RT =
     EMIF_mem.write.Resonant[0].series[0].RT = Conv.PI_I_harm_ratio[0].out * modifier3;
+    EMIF_mem.write.Resonant[4].series[0].RT =
     EMIF_mem.write.Resonant[1].series[0].RT = Conv.PI_I_harm_ratio[1].out * modifier3;
+    EMIF_mem.write.Resonant[5].series[0].RT =
     EMIF_mem.write.Resonant[2].series[0].RT = Conv.PI_I_harm_ratio[2].out * modifier3;
 
     Timer_PWM.CPU_COPY2 = TIMESTAMP_PWM;

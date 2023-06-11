@@ -44,6 +44,9 @@ interrupt void SD_NEW_INT()
     Conv.MR_ref.a = (float)EMIF_mem.read.Resonant[0].series[0].SUM * modifier1;
     Conv.MR_ref.b = (float)EMIF_mem.read.Resonant[1].series[0].SUM * modifier1;
     Conv.MR_ref.c = (float)EMIF_mem.read.Resonant[2].series[0].SUM * modifier1;
+    Conv.MR_ref.a += (float)EMIF_mem.read.Resonant[3].series[0].SUM * modifier1;
+    Conv.MR_ref.b += (float)EMIF_mem.read.Resonant[4].series[0].SUM * modifier1;
+    Conv.MR_ref.c += (float)EMIF_mem.read.Resonant[5].series[0].SUM * modifier1;
 
     modifier1 = Conv.div_range_modifier_Kalman_values;
     Conv.Kalman_U_grid.a = (float)EMIF_mem.read.Kalman.series[0].estimate * modifier1;
@@ -106,7 +109,7 @@ interrupt void SD_NEW_INT()
 
     ///////////////////////////////////////////////////////////////////
 
-    CPU2toCPU1.Resonant_start = 0b111;
+    CPU2toCPU1.Resonant_start = 0b111111;
     CPU2toCPU1.w_filter = PLL.w_filter;
     CPU2toCPU1.f_filter = PLL.f_filter;
     CPU2toCPU1.sign = PLL.sign;

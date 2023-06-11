@@ -4,9 +4,9 @@
   (keywordMap (keywordLevel 0))
   (status
     (written
-      (timestamp 2023 5 18 9 4 54)
+      (timestamp 2023 6 11 17 19 30)
       (program "SCUBA" (version "Diamond (64-bit) 3.12.0.240.2"))))
-      (comment "C:\lscc\diamond\3.12\ispfpga\bin\nt64\scuba.exe -w -n PLL_DSP -lang verilog -synth lse -bus_exp 7 -bb -arch sa5p00 -type pll -fin 20 -fclkop 200 -fclkop_tol 0.0 -fclkos 100 -fclkos_tol 0.0 -phases 0 -phase_cntl STATIC -fb_mode 1 -fdc C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Clarity/PLL_DSP/PLL_DSP.fdc ")
+      (comment "C:\lscc\diamond\3.12\ispfpga\bin\nt64\scuba.exe -w -n PLL_DSP -lang verilog -synth lse -bus_exp 7 -bb -arch sa5p00 -type pll -fin 25 -fclkop 200 -fclkop_tol 0.0 -fclkos 20 -fclkos_tol 0.0 -phases 0 -phase_cntl STATIC -fb_mode 1 -fdc C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Clarity/PLL_DSP/PLL_DSP.fdc ")
   (library ORCLIB
     (edifLevel 0)
     (technology
@@ -115,7 +115,7 @@
             (property CLKOS_FPHASE
               (string "0"))
             (property CLKOS_CPHASE
-              (string "5"))
+              (string "29"))
             (property CLKOP_FPHASE
               (string "0"))
             (property CLKOP_CPHASE
@@ -139,7 +139,7 @@
             (property CLKOS2_ENABLE
               (string "DISABLED"))
             (property FREQUENCY_PIN_CLKOS
-              (string "100.000000"))
+              (string "20.000000"))
             (property OUTDIVIDER_MUXB
               (string "DIVB"))
             (property CLKOS_ENABLE
@@ -151,7 +151,7 @@
             (property CLKOP_ENABLE
               (string "ENABLED"))
             (property FREQUENCY_PIN_CLKI
-              (string "20.000000"))
+              (string "25.000000"))
             (property ICP_CURRENT
               (string "5"))
             (property LPF_RESISTOR
@@ -161,11 +161,11 @@
             (property CLKOS2_DIV
               (string "1"))
             (property CLKOS_DIV
-              (string "6"))
+              (string "30"))
             (property CLKOP_DIV
               (string "3"))
             (property CLKFB_DIV
-              (string "10"))
+              (string "8"))
             (property CLKI_DIV
               (string "1"))
             (property FEEDBK_PATH
