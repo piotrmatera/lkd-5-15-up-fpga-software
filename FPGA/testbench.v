@@ -18,7 +18,7 @@ module SerDes_tb;
 		forever begin
 			#4
 			i <= i+1;
-			if(i>=5000) $stop;
+			if(i>=20000) $stop;
 		end
 	end
 
@@ -40,7 +40,7 @@ module SerDes_tb;
 		else
 			duty_r <= -16'd1033;
 			
-		//duty_r <= 16'd1032;
+		duty_r <= 16'd1562 + 16'd1;
 	end
 	
 	wire PWM_EN;
@@ -48,7 +48,7 @@ module SerDes_tb;
 	wire PWM_EN_r; 
 	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg[1] ^ sync_reg[0]), .CK(XTAL1_25MHz_i), .CD(!(TZ_EN & PWM_EN)), .Q(PWM_EN_r)); 
 
-	Symmetrical_PWM_full Symmetrical_PWM(.clk_i(XTAL1_25MHz_i), .enable_output_i(PWM_EN_r), .override_i(2'b0), .duty_i(duty_r), .next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
+	Symmetrical_PWM Symmetrical_PWM(.clk_i(XTAL1_25MHz_i), .enable_output_i(PWM_EN_r), .override_i(2'b0), .duty_i(duty_r), .next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(sync_phase), .PWM_o(PWM_o));
 	
 	localparam EMIF_MEMORY_WIDTH = `COMM_MEMORY_EMIF_WIDTH+3;//$clog2(2x COMM_MEMORY + MUX) = $clog2(3) = 2 
 	wire EMIF_oe_i; 

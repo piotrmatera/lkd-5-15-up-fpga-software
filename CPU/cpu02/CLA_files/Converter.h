@@ -38,6 +38,7 @@ struct Converter_struct
 
     float correction;
     float correction_switch;
+    float select_modulation;
 
     float RDY;
 

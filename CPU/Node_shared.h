@@ -107,6 +107,9 @@ union ALARM_master
 
         Uint16 U_dc_H:1;
         Uint16 U_dc_L:1;
+        Uint16 U_dc_n_H:1;
+        Uint16 U_dc_n_L:1;
+
         Uint16 Temperature_H:1;
         Uint16 Temperature_L:1;
 
@@ -117,10 +120,10 @@ union ALARM_master
 
         Uint16 FLT_SUPPLY_MASTER:1;
         Uint16 CONV_SOFTSTART : 1;
-        Uint16 PLL_UNSYNC : 1;
-        Uint16 CT_char_error : 1;
         //48bits
 
+        Uint16 PLL_UNSYNC : 1;
+        Uint16 CT_char_error : 1;
         Uint16 TZ_CPU1 : 1;
         Uint16 TZ_CPU2 : 1;
         Uint16 TZ_CLOCKFAIL_CPU1 : 1;
@@ -131,7 +134,7 @@ union ALARM_master
         Uint16 Not_enough_data_master : 1;
         Uint16 Driver_soft_error : 1;
         Uint16 FPGA_parameters : 1;
-        Uint16 rsvd1:7;
+        Uint16 rsvd1:5;
         //64bits
 
         Uint16 rsvd2:16;
@@ -173,10 +176,10 @@ struct STATUS_master
     Uint16 CT_connection_c : 2;
 
     Uint16 dummy3 : 4;
+    Uint16 dummy4 : 3;
+    //48
     Uint16 error_retry : 4;
-    //error retry jest teraz podzielone
-
-    Uint16 rsvd : 15;
+    Uint16 rsvd : 12;
 };
 
 struct CONTROL_master

@@ -57,6 +57,7 @@ interrupt void SD_NEW_INT()
     Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;
     Conv.L_conv = CPU1toCPU2.CLA1toCLA2.L_conv;
     Conv.enable = CPU1toCPU2.CLA1toCLA2.enable;
+    Conv.select_modulation = CPU1toCPU2.CLA1toCLA2.select_modulation;
 
     Timer_PWM.CPU_MEAS = TIMESTAMP_PWM;
 

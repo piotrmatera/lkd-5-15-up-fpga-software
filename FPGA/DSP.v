@@ -1,5 +1,41 @@
 `timescale 1ns/1ps
 
+module addr_gen_no_series(clk, addr_sel, addr_ptr, addr_out);
+	parameter ADDR_WIDTH = 9;
+	parameter [ADDR_WIDTH-1:0] ADDR_START_STATES = 9'd0;
+	parameter [ADDR_WIDTH-1:0] ADDR_START_COMMON = 9'd0;
+	parameter [ADDR_WIDTH-1:0] ADDR_INC_STATES = 1'b1;
+	parameter [ADDR_WIDTH-1:0] ADDR_INC_COMMON = 1'b1;
+
+	localparam OFFSET_WIDTH = ($clog2(ADDR_INC_STATES) > $clog2(ADDR_INC_COMMON) ? $clog2(ADDR_INC_STATES) : $clog2(ADDR_INC_COMMON))+1;
+
+	input clk;
+	input [3:0] addr_sel;
+	input [OFFSET_WIDTH-1:0] addr_ptr;
+	output reg [ADDR_WIDTH-1:0] addr_out;
+	
+	reg [ADDR_WIDTH-1:0] cnt[1:0];
+	reg [OFFSET_WIDTH-1:0] addr_ptr_r[1:0];
+	reg [ADDR_WIDTH-1:0] addr_reg[1:0];
+	
+	initial begin
+		cnt[0] = ADDR_START_STATES;
+		cnt[1] = ADDR_START_COMMON;
+	end
+	
+	always @(posedge clk) begin
+		addr_ptr_r[0] <= addr_ptr;
+		addr_ptr_r[1] <= addr_ptr_r[0];
+		addr_reg[0] <= cnt[addr_ptr[OFFSET_WIDTH-1]];
+		addr_reg[1] <= addr_reg[0];
+		addr_out <= addr_reg[1] + addr_ptr_r[1][OFFSET_WIDTH-2:0];
+		if(addr_sel[0]) cnt[0] <= cnt[0] + ADDR_INC_STATES;
+		if(addr_sel[1]) cnt[0] <= ADDR_START_STATES;
+		if(addr_sel[2]) cnt[1] <= cnt[1] + ADDR_INC_COMMON;
+		if(addr_sel[3]) cnt[1] <= ADDR_START_COMMON;
+	end
+endmodule
+
 module addr_gen(clk, addr_sel, addr_ptr, addr_out, series_inc, series_rst);
 	parameter ADDR_WIDTH = 9;
 	parameter [ADDR_WIDTH-1:0] ADDR_START_STATES = 9'd0;
@@ -58,8 +94,8 @@ module pipeline_delay(clk, in, out);
 	
 	genvar i;
 	
-	for (i = 0; i < CYCLES; i = i + 1)
-        initial in_r[i] = 0;
+	//for (i = 0; i < CYCLES; i = i + 1)
+        //initial in_r[i] = 0;
 
 	if(SHIFT_MEM) begin
 		pmi_distributed_shift_reg

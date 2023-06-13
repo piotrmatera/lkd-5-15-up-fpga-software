@@ -99,6 +99,7 @@ interrupt void SD_AVG_NT()
     CPU1toCPU2.CLA1toCLA2.iq_ref.a = Conv.PI_Iq[0].out;
     CPU1toCPU2.CLA1toCLA2.iq_ref.b = Conv.PI_Iq[1].out;
     CPU1toCPU2.CLA1toCLA2.iq_ref.c = Conv.PI_Iq[2].out;
+    CPU1toCPU2.CLA1toCLA2.select_modulation = Conv.select_modulation;
 
     Timer_PWM.CPU_COPY1 = TIMESTAMP_PWM;
 
@@ -169,6 +170,8 @@ interrupt void SD_AVG_NT()
 
         if(Meas_master.U_dc_avg < Meas_alarm_L.U_dc) alarm_master.bit.U_dc_L = 1;
         if(Meas_master.U_dc_avg > Meas_alarm_H.U_dc) alarm_master.bit.U_dc_H = 1;
+        if(Meas_master.U_dc_n_avg < Meas_alarm_L.U_dc*0.5f) alarm_master.bit.U_dc_n_L = 1;
+        if(Meas_master.U_dc_n_avg > Meas_alarm_H.U_dc*0.5f) alarm_master.bit.U_dc_n_H = 1;
         if(fabsf(Meas_master.U_dc - 2.0f * Meas_master.U_dc_n) > Meas_alarm_H.U_dc_balance) alarm_master.bit.U_dc_balance = 1;
 
         if(Grid.I_conv.a > Meas_alarm_H.I_conv_rms) alarm_master.bit.I_conv_rms_a = 1;

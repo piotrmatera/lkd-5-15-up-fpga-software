@@ -54,9 +54,8 @@ void Converter_calc()
     Conv.duty_float[2] = Conv.U_ref.c * ref_scaling;
     Conv.duty_float[3] = Conv.U_ref.n * ref_scaling;
 
-    static volatile float select_modulation;
     register float correction;
-    if(!select_modulation)
+    if(!Conv.select_modulation)
     {
         register float max = fmaxf(Conv.duty_float[0], fmaxf(Conv.duty_float[1], Conv.duty_float[2]));
         register float min = fminf(Conv.duty_float[0], fminf(Conv.duty_float[1], Conv.duty_float[2]));
@@ -76,15 +75,15 @@ void Converter_calc()
         register float correction_switch_new = 0.0f;
         if (fabsf(I_ref_max) > fabsf(I_ref_min)) correction_switch_new = 1.0f;
         static volatile float switcher;
-        register float switcher_temp = switcher = 1.0f - switcher;
+        register float switcher_temp = switcher = 0.0f;//1.0f - switcher;
         register float correction_switch = (switcher_temp) * Conv.correction_switch + (1.0f - switcher_temp) * correction_switch_new;
 
-        correction = (correction_switch) * (1.5f + Conv.cycle_period - duty_max) + (1.0f - correction_switch) * (-0.5f - Conv.cycle_period - duty_min);//1.5f,-0.5f
+        correction = (correction_switch) * (1.5f + Conv.cycle_period - duty_max) + (1.0f - correction_switch) * (-1.5f - Conv.cycle_period - duty_min);//1.5f,-0.5f
 
         if (Conv.correction_switch != correction_switch)
         {
             correction = (Conv.correction + correction) * 0.5f;
-            switcher = 1.0f - switcher;
+//            switcher = 1.0f - switcher;
         }
         Conv.correction_switch = correction_switch;
     }

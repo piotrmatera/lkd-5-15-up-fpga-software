@@ -539,6 +539,8 @@ void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_
     if(alarm_master_temp.bit.Temperature_L) f_puts("\t\tTemperature_L \n", fil);
     if(alarm_master_temp.bit.U_dc_H       ) f_puts("\t\tU_dc_H        \n", fil);
     if(alarm_master_temp.bit.U_dc_L       ) f_puts("\t\tU_dc_L        \n", fil);
+    if(alarm_master_temp.bit.U_dc_n_H     ) f_puts("\t\tU_dc_n_H      \n", fil);
+    if(alarm_master_temp.bit.U_dc_n_L     ) f_puts("\t\tU_dc_n_L      \n", fil);
 
     if(alarm_master_temp.bit.CONV_SOFTSTART       ) f_puts("\t\tCONV_SOFTSTART \n", fil);
     //

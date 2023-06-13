@@ -427,7 +427,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant1_SIGNEDCO; 
 
 	parameter Resonant1_Mem2_key = 4'd3;
-	Resonant_grid #(.HARMONICS_NUM(25), .IN_SERIES_NUM(3)) Resonant1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i), 
+	Resonant_grid #(.HARMONICS_NUM(25)) Resonant1(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i), 
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant1_Mem2_key[2 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 2] == Resonant1_Mem2_key[0 +: 2]),
 	.enable_i(Resonant1_START), .Mem2_addrw_o(Resonant1_Mem2_addrw), .Mem2_we_o(Resonant1_Mem2_we), .Mem2_data_o(Resonant1_Mem2_data), .WIP_flag_o(Resonant1_WIP), 
 	.CIN(Resonant1_CIN), .SIGNEDCIN(Resonant1_SIGNEDCIN), .CO(Resonant1_CO), .SIGNEDCO(Resonant1_SIGNEDCO));
@@ -454,7 +454,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant2_SIGNEDCO;
 
 	parameter Resonant2_Mem2_key = 4'd4;
-	Resonant_grid #(.HARMONICS_NUM(25), .IN_SERIES_NUM(3)) Resonant2(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Resonant_grid #(.HARMONICS_NUM(25)) Resonant2(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant2_Mem2_key[2 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 2] == Resonant2_Mem2_key[0 +: 2]),
 	.enable_i(Resonant2_START), .Mem2_addrw_o(Resonant2_Mem2_addrw), .Mem2_we_o(Resonant2_Mem2_we), .Mem2_data_o(Resonant2_Mem2_data), .WIP_flag_o(Resonant2_WIP),
 	.CIN(Resonant2_CIN), .SIGNEDCIN(Resonant2_SIGNEDCIN), .CO(Resonant2_CO), .SIGNEDCO(Resonant2_SIGNEDCO)); 
@@ -480,7 +480,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant3_SIGNEDCO;
 
 	parameter Resonant3_Mem2_key = 4'd5;
-	Resonant_grid #(.HARMONICS_NUM(25), .IN_SERIES_NUM(3)) Resonant3(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Resonant_grid #(.HARMONICS_NUM(25)) Resonant3(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant3_Mem2_key[2 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 2] == Resonant3_Mem2_key[0 +: 2]),
 	.enable_i(Resonant3_START), .Mem2_addrw_o(Resonant3_Mem2_addrw), .Mem2_we_o(Resonant3_Mem2_we), .Mem2_data_o(Resonant3_Mem2_data), .WIP_flag_o(Resonant3_WIP),
 	.CIN(Resonant3_CIN), .SIGNEDCIN(Resonant3_SIGNEDCIN), .CO(Resonant3_CO), .SIGNEDCO(Resonant3_SIGNEDCO));
@@ -506,7 +506,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant4_SIGNEDCO;
 
 	parameter Resonant4_Mem2_key = 4'd6;
-	Resonant_grid #(.HARMONICS_NUM(25), .IN_SERIES_NUM(3)) Resonant4(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Resonant_grid #(.HARMONICS_NUM(25)) Resonant4(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant4_Mem2_key[2 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 2] == Resonant4_Mem2_key[0 +: 2]),
 	.enable_i(Resonant4_START), .Mem2_addrw_o(Resonant4_Mem2_addrw), .Mem2_we_o(Resonant4_Mem2_we), .Mem2_data_o(Resonant4_Mem2_data), .WIP_flag_o(Resonant4_WIP),
 	.CIN(Resonant4_CIN), .SIGNEDCIN(Resonant4_SIGNEDCIN), .CO(Resonant4_CO), .SIGNEDCO(Resonant4_SIGNEDCO));
@@ -532,7 +532,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant5_SIGNEDCO;
 
 	parameter Resonant5_Mem2_key = 4'd7;
-	Resonant_grid #(.HARMONICS_NUM(25), .IN_SERIES_NUM(3)) Resonant5(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Resonant_grid #(.HARMONICS_NUM(25)) Resonant5(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant5_Mem2_key[2 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 2] == Resonant5_Mem2_key[0 +: 2]),
 	.enable_i(Resonant5_START), .Mem2_addrw_o(Resonant5_Mem2_addrw), .Mem2_we_o(Resonant5_Mem2_we), .Mem2_data_o(Resonant5_Mem2_data), .WIP_flag_o(Resonant5_WIP),
 	.CIN(Resonant5_CIN), .SIGNEDCIN(Resonant5_SIGNEDCIN), .CO(Resonant5_CO), .SIGNEDCO(Resonant5_SIGNEDCO));
@@ -544,8 +544,9 @@ module SerDes_master(CPU_io, FPGA_io);
 	)
 	Resonant5_Mem2(.Data(Resonant5_Mem2_data[35:4]), .WrAddress(Resonant5_Mem2_addrw), .RdAddress(EMIF_address_i[8:0]), .WrClock(clk_DSP), .RdClock(!EMIF_oe_i), .WrClockEn(1'b1), .RdClockEn(1'b1), 
 	.WE(Resonant5_Mem2_we), .Reset(1'b0), .Q(Resonant5_data_o)); 	
-	wire Resonant5_WIP;
-	wire Resonant5_START;
+	
+	wire Resonant6_WIP;
+	wire Resonant6_START;
 	
 	wire Resonant6_Mem2_we;
 	wire [8:0] Resonant6_Mem2_addrw;
@@ -557,7 +558,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire Resonant6_SIGNEDCO;
 
 	parameter Resonant6_Mem2_key = 4'd8;
-	Resonant_grid #(.HARMONICS_NUM(25), .IN_SERIES_NUM(3)) Resonant6(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
+	Resonant_grid #(.HARMONICS_NUM(25)) Resonant6(.clk_i(clk_DSP), .Mem1_data_i(EMIF_data_i), .Mem1_addrw_i(EMIF_address_i[`COMM_MEMORY_EMIF_WIDTH-1:0]), .Mem1_clk_w(EMIF_we_i),
 	.Mem1_clk_en_w(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == Resonant6_Mem2_key[2 +: 2]), .Mem1_we_i(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 2] == Resonant6_Mem2_key[0 +: 2]),
 	.enable_i(Resonant6_START), .Mem2_addrw_o(Resonant6_Mem2_addrw), .Mem2_we_o(Resonant6_Mem2_we), .Mem2_data_o(Resonant6_Mem2_data), .WIP_flag_o(Resonant6_WIP),
 	.CIN(Resonant6_CIN), .SIGNEDCIN(Resonant6_SIGNEDCIN), .CO(Resonant6_CO), .SIGNEDCO(Resonant6_SIGNEDCO));
@@ -1117,11 +1118,15 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_FLT_FPGA6(.I(1'b0), .T(1'b1), .O(FLT_bus[6]), .B(FPGA_io[`FLT_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
 	BB BB_FLT_FPGA7(.I(1'b0), .T(1'b1), .O(FLT_bus[7]), .B(FPGA_io[`FLT_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
  
+	wire [7:0] REL_i; 
+	wire [7:0] REL_o; 
+	wire RDY_H_L3_FM_temp;
+	assign FLT_bus[12] = RDY_H_L3_FM_temp | REL_i[6];
 	BB BB_FLT_FPGA8(.I(!EMIF_RX_reg [10][8]), .T(1'b0), .O(FLT_bus[8]), .B(FPGA_io[`RDY_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
 	BB BB_FLT_FPGA9(.I(!EMIF_RX_reg [10][9]), .T(1'b0), .O(FLT_bus[9]), .B(FPGA_io[`RDY_L_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
 	BB BB_FLT_FPGA10(.I(!EMIF_RX_reg [10][10]), .T(1'b0), .O(FLT_bus[10]), .B(FPGA_io[`RDY_H_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
 	BB BB_FLT_FPGA11(.I(!EMIF_RX_reg [10][11]), .T(1'b0), .O(FLT_bus[11]), .B(FPGA_io[`RDY_L_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA12(.I(!EMIF_RX_reg [10][12]), .T(1'b0), .O(FLT_bus[12]), .B(FPGA_io[`RDY_H_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA12(.I(!EMIF_RX_reg [10][12]), .T(1'b0), .O(RDY_H_L3_FM_temp), .B(FPGA_io[`RDY_H_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
 	BB BB_FLT_FPGA13(.I(!EMIF_RX_reg [10][13]), .T(1'b0), .O(FLT_bus[13]), .B(FPGA_io[`RDY_L_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
 	BB BB_FLT_FPGA14(.I(!EMIF_RX_reg [10][14]), .T(1'b0), .O(FLT_bus[14]), .B(FPGA_io[`RDY_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
 	BB BB_FLT_FPGA15(.I(!EMIF_RX_reg [10][15]), .T(1'b0), .O(FLT_bus[15]), .B(FPGA_io[`RDY_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
@@ -1164,9 +1169,6 @@ module SerDes_master(CPU_io, FPGA_io);
 	//double_pulse double_pulse(.clk_i(XTAL_20MHz_i), .start_i(PWM_EN_r), .length0_i(EMIF_RX_reg [8][15:0]), .length1_i(EMIF_RX_reg [8][31:16]), .PWM_o(PWM_dp)); 
 	//deadtime deadtime[3:0](.clk_i(XTAL_20MHz_i), .PWM_i({4{PWM_dp}}), .enable_i({PWM_EN_r, 3'b0}), .override_i(EMIF_RX_reg [10][7:0]), .PWM_o(PWM_o)); 
 
-
-	wire [7:0] REL_i; 
-	wire [7:0] REL_o; 
 	assign REL_o = (TZ_EN_CPU1 & TZ_EN_CPU2 & TZ_FPGA) ? REL_i : 8'b0; 
 	BB BB_REL_CPU0(.I(1'b0), .T(1'b1), .O(REL_i[0]), .B(CPU_io[`C_SS_RLY_L1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU1(.I(1'b0), .T(1'b1), .O(REL_i[1]), .B(CPU_io[`GR_RLY_L1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 

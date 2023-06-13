@@ -312,6 +312,7 @@ struct CLA1toCLA2_struct
     float Kp_I;
     float L_conv;
     float enable;
+    float select_modulation;
     float range_modifier_Resonant_values;
     float range_modifier_Kalman_values;
     float range_modifier_Resonant_coefficients;

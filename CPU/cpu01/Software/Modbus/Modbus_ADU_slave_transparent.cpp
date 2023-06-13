@@ -379,6 +379,10 @@ Modbus_error_enum_t Modbus_ADU_slave_transparent::Fcn_before_processed()
                                                                             + Modbus_Converter.input_registers.Energy_meter.QIV[1]
                                                                             + Modbus_Converter.input_registers.Energy_meter.QIV[2];
 
+            Modbus_Converter.input_registers.Temp1 = Meas_master.Temperature1;
+            Modbus_Converter.input_registers.Temp2 = Meas_master.Temperature2;
+            Modbus_Converter.input_registers.Temp3 = Meas_master.Temperature3;
+            Modbus_Converter.input_registers.Temp_CPU = 0.0f;
             Modbus_Converter.input_registers.file_number_logs = SD_card.file_number_logs;
             Modbus_Converter.input_registers.file_number_errors = SD_card.file_number_errors;
             Modbus_Converter.input_registers.status_master = status_master;
@@ -394,6 +398,9 @@ Modbus_error_enum_t Modbus_ADU_slave_transparent::Fcn_before_processed()
             Modbus_Converter.input_registers.L_grid_previous[7] = L_grid_meas.L_grid_previous[7];
             Modbus_Converter.input_registers.L_grid_previous[8] = L_grid_meas.L_grid_previous[8];
             Modbus_Converter.input_registers.L_grid_previous[9] = L_grid_meas.L_grid_previous[9];
+            Modbus_Converter.input_registers.Grid_filter.THD_U_grid.a = L_grid_meas.L_grid_previous[0]*1000.0f;
+            Modbus_Converter.input_registers.Grid_filter.THD_U_grid.b = L_grid_meas.L_grid_previous[1]*1000.0f;
+            Modbus_Converter.input_registers.Grid_filter.THD_U_grid.c = L_grid_meas.L_grid_previous[2]*1000.0f;
             Modbus_Converter.input_registers.RTC_current_time = RTC_current_time;
             Modbus_Converter.input_registers.rtu_port_id = this->RTU->get_sci_id();
             Modbus_Converter.input_registers.Machine_state = Machine.state;

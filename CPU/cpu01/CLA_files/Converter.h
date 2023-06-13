@@ -76,6 +76,7 @@ struct Converter_struct
     float compensation;
     float compensation2;
     float I_lim, I_lim_nominal;
+    float select_modulation;
 
     float w_filter;
     float f_filter;

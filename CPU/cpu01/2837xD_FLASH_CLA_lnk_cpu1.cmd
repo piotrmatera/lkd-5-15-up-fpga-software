@@ -1,4 +1,4 @@
-//#define _BOOTLOADER
+#define _BOOTLOADER
 #define CLA_SCRATCHPAD_SIZE 0x100
 --undef_sym=__cla_scratchpad_end
 --undef_sym=__cla_scratchpad_start
