@@ -168,7 +168,8 @@ interrupt void Cla1Task1 ( void )
     Efficient_conditioning_avg(EMIF_CLA.I_conv_a, Meas_master_gain.I_conv.a, Meas_master.I_conv.a, Meas_master.I_conv_avg.a, Meas_master_offset.I_conv.b);
     Efficient_conditioning_avg(EMIF_CLA.I_conv_b, Meas_master_gain.I_conv.b, Meas_master.I_conv.b, Meas_master.I_conv_avg.b, Meas_master_offset.I_conv.c);
     Efficient_conditioning_avg(EMIF_CLA.I_conv_c, Meas_master_gain.I_conv.c, Meas_master.I_conv.c, Meas_master.I_conv_avg.c, Meas_master_offset.I_conv.n);
-    Efficient_conditioning_avg(EMIF_CLA.I_conv_n, Meas_master_gain.I_conv.n, Meas_master.I_conv.n, Meas_master.I_conv_avg.n, Meas_master_offset.I_conv.n);
+    Meas_master.I_conv.n = -(Meas_master.I_conv.a + Meas_master.I_conv.b + Meas_master.I_conv.c);
+    Meas_master.I_conv_avg.n = (Meas_master.I_conv_avg.a + Meas_master.I_conv_avg.b + Meas_master.I_conv_avg.c);
 
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 1;
@@ -226,8 +227,8 @@ interrupt void Cla1Task1 ( void )
 
     CIC2_filter_CLAasm(&CIC2_calibration, *CIC2_calibration_input.ptr);
 
-    Conv.P_conv = Meas_master.U_grid.a * Meas_master.I_conv.a + Meas_master.U_grid.b * Meas_master.I_conv.b + Meas_master.U_grid.c * Meas_master.I_conv.c;
-    Filter1_calc_CLAasm(&Conv.P_conv_filter, Conv.P_conv);
+    CIC1_filter_CLAasm(&Conv.P_conv_filter, Conv.P_conv);
+    CIC1_filter_CLAasm(&Conv.C_dc_filter, Conv.C_dc_meas);
 
     Timer_PWM.CLA_END_TASK1 = TIMESTAMP_PWM;
 }

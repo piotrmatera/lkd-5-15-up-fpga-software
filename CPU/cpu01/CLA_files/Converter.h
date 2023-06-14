@@ -24,7 +24,13 @@ struct abc_Filter1_struct
 struct Converter_struct
 {
     float P_conv;
-    struct Filter1_struct P_conv_filter;
+    struct CIC1_struct P_conv_filter;
+    float I_dc;
+    float U_dc_100Hz_sqr;
+    float Q_100Hz;
+    float C_dc_meas;
+    struct CIC1_struct C_dc_filter;
+    float C_dc_measured;
 
     struct trigonometric_struct I_grid_rot[3];
     struct trigonometric_struct zero_rot;

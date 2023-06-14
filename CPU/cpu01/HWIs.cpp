@@ -37,52 +37,61 @@ interrupt void SD_AVG_NT()
 
     Cla1ForceTask1();
 
+    static volatile struct trigonometric_struct U_dc_100Hz, I_dc_100Hz;
     register float modifier1 = Conv.div_range_modifier_Kalman_values;
+    Kalman_U_grid[0].states[2] = (float)EMIF_mem.read.Kalman.series[0].states[1].x1 * modifier1;
     Conv.U_dc_kalman = (float)EMIF_mem.read.Kalman_DC.series[0].states[0].x1 * modifier1;
+    U_dc_100Hz.cosine = (float)EMIF_mem.read.Kalman_DC.series[0].states[1].x1 * modifier1;
+    I_dc_100Hz.cosine = (float)EMIF_mem.read.Kalman_DC.series[1].states[1].x1 * modifier1;
+    U_dc_100Hz.sine = (float)EMIF_mem.read.Kalman_DC.series[0].states[1].x2 * modifier1;
+    I_dc_100Hz.sine = (float)EMIF_mem.read.Kalman_DC.series[1].states[1].x2 * modifier1;
+    Conv.U_dc_100Hz_sqr = U_dc_100Hz.cosine * U_dc_100Hz.cosine + U_dc_100Hz.sine * U_dc_100Hz.sine;
+    Conv.Q_100Hz = U_dc_100Hz.cosine * I_dc_100Hz.sine - U_dc_100Hz.sine * I_dc_100Hz.cosine;
+    Conv.C_dc_meas = Saturation(Conv.Q_100Hz / (Conv.U_dc_100Hz_sqr * Conv.w_filter * 2.0f), 0.0f, 5e-3);
 
-    {
-        static volatile struct
-        {
-            struct abc_struct harmonic[5];
-            float estimate;
-            float error;
-        }Kalman_mem;
-        int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman.series[1].states[0];
-        float *pointer_dst = (float *)&Kalman_mem;
-        for(int i=0; i<5; i++)
-        {
-            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
-            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
-            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values * Conv.div_range_modifier_Kalman_values * Conv.range_modifier_Kalman_coefficients;
-        }
+//    {
+//        static volatile struct
+//        {
+//            struct abc_struct harmonic[5];
+//            float estimate;
+//            float error;
+//        }Kalman_mem;
+//        int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman.series[1].states[0];
+//        float *pointer_dst = (float *)&Kalman_mem;
+//        for(int i=0; i<5; i++)
+//        {
+//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values * Conv.div_range_modifier_Kalman_values * Conv.range_modifier_Kalman_coefficients;
+//        }
+//
+//        pointer_src = (int32 *)&EMIF_mem.read.Kalman.series[1].estimate;
+//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
+//    }
 
-        pointer_src = (int32 *)&EMIF_mem.read.Kalman.series[1].estimate;
-        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
-        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
-    }
-
-    {
-        static volatile struct
-        {
-            float harmonic[5][5];
-            float sum;
-            float error;
-        }Resonant_mem;
-        int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].states[0];
-        float *pointer_dst = (float *)&Resonant_mem;
-        for(int i=0; i<5; i++)
-        {
-            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-        }
-
-        pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].SUM;
-        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-    }
+//    {
+//        static volatile struct
+//        {
+//            float harmonic[5][5];
+//            float sum;
+//            float error;
+//        }Resonant_mem;
+//        int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].states[0];
+//        float *pointer_dst = (float *)&Resonant_mem;
+//        for(int i=0; i<5; i++)
+//        {
+//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//        }
+//
+//        pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].SUM;
+//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+//    }
 
     Conv.w_filter = CPU2toCPU1.w_filter;
     Conv.f_filter = CPU2toCPU1.f_filter;
@@ -106,6 +115,13 @@ interrupt void SD_AVG_NT()
     while(!PieCtrlRegs.PIEIFR11.bit.INTx1);
     PieCtrlRegs.PIEIFR11.bit.INTx1 = 0;
 
+    static volatile float duty_temp[4];
+    duty_temp[0] = CPU2toCPU1.duty[0];
+    duty_temp[1] = CPU2toCPU1.duty[1];
+    duty_temp[2] = CPU2toCPU1.duty[2];
+    duty_temp[3] = CPU2toCPU1.duty[3];
+    Conv.P_conv = Meas_master.U_grid.a * Meas_master.I_conv.a + Meas_master.U_grid.b * Meas_master.I_conv.b + Meas_master.U_grid.c * Meas_master.I_conv.c;
+    Conv.I_dc = -(duty_temp[0] * Meas_master.I_conv.a + duty_temp[1] * Meas_master.I_conv.b + duty_temp[2] * Meas_master.I_conv.c + duty_temp[3] * Meas_master.I_conv.n) / fmaxf(2.0f * EMIF_mem.read.cycle_period, 1.0f);
     register float modifier2 = Conv.range_modifier_Kalman_values;
     EMIF_mem.write.Kalman.input[0] = Meas_master.U_grid.a * modifier2;
     EMIF_mem.write.Kalman.input[1] = Meas_master.U_grid.b * modifier2;
@@ -114,6 +130,7 @@ interrupt void SD_AVG_NT()
     EMIF_mem.write.Kalman.input[4] = Meas_master.I_grid.b * modifier2;
     EMIF_mem.write.Kalman.input[5] = Meas_master.I_grid.c * modifier2;
     EMIF_mem.write.Kalman_DC.input[0] = Meas_master.U_dc * modifier2;
+    EMIF_mem.write.Kalman_DC.input[1] = Conv.I_dc * modifier2;
     EMIF_mem.write.DSP_start = 0b11000000;
 
     EMIF_mem.write.Resonant[0].series[0].HC =
@@ -215,12 +232,6 @@ interrupt void SD_AVG_NT()
         static volatile float trigger_val = (float)Machine_class::state_Lgrid_meas;
         static volatile float edge = 1;
         static volatile float trigger_last;
-
-        static volatile float duty_temp[4];
-        duty_temp[0] = CPU2toCPU1.duty[0];
-        duty_temp[1] = CPU2toCPU1.duty[1];
-        duty_temp[2] = CPU2toCPU1.duty[2];
-        duty_temp[3] = CPU2toCPU1.duty[3];
 
         if(!first)
         {

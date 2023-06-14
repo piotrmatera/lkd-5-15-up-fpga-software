@@ -359,7 +359,7 @@ Uint16 SD_card_class::log_data()
         if(fresult = f_open(&log_file, filename_buffer, FA_WRITE | FA_CREATE_ALWAYS)) return fresult;
     }
 
-    float temp_array[20];
+    float temp_array[18];
     temp_array[0] = *(float *)&FatFS_time;
     temp_array[1] = Grid_filter.U_grid_1h.a;
     temp_array[2] = Grid_filter.U_grid_1h.b;
@@ -371,105 +371,14 @@ Uint16 SD_card_class::log_data()
     temp_array[8] = Grid_filter.P_grid_1h.b;
     temp_array[9] = Grid_filter.P_grid_1h.c;
 
-//    if(!status_master.slave_rdy_0)
-//    {
-//        log_slave[0].P_conv_1h.a =
-//        log_slave[0].P_conv_1h.b =
-//        log_slave[0].P_conv_1h.c =
-//        log_slave[0].Q_conv_1h.a =
-//        log_slave[0].Q_conv_1h.b =
-//        log_slave[0].Q_conv_1h.c =
-//        log_slave[0].Temperature.a =
-//        log_slave[0].Temperature.b =
-//        log_slave[0].Temperature.c =
-//        log_slave[0].Temperature.n = 0.0f;
-//    }
-
-    temp_array[10] = Grid_filter.Q_conv_1h.a;//log_slave[0].P_conv_1h.a;
-    temp_array[11] = Grid_filter.Q_conv_1h.b;//log_slave[0].P_conv_1h.b;
-    temp_array[12] = Grid_filter.Q_conv_1h.c;//log_slave[0].P_conv_1h.c;
-    temp_array[13] = Grid_filter.P_conv_1h.a;//log_slave[0].Q_conv_1h.a;
-    temp_array[14] = Grid_filter.P_conv_1h.b;//log_slave[0].Q_conv_1h.b;
-    temp_array[15] = Grid_filter.P_conv_1h.c;//log_slave[0].Q_conv_1h.c;
-//    temp_array[16] = log_slave[0].Temperature.a;
-//    temp_array[17] = log_slave[0].Temperature.b;
-//    temp_array[18] = log_slave[0].Temperature.c;
-//    temp_array[19] = log_slave[0].Temperature.n;
-
-//    if(!status_master.slave_rdy_1)
-//    {
-//        log_slave[1].P_conv_1h.a =
-//        log_slave[1].P_conv_1h.b =
-//        log_slave[1].P_conv_1h.c =
-//        log_slave[1].Q_conv_1h.a =
-//        log_slave[1].Q_conv_1h.b =
-//        log_slave[1].Q_conv_1h.c =
-//        log_slave[1].Temperature.a =
-//        log_slave[1].Temperature.b =
-//        log_slave[1].Temperature.c =
-//        log_slave[1].Temperature.n = 0.0f;
-//    }
-//
-//    temp_array[20] = log_slave[1].P_conv_1h.a;
-//    temp_array[21] = log_slave[1].P_conv_1h.b;
-//    temp_array[22] = log_slave[1].P_conv_1h.c;
-//    temp_array[23] = log_slave[1].Q_conv_1h.a;
-//    temp_array[24] = log_slave[1].Q_conv_1h.b;
-//    temp_array[25] = log_slave[1].Q_conv_1h.c;
-//    temp_array[26] = log_slave[1].Temperature.a;
-//    temp_array[27] = log_slave[1].Temperature.b;
-//    temp_array[28] = log_slave[1].Temperature.c;
-//    temp_array[29] = log_slave[1].Temperature.n;
-//
-//    if(!status_master.slave_rdy_2)
-//    {
-//        log_slave[2].P_conv_1h.a =
-//        log_slave[2].P_conv_1h.b =
-//        log_slave[2].P_conv_1h.c =
-//        log_slave[2].Q_conv_1h.a =
-//        log_slave[2].Q_conv_1h.b =
-//        log_slave[2].Q_conv_1h.c =
-//        log_slave[2].Temperature.a =
-//        log_slave[2].Temperature.b =
-//        log_slave[2].Temperature.c =
-//        log_slave[2].Temperature.n = 0.0f;
-//    }
-//
-//    temp_array[30] = log_slave[2].P_conv_1h.a;
-//    temp_array[31] = log_slave[2].P_conv_1h.b;
-//    temp_array[32] = log_slave[2].P_conv_1h.c;
-//    temp_array[33] = log_slave[2].Q_conv_1h.a;
-//    temp_array[34] = log_slave[2].Q_conv_1h.b;
-//    temp_array[35] = log_slave[2].Q_conv_1h.c;
-//    temp_array[36] = log_slave[2].Temperature.a;
-//    temp_array[37] = log_slave[2].Temperature.b;
-//    temp_array[38] = log_slave[2].Temperature.c;
-//    temp_array[39] = log_slave[2].Temperature.n;
-//
-//    if(!status_master.slave_rdy_3)
-//    {
-//        log_slave[3].P_conv_1h.a =
-//        log_slave[3].P_conv_1h.b =
-//        log_slave[3].P_conv_1h.c =
-//        log_slave[3].Q_conv_1h.a =
-//        log_slave[3].Q_conv_1h.b =
-//        log_slave[3].Q_conv_1h.c =
-//        log_slave[3].Temperature.a =
-//        log_slave[3].Temperature.b =
-//        log_slave[3].Temperature.c =
-//        log_slave[3].Temperature.n = 0.0f;
-//    }
-//
-//    temp_array[40] = log_slave[3].P_conv_1h.a;
-//    temp_array[41] = log_slave[3].P_conv_1h.b;
-//    temp_array[42] = log_slave[3].P_conv_1h.c;
-//    temp_array[43] = log_slave[3].Q_conv_1h.a;
-//    temp_array[44] = log_slave[3].Q_conv_1h.b;
-//    temp_array[45] = log_slave[3].Q_conv_1h.c;
-//    temp_array[46] = log_slave[3].Temperature.a;
-//    temp_array[47] = log_slave[3].Temperature.b;
-//    temp_array[48] = log_slave[3].Temperature.c;
-//    temp_array[49] = log_slave[3].Temperature.n;
+    temp_array[10] = Grid_filter.Q_conv_1h.a;
+    temp_array[11] = Grid_filter.Q_conv_1h.b;
+    temp_array[12] = Grid_filter.Q_conv_1h.c;
+    temp_array[13] = Grid_filter.P_conv_1h.a;
+    temp_array[14] = Grid_filter.P_conv_1h.b;
+    temp_array[15] = Grid_filter.P_conv_1h.c;
+    temp_array[16] = fmaxf(Meas_master.Temperature1, fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
+    temp_array[17] = Conv.RDY2;
 
     save_memory(&log_file, (Uint16 *)temp_array, sizeof(temp_array));
     fresult = f_sync(&log_file);

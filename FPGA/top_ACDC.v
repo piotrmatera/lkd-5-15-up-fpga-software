@@ -133,8 +133,8 @@
 //H18 -> D12 
 //C17 -> D17 
  
-`define BGA
-//`define HLQFP
+//`define BGA
+`define HLQFP
  
 module SerDes_master(CPU_io, FPGA_io); 
 	inout[168:0] CPU_io/*synthesis IO_TYPE="LVCMOS33" */;  

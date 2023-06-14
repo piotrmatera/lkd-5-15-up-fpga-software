@@ -66,7 +66,6 @@ struct Grid_analyzer_struct Grid_params;
 
 struct Kalman_struct Kalman_I_grid[3];
 struct Kalman_struct Kalman_U_grid[3];
-struct Kalman_DC_struct Kalman_U_dc;
 
 struct Energy_meter_struct Energy_meter;
 

@@ -30,7 +30,8 @@ interrupt void Cla1Task1 ( void )
     Efficient_conditioning(EMIF_CLA.I_conv_a, Meas_master_gain.I_conv.a, Meas_master.I_conv.a, Meas_master.I_conv_avg.a, Meas_master_offset.I_conv.b);
     Efficient_conditioning(EMIF_CLA.I_conv_b, Meas_master_gain.I_conv.b, Meas_master.I_conv.b, Meas_master.I_conv_avg.b, Meas_master_offset.I_conv.c);
     Efficient_conditioning(EMIF_CLA.I_conv_c, Meas_master_gain.I_conv.c, Meas_master.I_conv.c, Meas_master.I_conv_avg.c, Meas_master_offset.I_conv.n);
-    Efficient_conditioning(EMIF_CLA.I_conv_n, Meas_master_gain.I_conv.n, Meas_master.I_conv.n, Meas_master.I_conv_avg.n, Meas_master_offset.I_conv.n);
+    Meas_master.I_conv.n = -(Meas_master.I_conv.a + Meas_master.I_conv.b + Meas_master.I_conv.c);
+    Meas_master.I_conv_avg.n = (Meas_master.I_conv_avg.a + Meas_master.I_conv_avg.b + Meas_master.I_conv_avg.c);
 
     Converter_calc();
 

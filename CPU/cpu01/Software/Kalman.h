@@ -1,4 +1,4 @@
-// Tomasz Œwiêchowicz swiechowicz.tomasz@gmail.com
+// Tomasz ï¿½wiï¿½chowicz swiechowicz.tomasz@gmail.com
 
 #include "stdafx.h" 
 
@@ -18,17 +18,10 @@ struct Kalman_struct
     float THD_total;
 };
 
-struct Kalman_DC_struct
-{
-    float states[2 * FPGA_KALMAN_DC_STATES];
-    float estimate;
-};
-
 extern struct trigonometric_struct sincos_kalman_table[SINCOS_HARMONICS];
 
 extern struct Kalman_struct Kalman_I_grid[3];
 extern struct Kalman_struct Kalman_U_grid[3];
-extern struct Kalman_DC_struct Kalman_U_dc;
 
 extern float Kalman_gain[2 * FPGA_KALMAN_STATES];
 extern float Kalman_gain_dc[2 * FPGA_KALMAN_DC_STATES];

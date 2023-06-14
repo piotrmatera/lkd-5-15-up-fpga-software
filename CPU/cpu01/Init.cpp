@@ -313,7 +313,7 @@ void Init_class::Variables()
     Meas_alarm_H.Temp = 95.0f;
     Meas_alarm_L.Temp = 0.0f;
 
-    Meas_alarm_H.U_dc = 400.0f;
+    Meas_alarm_H.U_dc = 750.0f;
     Meas_alarm_L.U_dc = -5.0f;
     Meas_alarm_H.U_dc_balance = 30.0f;
 
@@ -350,7 +350,8 @@ void Init_class::Variables()
 
     ///////////////////////////////////////////////////////////////////
 
-    Conv.P_conv_filter.Ts_Ti = Conv.Ts / 0.1f;
+    CIC1_filter(&Conv.P_conv_filter, 1000.0f, full_OSR, 1);
+    CIC1_filter(&Conv.C_dc_filter, 0.1f, full_OSR, 1);
 
     Conv.version_Q_comp_local_prefilter.a.Ts_Ti =
     Conv.version_Q_comp_local_prefilter.b.Ts_Ti =
@@ -373,7 +374,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.I_lim = Conv.I_lim_nominal;
-    Conv.U_dc_ref = 350.0f;
+    Conv.U_dc_ref = 700.0f;
 
     CIC1_adaptive_filter(&Conv.CIC1_U_dc, 1000.0f, full_OSR);
 

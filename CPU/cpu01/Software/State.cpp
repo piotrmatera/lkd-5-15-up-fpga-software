@@ -1638,6 +1638,7 @@ void Machine_class::CT_test()
         struct abc_struct Id_pos[3], Id_neg[3], Id_diff[3];
         struct abc_struct CT_gain[3];
     }CT_test_startup;
+    static float C_dc_meas[6];
 
     static Uint64 timer_old;
     static Uint16 CT_test_state;
@@ -1686,6 +1687,7 @@ void Machine_class::CT_test()
             CT_test_startup.Id_pos[repeat_counter].a = Conv.id_load.a - Conv.id_conv.a;
             CT_test_startup.Id_pos[repeat_counter].b = Conv.id_load.b - Conv.id_conv.b;
             CT_test_startup.Id_pos[repeat_counter].c = Conv.id_load.c - Conv.id_conv.c;
+            C_dc_meas[repeat_counter] = Conv.C_dc_meas;
             CT_test_state++;
             timer_old = ReadIpcTimer();
         }
@@ -1710,6 +1712,7 @@ void Machine_class::CT_test()
             CT_test_startup.Id_neg[repeat_counter].a = Conv.id_load.a - Conv.id_conv.a;
             CT_test_startup.Id_neg[repeat_counter].b = Conv.id_load.b - Conv.id_conv.b;
             CT_test_startup.Id_neg[repeat_counter].c = Conv.id_load.c - Conv.id_conv.c;
+            C_dc_meas[repeat_counter+3] = Conv.C_dc_filter.out;
             Conv.Q_set_local.a =
             Conv.Q_set_local.b =
             Conv.Q_set_local.c = 0.0f;
@@ -1725,6 +1728,9 @@ void Machine_class::CT_test()
         if(CT_test_state_last != CT_test_state)
         {
             CT_test_state_last = CT_test_state;
+
+            qsort(C_dc_meas, 6, sizeof(float), compare_float);
+            Conv.C_dc_measured = (C_dc_meas[2]+C_dc_meas[3]) * 0.5f;
 
             CT_test_startup.Iq_diff[0].a = fabsf(CT_test_startup.Iq_pos[0].a - CT_test_startup.Iq_neg[0].a);
             CT_test_startup.Iq_diff[0].b = fabsf(CT_test_startup.Iq_pos[0].b - CT_test_startup.Iq_neg[0].b);
