@@ -359,7 +359,7 @@ Uint16 SD_card_class::log_data()
         if(fresult = f_open(&log_file, filename_buffer, FA_WRITE | FA_CREATE_ALWAYS)) return fresult;
     }
 
-    float temp_array[18];
+    float temp_array[21];
     temp_array[0] = *(float *)&FatFS_time;
     temp_array[1] = Grid_filter.U_grid_1h.a;
     temp_array[2] = Grid_filter.U_grid_1h.b;
@@ -377,8 +377,11 @@ Uint16 SD_card_class::log_data()
     temp_array[13] = Grid_filter.P_conv_1h.a;
     temp_array[14] = Grid_filter.P_conv_1h.b;
     temp_array[15] = Grid_filter.P_conv_1h.c;
-    temp_array[16] = fmaxf(Meas_master.Temperature1, fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
-    temp_array[17] = Conv.RDY2;
+    temp_array[16] = Meas_master.Temperature1;
+    temp_array[17] = Meas_master.Temperature2;
+    temp_array[18] = Meas_master.Temperature3;
+    temp_array[19] = Conv.RDY2;
+    temp_array[20] = Conv.P_conv_filter.out;
 
     save_memory(&log_file, (Uint16 *)temp_array, sizeof(temp_array));
     fresult = f_sync(&log_file);

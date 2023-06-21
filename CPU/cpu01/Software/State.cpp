@@ -513,7 +513,7 @@ void Machine_class::Background()
     //to z drugiego RTU zrobic w kolejnym cyklu petli glownej
     if( process_next_ADU ){
 
-        switch( Modbus_slave_EXT_translated.task() ){
+        switch( Modbus_slave_EXT.task() ){
 
         case mdb_request_wrong_address: //wykryty zly adres, sprawdzic dla drugiego urzadzenia na tym RTU
             if( Modbus_slave_EXT.task() == mdb_request_wrong_address)
@@ -902,7 +902,8 @@ void Machine_class::init()
 
         SD_card.settings.C_dc = 990e-6;
         SD_card.settings.L_conv = 265e-6;
-        SD_card.settings.I_lim = 24.0f;
+        SD_card.settings.I_lim =
+        Conv.I_lim_nominal = 24.0f;
     }
     else
     {
@@ -1169,7 +1170,7 @@ void Machine_class::idle()
             static const float delay_table[] =
             {
                  [0] = 0.0f,
-                 [1] = 1e10,
+                 [1] = 0.0f,
                  [2] = 10.0f,
                  [3] = 0.0f,
                  [4] = 60.0f,

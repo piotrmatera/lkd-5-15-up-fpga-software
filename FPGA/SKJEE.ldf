@@ -87,10 +87,10 @@
         <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">
             <Options/>
         </Source>
-        <Source name="SKJEE_BGA.lpf" type="Logic Preference" type_short="LPF" excluded="TRUE">
+        <Source name="SKJEE_BGA.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
-        <Source name="SKJEE_HLQFP.lpf" type="Logic Preference" type_short="LPF">
+        <Source name="SKJEE_HLQFP.lpf" type="Logic Preference" type_short="LPF" excluded="TRUE">
             <Options/>
         </Source>
     </Implementation>

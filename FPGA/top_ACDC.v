@@ -133,8 +133,8 @@
 //H18 -> D12 
 //C17 -> D17 
  
-//`define BGA
-`define HLQFP
+`define BGA
+//`define HLQFP
  
 module SerDes_master(CPU_io, FPGA_io); 
 	inout[168:0] CPU_io/*synthesis IO_TYPE="LVCMOS33" */;  
@@ -1120,16 +1120,16 @@ module SerDes_master(CPU_io, FPGA_io);
  
 	wire [7:0] REL_i; 
 	wire [7:0] REL_o; 
-	wire RDY_H_L3_FM_temp;
-	assign FLT_bus[12] = RDY_H_L3_FM_temp | REL_i[6];
-	BB BB_FLT_FPGA8(.I(!EMIF_RX_reg [10][8]), .T(1'b0), .O(FLT_bus[8]), .B(FPGA_io[`RDY_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA9(.I(!EMIF_RX_reg [10][9]), .T(1'b0), .O(FLT_bus[9]), .B(FPGA_io[`RDY_L_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA10(.I(!EMIF_RX_reg [10][10]), .T(1'b0), .O(FLT_bus[10]), .B(FPGA_io[`RDY_H_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA11(.I(!EMIF_RX_reg [10][11]), .T(1'b0), .O(FLT_bus[11]), .B(FPGA_io[`RDY_L_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA12(.I(!EMIF_RX_reg [10][12]), .T(1'b0), .O(RDY_H_L3_FM_temp), .B(FPGA_io[`RDY_H_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA13(.I(!EMIF_RX_reg [10][13]), .T(1'b0), .O(FLT_bus[13]), .B(FPGA_io[`RDY_L_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA14(.I(!EMIF_RX_reg [10][14]), .T(1'b0), .O(FLT_bus[14]), .B(FPGA_io[`RDY_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
-	BB BB_FLT_FPGA15(.I(!EMIF_RX_reg [10][15]), .T(1'b0), .O(FLT_bus[15]), .B(FPGA_io[`RDY_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	wire [7:0] RDY_temp;
+	assign FLT_bus[15:8] = RDY_temp | {8{REL_i[6]}};
+	BB BB_FLT_FPGA8(.I(!EMIF_RX_reg [10][8]), .T(1'b0), .O(RDY_temp[0]), .B(FPGA_io[`RDY_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA9(.I(!EMIF_RX_reg [10][9]), .T(1'b0), .O(RDY_temp[1]), .B(FPGA_io[`RDY_L_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA10(.I(!EMIF_RX_reg [10][10]), .T(1'b0), .O(RDY_temp[2]), .B(FPGA_io[`RDY_H_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA11(.I(!EMIF_RX_reg [10][11]), .T(1'b0), .O(RDY_temp[3]), .B(FPGA_io[`RDY_L_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA12(.I(!EMIF_RX_reg [10][12]), .T(1'b0), .O(RDY_temp[4]), .B(FPGA_io[`RDY_H_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA13(.I(!EMIF_RX_reg [10][13]), .T(1'b0), .O(RDY_temp[5]), .B(FPGA_io[`RDY_L_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA14(.I(!EMIF_RX_reg [10][14]), .T(1'b0), .O(RDY_temp[6]), .B(FPGA_io[`RDY_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
+	BB BB_FLT_FPGA15(.I(!EMIF_RX_reg [10][15]), .T(1'b0), .O(RDY_temp[7]), .B(FPGA_io[`RDY_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
   
 	wire [7:0] PWM_o; 
 	BB BB_PWM_FPGA0(.I(PWM_o[0]), .T(1'b0), .O(), .B(FPGA_io[`PWM_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 

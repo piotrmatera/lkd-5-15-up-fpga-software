@@ -2,10 +2,10 @@ close all
 clear all
 [file,path] = uigetfile('*logs.bin');
 fid = fopen([path file],'r');
-data = fread(fid, [18 Inf], 'single')';
+data = fread(fid, [21 Inf], 'single')';
 data = data(2:end,:);
 frewind(fid);
-data2 = fread(fid, [18 Inf], 'uint32=>uint32')';
+data2 = fread(fid, [21 Inf], 'uint32=>uint32')';
 data2 = data2(2:end,:);
 
 time = data2(:,1);
@@ -66,8 +66,12 @@ plot(t, data(:,17));
 title('Temperatures');
 xlim(xlimits);
 figure
-plot(t, data(:,18));
-title('Operatin');
+plot(t, data(:,20));
+title('Operating');
+xlim(xlimits);
+figure
+plot(t, data(:,21));
+title('Losses');
 xlim(xlimits);
 
 uiwait(msgbox('Press OK to close figures'));
