@@ -56,13 +56,13 @@ interrupt void SD_AVG_NT()
 //            float estimate;
 //            float error;
 //        }Kalman_mem;
-//        int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman.series[1].states[0];
+//        int32 *pointer_src = (int32 *)&EMIF_mem.read.Kalman.series[0].states[0];
 //        float *pointer_dst = (float *)&Kalman_mem;
 //        for(int i=0; i<5; i++)
 //        {
 //            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
 //            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
-//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values * Conv.div_range_modifier_Kalman_values * Conv.range_modifier_Kalman_coefficients;
+//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values_square;
 //        }
 //
 //        pointer_src = (int32 *)&EMIF_mem.read.Kalman.series[1].estimate;
@@ -122,6 +122,18 @@ interrupt void SD_AVG_NT()
     duty_temp[3] = CPU2toCPU1.duty[3];
     Conv.P_conv = Meas_master.U_grid.a * Meas_master.I_conv.a + Meas_master.U_grid.b * Meas_master.I_conv.b + Meas_master.U_grid.c * Meas_master.I_conv.c;
     Conv.I_dc = -(duty_temp[0] * Meas_master.I_conv.a + duty_temp[1] * Meas_master.I_conv.b + duty_temp[2] * Meas_master.I_conv.c + duty_temp[3] * Meas_master.I_conv.n) / fmaxf(2.0f * EMIF_mem.read.cycle_period, 1.0f);
+
+//    static float angle = 0.0f;
+//    angle += Conv.Ts * Conv.w_filter;
+//    angle -= (float)((int32)(angle * MATH_1_PI)) * MATH_2PI;
+//    static volatile float zmienna;
+//    zmienna = 20.0f * (1.0f + sinf(angle) + sinf(7.0f * angle));
+
+    static Uint16 indexer = 0;
+    if(++indexer >= 6) indexer = 0;
+    if(indexer < 3) Kalman_THD_calc_CPUasm(&Kalman_U_grid[indexer], (int32 *)&EMIF_mem.read.Kalman.series[indexer].states[0].A);
+    else Kalman_THD_calc_CPUasm(&Kalman_I_grid[indexer-3], (int32 *)&EMIF_mem.read.Kalman.series[indexer].states[0].A);
+
     register float modifier2 = Conv.range_modifier_Kalman_values;
     EMIF_mem.write.Kalman.input[0] = Meas_master.U_grid.a * modifier2;
     EMIF_mem.write.Kalman.input[1] = Meas_master.U_grid.b * modifier2;

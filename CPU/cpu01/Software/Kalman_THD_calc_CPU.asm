@@ -3,6 +3,7 @@
 ; C prototype:
 ; extern void Kalman_THD_calc_CPUasm(struct Kalman_struct *Kalman);
 ; argument 1 = *Kalman : structure of internal variables [XAR4]
+; argument 2 = *EMIF_Kalman : structure of EMIF variables [XAR5]
 ; (6+1+8)*N + 33 instructions without pre-jump
 
         .cdecls   C,LIST,"stdafx.h"
@@ -12,7 +13,7 @@
 		.endif
 
         .global _Kalman_THD_calc_CPUasm
-        .text
+        .sect ".TI.ramfunc"
 
 _Kalman_THD_calc_CPUasm:
 ;		ESTOP0
@@ -20,7 +21,53 @@ _Kalman_THD_calc_CPUasm:
         MOV32    *SP++, R5H                ;save R5H on stack
         MOV32    *SP++, R6H                ;save R6H on stack
         MOV32    *SP++, R7H                ;save R7H on stack
+;copy amplitudes
+;XAR4 EMIF_mem
+;XAR4 Kalman_struct
+;XAR5 amplitudes
+        MOVL     XAR1, XAR5
+        MOVL     XAR0, #6
 
+        MOVL     XAR5, XAR4
+        MOV      ACC, #Kalman_struct.rms_values
+        ADDL     XAR5, ACC
+
+		MOVW     DP, #_Conv.div_range_modifier_Kalman_values_square
+		MOV32	 R7H, @_Conv.div_range_modifier_Kalman_values_square
+
+		SETC AMODE ; Change to AMODE = 1
+		.lp_amode ; Tell assembler to check for AMODE = 1 syntax
+
+		NOP		 *, ARP1
+        I32TOF32 R4H,*0++, ARP1
+        I32TOF32 R5H,*0++, ARP1
+        MPYF32   R2H, R4H, R7H
+
+        I32TOF32 R4H,*0++, ARP1
+        MPYF32   R3H, R5H, R7H
+		SQRTF32  R0H,R2H
+        I32TOF32 R5H,*0++, ARP1
+        MPYF32   R2H, R4H, R7H
+		SQRTF32  R1H,R3H
+
+        .loop FPGA_KALMAN_STATES/2-1
+        I32TOF32 R4H,*0++, ARP5
+        MPYF32   R3H, R5H, R7H
+||        MOV32    *++, R0H, ARP1
+		SQRTF32  R0H,R2H
+        I32TOF32 R5H,*0++, ARP5
+        MPYF32   R2H, R4H, R7H
+||        MOV32    *++, R1H, ARP1
+		SQRTF32  R1H,R3H
+        .endloop
+		NOP
+		NOP
+		NOP		 *, ARP5
+        MOV32    *XAR5++, R0H, ARP5
+        MOV32    *XAR5++, R1H, ARP5
+
+		CLRC AMODE ; Revert back to AMODE = 0
+		.c28_amode ; Tell assembler to check for AMODE = 1 syntax
 ;calculate total THD
 ;XAR4 Kalman_struct
 ;XAR5 amplitudes

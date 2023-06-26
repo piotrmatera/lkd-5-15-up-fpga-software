@@ -109,6 +109,7 @@ struct Converter_struct
     float div_range_modifier_Kalman_coefficients;
     float range_modifier_Kalman_values;
     float div_range_modifier_Kalman_values;
+    float div_range_modifier_Kalman_values_square;
 };
 
 extern struct Converter_struct Conv;

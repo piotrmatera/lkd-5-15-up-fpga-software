@@ -164,7 +164,7 @@ extern void Energy_meter_CPUasm();
 extern void DINT_copy_CPUasm(Uint16 *dst, Uint16 *src, Uint16 size);
 extern void SINCOS_calc_CPUasm(struct trigonometric_struct *sincos_table, float angle);
 extern void SINCOS_kalman_calc_CPUasm(struct trigonometric_struct *sincos_table, float angle);
-extern void Kalman_THD_calc_CPUasm(struct Kalman_struct *Kalman);
+extern void Kalman_THD_calc_CPUasm(struct Kalman_struct *Kalman, int32 *EMIF_Kalman);
 
 //
 //Task 2 (C) Variables
