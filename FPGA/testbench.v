@@ -18,7 +18,7 @@ module SerDes_tb;
 		forever begin
 			#4
 			i <= i+1;
-			if(i>=20000) $stop;
+			if(i>=4000) $stop;
 		end
 	end
 

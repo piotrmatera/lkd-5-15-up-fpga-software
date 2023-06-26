@@ -28,7 +28,7 @@ module addr_gen_no_series(clk, addr_sel, addr_ptr, addr_out);
 		addr_ptr_r[1] <= addr_ptr_r[0];
 		addr_reg[0] <= cnt[addr_ptr[OFFSET_WIDTH-1]];
 		addr_reg[1] <= addr_reg[0];
-		addr_out <= addr_reg[1] + addr_ptr_r[1][OFFSET_WIDTH-2:0];
+		addr_out <= addr_reg[0] + addr_ptr_r[0][OFFSET_WIDTH-2:0];
 		if(addr_sel[0]) cnt[0] <= cnt[0] + ADDR_INC_STATES;
 		if(addr_sel[1]) cnt[0] <= ADDR_START_STATES;
 		if(addr_sel[2]) cnt[1] <= cnt[1] + ADDR_INC_COMMON;

@@ -535,6 +535,7 @@ void Init_class::Variables()
     Conv.div_range_modifier_Kalman_coefficients = 1.0f / Conv.range_modifier_Kalman_coefficients;
     Conv.range_modifier_Kalman_values = (float)(1UL << 21) * CT_SD_max;
     Conv.div_range_modifier_Kalman_values = 1.0f / Conv.range_modifier_Kalman_values;
+    Conv.div_range_modifier_Kalman_values_square = Conv.div_range_modifier_Kalman_values * Conv.div_range_modifier_Kalman_values * Conv.range_modifier_Kalman_coefficients;
 
     EMIF_mem.write.Kalman.states[0].K1 = Kalman_gain[0] * Conv.range_modifier_Kalman_coefficients;
     EMIF_mem.write.Kalman.states[0].K2 = Kalman_gain[1] * Conv.range_modifier_Kalman_coefficients;
