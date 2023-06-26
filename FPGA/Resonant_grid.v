@@ -5,6 +5,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	parameter DEBUG = 0;
 	localparam QMATH_SHIFT = 2;
 	
+	localparam READ_DELAY = 4;
 	localparam HARMONICS_CNT_WIDTH = $clog2(HARMONICS_NUM);
 	
 	localparam M0_ADDR_WIDTH = 9;
@@ -140,7 +141,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	reg [31:0] harmonics_grid;
 	reg zero_error;
 	
-	reg [5:0] harm_save_r;
+	reg [READ_DELAY:0] harm_save_r;
 	reg [HARMONICS_CNT_WIDTH-1:0] harmonics_cmp;
 	
 	reg [HARMONICS_CNT_WIDTH-1:0] harmonics_cnt;	
@@ -243,7 +244,7 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 		cnt_25 <= cnt == 24;
 		if(cnt_25) harmonics_grid <= {1'b0, harmonics_grid[31:1]};
 			
-		harm_save_r <= {cnt == 2, harm_save_r[5:1]};
+		harm_save_r <= {cnt == 2, harm_save_r[READ_DELAY:1]};
 		if(harm_save_r[2]) harmonics_cmp <= Mem1_data_o[4 +: HARMONICS_CNT_WIDTH];
 		if(harm_save_r[1]) harmonics_grid <= Mem1_data_o[4 +: 32];
 		if(harm_save_r[0]) zero_error <= Mem1_data_o[4+32-QMATH_SHIFT];
@@ -942,37 +943,37 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	.addr_ptr(addrr_M1_ptr), .addr_out(addrr_M1_out));
 
 					
-	pipeline_delay #(.WIDTH(OPCODE_WIDTH),.CYCLES(5),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(OPCODE_WIDTH),.CYCLES(READ_DELAY),.SHIFT_MEM(0)) 
 	opcode_delay (.clk(clk_i), .in(Opcode), .out(Opcode_pip));
 	
-	pipeline_delay #(.WIDTH(AMUX_WIDTH),.CYCLES(5),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(AMUX_WIDTH),.CYCLES(READ_DELAY),.SHIFT_MEM(0)) 
 	amux_delay (.clk(clk_i), .in(AMuxsel), .out(AMuxsel_pip));
 	
-	pipeline_delay #(.WIDTH(BMUX_WIDTH),.CYCLES(5),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(BMUX_WIDTH),.CYCLES(READ_DELAY),.SHIFT_MEM(0)) 
 	bmux_delay (.clk(clk_i), .in(BMuxsel), .out(BMuxsel_pip));
 	
-	pipeline_delay #(.WIDTH(CMUX_WIDTH),.CYCLES(5),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(CMUX_WIDTH),.CYCLES(READ_DELAY),.SHIFT_MEM(0)) 
 	cmux_delay (.clk(clk_i), .in(CMuxsel), .out(CMuxsel_pip));
 	
-	pipeline_delay #(.WIDTH(AAMEM_WIDTH),.CYCLES(5),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(AAMEM_WIDTH),.CYCLES(READ_DELAY),.SHIFT_MEM(0)) 
 	aamem_delay (.clk(clk_i), .in(AAMemsel), .out(AAMemsel_pip));
 	
-	pipeline_delay #(.WIDTH(ABMEM_WIDTH),.CYCLES(5),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(ABMEM_WIDTH),.CYCLES(READ_DELAY),.SHIFT_MEM(0)) 
 	abmem_delay (.clk(clk_i), .in(ABMemsel), .out(ABMemsel_pip));
 	
-	pipeline_delay #(.WIDTH(BAMEM_WIDTH),.CYCLES(5),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(BAMEM_WIDTH),.CYCLES(READ_DELAY),.SHIFT_MEM(0)) 
 	bamem_delay (.clk(clk_i), .in(BAMemsel), .out(BAMemsel_pip));
 	
-	pipeline_delay #(.WIDTH(BBMEM_WIDTH),.CYCLES(5),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(BBMEM_WIDTH),.CYCLES(READ_DELAY),.SHIFT_MEM(0)) 
 	bbmem_delay (.clk(clk_i), .in(BBMemsel), .out(BBMemsel_pip));
 	
-	pipeline_delay #(.WIDTH(CMEM_WIDTH),.CYCLES(5),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(CMEM_WIDTH),.CYCLES(READ_DELAY),.SHIFT_MEM(0)) 
 	cmem_delay (.clk(clk_i), .in(CMemsel), .out(CMemsel_pip));
 		
-	pipeline_delay #(.WIDTH(1),.CYCLES(6),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(1),.CYCLES(READ_DELAY+1),.SHIFT_MEM(0)) 
 	ce_delay (.clk(clk_i), .in(CE1), .out(CE1_pip));
 	
-	pipeline_delay #(.WIDTH(1),.CYCLES(8),.SHIFT_MEM(0)) 
+	pipeline_delay #(.WIDTH(1),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 	we_delay (.clk(clk_i), .in(Mem0_we), .out(Mem0_we_pip));
 	
 	
@@ -1006,43 +1007,43 @@ module Resonant_grid(clk_i, Mem1_data_i, Mem1_addrw_i, Mem1_we_i, Mem1_clk_w, Me
 	assign Mem0_data_i_pip2 = Mem0_data_i;
 		
 	if(DEBUG) begin
-		pipeline_delay #(.WIDTH(CNT_WIDTH),.CYCLES(9),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(CNT_WIDTH),.CYCLES(READ_DELAY+4),.SHIFT_MEM(0)) 
 		cnt_delay2 (.clk(clk_i), .in(cnt), .out(cnt_pip2));
 			
-		pipeline_delay #(.WIDTH(HARMONICS_CNT_WIDTH),.CYCLES(9),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(HARMONICS_CNT_WIDTH),.CYCLES(READ_DELAY+4),.SHIFT_MEM(0)) 
 		harmonics_cnt_delay2 (.clk(clk_i), .in(harmonics_cnt), .out(harmonics_cnt_pip2));
 		
-		pipeline_delay #(.WIDTH(OPCODE_WIDTH),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(OPCODE_WIDTH),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		opcode_delay2 (.clk(clk_i), .in(Opcode), .out(Opcode_pip2));
 		
-		pipeline_delay #(.WIDTH(AMUX_WIDTH),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(AMUX_WIDTH),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		amux_delay2 (.clk(clk_i), .in(AMuxsel), .out(AMuxsel_pip2));
 		
-		pipeline_delay #(.WIDTH(BMUX_WIDTH),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(BMUX_WIDTH),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		bmux_delay2 (.clk(clk_i), .in(BMuxsel), .out(BMuxsel_pip2));
 		
-		pipeline_delay #(.WIDTH(CMUX_WIDTH),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(CMUX_WIDTH),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		cmux_delay2 (.clk(clk_i), .in(CMuxsel), .out(CMuxsel_pip2));
 		
-		pipeline_delay #(.WIDTH(AAMEM_WIDTH),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(AAMEM_WIDTH),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		aamem_delay2 (.clk(clk_i), .in(AAMemsel), .out(AAMemsel_pip2));
 		
-		pipeline_delay #(.WIDTH(ABMEM_WIDTH),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(ABMEM_WIDTH),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		abmem_delay2 (.clk(clk_i), .in(ABMemsel), .out(ABMemsel_pip2));
 		
-		pipeline_delay #(.WIDTH(BAMEM_WIDTH),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(BAMEM_WIDTH),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		bamem_delay2 (.clk(clk_i), .in(BAMemsel), .out(BAMemsel_pip2));
 		
-		pipeline_delay #(.WIDTH(BBMEM_WIDTH),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(BBMEM_WIDTH),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		bbmem_delay2 (.clk(clk_i), .in(BBMemsel), .out(BBMemsel_pip2));
 		
-		pipeline_delay #(.WIDTH(CMEM_WIDTH),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(CMEM_WIDTH),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		cmem_delay2 (.clk(clk_i), .in(CMemsel), .out(CMemsel_pip2));
 			
-		pipeline_delay #(.WIDTH(1),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(1),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		ce_delay2 (.clk(clk_i), .in(CE1), .out(CE1_pip2));
 					
-		pipeline_delay #(.WIDTH(1),.CYCLES(8),.SHIFT_MEM(0)) 
+		pipeline_delay #(.WIDTH(1),.CYCLES(READ_DELAY+3),.SHIFT_MEM(0)) 
 		we_delay2 (.clk(clk_i), .in(Mem0_we), .out(Mem0_we_pip2));
 		
 		
