@@ -604,7 +604,8 @@ Uint16 SD_card_class::save_state()
     fresult = f_truncate(&fil);
     fresult = f_close(&fil);
     if(alarm_master.bit.FLT_SUPPLY_MASTER) return fresult;
-///////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////
 
 
     ltoa(file_number_errors, filename_buffer, 10);
@@ -614,7 +615,24 @@ Uint16 SD_card_class::save_state()
         f_close(&fil);
         return fresult;
     }
+
     save_memory(&fil, (Uint16 *)&Scope.data, sizeof(Scope.data));
+    fresult = f_truncate(&fil);
+    fresult = f_close(&fil);
+
+    ///////////////////////////////////////////////////////////////////
+
+    ltoa(file_number_errors, filename_buffer, 10);
+    strcat(filename_buffer,"Scope.bit");
+    if(fresult = f_open(&fil, filename_buffer, FA_READ | FA_WRITE | FA_CREATE_ALWAYS))
+    {
+        f_close(&fil);
+        return fresult;
+    }
+
+    Uint32 Scope_depth = EMIF_mem.read.Scope_depth;
+    Uint32 index = 0;
+    while(index < Scope_depth) index = save_FPGA_scope(&fil, index);
     fresult = f_truncate(&fil);
     fresult = f_close(&fil);
 

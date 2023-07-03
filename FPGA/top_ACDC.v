@@ -51,11 +51,11 @@
 `define TX_Mod_FM  `C+2 
 `define RX_Mod_FM  `D+2 
  
-`define TX1_FM  `C+20 
-`define TX2_FM  `B+19 
+`define TX1_FM  `L+4 
+`define TX2_FM  `E+3 
  
-`define RX1_FM  `D+17 
-`define RX2_FM  `C+18 
+`define RX1_FM  `E+5 
+`define RX2_FM  `D+5
 
 `define PWM_L_N_FM  `B+2
 `define PWM_H_N_FM  `B+3
@@ -133,12 +133,12 @@
 //H18 -> D12 
 //C17 -> D17 
  
-`define BGA
-//`define HLQFP
+//`define BGA
+`define HLQFP
  
 module SerDes_master(CPU_io, FPGA_io); 
-	inout[168:0] CPU_io/*synthesis IO_TYPE="LVCMOS33" */;  
-	inout[400:1] FPGA_io/*synthesis IO_TYPE="LVCMOS33" */; 
+	inout[168:0] CPU_io;  
+	inout[400:1] FPGA_io; 
   
 	integer i;  
  
@@ -832,7 +832,7 @@ module SerDes_master(CPU_io, FPGA_io);
 ///////////////////////////////////////////////////////////////////// 
 
 	localparam DEB_WRITE_WIDTH_MULTIPLY = 2;
-	localparam DEB_WADDR_WIDTH = 8; 
+	localparam DEB_WADDR_WIDTH = 11; 
 	
 	localparam DEB_READ_WIDTH = 36;
 	localparam DEB_WRITE_WIDTH = DEB_WRITE_WIDTH_MULTIPLY*DEB_READ_WIDTH;
@@ -930,10 +930,13 @@ module SerDes_master(CPU_io, FPGA_io);
 		if(Scope_enable_extended) timestamp_mem <= timestamp_counter;
 	end 
 	
-	assign Scope_acquire_before_trigger = EMIF_RX_reg [4][DEB_WADDR_WIDTH-1:0];
-	assign Scope_enable = rx1_lopri_msg_rdy[0] | (|rx1_lopri_msg_wip) | fifo_tx1_core_we[1] | (rx1_fifo_rx_o == `K_Start_Lopri_Packet); 
-	assign Scope_data_in = {rx1_state_reg, rx1_lopri_msg_rdy[3:0], rx1_lopri_msg_wip[3:0], rx1_fifo_rx_o, rx1_fifo_rx_dv, tx1_lopri_msg_wip[3:0], fifo_tx1_core, fifo_tx1_core_we, Scope_trigger_r, timestamp_diff}; 
-	assign Scope_trigger = EMIF_RX_reg [5][0]; 
+	assign Scope_acquire_before_trigger = EMIF_RX_reg[4][DEB_WADDR_WIDTH-1:0];
+	assign Scope_trigger = EMIF_RX_reg[5][0]; 
+		
+	wire [7:0] PWM_i; 
+	assign Scope_enable = 1'b1; 
+	assign Scope_data_in = {PWM_i[6], PWM_i[4], PWM_i[2], PWM_i[0], FLT_REG_O[15:0], FLT_bus[15:0], sync_phase, Scope_trigger_r, timestamp_diff}; 
+
 	 
 /////////////////////////////////////////////////////////////////////  
   
@@ -1132,14 +1135,14 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_FLT_FPGA15(.I(!EMIF_RX_reg [10][15]), .T(1'b0), .O(RDY_temp[7]), .B(FPGA_io[`RDY_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" OPENDRAIN="ON" */; 
   
 	wire [7:0] PWM_o; 
-	BB BB_PWM_FPGA0(.I(PWM_o[0]), .T(1'b0), .O(), .B(FPGA_io[`PWM_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_PWM_FPGA1(.I(PWM_o[1]), .T(1'b0), .O(), .B(FPGA_io[`PWM_L_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_PWM_FPGA2(.I(PWM_o[2]), .T(1'b0), .O(), .B(FPGA_io[`PWM_H_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_PWM_FPGA3(.I(PWM_o[3]), .T(1'b0), .O(), .B(FPGA_io[`PWM_L_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_PWM_FPGA4(.I(PWM_o[4]), .T(1'b0), .O(), .B(FPGA_io[`PWM_H_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_PWM_FPGA5(.I(PWM_o[5]), .T(1'b0), .O(), .B(FPGA_io[`PWM_L_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_PWM_FPGA6(.I(PWM_o[6]), .T(1'b0), .O(), .B(FPGA_io[`PWM_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_PWM_FPGA7(.I(PWM_o[7]), .T(1'b0), .O(), .B(FPGA_io[`PWM_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_PWM_FPGA0(.I(PWM_o[0]), .T(1'b0), .O(PWM_i[0]), .B(FPGA_io[`PWM_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_PWM_FPGA1(.I(PWM_o[1]), .T(1'b0), .O(PWM_i[1]), .B(FPGA_io[`PWM_L_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_PWM_FPGA2(.I(PWM_o[2]), .T(1'b0), .O(PWM_i[2]), .B(FPGA_io[`PWM_H_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_PWM_FPGA3(.I(PWM_o[3]), .T(1'b0), .O(PWM_i[3]), .B(FPGA_io[`PWM_L_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_PWM_FPGA4(.I(PWM_o[4]), .T(1'b0), .O(PWM_i[4]), .B(FPGA_io[`PWM_H_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_PWM_FPGA5(.I(PWM_o[5]), .T(1'b0), .O(PWM_i[5]), .B(FPGA_io[`PWM_L_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_PWM_FPGA6(.I(PWM_o[6]), .T(1'b0), .O(PWM_i[6]), .B(FPGA_io[`PWM_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_PWM_FPGA7(.I(PWM_o[7]), .T(1'b0), .O(PWM_i[7]), .B(FPGA_io[`PWM_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
  
 	wire TRIGGER; 
 	reg TRIGGER_r; 
@@ -1234,8 +1237,9 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_Modbus_TX_FPGA(.I(Modbus_TX), .T(1'b0), .O(), .B(FPGA_io[`TX_Mod_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
 	BB BB_Modbus_RX_FPGA(.I(1'b0), .T(1'b1), .O(Modbus_RX), .B(FPGA_io[`RX_Mod_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
    
-	BB BB_COMM_TX0(.I(tx_o[0]), .T(1'b0), .O(), .B(FPGA_io[`TX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
+	OB BB_COMM_TX0(.I(tx_o[0]), .O(FPGA_io[`TX1_FM]))/*synthesis IO_TYPE="LVPECL33E" */;  
 	BB BB_COMM_TX1(.I(tx_o[1]), .T(1'b0), .O(), .B(FPGA_io[`TX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
-	BB BB_COMM_RX0(.I(1'b0), .T(1'b1), .O(rx_i[0]), .B(FPGA_io[`RX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
+	assign rx_i[0] = FPGA_io[`RX1_FM];
+	//IB BB_COMM_RX0(.I(FPGA_io[`RX1_FM]), .O(rx_i[0]))/*synthesis IO_TYPE="LVPECL33" */;  
 	BB BB_COMM_RX1(.I(1'b0), .T(1'b1), .O(rx_i[1]), .B(FPGA_io[`RX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 endmodule  

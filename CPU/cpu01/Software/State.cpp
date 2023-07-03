@@ -1589,6 +1589,9 @@ void Machine_class::start()
 
         DELAY_US(100);
 
+
+        EMIF_mem.write.Scope_acquire_before_trigger = (EMIF_mem.read.Scope_depth / EMIF_mem.read.Scope_width_mult)>>1;
+        EMIF_mem.write.Scope_trigger = 0;
         Scope_start();
 
         if( mosfet_ctrl_app.getState() != MosfetCtrlApp::state_idle ){
@@ -2340,6 +2343,7 @@ void Machine_class::cleanup()
         Machine.state_last = Machine.state;
         Conv.enable = 0;
         Scope_trigger_unc();
+        EMIF_mem.write.Scope_trigger = 1;
         Machine.recent_error = 1;
         if(mosfet_ctrl_app.getState() == MosfetCtrlApp::state_error){
             //gdy wystapil jakis blad to proba zrestartowania maszyn stanowych
@@ -2349,9 +2353,10 @@ void Machine_class::cleanup()
     }
 
     if(Scope.finished_sorting && !status_master.Scope_snapshot_pending && !control_master.triggers.bit.Scope_snapshot
-            && mosfet_ctrl_app.finished())
+            && mosfet_ctrl_app.finished() && EMIF_mem.read.Scope_rdy)
     {
         SD_card.save_state();
+        EMIF_mem.write.Scope_trigger = 0;
         if(Machine.error_retry == 4) control_master.triggers.bit.CPU_reset = 1;
         Machine.state = state_idle;
     }
