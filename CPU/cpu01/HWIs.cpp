@@ -222,6 +222,7 @@ interrupt void SD_AVG_NT()
             EALLOW;
             EPwm4Regs.TZFRC.bit.OST = 1;
             EDIS;
+            EMIF_mem.write.Scope_trigger = 1;
             alarm_master_snapshot.all[0] = alarm_master.all[0];
             alarm_master_snapshot.all[1] = alarm_master.all[1];
             alarm_master_snapshot.all[2] = alarm_master.all[2];
