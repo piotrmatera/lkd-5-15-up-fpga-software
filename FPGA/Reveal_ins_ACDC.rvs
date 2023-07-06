@@ -1,4 +1,4 @@
-<Project ModBy="Analyzer" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvs" Date="2023-07-02">
+<Project ModBy="Analyzer" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvs" Date="2023-07-03">
  <Core Name="SerDes_master_LA0">
   <Setting>
    <Capture SamplesPerTrig="512" NumTrigsCap="1"/>
