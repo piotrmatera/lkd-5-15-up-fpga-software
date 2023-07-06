@@ -51,11 +51,11 @@
 `define TX_Mod_FM  `C+2 
 `define RX_Mod_FM  `D+2 
  
-`define TX1_FM  `L+4 
-`define TX2_FM  `E+3 
+`define TX2_FM  `C+20 
+`define TX1_FM  `B+19 
  
-`define RX1_FM  `E+5 
-`define RX2_FM  `D+5
+`define RX2_FM  `D+17 
+`define RX1_FM  `C+18
 
 `define PWM_L_N_FM  `B+2
 `define PWM_H_N_FM  `B+3
@@ -1237,9 +1237,8 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_Modbus_TX_FPGA(.I(Modbus_TX), .T(1'b0), .O(), .B(FPGA_io[`TX_Mod_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
 	BB BB_Modbus_RX_FPGA(.I(1'b0), .T(1'b1), .O(Modbus_RX), .B(FPGA_io[`RX_Mod_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
    
-	OB BB_COMM_TX0(.I(tx_o[0]), .O(FPGA_io[`TX1_FM]))/*synthesis IO_TYPE="LVPECL33E" */;  
+	BB BB_COMM_TX0(.I(tx_o[0]), .T(1'b0), .O(), .B(FPGA_io[`TX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 	BB BB_COMM_TX1(.I(tx_o[1]), .T(1'b0), .O(), .B(FPGA_io[`TX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
-	assign rx_i[0] = FPGA_io[`RX1_FM];
-	//IB BB_COMM_RX0(.I(FPGA_io[`RX1_FM]), .O(rx_i[0]))/*synthesis IO_TYPE="LVPECL33" */;  
+	BB BB_COMM_RX0(.I(1'b0), .T(1'b1), .O(rx_i[0]), .B(FPGA_io[`RX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 	BB BB_COMM_RX1(.I(1'b0), .T(1'b1), .O(rx_i[1]), .B(FPGA_io[`RX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 endmodule  
