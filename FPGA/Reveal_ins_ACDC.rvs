@@ -1,5 +1,5 @@
-<Project ModBy="Analyzer" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvs" Date="2023-07-03">
- <Core Name="SerDes_master_LA0">
+<Project ModBy="Analyzer" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvs" Date="2023-07-08">
+ <Core Name="top_ACDC_RX1_port">
   <Setting>
    <Capture SamplesPerTrig="512" NumTrigsCap="1"/>
    <Event EventCnt="0" CntEnableRun="0"/>
@@ -22,37 +22,111 @@
      <Sig Name="RX1_port/fifo_we_o:0"/>
      <Sig Name="RX1_port/fifo_we_o:1"/>
     </Bus>
-    <Sig Name="RX1_port/error"/>
     <Sig Name="RX1_port/rx_rdy_o"/>
-    <Sig Name="RX1_port/dec_en_i"/>
-    <Bus Name="RX1_port/dec_i" Radix="0">
-     <Sig Name="RX1_port/dec_i:0"/>
-     <Sig Name="RX1_port/dec_i:1"/>
-     <Sig Name="RX1_port/dec_i:2"/>
-     <Sig Name="RX1_port/dec_i:3"/>
-     <Sig Name="RX1_port/dec_i:4"/>
-     <Sig Name="RX1_port/dec_i:5"/>
-     <Sig Name="RX1_port/dec_i:6"/>
-     <Sig Name="RX1_port/dec_i:7"/>
-     <Sig Name="RX1_port/dec_i:8"/>
-     <Sig Name="RX1_port/dec_i:9"/>
-    </Bus>
-    <Bus Name="RX1_port/dec_o" Radix="0">
-     <Sig Name="RX1_port/dec_o:0"/>
-     <Sig Name="RX1_port/dec_o:1"/>
-     <Sig Name="RX1_port/dec_o:2"/>
-     <Sig Name="RX1_port/dec_o:3"/>
-     <Sig Name="RX1_port/dec_o:4"/>
-     <Sig Name="RX1_port/dec_o:5"/>
-     <Sig Name="RX1_port/dec_o:6"/>
-     <Sig Name="RX1_port/dec_o:7"/>
-     <Sig Name="RX1_port/dec_o:8"/>
-    </Bus>
-    <Sig Name="RX1_port/comma_even"/>
-    <Sig Name="RX1_port/comma_odd"/>
    </Trace>
    <Trigger>
-    <TU Operator="6" Name="TU1" ID="1" Value="1" Radix="0"/>
+    <TU Operator="0" Name="TU1" ID="1" Value="0" Radix="0"/>
+    <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
+   </Trigger>
+  </Dataset>
+ </Core>
+ <Core Name="top_ACDC_RX2_port">
+  <Setting>
+   <Capture SamplesPerTrig="512" NumTrigsCap="1"/>
+   <Event EventCnt="0" CntEnableRun="0"/>
+   <TrigSetting PreTrgSamples="" AND_ALL="0" PostTrgSamples="" TURadix="0"/>
+  </Setting>
+  <Dataset Name="Base">
+   <Trace>
+    <Bus Name="RX2_port/fifo_o" Radix="0">
+     <Sig Name="RX2_port/fifo_o:0"/>
+     <Sig Name="RX2_port/fifo_o:1"/>
+     <Sig Name="RX2_port/fifo_o:2"/>
+     <Sig Name="RX2_port/fifo_o:3"/>
+     <Sig Name="RX2_port/fifo_o:4"/>
+     <Sig Name="RX2_port/fifo_o:5"/>
+     <Sig Name="RX2_port/fifo_o:6"/>
+     <Sig Name="RX2_port/fifo_o:7"/>
+     <Sig Name="RX2_port/fifo_o:8"/>
+    </Bus>
+    <Bus Name="RX2_port/fifo_we_o" Radix="0">
+     <Sig Name="RX2_port/fifo_we_o:0"/>
+     <Sig Name="RX2_port/fifo_we_o:1"/>
+    </Bus>
+    <Sig Name="RX2_port/rx_rdy_o"/>
+   </Trace>
+   <Trigger>
+    <TU Operator="0" Name="TU1" ID="1" Value="0" Radix="0"/>
+    <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
+   </Trigger>
+  </Dataset>
+ </Core>
+ <Core Name="top_ACDC_comm">
+  <Setting>
+   <Capture SamplesPerTrig="512" NumTrigsCap="1"/>
+   <Event EventCnt="0" CntEnableRun="0"/>
+   <TrigSetting PreTrgSamples="" AND_ALL="0" PostTrgSamples="" TURadix="0"/>
+  </Setting>
+  <Dataset Name="Base">
+   <Trace>
+    <Bus Name="RX1_core/fifo_rx_o" Radix="0">
+     <Sig Name="RX1_core/fifo_rx_o:0"/>
+     <Sig Name="RX1_core/fifo_rx_o:1"/>
+     <Sig Name="RX1_core/fifo_rx_o:2"/>
+     <Sig Name="RX1_core/fifo_rx_o:3"/>
+     <Sig Name="RX1_core/fifo_rx_o:4"/>
+     <Sig Name="RX1_core/fifo_rx_o:5"/>
+     <Sig Name="RX1_core/fifo_rx_o:6"/>
+     <Sig Name="RX1_core/fifo_rx_o:7"/>
+     <Sig Name="RX1_core/fifo_rx_o:8"/>
+    </Bus>
+    <Sig Name="RX1_core/fifo_rx_dv"/>
+    <Bus Name="RX2_core/fifo_rx_o" Radix="0">
+     <Sig Name="RX2_core/fifo_rx_o:0"/>
+     <Sig Name="RX2_core/fifo_rx_o:1"/>
+     <Sig Name="RX2_core/fifo_rx_o:2"/>
+     <Sig Name="RX2_core/fifo_rx_o:3"/>
+     <Sig Name="RX2_core/fifo_rx_o:4"/>
+     <Sig Name="RX2_core/fifo_rx_o:5"/>
+     <Sig Name="RX2_core/fifo_rx_o:6"/>
+     <Sig Name="RX2_core/fifo_rx_o:7"/>
+     <Sig Name="RX2_core/fifo_rx_o:8"/>
+    </Bus>
+    <Sig Name="RX2_core/fifo_rx_dv"/>
+    <Bus Name="TX1_core/fifo_o" Radix="0">
+     <Sig Name="TX1_core/fifo_o:0"/>
+     <Sig Name="TX1_core/fifo_o:1"/>
+     <Sig Name="TX1_core/fifo_o:2"/>
+     <Sig Name="TX1_core/fifo_o:3"/>
+     <Sig Name="TX1_core/fifo_o:4"/>
+     <Sig Name="TX1_core/fifo_o:5"/>
+     <Sig Name="TX1_core/fifo_o:6"/>
+     <Sig Name="TX1_core/fifo_o:7"/>
+     <Sig Name="TX1_core/fifo_o:8"/>
+    </Bus>
+    <Bus Name="TX1_core/fifo_we_o" Radix="0">
+     <Sig Name="TX1_core/fifo_we_o:0"/>
+     <Sig Name="TX1_core/fifo_we_o:1"/>
+    </Bus>
+    <Bus Name="TX2_core/fifo_o" Radix="0">
+     <Sig Name="TX2_core/fifo_o:0"/>
+     <Sig Name="TX2_core/fifo_o:1"/>
+     <Sig Name="TX2_core/fifo_o:2"/>
+     <Sig Name="TX2_core/fifo_o:3"/>
+     <Sig Name="TX2_core/fifo_o:4"/>
+     <Sig Name="TX2_core/fifo_o:5"/>
+     <Sig Name="TX2_core/fifo_o:6"/>
+     <Sig Name="TX2_core/fifo_o:7"/>
+     <Sig Name="TX2_core/fifo_o:8"/>
+    </Bus>
+    <Bus Name="TX2_core/fifo_we_o" Radix="0">
+     <Sig Name="TX2_core/fifo_we_o:0"/>
+     <Sig Name="TX2_core/fifo_we_o:1"/>
+    </Bus>
+    <Sig Name="sync_phase"/>
+   </Trace>
+   <Trigger>
+    <TU Operator="0" Name="TU1" ID="1" Value="0" Radix="0"/>
     <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
    </Trigger>
   </Dataset>

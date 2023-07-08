@@ -1,4 +1,9 @@
 rvl_alias "fifo_rx1_clk_5x" "RX1_port/fifo_clk_o";
+rvl_alias "fifo_rx2_clk_5x" "RX2_port/fifo_clk_o";
+rvl_alias "clk_1x" "clk_1x";
+RVL_ALIAS "fifo_rx1_clk_5x" "RX1_port/fifo_clk_o"; 
+RVL_ALIAS "fifo_rx2_clk_5x" "RX2_port/fifo_clk_o"; 
+RVL_ALIAS "clk_1x" "clk_1x"; 
 BLOCK RESETPATHS ;
 BLOCK ASYNCPATHS ;
 BLOCK JTAGPATHS ;

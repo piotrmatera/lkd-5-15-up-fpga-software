@@ -1,7 +1,7 @@
-<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-02">
+<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-07">
     <IP Version="1_6_042617"/>
     <Design DesignEntry="Schematic/Verilog HDL" Synthesis="lse" DeviceFamily="ECP5U" DesignName="SKJEE"/>
-    <Core InsertDataset="0" Insert="1" Reveal_sig="499449419" Name="SerDes_master_LA0" ID="0">
+    <Core InsertDataset="0" Insert="1" Reveal_sig="500116246" Name="top_ACDC_RX1_port" ID="0">
         <Setting>
             <Clock SampleClk="RX1_port/fifo_clk_o" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
             <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="512"/>
@@ -27,37 +27,117 @@
                     <Sig Type="SIG" Name="RX1_port/fifo_we_o:0"/>
                     <Sig Type="SIG" Name="RX1_port/fifo_we_o:1"/>
                 </Bus>
-                <Sig Type="SIG" Name="RX1_port/error"/>
                 <Sig Type="SIG" Name="RX1_port/rx_rdy_o"/>
-                <Sig Type="SIG" Name="RX1_port/dec_en_i"/>
-                <Bus Name="RX1_port/dec_i">
-                    <Sig Type="SIG" Name="RX1_port/dec_i:0"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:1"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:2"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:3"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:4"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:5"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:6"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:7"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:8"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:9"/>
-                </Bus>
-                <Bus Name="RX1_port/dec_o">
-                    <Sig Type="SIG" Name="RX1_port/dec_o:0"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:1"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:2"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:3"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:4"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:5"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:6"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:7"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:8"/>
-                </Bus>
-                <Sig Type="SIG" Name="RX1_port/comma_even"/>
-                <Sig Type="SIG" Name="RX1_port/comma_odd"/>
             </Trace>
             <Trigger>
-                <TU Serialbits="0" Type="0" ID="1" Sig="RX1_port/error,"/>
+                <TU Serialbits="0" Type="0" ID="1" Sig="RX1_port/rx_rdy_o,"/>
+                <TE MaxSequence="2" MaxEvnCnt="1" ID="1" Resource="1"/>
+            </Trigger>
+        </Dataset>
+    </Core>
+    <Core InsertDataset="0" Insert="1" Reveal_sig="500116247" Name="top_ACDC_RX2_port" ID="1">
+        <Setting>
+            <Clock SampleClk="RX2_port/fifo_clk_o" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
+            <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="512"/>
+            <Capture Mode="0" MinSamplesPerTrig="8"/>
+            <Event CntEnable="0" MaxEventCnt="8"/>
+            <TrigOut Polarity="0" MinPulseWidth="0" TrigOutNetType="1" EnableTrigOut="0" TrigOutNet="reveal_debug_top_ACDC_LA1_net"/>
+            <DistRAM Disable="1"/>
+        </Setting>
+        <Dataset Name="Base">
+            <Trace>
+                <Bus Name="RX2_port/fifo_o">
+                    <Sig Type="SIG" Name="RX2_port/fifo_o:0"/>
+                    <Sig Type="SIG" Name="RX2_port/fifo_o:1"/>
+                    <Sig Type="SIG" Name="RX2_port/fifo_o:2"/>
+                    <Sig Type="SIG" Name="RX2_port/fifo_o:3"/>
+                    <Sig Type="SIG" Name="RX2_port/fifo_o:4"/>
+                    <Sig Type="SIG" Name="RX2_port/fifo_o:5"/>
+                    <Sig Type="SIG" Name="RX2_port/fifo_o:6"/>
+                    <Sig Type="SIG" Name="RX2_port/fifo_o:7"/>
+                    <Sig Type="SIG" Name="RX2_port/fifo_o:8"/>
+                </Bus>
+                <Bus Name="RX2_port/fifo_we_o">
+                    <Sig Type="SIG" Name="RX2_port/fifo_we_o:0"/>
+                    <Sig Type="SIG" Name="RX2_port/fifo_we_o:1"/>
+                </Bus>
+                <Sig Type="SIG" Name="RX2_port/rx_rdy_o"/>
+            </Trace>
+            <Trigger>
+                <TU Serialbits="0" Type="0" ID="1" Sig="RX2_port/rx_rdy_o,"/>
+                <TE MaxSequence="2" MaxEvnCnt="1" ID="1" Resource="1"/>
+            </Trigger>
+        </Dataset>
+    </Core>
+    <Core InsertDataset="0" Insert="1" Reveal_sig="500116248" Name="top_ACDC_comm" ID="2">
+        <Setting>
+            <Clock SampleClk="clk_1x" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
+            <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="512"/>
+            <Capture Mode="0" MinSamplesPerTrig="8"/>
+            <Event CntEnable="0" MaxEventCnt="8"/>
+            <TrigOut Polarity="0" MinPulseWidth="0" TrigOutNetType="1" EnableTrigOut="0" TrigOutNet="reveal_debug_top_ACDC_LA2_net"/>
+            <DistRAM Disable="1"/>
+        </Setting>
+        <Dataset Name="Base">
+            <Trace>
+                <Bus Name="RX1_core/fifo_rx_o">
+                    <Sig Type="SIG" Name="RX1_core/fifo_rx_o:0"/>
+                    <Sig Type="SIG" Name="RX1_core/fifo_rx_o:1"/>
+                    <Sig Type="SIG" Name="RX1_core/fifo_rx_o:2"/>
+                    <Sig Type="SIG" Name="RX1_core/fifo_rx_o:3"/>
+                    <Sig Type="SIG" Name="RX1_core/fifo_rx_o:4"/>
+                    <Sig Type="SIG" Name="RX1_core/fifo_rx_o:5"/>
+                    <Sig Type="SIG" Name="RX1_core/fifo_rx_o:6"/>
+                    <Sig Type="SIG" Name="RX1_core/fifo_rx_o:7"/>
+                    <Sig Type="SIG" Name="RX1_core/fifo_rx_o:8"/>
+                </Bus>
+                <Sig Type="SIG" Name="RX1_core/fifo_rx_dv"/>
+                <Bus Name="RX2_core/fifo_rx_o">
+                    <Sig Type="SIG" Name="RX2_core/fifo_rx_o:0"/>
+                    <Sig Type="SIG" Name="RX2_core/fifo_rx_o:1"/>
+                    <Sig Type="SIG" Name="RX2_core/fifo_rx_o:2"/>
+                    <Sig Type="SIG" Name="RX2_core/fifo_rx_o:3"/>
+                    <Sig Type="SIG" Name="RX2_core/fifo_rx_o:4"/>
+                    <Sig Type="SIG" Name="RX2_core/fifo_rx_o:5"/>
+                    <Sig Type="SIG" Name="RX2_core/fifo_rx_o:6"/>
+                    <Sig Type="SIG" Name="RX2_core/fifo_rx_o:7"/>
+                    <Sig Type="SIG" Name="RX2_core/fifo_rx_o:8"/>
+                </Bus>
+                <Sig Type="SIG" Name="RX2_core/fifo_rx_dv"/>
+                <Bus Name="TX1_core/fifo_o">
+                    <Sig Type="SIG" Name="TX1_core/fifo_o:0"/>
+                    <Sig Type="SIG" Name="TX1_core/fifo_o:1"/>
+                    <Sig Type="SIG" Name="TX1_core/fifo_o:2"/>
+                    <Sig Type="SIG" Name="TX1_core/fifo_o:3"/>
+                    <Sig Type="SIG" Name="TX1_core/fifo_o:4"/>
+                    <Sig Type="SIG" Name="TX1_core/fifo_o:5"/>
+                    <Sig Type="SIG" Name="TX1_core/fifo_o:6"/>
+                    <Sig Type="SIG" Name="TX1_core/fifo_o:7"/>
+                    <Sig Type="SIG" Name="TX1_core/fifo_o:8"/>
+                </Bus>
+                <Bus Name="TX1_core/fifo_we_o">
+                    <Sig Type="SIG" Name="TX1_core/fifo_we_o:0"/>
+                    <Sig Type="SIG" Name="TX1_core/fifo_we_o:1"/>
+                </Bus>
+                <Bus Name="TX2_core/fifo_o">
+                    <Sig Type="SIG" Name="TX2_core/fifo_o:0"/>
+                    <Sig Type="SIG" Name="TX2_core/fifo_o:1"/>
+                    <Sig Type="SIG" Name="TX2_core/fifo_o:2"/>
+                    <Sig Type="SIG" Name="TX2_core/fifo_o:3"/>
+                    <Sig Type="SIG" Name="TX2_core/fifo_o:4"/>
+                    <Sig Type="SIG" Name="TX2_core/fifo_o:5"/>
+                    <Sig Type="SIG" Name="TX2_core/fifo_o:6"/>
+                    <Sig Type="SIG" Name="TX2_core/fifo_o:7"/>
+                    <Sig Type="SIG" Name="TX2_core/fifo_o:8"/>
+                </Bus>
+                <Bus Name="TX2_core/fifo_we_o">
+                    <Sig Type="SIG" Name="TX2_core/fifo_we_o:0"/>
+                    <Sig Type="SIG" Name="TX2_core/fifo_we_o:1"/>
+                </Bus>
+                <Sig Type="SIG" Name="sync_phase"/>
+            </Trace>
+            <Trigger>
+                <TU Serialbits="0" Type="0" ID="1" Sig="sync_phase,"/>
                 <TE MaxSequence="2" MaxEvnCnt="1" ID="1" Resource="1"/>
             </Trigger>
         </Dataset>

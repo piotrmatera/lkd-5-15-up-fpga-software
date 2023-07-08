@@ -45,41 +45,10 @@
     </TraceSignal>
     <TraceSignal IsHidden="false" Name="RX1_port/fifo_we_o:0" NodeType="2" PortIndex="9"/>
     <TraceSignal IsHidden="false" Name="RX1_port/fifo_we_o:1" NodeType="2" PortIndex="10"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/error" NodeType="0" PortIndex="11"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/rx_rdy_o" NodeType="0" PortIndex="12"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_en_i" NodeType="0" PortIndex="13"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i" NodeType="1" PortIndex="14">
-     <BusRadix Radix="0"/>
-     <IsExpanded Expand="false"/>
-    </TraceSignal>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:0" NodeType="2" PortIndex="14"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:1" NodeType="2" PortIndex="15"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:2" NodeType="2" PortIndex="16"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:3" NodeType="2" PortIndex="17"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:4" NodeType="2" PortIndex="18"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:5" NodeType="2" PortIndex="19"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:6" NodeType="2" PortIndex="20"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:7" NodeType="2" PortIndex="21"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:8" NodeType="2" PortIndex="22"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:9" NodeType="2" PortIndex="23"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o" NodeType="1" PortIndex="24">
-     <BusRadix Radix="0"/>
-     <IsExpanded Expand="false"/>
-    </TraceSignal>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:0" NodeType="2" PortIndex="24"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:1" NodeType="2" PortIndex="25"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:2" NodeType="2" PortIndex="26"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:3" NodeType="2" PortIndex="27"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:4" NodeType="2" PortIndex="28"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:5" NodeType="2" PortIndex="29"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:6" NodeType="2" PortIndex="30"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:7" NodeType="2" PortIndex="31"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:8" NodeType="2" PortIndex="32"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/comma_even" NodeType="0" PortIndex="33"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/comma_odd" NodeType="0" PortIndex="34"/>
+    <TraceSignal IsHidden="false" Name="RX1_port/rx_rdy_o" NodeType="0" PortIndex="11"/>
    </TraceSigTreeData>
    <TriggerUI UserSelect="0" PreSelectType="0" PreSelect="1" UserSelectPos="0"/>
-   <CoreRun Run="true"/>
+   <CoreRun Run="false"/>
    <CoreWndUIData>
     <ClockFrequency Unit="ns" Frequency="-1.0"/>
    </CoreWndUIData>

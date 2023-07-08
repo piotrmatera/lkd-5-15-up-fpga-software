@@ -51,11 +51,11 @@
 `define TX_Mod_FM  `C+2 
 `define RX_Mod_FM  `D+2 
  
-`define TX2_FM  `C+20 
-`define TX1_FM  `B+19 
- 
-`define RX2_FM  `D+17 
-`define RX1_FM  `C+18
+`define TX1_FM  `C+20 
+`define TX2_FM  `B+19
+
+`define RX1_FM  `D+17 
+`define RX2_FM  `C+18
 
 `define PWM_L_N_FM  `B+2
 `define PWM_H_N_FM  `B+3
@@ -133,10 +133,10 @@
 //H18 -> D12 
 //C17 -> D17 
  
-//`define BGA
-`define HLQFP
+`define BGA
+//`define HLQFP
  
-module SerDes_master(CPU_io, FPGA_io); 
+module top_ACDC(CPU_io, FPGA_io); 
 	inout[168:0] CPU_io;  
 	inout[400:1] FPGA_io; 
   
@@ -163,7 +163,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	reg [31:0] EMIF_data_o;  
 	wire [EMIF_MEMORY_WIDTH-1:0] EMIF_address_i;  
   
-	localparam EMIF_MUX_NUMBER = 35; 
+	localparam EMIF_MUX_NUMBER = 38; 
 	localparam EMIF_REG_NUMBER = 18; 
 	localparam EMIF_MUX_WIDTH = $clog2(EMIF_MUX_NUMBER); 
 	localparam EMIF_REG_WIDTH = $clog2(EMIF_REG_NUMBER); 
@@ -288,6 +288,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign Comm_tx1_datar = tx1_select_memory ? Comm_tx1_mux_datar_r : Comm_tx1_mem_datar;  
 	 
 	wire tx1_code_start;  
+	wire [8:0] tx1_code;  
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] tx1_hipri_msg_start; 
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] tx1_hipri_msg_wip;  
 	wire [`LOPRI_MAILBOXES_NUMBER-1:0] tx1_lopri_msg_start; 
@@ -297,7 +298,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	.mem_addr_o(Comm_tx1_addrr), .mem_data_i(Comm_tx1_datar),  
 	.tx_hipri_msg_start_i(tx1_hipri_msg_start), .tx_hipri_msg_wip_o(tx1_hipri_msg_wip), 
 	.tx_lopri_msg_start_i(tx1_lopri_msg_start), .tx_lopri_msg_wip_o(tx1_lopri_msg_wip), 
-	.tx_code_start_i(tx1_code_start));  
+	.tx_code_start_i(tx1_code_start), .tx_code_i(tx1_code));  
  
   
 	wire [`POINTER_WIDTH-1:0] Comm_tx2_addrr;  
@@ -308,7 +309,8 @@ module SerDes_master(CPU_io, FPGA_io);
 	reg tx2_select_memory;  
 	assign Comm_tx2_datar = tx2_select_memory ? Comm_tx2_mux_datar_r : Comm_tx2_mem_datar;  
 	 
-	wire tx2_code_start;  
+	wire tx2_code_start;
+	wire [8:0] tx2_code;  
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] tx2_hipri_msg_start; 
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] tx2_hipri_msg_wip;  
 	wire [`LOPRI_MAILBOXES_NUMBER-1:0] tx2_lopri_msg_start; 
@@ -318,7 +320,7 @@ module SerDes_master(CPU_io, FPGA_io);
 	.mem_addr_o(Comm_tx2_addrr), .mem_data_i(Comm_tx2_datar),  
 	.tx_hipri_msg_start_i(tx2_hipri_msg_start), .tx_hipri_msg_wip_o(tx2_hipri_msg_wip), 
 	.tx_lopri_msg_start_i(tx2_lopri_msg_start), .tx_lopri_msg_wip_o(tx2_lopri_msg_wip), 
-	.tx_code_start_i(tx2_code_start));  
+	.tx_code_start_i(tx2_code_start), .tx_code_i(tx2_code));  
 	 
 	wire [31:0] COMM_RX_MEM1_data_o; 
 	wire [31:0] COMM_RX_MEM2_data_o;   
@@ -733,13 +735,13 @@ module SerDes_master(CPU_io, FPGA_io);
  
 	wire TZ_FPGA;
 	assign TZ_FPGA = !(|FLT_REG_O); 
-	 
+
 /////////////////////////////////////////////////////////////////////   
 	 	 
-	defparam TX1_port.TIMESTAMP_CODE = `K_Timestamp_master; 
-	defparam TX2_port.TIMESTAMP_CODE = `K_Timestamp_master; 
-	defparam RX1_port.TIMESTAMP_CODE = `K_Timestamp_slave; 
-	defparam RX2_port.TIMESTAMP_CODE = `K_Timestamp_slave;	 
+	defparam TX1_port.TIMESTAMP_CODE = `K_Timestamp_slave;	
+	defparam TX2_port.TIMESTAMP_CODE = `K_Timestamp_master;
+	defparam RX1_port.TIMESTAMP_CODE = `K_Timestamp_master;
+	defparam RX2_port.TIMESTAMP_CODE = `K_Timestamp_slave;	
 	 
 	wire [63:0] snapshot_value; 
 	wire [15:0] local_counter;  
@@ -748,7 +750,6 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire sync_phase; 
 	Local_counter Local_counter(.clk_i(clk_5x), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase), .sync_o(sync), 
 	.snapshot_start_i({timestamp_code_rx2, timestamp_code_tx2, timestamp_code_rx1, timestamp_code_tx1}), .snapshot_value_o(snapshot_value));  
-	assign next_period = `CYCLE_PERIOD - 16'd1; 
 	 
 	always @(posedge clk_5x) 
 		SD_sync_pulse <= local_counter >= EMIF_RX_reg [2][15:0]; 
@@ -756,6 +757,8 @@ module SerDes_master(CPU_io, FPGA_io);
 	reg pulse_cycle_r; 
 	always @(posedge clk_5x)  
 		pulse_cycle_r = local_counter == `CYCLE_PERIOD - (`CYCLE_PERIOD>>2);  
+		
+/////////////////////////////////////////////////////////////////////   
 		 
 	wire [`HIPRI_MAILBOXES_NUMBER*16-1:0] clock_offsets; 
 	wire [`HIPRI_MAILBOXES_NUMBER*16-1:0] comm_delays;  
@@ -764,64 +767,84 @@ module SerDes_master(CPU_io, FPGA_io);
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] slave_rdy; 
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] scope_trigger_request; 
 	Master_sync Master_sync(.clk_i(clk_1x), .pulse_cycle_i(pulse_cycle_r), 
-	.rx_addrw_i(Comm_rx1_addrw), .rx_dataw_i(Comm_rx1_dataw), .rx_we_i(Comm_rx1_we), 
+	.rx_addrw_i(Comm_rx2_addrw), .rx_dataw_i(Comm_rx2_dataw), .rx_we_i(Comm_rx2_we), 
 	.snapshot_value_i(snapshot_value), .clock_offsets_o(clock_offsets), .comm_delays_o(comm_delays), 
 	.rx_ok_o(rx_ok), .sync_ok_o(sync_ok), .slave_rdy_o(slave_rdy), .scope_trigger_request_o(scope_trigger_request)); 
-	 
-	assign rx1_hipri_msg_ack = EMIF_RX_reg [1][1*8 +: `HIPRI_MAILBOXES_NUMBER];  
+
+/////////////////////////////////////////////////////////////////////   
+
+	wire[`HIPRI_MAILBOXES_WIDTH-1:0] node_number;
+	wire node_number_rdy; 
+	Node_number_eval Node_number_eval(.clk_1x_i(clk_1x), .fifo_clk_i(fifo_rx1_clk_5x), .fifo_we_i(fifo_rx1_port_we), .fifo_i(fifo_rx1_port), .node_number_o(node_number), .node_number_rdy_o(node_number_rdy)); 
+ 
+	wire[31:0] Kalman_offset; 
+	wire[31:0] Kalman_rate;  
+	wire[15:0] offset_memory;  
+	wire sync_rdy; 
+	Slave_sync Slave_sync(.clk_i(clk_1x), .sync_phase_i(sync_phase), .msg_rdy_i(rx1_hipri_msg_rdy[0]),
+	.rx_addrw_i(Comm_rx1_addrw), .rx_dataw_i(Comm_rx1_dataw), .rx_we_i(Comm_rx1_we), 
+	.node_number_i(node_number), .node_number_rdy_i(node_number_rdy),
+	.Kalman_offset_o(Kalman_offset), .Kalman_rate_o(Kalman_rate), .offset_memory_o(offset_memory),
+	.next_period_o(next_period), .sync_rdy_o(sync_rdy)); 
+
+/////////////////////////////////////////////////////////////////////   
+
+	reg master_slave_selector;
+	always @(posedge clk_5x) master_slave_selector <= !rx1_port_rdy && rx2_port_rdy;
+	
+	assign rx1_hipri_msg_ack = {EMIF_RX_reg[1][1*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], rx1_hipri_msg_rdy[0]}; 
 	assign rx2_hipri_msg_ack = EMIF_RX_reg [1][3*8 +: `HIPRI_MAILBOXES_NUMBER];  
  
 	assign rx1_lopri_msg_ack = EMIF_RX_reg [1][0*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	assign rx2_lopri_msg_ack = EMIF_RX_reg [1][2*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	 
-	assign tx1_hipri_msg_start = {EMIF_RX_reg [0][1*8+2 +: `HIPRI_MAILBOXES_NUMBER-2], new_value, new_value_early};  
-	assign tx2_hipri_msg_start = EMIF_RX_reg [0][3*8 +: `HIPRI_MAILBOXES_NUMBER];  
+	assign tx1_hipri_msg_start = {EMIF_RX_reg[0][1*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], rx1_hipri_msg_wip[0]}; 
+	assign tx2_hipri_msg_start = {EMIF_RX_reg [0][3*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], new_value && master_slave_selector};  
 	 
 	assign tx1_lopri_msg_start = EMIF_RX_reg [0][0*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	assign tx2_lopri_msg_start = EMIF_RX_reg [0][2*8 +: `LOPRI_MAILBOXES_NUMBER];  
- 
- 	defparam TX1_core.TX_CODE = `K_Timestamp_master; 
-	defparam TX2_core.TX_CODE = `K_Timestamp_master; 
-	assign tx1_code_start = pulse_cycle_r;  
-	assign tx2_code_start = pulse_cycle_r; 
-  
+ 	
+ 	assign tx1_code = `K_Timestamp_slave; 
+	assign tx2_code = master_slave_selector ? `K_Timestamp_master : `K_Enum_nodes; 
+	assign tx1_code_start = timestamp_code_rx1;  
+	assign tx2_code_start = master_slave_selector ? pulse_cycle_r : timestamp_code_rx1; 
+	
+	wire PWM_EN_r;
 	always @(posedge clk_1x) begin 
 		tx1_select_memory <= 1'b1; 
 		tx2_select_memory <= 1'b1; 
-		case(Comm_tx1_addrr) 
-			11'h400 : Comm_tx1_mux_datar_r <= {4'd0, 4'd0}; 
-			11'h401 : Comm_tx1_mux_datar_r <= 8'd8 - 8'd1; 
-			11'h402 : Comm_tx1_mux_datar_r <= SD_dat[0*8 +: 8]; 
-			11'h403 : Comm_tx1_mux_datar_r <= SD_dat[1*8 +: 8]; 
-			11'h404 : Comm_tx1_mux_datar_r <= SD_dat[2*8 +: 8]; 
-			11'h405 : Comm_tx1_mux_datar_r <= SD_dat[3*8 +: 8]; 
-			11'h406 : Comm_tx1_mux_datar_r <= SD_dat[4*8 +: 8]; 
-			11'h407 : Comm_tx1_mux_datar_r <= SD_dat[5*8 +: 8];  
-			11'h408 : Comm_tx1_mux_datar_r <= SD_dat[6*8 +: 8]; 
-			11'h409 : Comm_tx1_mux_datar_r <= SD_dat[7*8 +: 8]; 
-			11'h40A : Comm_tx1_mux_datar_r <= SD_dat[8*8 +: 8]; 
-			11'h40B : Comm_tx1_mux_datar_r <= SD_dat[9*8 +: 8]; 
-			11'h40C : Comm_tx1_mux_datar_r <= SD_dat[10*8 +: 8]; 
-			11'h40D : Comm_tx1_mux_datar_r <= SD_dat[11*8 +: 8];  
-			  
-			11'h480 : Comm_tx1_mux_datar_r <= {4'd0, 4'd1}; 
-			11'h481 : Comm_tx1_mux_datar_r <= 8'd7 - 8'd1; 
-			11'h482 : Comm_tx1_mux_datar_r <= {{8-`HIPRI_MAILBOXES_NUMBER{1'b0}}, rx_ok}; 
-			11'h483 : Comm_tx1_mux_datar_r <= {7'b0, sync_phase}; 
-			11'h484 : Comm_tx1_mux_datar_r <= clock_offsets[0*8 +: 8]; 
-			11'h485 : Comm_tx1_mux_datar_r <= clock_offsets[1*8 +: 8]; 
-			11'h486 : Comm_tx1_mux_datar_r <= clock_offsets[2*8 +: 8]; 
-			11'h487 : Comm_tx1_mux_datar_r <= clock_offsets[3*8 +: 8]; 
-			11'h488 : Comm_tx1_mux_datar_r <= clock_offsets[4*8 +: 8]; 
-			11'h489 : Comm_tx1_mux_datar_r <= clock_offsets[5*8 +: 8];  
-			11'h48A : Comm_tx1_mux_datar_r <= clock_offsets[6*8 +: 8];  
-			11'h48B : Comm_tx1_mux_datar_r <= clock_offsets[7*8 +: 8]; 
-			default : begin 
-				tx1_select_memory <= 1'b0; 
-				Comm_tx1_mux_datar_r <= 8'd0; 
-			end 
-		endcase 
+		
+		case(Comm_tx1_addrr)
+			11'h400 : Comm_tx1_mux_datar_r <= {4'h0, {4-`HIPRI_MAILBOXES_WIDTH{1'b0}}, node_number};
+			11'h401 : Comm_tx1_mux_datar_r <= 8'd7 - 8'd1;
+			11'h402 : Comm_tx1_mux_datar_r <= {5'b0, scope_trigger_request, PWM_EN_r, sync_rdy}; 
+			11'h403 : Comm_tx1_mux_datar_r <= 8'b0; 
+			11'h404 : Comm_tx1_mux_datar_r <= snapshot_value[0*8 +: 8];
+			11'h405 : Comm_tx1_mux_datar_r <= snapshot_value[1*8 +: 8];
+			11'h406 : Comm_tx1_mux_datar_r <= snapshot_value[2*8 +: 8];
+			11'h407 : Comm_tx1_mux_datar_r <= snapshot_value[3*8 +: 8];
+			11'h408 : Comm_tx1_mux_datar_r <= snapshot_value[4*8 +: 8];
+			11'h409 : Comm_tx1_mux_datar_r <= snapshot_value[5*8 +: 8];
+			11'h40A : Comm_tx1_mux_datar_r <= snapshot_value[6*8 +: 8];
+			11'h40B : Comm_tx1_mux_datar_r <= snapshot_value[7*8 +: 8];
+			default : begin
+				tx1_select_memory <= 1'b0;
+				Comm_tx1_mux_datar_r <= 8'd0;
+			end
+		endcase
 		case(Comm_tx2_addrr) 
+			11'h400 : Comm_tx2_mux_datar_r <= {4'd0, 4'd0}; 
+			11'h401 : Comm_tx2_mux_datar_r <= 8'd7 - 8'd1; 
+			11'h402 : Comm_tx2_mux_datar_r <= {{8-`HIPRI_MAILBOXES_NUMBER{1'b0}}, rx_ok}; 
+			11'h403 : Comm_tx2_mux_datar_r <= {7'b0, sync_phase}; 
+			11'h404 : Comm_tx2_mux_datar_r <= clock_offsets[0*8 +: 8]; 
+			11'h405 : Comm_tx2_mux_datar_r <= clock_offsets[1*8 +: 8]; 
+			11'h406 : Comm_tx2_mux_datar_r <= clock_offsets[2*8 +: 8]; 
+			11'h407 : Comm_tx2_mux_datar_r <= clock_offsets[3*8 +: 8]; 
+			11'h408 : Comm_tx2_mux_datar_r <= clock_offsets[4*8 +: 8]; 
+			11'h409 : Comm_tx2_mux_datar_r <= clock_offsets[5*8 +: 8];  
+			11'h40A : Comm_tx2_mux_datar_r <= clock_offsets[6*8 +: 8];  
+			11'h40B : Comm_tx2_mux_datar_r <= clock_offsets[7*8 +: 8]; 
 			default : begin 
 				tx2_select_memory <= 1'b0; 
 				Comm_tx2_mux_datar_r <= 8'd0; 
@@ -832,7 +855,7 @@ module SerDes_master(CPU_io, FPGA_io);
 ///////////////////////////////////////////////////////////////////// 
 
 	localparam DEB_WRITE_WIDTH_MULTIPLY = 2;
-	localparam DEB_WADDR_WIDTH = 11; 
+	localparam DEB_WADDR_WIDTH = 9; 
 	
 	localparam DEB_READ_WIDTH = 36;
 	localparam DEB_WRITE_WIDTH = DEB_WRITE_WIDTH_MULTIPLY*DEB_READ_WIDTH;
@@ -1003,7 +1026,10 @@ module SerDes_master(CPU_io, FPGA_io);
 	assign EMIF_TX_mux[32] = {CONTROL_RATE, CYCLE_PERIOD}; 
 	assign EMIF_TX_mux[33] = {OUTPUT_SHIFT, DEF_OSR}; 
 	assign EMIF_TX_mux[34] = {Resonant4_WIP, Kalman1_WIP, Kalman_DC_WIP, Resonant3_WIP, Resonant2_WIP, Resonant1_WIP, sync_phase};  
-	 
+	assign EMIF_TX_mux[35] = Kalman_offset;
+	assign EMIF_TX_mux[36] = Kalman_rate;
+	assign EMIF_TX_mux[37] = offset_memory;
+	
  	FD1P3DX EMIF_RX_reg_0[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 4] == 4'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 0), .CK(EMIF_we_i), .CD({tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}), .Q(EMIF_RX_reg [0])); 
  	FD1P3DX EMIF_RX_reg_1[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 4] == 4'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 1), .CK(EMIF_we_i), .CD(~{rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}), .Q(EMIF_RX_reg [1])); 
 	EMIF_RX_reg #(.INIT_VAL(32'd1625)) EMIF_RX_reg_2(.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 4] == 4'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 2), .CK(EMIF_we_i), .RST(1'b0), .Q(EMIF_RX_reg [2])); 
@@ -1237,8 +1263,10 @@ module SerDes_master(CPU_io, FPGA_io);
 	BB BB_Modbus_TX_FPGA(.I(Modbus_TX), .T(1'b0), .O(), .B(FPGA_io[`TX_Mod_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
 	BB BB_Modbus_RX_FPGA(.I(1'b0), .T(1'b1), .O(Modbus_RX), .B(FPGA_io[`RX_Mod_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
    
-	BB BB_COMM_TX0(.I(tx_o[0]), .T(1'b0), .O(), .B(FPGA_io[`TX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
+   	BB BB_COMM_TX0(.I(tx_o[0]), .T(1'b0), .O(), .B(FPGA_io[`TX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 	BB BB_COMM_TX1(.I(tx_o[1]), .T(1'b0), .O(), .B(FPGA_io[`TX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 	BB BB_COMM_RX0(.I(1'b0), .T(1'b1), .O(rx_i[0]), .B(FPGA_io[`RX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
-	BB BB_COMM_RX1(.I(1'b0), .T(1'b1), .O(rx_i[1]), .B(FPGA_io[`RX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
+	BB BB_COMM_RX1(.I(1'b0), .T(1'b1), .O(rx_i[1]), .B(FPGA_io[`RX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
+	  
+	BB BB_TEST(.I(sync_phase), .T(1'b0), .O(), .B(FPGA_io[`K+4]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 endmodule  

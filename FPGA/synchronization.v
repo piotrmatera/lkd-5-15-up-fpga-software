@@ -122,6 +122,53 @@ module Local_counter(clk_i, next_period_i, current_period_o, local_counter_o, sy
 	end 
 endmodule 
 
+module Local_free_counter(clk_i, shift_i, shift_value_i, local_counter_o, sync_o, snapshot_start_i, snapshot_value_o);
+	input clk_i;
+	input shift_i;
+	input[15:0] shift_value_i;
+	output reg[15:0] local_counter_o;
+	output sync_o;
+	input[3:0] snapshot_start_i; 
+	output[63:0] snapshot_value_o; 
+	
+/////////////////////////////////////////////////
+	
+	wire[3:0] snapshot_start_r;
+	Sync_latch_input #(.OUT_POLARITY(1), .STEPS(4)) sync_snap_start[3:0](.clk_i(clk_i), .in(snapshot_start_i), .out(snapshot_start_r), .reset_i(snapshot_start_r), .set_i(1'b0));
+	 
+	reg[15:0] snapshot_value_r[3:0];
+
+
+	wire shift_start_r;
+	Sync_latch_input #(.OUT_POLARITY(1), .STEPS(4)) shift_start(.clk_i(clk_i), .in(shift_i), .out(shift_start_r), .reset_i(shift_start_r), .set_i(1'b0)); 
+	
+	reg[15:0] shift_value_r; 
+	 
+	always @(posedge clk_i) begin
+		if(snapshot_start_r[3]) snapshot_value_r[3] <= local_counter_o; 
+		if(snapshot_start_r[2]) snapshot_value_r[2] <= local_counter_o; 
+		if(snapshot_start_r[1]) snapshot_value_r[1] <= local_counter_o; 
+		if(snapshot_start_r[0]) snapshot_value_r[0] <= local_counter_o; 
+			
+		if(!shift_start_r) shift_value_r <= 0;
+		else shift_value_r <= shift_value_i;
+			
+		local_counter_o <= local_counter_o + 1'b1 + shift_value_r; 
+	end 
+ 
+	assign snapshot_value_o = {snapshot_value_r[3], snapshot_value_r[2],	snapshot_value_r[1], snapshot_value_r[0]};
+	assign sync_o = local_counter_o[9];
+	
+	initial begin
+		shift_value_r = 0; 
+		local_counter_o = 0; 
+		snapshot_value_r[3] = 0; 
+		snapshot_value_r[2] = 0; 
+		snapshot_value_r[1] = 0; 
+		snapshot_value_r[0] = 0; 
+	end 
+endmodule 
+
 module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapshot_value_i, clock_offsets_o, comm_delays_o, rx_ok_o, sync_ok_o, slave_rdy_o, scope_trigger_request_o);
 	localparam STATES_WIDTH = 3;
 	localparam [STATES_WIDTH-1:0]
@@ -381,14 +428,14 @@ module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_nu
 
 	reg[15:0] flags_memory;
 	always @(posedge clk_i) begin 
-		if(rx_addrw_i == 2 + `HIPRI_MSG_LENGTH*1 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)
+		if(rx_addrw_i == 2 + `HIPRI_MSG_LENGTH*0 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)
 			flags_memory[7:0] <= rx_dataw_i;
-		if(rx_addrw_i == 3 + `HIPRI_MSG_LENGTH*1 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)
+		if(rx_addrw_i == 3 + `HIPRI_MSG_LENGTH*0 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)
 			flags_memory[15:8] <= rx_dataw_i; 
 			
-		if(rx_addrw_i == 4 + `HIPRI_MSG_LENGTH*1 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER + (node_number_i<<1))
+		if(rx_addrw_i == 4 + `HIPRI_MSG_LENGTH*0 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER + (node_number_i<<1))
 			offset_memory_o[7:0] <= rx_dataw_i;
-		if(rx_addrw_i == 5 + `HIPRI_MSG_LENGTH*1 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER + (node_number_i<<1))
+		if(rx_addrw_i == 5 + `HIPRI_MSG_LENGTH*0 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER + (node_number_i<<1))
 			offset_memory_o[15:8] <= rx_dataw_i; 
 	end
 	 
@@ -437,7 +484,7 @@ module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_nu
 			new_cycle_flag <= 1'b1;
 			comm_last <= 1'b0;
 			
-			if($signed(Kalman_offset_o) < (65536.0*1.2) && $signed(Kalman_offset_o) > (-65536.0*1.2) && 
+			if($signed(Kalman_offset_o) < $signed(65536+(65536>>2)) && (Kalman_offset_o) > $signed(-65536-(65536>>2)) && 
 			   node_number_rdy_i && comm_last) begin
 				if(sync_counter >= `CONV_FREQUENCY)
 					sync_rdy_o <= 1'b1;
