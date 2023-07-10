@@ -119,7 +119,7 @@
 
 /////////////////////////////////////////////////////////////////////
 
-`define KALMAN_TIME (0.5/`CONV_FREQUENCY)
+`define KALMAN_TIME (8e-9*2000.0)
 `define KALMAN_GAIN 0.005
 
 `define HIPRI_MAILBOXES_NUMBER 8

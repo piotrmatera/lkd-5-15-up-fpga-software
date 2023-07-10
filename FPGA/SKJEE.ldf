@@ -2,11 +2,14 @@
 <BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381I" default_implementation="ACDC">
     <Options/>
     <Implementation title="ACDC" dir="ACDC" description="ACDC" synthesis="lse" default_strategy="Strategy1">
-        <Options def_top="Resonant" top="SerDes_master"/>
+        <Options top="top_ACDC"/>
         <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
-            <Options top_module="SerDes_master"/>
+            <Options top_module="top_ACDC"/>
         </Source>
         <Source name="testbench.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="testbench_parallel.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
             <Options/>
         </Source>
         <Source name="Clarity/Clarity.sbx" type="sbx" type_short="SBX">

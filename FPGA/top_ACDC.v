@@ -133,13 +133,14 @@
 //H18 -> D12 
 //C17 -> D17 
  
-`define BGA
-//`define HLQFP
+//`define BGA
+`define HLQFP
  
 module top_ACDC(CPU_io, FPGA_io); 
 	inout[168:0] CPU_io;  
 	inout[400:1] FPGA_io; 
-  
+  	parameter INITIAL_COUNTER = 0;
+	
 	integer i;  
  
 	BB BB_XTAL_25MHz(.I(1'b0), .T(1'b1), .O(XTAL_25MHz_i), .B(FPGA_io[`G+2]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
@@ -743,21 +744,33 @@ module top_ACDC(CPU_io, FPGA_io);
 	defparam RX1_port.TIMESTAMP_CODE = `K_Timestamp_master;
 	defparam RX2_port.TIMESTAMP_CODE = `K_Timestamp_slave;	
 	 
-	wire [63:0] snapshot_value; 
 	wire [15:0] local_counter;  
 	wire [15:0] current_period; 
 	wire [15:0] next_period; 
 	wire sync_phase; 
 	Local_counter Local_counter(.clk_i(clk_5x), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase), .sync_o(sync), 
-	.snapshot_start_i({timestamp_code_rx2, timestamp_code_tx2, timestamp_code_rx1, timestamp_code_tx1}), .snapshot_value_o(snapshot_value));  
-	 
+	.snapshot_start_i(4'b0), .snapshot_value_o());  
+	assign next_period = `CYCLE_PERIOD - 16'd1;
+	
 	always @(posedge clk_5x) 
 		SD_sync_pulse <= local_counter >= EMIF_RX_reg [2][15:0]; 
 	  
-	reg pulse_cycle_r; 
-	always @(posedge clk_5x)  
-		pulse_cycle_r = local_counter == `CYCLE_PERIOD - (`CYCLE_PERIOD>>2);  
-		
+	wire [63:0] snapshot_value; 
+	wire [15:0] local_free_counter;  
+	wire [1:0] shift_value;
+	wire shift_start;
+	wire sync_free;
+	
+	Local_free_counter #(.INITIAL_COUNTER(INITIAL_COUNTER)) Local_free_counter(.clk_i(clk_5x), .shift_value_i(shift_value), .shift_start_i(shift_start), .local_counter_o(local_free_counter), .sync_o(sync_free), 
+	.snapshot_start_i({timestamp_code_rx2, timestamp_code_tx2, timestamp_code_rx1, timestamp_code_tx1}), .snapshot_value_o(snapshot_value));  
+
+	reg sync_free_last;
+	reg[8:0] sync_free_delay_counter = 0;
+	always @(posedge clk_5x) begin
+		sync_free_last <= sync_free;
+		if((sync_free && !sync_free_last) | (|sync_free_delay_counter)) sync_free_delay_counter <= sync_free_delay_counter + 1'b1;
+	end
+
 /////////////////////////////////////////////////////////////////////   
 		 
 	wire [`HIPRI_MAILBOXES_NUMBER*16-1:0] clock_offsets; 
@@ -766,7 +779,7 @@ module top_ACDC(CPU_io, FPGA_io);
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] sync_ok;  
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] slave_rdy; 
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] scope_trigger_request; 
-	Master_sync Master_sync(.clk_i(clk_1x), .pulse_cycle_i(pulse_cycle_r), 
+	Master_sync Master_sync(.clk_i(clk_1x), .pulse_cycle_i(sync_free), 
 	.rx_addrw_i(Comm_rx2_addrw), .rx_dataw_i(Comm_rx2_dataw), .rx_we_i(Comm_rx2_we), 
 	.snapshot_value_i(snapshot_value), .clock_offsets_o(clock_offsets), .comm_delays_o(comm_delays), 
 	.rx_ok_o(rx_ok), .sync_ok_o(sync_ok), .slave_rdy_o(slave_rdy), .scope_trigger_request_o(scope_trigger_request)); 
@@ -781,11 +794,11 @@ module top_ACDC(CPU_io, FPGA_io);
 	wire[31:0] Kalman_rate;  
 	wire[15:0] offset_memory;  
 	wire sync_rdy; 
-	Slave_sync Slave_sync(.clk_i(clk_1x), .sync_phase_i(sync_phase), .msg_rdy_i(rx1_hipri_msg_rdy[0]),
+	Slave_sync Slave_sync(.clk_i(clk_1x), .msg_rdy_i(rx1_hipri_msg_rdy[0]),
 	.rx_addrw_i(Comm_rx1_addrw), .rx_dataw_i(Comm_rx1_dataw), .rx_we_i(Comm_rx1_we), 
 	.node_number_i(node_number), .node_number_rdy_i(node_number_rdy),
 	.Kalman_offset_o(Kalman_offset), .Kalman_rate_o(Kalman_rate), .offset_memory_o(offset_memory),
-	.next_period_o(next_period), .sync_rdy_o(sync_rdy)); 
+	.shift_value_o(shift_value), .shift_start_o(shift_start), .sync_rdy_o(sync_rdy)); 
 
 /////////////////////////////////////////////////////////////////////   
 
@@ -793,13 +806,13 @@ module top_ACDC(CPU_io, FPGA_io);
 	always @(posedge clk_5x) master_slave_selector <= !rx1_port_rdy && rx2_port_rdy;
 	
 	assign rx1_hipri_msg_ack = {EMIF_RX_reg[1][1*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], rx1_hipri_msg_rdy[0]}; 
-	assign rx2_hipri_msg_ack = EMIF_RX_reg [1][3*8 +: `HIPRI_MAILBOXES_NUMBER];  
+	assign rx2_hipri_msg_ack = rx2_hipri_msg_rdy;//EMIF_RX_reg [1][3*8 +: `HIPRI_MAILBOXES_NUMBER];  
  
 	assign rx1_lopri_msg_ack = EMIF_RX_reg [1][0*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	assign rx2_lopri_msg_ack = EMIF_RX_reg [1][2*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	 
 	assign tx1_hipri_msg_start = {EMIF_RX_reg[0][1*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], rx1_hipri_msg_wip[0]}; 
-	assign tx2_hipri_msg_start = {EMIF_RX_reg [0][3*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], new_value && master_slave_selector};  
+	assign tx2_hipri_msg_start = {EMIF_RX_reg [0][3*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], sync_free_delay_counter[8] && master_slave_selector};  
 	 
 	assign tx1_lopri_msg_start = EMIF_RX_reg [0][0*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	assign tx2_lopri_msg_start = EMIF_RX_reg [0][2*8 +: `LOPRI_MAILBOXES_NUMBER];  
@@ -807,7 +820,7 @@ module top_ACDC(CPU_io, FPGA_io);
  	assign tx1_code = `K_Timestamp_slave; 
 	assign tx2_code = master_slave_selector ? `K_Timestamp_master : `K_Enum_nodes; 
 	assign tx1_code_start = timestamp_code_rx1;  
-	assign tx2_code_start = master_slave_selector ? pulse_cycle_r : timestamp_code_rx1; 
+	assign tx2_code_start = master_slave_selector ? sync_free : timestamp_code_rx1; 
 	
 	wire PWM_EN_r;
 	always @(posedge clk_1x) begin 
@@ -1268,5 +1281,5 @@ module top_ACDC(CPU_io, FPGA_io);
 	BB BB_COMM_RX0(.I(1'b0), .T(1'b1), .O(rx_i[0]), .B(FPGA_io[`RX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 	BB BB_COMM_RX1(.I(1'b0), .T(1'b1), .O(rx_i[1]), .B(FPGA_io[`RX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
 	  
-	BB BB_TEST(.I(sync_phase), .T(1'b0), .O(), .B(FPGA_io[`K+4]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
+	BB BB_TEST(.I(local_free_counter[10]), .T(1'b0), .O(), .B(FPGA_io[`K+4]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 endmodule  

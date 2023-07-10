@@ -1,10 +1,10 @@
 `include "global.v"
 
-`define TX2_FM  `C+20 
-`define TX1_FM  `B+19 
- 
-`define RX2_FM  `D+17 
-`define RX1_FM  `C+18
+`define TX1_FM  `C+20 
+`define TX2_FM  `B+19
+
+`define RX1_FM  `D+17 
+`define RX2_FM  `C+18
 
 module SerDes_tb2;
 	reg XTAL1_25MHz_i, XTAL2_25MHz_i, XTAL3_25MHz_i;
@@ -76,9 +76,9 @@ module SerDes_tb2;
 	
 	assign Slave3_rx[1] = ~1'b0;
 */
-	top_ACDC top_ACDC0(.CPU_io(Master_CIO), .FPGA_io(Master_FIO));
+	top_ACDC #(.INITIAL_COUNTER(0)) top_ACDC0(.CPU_io(Master_CIO), .FPGA_io(Master_FIO));
 
-	top_ACDC top_ACDC1(.CPU_io(Slave1_CIO), .FPGA_io(Slave1_FIO));
+	top_ACDC #(.INITIAL_COUNTER(100))top_ACDC1(.CPU_io(Slave1_CIO), .FPGA_io(Slave1_FIO));
 
 	//top_ACDC top_ACDC2(.CPU_io(Slave2_CIO), .FPGA_io(Slave2_FIO));
 

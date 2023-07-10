@@ -122,12 +122,13 @@ module Local_counter(clk_i, next_period_i, current_period_o, local_counter_o, sy
 	end 
 endmodule 
 
-module Local_free_counter(clk_i, shift_i, shift_value_i, local_counter_o, sync_o, snapshot_start_i, snapshot_value_o);
+module Local_free_counter(clk_i, shift_value_i, shift_start_i, local_counter_o, sync_o, snapshot_start_i, snapshot_value_o);
+	parameter INITIAL_COUNTER = 0;
 	input clk_i;
-	input shift_i;
-	input[15:0] shift_value_i;
+	input[1:0] shift_value_i;
+	input shift_start_i;
 	output reg[15:0] local_counter_o;
-	output sync_o;
+	output reg sync_o;
 	input[3:0] snapshot_start_i; 
 	output[63:0] snapshot_value_o; 
 	
@@ -140,10 +141,11 @@ module Local_free_counter(clk_i, shift_i, shift_value_i, local_counter_o, sync_o
 
 
 	wire shift_start_r;
-	Sync_latch_input #(.OUT_POLARITY(1), .STEPS(4)) shift_start(.clk_i(clk_i), .in(shift_i), .out(shift_start_r), .reset_i(shift_start_r), .set_i(1'b0)); 
+	Sync_latch_input #(.OUT_POLARITY(1), .STEPS(4)) shift_start(.clk_i(clk_i), .in(shift_start_i), .out(shift_start_r), .reset_i(shift_start_r), .set_i(1'b0)); 
 	
-	reg[15:0] shift_value_r; 
-	 
+	reg[1:0] shift_value_r; 
+	reg[15:0] local_counter2;
+	
 	always @(posedge clk_i) begin
 		if(snapshot_start_r[3]) snapshot_value_r[3] <= local_counter_o; 
 		if(snapshot_start_r[2]) snapshot_value_r[2] <= local_counter_o; 
@@ -153,15 +155,22 @@ module Local_free_counter(clk_i, shift_i, shift_value_i, local_counter_o, sync_o
 		if(!shift_start_r) shift_value_r <= 0;
 		else shift_value_r <= shift_value_i;
 			
-		local_counter_o <= local_counter_o + 1'b1 + shift_value_r; 
+		local_counter_o <= {1'b0, local_counter_o[14:0] + 1'b1 - {{13{shift_value_r[1]}}, shift_value_r}}; 
+		
+		local_counter2 <= local_counter2 + 1'b1; 
+		sync_o <= 1'b0;
+		if(local_counter2 == 1999) begin
+			sync_o <= 1'b1;
+			local_counter2 <= 0; 
+		end		
 	end 
  
 	assign snapshot_value_o = {snapshot_value_r[3], snapshot_value_r[2],	snapshot_value_r[1], snapshot_value_r[0]};
-	assign sync_o = local_counter_o[9];
 	
 	initial begin
+		local_counter2 = 0; 
 		shift_value_r = 0; 
-		local_counter_o = 0; 
+		local_counter_o = INITIAL_COUNTER; 
 		snapshot_value_r[3] = 0; 
 		snapshot_value_r[2] = 0; 
 		snapshot_value_r[1] = 0; 
@@ -325,8 +334,8 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 			end
 			S_MS_3 : begin 
 				if(converter_number == {`HIPRI_MAILBOXES_WIDTH{1'b0}}) begin 
-					ALU_delay <= ALU_delay - snapshot_value_tx1_codes; 
-					ALU_offset <= ALU_offset - snapshot_value_tx1_codes; 
+					ALU_delay <= ALU_delay - snapshot_value_tx2_codes; 
+					ALU_offset <= ALU_offset - snapshot_value_tx2_codes; 
 				end  
 				else begin 
 					ALU_delay <= ALU_delay - timestamp_memory_read;
@@ -336,8 +345,8 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 			end
 			S_MS_4 : begin 
 				if(converter_number == {`HIPRI_MAILBOXES_WIDTH{1'b0}}) begin
-					ALU_delay <= ALU_delay + snapshot_value_rx1_codes;
-					ALU_offset <= ALU_offset - snapshot_value_rx1_codes;
+					ALU_delay <= ALU_delay + snapshot_value_rx2_codes;
+					ALU_offset <= ALU_offset - snapshot_value_rx2_codes;
 				end  
 				else begin
 					ALU_delay <= ALU_delay + timestamp_memory_read;
@@ -346,6 +355,11 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 				state_reg <= S_MS_5;
 			end
 			S_MS_5 : begin 
+				if($signed(ALU_offset) > $signed(16'd16384)) ALU_offset <= ALU_offset - 16'd32768;
+				if($signed(ALU_offset) < $signed(-16'd16384)) ALU_offset <= ALU_offset + 16'd32768;
+				state_reg <= S_MS_6;
+			end
+			S_MS_6 : begin
 				comm_delays_r[converter_number] <= ALU_delay; 
 				clock_offsets_r[converter_number] <= ALU_offset; 
  
@@ -355,9 +369,6 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 					state_reg <= S_MS_idle; 
 				else 
 					state_reg <= S_MS_1;
-			end
-			S_MS_6 : begin
-				state_reg <= S_MS_idle;
 			end
 			S_MS_7 : begin
 				state_reg <= S_MS_idle;
@@ -391,7 +402,7 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 
 endmodule
  
-module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_number_rdy_i, msg_rdy_i, next_period_o, sync_phase_i, Kalman_offset_o, Kalman_rate_o, offset_memory_o, sync_rdy_o);
+module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_number_rdy_i, msg_rdy_i, Kalman_offset_o, Kalman_rate_o, offset_memory_o, shift_value_o, shift_start_o, sync_rdy_o);
 	localparam STATES_WIDTH = 3;
 	localparam [STATES_WIDTH-1:0]
     S_SS_idle = 0,
@@ -416,12 +427,12 @@ module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_nu
 	input[`HIPRI_MAILBOXES_WIDTH-1:0] node_number_i; 
 	input node_number_rdy_i; 
 	input msg_rdy_i; 
-	output reg[15:0] next_period_o;
-	input sync_phase_i; 
 	 
 	output reg[31:0] Kalman_offset_o; 
 	output reg[31:0] Kalman_rate_o; 
 	output reg[15:0] offset_memory_o; 
+	output reg[1:0] shift_value_o;
+	output reg shift_start_o;
 	output reg sync_rdy_o; 
 	
 /////////////////////////////////////////////////////////////////////
@@ -455,86 +466,47 @@ module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_nu
 	wire[31:0] Kalman_error;
 	assign Kalman_error = {offset_memory_o, 16'b0} - Kalman_offset_o; 
 	 
-	reg[15:0] sync_counter; 
-	reg[1:0] period_request; 
-	reg[1:0] period_request_r; 
-	reg[2:0] period_request_timer; 
-	reg comm_last;
+	reg[15:0] offset_memory_r; 
+	reg[15:0] sync_counter;
+	reg[15:0] timeout_counter;
 	reg msg_rdy_r;
-	reg msg_rdy_flag;
-	reg[1:0] sync_phase_r;
-	reg new_cycle_flag;
-	assign new_cycle_r = sync_phase_r[1] ^ sync_phase_r[0];
+
+	wire msg_rdy_pulse;
+	assign msg_rdy_pulse = msg_rdy_i && !msg_rdy_r;
 	
-	localparam [1:0]
-    PERIOD_DONOTHING = 0,
-    PERIOD_CHANGE_PHASE = 1,
-    PERIOD_DECREASE = 2,
-	PERIOD_INCREASE = 3;
-
+	
 	always @(posedge clk_i) begin 
-		sync_phase_r <= {sync_phase_i, sync_phase_r[1]}; 
 		msg_rdy_r <= msg_rdy_i;
-		if(msg_rdy_i && !msg_rdy_r) begin
-			msg_rdy_flag <= 1'b1;
-			comm_last <= 1'b1;
-		end
-
-		if(new_cycle_r) begin
-			new_cycle_flag <= 1'b1;
-			comm_last <= 1'b0;
-			
-			if($signed(Kalman_offset_o) < $signed(65536+(65536>>2)) && (Kalman_offset_o) > $signed(-65536-(65536>>2)) && 
-			   node_number_rdy_i && comm_last) begin
-				if(sync_counter >= `CONV_FREQUENCY)
-					sync_rdy_o <= 1'b1;
-				else
-					sync_counter <= sync_counter + 1'b1;
-			end
-			else begin
-				sync_counter <= 16'b0;
-				sync_rdy_o <= 1'b0; 
-			end 
-			
-			period_request <= 2'b0;
-			if(period_request_timer == 3'b0) begin
-				period_request_r <= period_request;
-				if(period_request != 2'b0) period_request_timer <= 3'b1;
-				case (period_request) 
-					PERIOD_DONOTHING : next_period_o <= `CYCLE_PERIOD - 16'd1;
-					PERIOD_CHANGE_PHASE : next_period_o <= `CYCLE_PERIOD*2 - 16'd1;
-					PERIOD_DECREASE : next_period_o <= `CYCLE_PERIOD - 16'd2; 
-					PERIOD_INCREASE : next_period_o <= `CYCLE_PERIOD - 16'd0;
-				endcase
-			end
-			else begin
-				next_period_o <= `CYCLE_PERIOD - 16'd1;
-				period_request_timer <= period_request_timer + 1'b1;
-			end
+		start_r <= 1'b0; 
+		shift_start_o <= 1'b0;
+					
+		timeout_counter <= timeout_counter + 1'b1;
+		if(msg_rdy_pulse) timeout_counter <= 0;
+		if(timeout_counter >= 4096) begin
+			sync_counter <= 16'b0;
+			sync_rdy_o <= 1'b0; 
 		end 
 		
-		start_r <= 1'b0; 
 		case (state_reg)
 			S_SS_idle : begin
-				if(msg_rdy_flag) begin
-					if(node_number_rdy_i && flags_memory[node_number_i])				
-						state_reg <= S_SS_1; 
-					msg_rdy_flag <= 1'b0; 
-				end
-				else if(new_cycle_flag) begin
-					new_cycle_flag <= 1'b0;
-					state_reg <= S_SS_3;
-					if(period_request_timer == 3'd5) begin
-						case (period_request_r) 
-							PERIOD_DONOTHING : ;
-							PERIOD_CHANGE_PHASE : ;
-							PERIOD_DECREASE : Kalman_offset_o <= Kalman_offset_o + {16'd2, 16'd0}; 
-							PERIOD_INCREASE : Kalman_offset_o <= Kalman_offset_o - {16'd2, 16'd0};
-						endcase
-					end
-				end
+				if(msg_rdy_pulse && node_number_rdy_i && flags_memory[node_number_i])
+					state_reg <= S_SS_1;
 			end
 			S_SS_1 : begin 
+				offset_memory_r <= offset_memory_o;
+				
+				if($signed(Kalman_offset_o) < $signed(65536+(65536>>2)) && $signed(Kalman_offset_o) > $signed(-65536-(65536>>2)) && 
+				   node_number_rdy_i) begin
+					if(sync_counter >= `CONV_FREQUENCY)
+						sync_rdy_o <= 1'b1;
+					else
+						sync_counter <= sync_counter + 1'b1;
+				end
+				else begin
+					sync_counter <= 16'b0;
+					sync_rdy_o <= 1'b0; 
+				end 
+				
 				A_r <= Kalman_error;
 				B_r <= (2.0**32.0)*`KALMAN_GAIN; 
 				start_r <= 1'b1;
@@ -542,59 +514,61 @@ module Slave_sync(clk_i, rx_addrw_i, rx_dataw_i, rx_we_i, node_number_i, node_nu
 			end 
 			S_SS_2 : begin 
 				if(rdy_mult && !start_r) begin
-					state_reg <= S_SS_idle; 
+					state_reg <= S_SS_3; 
 					Kalman_offset_o <= Kalman_offset_o + Y_mult[32 +: 32]; 
 					Kalman_rate_o <= Kalman_rate_o + Y_mult[32 +: 32]; 
 				end
 			end
 			S_SS_3 : begin 
 				A_r <= Kalman_rate_o;
-				B_r <= (2.0**32.0)*`KALMAN_TIME*6.0;
+				B_r <= (2.0**32.0)*`KALMAN_TIME;
 				start_r <= 1'b1;
 				state_reg <= S_SS_4;
 			end
 			S_SS_4 : begin
 				if(rdy_mult && !start_r) begin
 					state_reg <= S_SS_5;
-					Kalman_offset_predict <= Kalman_offset_o + Y_mult[32 +: 32];
-				end
-			end
-			S_SS_5 : begin 
-				A_r <= Kalman_rate_o;
-				B_r <= (2.0**32.0)*`KALMAN_TIME;
-				start_r <= 1'b1;
-				state_reg <= S_SS_6;
-			end
-			S_SS_6 : begin
-				if(rdy_mult && !start_r) begin
-					state_reg <= S_SS_7;
 					Kalman_offset_o <= Kalman_offset_o + Y_mult[32 +: 32];
 				end
 			end
-			S_SS_7 : begin
-				if($signed(Kalman_offset_predict) >= $signed(32'd65536))
-					period_request <= PERIOD_INCREASE;
-				else if($signed(Kalman_offset_predict) <= $signed(-32'd65536)) 
-					period_request <= PERIOD_DECREASE;
-				else if(sync_phase_r[0] == flags_memory[8])
-					period_request <= PERIOD_CHANGE_PHASE;
+			S_SS_5 : begin
+				Kalman_offset_o <= Kalman_offset_o - {{13{shift_value_o[1]}}, shift_value_o, 1'b0, 16'b0};
+				
+				if(!shift_value_o) begin
+					if($signed(Kalman_offset_predict) >= $signed(32'd65536))
+						shift_value_o <= 2'd1;
+					else if($signed(Kalman_offset_predict) <= $signed(-32'd65536)) 
+						shift_value_o <= -2'd1;
+					else
+						shift_value_o <= 2'b0;
+				end
 				else
-					period_request <= PERIOD_DONOTHING;	
-				state_reg <= S_SS_idle;
+					shift_value_o <= 2'b0;
+				state_reg <= S_SS_6;
+			end
+			S_SS_6 : begin 
+				shift_start_o <= 1'b1;
+				
+				A_r <= Kalman_rate_o;
+				B_r <= (2.0**32.0)*`KALMAN_TIME*2.0;
+				start_r <= 1'b1;
+				state_reg <= S_SS_7;
+			end
+			S_SS_7 : begin
+				if(rdy_mult && !start_r) begin
+					state_reg <= S_SS_idle;
+					Kalman_offset_predict <= Kalman_offset_o + Y_mult[32 +: 32];
+				end
 			end
 		endcase 
 	end
  
-	initial begin 
-		sync_rdy_o = 0; 
-		new_cycle_flag = 0; 
-		sync_phase_r = 0; 
-		comm_last = 0; 
+	initial begin
+		shift_start_o = 0;
+		sync_rdy_o = 0;
 		sync_counter = 0;
-		period_request = 0; 
-		period_request_r = 0; 
-		period_request_timer = 0; 
-		next_period_o = `CYCLE_PERIOD - 16'd1; 
+		timeout_counter = 0;
+		shift_value_o = 0;
 		state_reg = 0; 
 		Kalman_offset_o = 0; 
 		Kalman_offset_predict = 0; 
