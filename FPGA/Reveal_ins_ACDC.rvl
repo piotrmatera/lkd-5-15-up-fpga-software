@@ -1,7 +1,7 @@
-<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-10">
+<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-11">
     <IP Version="1_6_042617"/>
     <Design DesignEntry="Schematic/Verilog HDL" Synthesis="lse" DeviceFamily="ECP5U" DesignName="SKJEE"/>
-    <Core InsertDataset="0" Insert="1" Reveal_sig="500509519" Name="top_ACDC_comm" ID="0">
+    <Core InsertDataset="0" Insert="1" Reveal_sig="500658679" Name="top_ACDC_comm" ID="0">
         <Setting>
             <Clock SampleClk="clk_1x" SampleEnable="1" EnableClk="Slave_sync/msg_rdy_pulse" EnableClk_Pri="0"/>
             <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="2048"/>
@@ -12,7 +12,7 @@
         </Setting>
         <Dataset Name="Base">
             <Trace>
-                <Sig Type="SIG" Name="sync_phase"/>
+                <Sig Type="SIG" Name="local_counter_phase"/>
                 <Bus Name="Slave_sync/Kalman_offset_o">
                     <Sig Type="SIG" Name="Slave_sync/Kalman_offset_o:0"/>
                     <Sig Type="SIG" Name="Slave_sync/Kalman_offset_o:1"/>
@@ -123,7 +123,7 @@
                 </Bus>
             </Trace>
             <Trigger>
-                <TU Serialbits="0" Type="0" ID="1" Sig="sync_phase,"/>
+                <TU Serialbits="0" Type="0" ID="1" Sig="local_counter_phase,"/>
                 <TE MaxSequence="2" MaxEvnCnt="1" ID="1" Resource="0"/>
             </Trigger>
         </Dataset>
