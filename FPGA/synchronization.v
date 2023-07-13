@@ -492,6 +492,7 @@ module Slave_sync(clk_i, msg_rdy_i,
 	wire[31:0] Kalman_error;
 	assign Kalman_error = {offset_memory_o, 16'b0} - Kalman_offset_o; 
 	 
+	reg local_counter_update_condition;
 	reg[15:0] local_counter_error; 
 	reg[15:0] local_counter_error2; 
 	reg[15:0] local_counter_error3; 
@@ -505,7 +506,6 @@ module Slave_sync(clk_i, msg_rdy_i,
 	wire msg_rdy_pulse;
 	assign msg_rdy_pulse = msg_rdy_i && !msg_rdy_r;
 	
-	
 	always @(posedge clk_i) begin 
 		msg_rdy_r <= msg_rdy_i;
 		start_r <= 1'b0; 
@@ -518,6 +518,26 @@ module Slave_sync(clk_i, msg_rdy_i,
 			sync_counter <= 16'b0;
 			sync_rdy_o <= 1'b0; 
 		end 
+
+		if(local_counter_timestamp_new_latch_last) begin
+			case({local_counter_timestamp_phase_i, flags_memory[9]})
+				2'b00: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i;
+				2'b01: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i + `CYCLE_PERIOD;
+				2'b10: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i - `CYCLE_PERIOD;
+				2'b11: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i;
+			endcase
+			
+			local_counter_error2 <= local_counter_error;
+			if(local_counter_error[15]) local_counter_error2 <= local_counter_error + (`CYCLE_PERIOD<<1);
+				
+			local_counter_error3 <= local_counter_error2 + phase_shift_i;
+
+			local_counter_error4 <= local_counter_error3;
+			if($signed(local_counter_error3) >= $signed(`CYCLE_PERIOD)) local_counter_error4 <= local_counter_error3 - (`CYCLE_PERIOD<<1);
+			if($signed(-local_counter_error3) >= $signed(`CYCLE_PERIOD)) local_counter_error4 <= local_counter_error3 + (`CYCLE_PERIOD<<1);
+				
+			local_counter_update_condition <= sync_rdy_o && local_counter_timestamp_new_latch_last && local_counter_error_last == local_counter_error4 && cycle_period_memory == `CYCLE_PERIOD;
+		end
 		
 		case (state_reg)
 			S_SS_idle : begin
@@ -528,16 +548,8 @@ module Slave_sync(clk_i, msg_rdy_i,
 				local_counter_timestamp_new_latch_last <= local_counter_timestamp_new_latch;
 				offset_memory_r <= offset_memory_o;
 				
-				if(local_counter_timestamp_new_latch_last) begin
-					case({local_counter_timestamp_phase_i, flags_memory[9]})
-						2'b00: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i;
-						2'b01: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i + `CYCLE_PERIOD;
-						2'b10: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i - `CYCLE_PERIOD;
-						2'b11: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i;
-					endcase
-					local_counter_error_last <= local_counter_error4;
-				end
-				
+				if(local_counter_timestamp_new_latch_last) local_counter_error_last <= local_counter_error4;
+
 				if($signed(Kalman_offset_o) < $signed(65536+(65536>>2)) && $signed(Kalman_offset_o) > $signed(-65536-(65536>>2)) && 
 				   node_number_rdy_i) begin
 					if(sync_counter >= `CONV_FREQUENCY)
@@ -556,32 +568,19 @@ module Slave_sync(clk_i, msg_rdy_i,
 				state_reg <= S_SS_2;
 			end 
 			S_SS_2 : begin 
-				if(local_counter_timestamp_new_latch_last) begin
-					local_counter_error2 <= local_counter_error;
-					if(local_counter_error[15]) local_counter_error2 <= local_counter_error + (`CYCLE_PERIOD<<1);
-				end
-				
 				if(rdy_mult && !start_r) begin
 					state_reg <= S_SS_3; 
 					Kalman_offset_o <= Kalman_offset_o + Y_mult[32 +: 32]; 
 					Kalman_rate_o <= Kalman_rate_o + Y_mult[32 +: 32]; 
 				end
 			end
-			S_SS_3 : begin 
-				if(local_counter_timestamp_new_latch_last) local_counter_error3 <= local_counter_error2 + phase_shift_i;
-										
+			S_SS_3 : begin 										
 				A_r <= Kalman_rate_o;
 				B_r <= (2.0**32.0)*`KALMAN_TIME;
 				start_r <= 1'b1;
 				state_reg <= S_SS_4;
 			end
 			S_SS_4 : begin
-				if(local_counter_timestamp_new_latch_last) begin
-					local_counter_error4 <= local_counter_error3;
-					if($signed(local_counter_error3) >= $signed(`CYCLE_PERIOD)) local_counter_error4 <= local_counter_error3 - (`CYCLE_PERIOD<<1);
-					if($signed(-local_counter_error3) >= $signed(`CYCLE_PERIOD)) local_counter_error4 <= local_counter_error3 + (`CYCLE_PERIOD<<1);
-				end
-					
 				if(rdy_mult && !start_r) begin
 					state_reg <= S_SS_5;
 					Kalman_offset_o <= Kalman_offset_o + Y_mult[32 +: 32];
@@ -604,12 +603,13 @@ module Slave_sync(clk_i, msg_rdy_i,
 			end
 			S_SS_6 : begin 
 				shift_value2_o <= shift_value_o;
-				if(!shift_value_o && sync_rdy_o && local_counter_timestamp_new_latch_last && local_counter_error_last == local_counter_error4) begin
+				if(!shift_value_o && local_counter_update_condition) begin
 					if($signed(local_counter_error4) > $signed(16'd0))
 						shift_value2_o <= -2'd1;
 					else if($signed(local_counter_error4) < $signed(16'd0))
 						shift_value2_o <= 2'd1;
 				end
+				
 				A_r <= Kalman_rate_o;
 				B_r <= (2.0**32.0)*`KALMAN_TIME*2.0;
 				start_r <= 1'b1;
@@ -618,6 +618,7 @@ module Slave_sync(clk_i, msg_rdy_i,
 			S_SS_7 : begin
 				shift_start_o <= 1'b1;
 				shift_start2_o <= 1'b1;
+				
 				if(rdy_mult && !start_r) begin
 					state_reg <= S_SS_idle;
 					Kalman_offset_predict <= Kalman_offset_o + Y_mult[32 +: 32];
@@ -626,20 +627,22 @@ module Slave_sync(clk_i, msg_rdy_i,
 		endcase 
 	end
  
-	initial begin
-		local_counter_error = 0;
-		local_counter_error2 = 0;
-		local_counter_error3 = 0;
-		local_counter_error4 = 0;
-		shift_start_o = 0;
-		sync_rdy_o = 0;
-		sync_counter = 0;
-		timeout_counter = 0;
-		shift_value_o = 0;
-		state_reg = 0; 
-		Kalman_offset_o = 0; 
-		Kalman_offset_predict = 0; 
-		Kalman_rate_o = 0;
-	end
+		initial begin
+			local_counter_update_condition = 0;
+			local_counter_error_last = 0;
+			local_counter_error = 0;
+			local_counter_error2 = 0;
+			local_counter_error3 = 0;
+			local_counter_error4 = 0;
+			shift_start_o = 0;
+			sync_rdy_o = 0;
+			sync_counter = 0;
+			timeout_counter = 0;
+			shift_value_o = 0;
+			state_reg = 0; 
+			Kalman_offset_o = 0; 
+			Kalman_offset_predict = 0; 
+			Kalman_rate_o = 0;
+		end
 
 endmodule
