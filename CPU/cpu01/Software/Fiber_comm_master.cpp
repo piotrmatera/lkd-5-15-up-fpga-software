@@ -12,7 +12,7 @@
 #include "State.h"
 #include "Scope.h"
 
-class Fiber_comm_master_class Fiber_comm[4];
+class Fiber_comm_master_class Fiber_comm_master[4];
 void (Fiber_comm_master_class::*Fiber_comm_master_class::state_pointers[Fiber_comm_master_class::state_max])();
 
 void Fiber_comm_master_class::Main()
@@ -198,9 +198,6 @@ void Fiber_comm_master_class::async_data_mosi()
     if(input_flags.read_async_data) status_flags.wait_for_async_data = 1;
 
     msg.async_master.code_version = SW_ID;
-    msg.async_master.FatFS_time = *(Uint32 *)&FatFS_time;
-    msg.async_master.w_filter = Conv.w_filter;
-    msg.async_master.compensation2 = Conv.compensation2;
     msg.async_master.Meas_master_gain = Meas_master_gain;
     msg.async_master.Meas_master_offset = Meas_master_offset;
 

@@ -105,6 +105,6 @@ class Fiber_comm_master_class
     static void (Fiber_comm_master_class::*state_pointers[state_max])();
 };
 
-extern class Fiber_comm_master_class Fiber_comm[4];
+extern class Fiber_comm_master_class Fiber_comm_master[4];
 
 #endif /* FIBER_COMM_MASTER_H_ */

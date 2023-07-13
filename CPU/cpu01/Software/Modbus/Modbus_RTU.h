@@ -1,4 +1,4 @@
-//Tomasz Œwiêchowicz swiechowicz.tomasz@gmail.com
+//Tomasz ï¿½wiï¿½chowicz swiechowicz.tomasz@gmail.com
 
 #ifndef SOFTWARE_MODBUS_RTU_H_
 #define SOFTWARE_MODBUS_RTU_H_
@@ -17,6 +17,7 @@ public:
         Uint16 DERE_pin;
         Uint16 use_DERE;
         Uint32 baudrate;
+        Uint16 is_fiber;
     };
 
     Modbus_RTU_class()
@@ -26,6 +27,7 @@ public:
     }
 
     void init(struct Modbus_RTU_parameters_struct *Modbus_RTU_parameters);
+    void set_data_received();
     Uint16 send_data();
     void interrupt_task();
     Uint16 is_data_ready()
@@ -72,6 +74,7 @@ private:
     Uint16 DERE_pin;
     Uint16 use_DERE;
     Uint32 baudrate;
+    Uint16 is_fiber;
 
     Uint16 transmit_index;
 };

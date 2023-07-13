@@ -108,10 +108,9 @@ class Machine_class
     Uint16 ONOFF_switch, ONOFF_switch_last;
     Uint16 ONOFF, ONOFF_last;
     Uint16 save_to_RTC;
-    Uint16 node_number;
     Uint16 error_retry;
     Uint16 recent_error;
-//    Uint16 padding;
+    Uint16 padding;
 
     static void Main();
     static void Background();

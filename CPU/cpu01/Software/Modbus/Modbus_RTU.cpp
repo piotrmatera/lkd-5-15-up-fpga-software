@@ -1,4 +1,4 @@
-//Tomasz  Œwiêchowicz swiechowicz.tomasz@gmail.com
+//Tomasz  ï¿½wiï¿½chowicz swiechowicz.tomasz@gmail.com
 
 #include <Modbus_RTU.h>
 
@@ -9,87 +9,99 @@
 Uint16 Modbus_RTU_class::send_data()
 {
     if(state != Modbus_RTU_idle || data_out_length == 0) return 1;
-    transmit_index = 0;
-    EALLOW;
-    *(&InputXbarRegs.INPUT7SELECT + (ECapRegs - &ECap1Regs)) = TX_pin;
-    EDIS;
-    ECapRegs->TSCTR = 0;
+    if(!this->is_fiber)
+    {
+        transmit_index = 0;
+        EALLOW;
+        *(&InputXbarRegs.INPUT7SELECT + (ECapRegs - &ECap1Regs)) = TX_pin;
+        EDIS;
+        ECapRegs->TSCTR = 0;
+    }
     state = Modbus_RTU_send_response;
     return 0;
 }
 
+void Modbus_RTU_class::set_data_received()
+{
+    data_ready = 1;
+}
+
 void Modbus_RTU_class::init(struct Modbus_RTU_parameters_struct *Modbus_RTU_parameters)
 {
-    this->DERE_pin = Modbus_RTU_parameters->DERE_pin;
-    this->TX_pin = Modbus_RTU_parameters->TX_pin;
-    this->RX_pin = Modbus_RTU_parameters->RX_pin;
-    this->baudrate = Modbus_RTU_parameters->baudrate;
-    this->use_DERE = Modbus_RTU_parameters->use_DERE;
-    this->ECapRegs = Modbus_RTU_parameters->ECapRegs;
-    this->SciRegs = Modbus_RTU_parameters->SciRegs;
-
-    GPIO_Setup(RX_pin);
-
-    if(use_DERE)
+    this->is_fiber = Modbus_RTU_parameters->is_fiber;
+    if(!this->is_fiber)
     {
-        GPIO_Setup(DERE_pin);
+        this->DERE_pin = Modbus_RTU_parameters->DERE_pin;
+        this->TX_pin = Modbus_RTU_parameters->TX_pin;
+        this->RX_pin = Modbus_RTU_parameters->RX_pin;
+        this->baudrate = Modbus_RTU_parameters->baudrate;
+        this->use_DERE = Modbus_RTU_parameters->use_DERE;
+        this->ECapRegs = Modbus_RTU_parameters->ECapRegs;
+        this->SciRegs = Modbus_RTU_parameters->SciRegs;
+
+        GPIO_Setup(RX_pin);
+
+        if(use_DERE)
+        {
+            GPIO_Setup(DERE_pin);
+        }
+
+        EALLOW;
+        CpuSysRegs.PCLKCR7.all |= 1<<(SciRegs - &SciaRegs);
+        EDIS;
+
+        SciRegs->SCICTL1.bit.SWRESET = 0;
+        SciRegs->SCIFFTX.bit.SCIRST = 0;
+        SciRegs->SCIFFTX.bit.TXFIFORESET = 0;
+        SciRegs->SCIFFRX.bit.RXFIFORESET = 0;
+
+        SciRegs->SCICCR.all = 0x0007;      // 1 stop bit,  No loopback
+                                         // No parity,8 char bits,
+                                         // async mode, idle-line protocol
+        SciRegs->SCICTL1.bit.TXENA = 1;
+        SciRegs->SCICTL1.bit.RXENA = 1;
+
+        Uint16 Baudrate_reg = CALC_BAUDRATE(baudrate);
+        SciRegs->SCIHBAUD.bit.BAUD = Baudrate_reg >> 8;
+        SciRegs->SCILBAUD.bit.BAUD = Baudrate_reg;
+        SciRegs->SCIFFTX.bit.SCIFFENA = 1;
+
+        SciRegs->SCICTL1.bit.SWRESET = 1;
+        SciRegs->SCIFFTX.bit.SCIRST = 1;
+        SciRegs->SCIFFTX.bit.TXFIFORESET = 1;
+        SciRegs->SCIFFRX.bit.RXFIFORESET = 1;
+
+        SciRegs->SCITXBUF.all = 0xA;
+
+        EALLOW;
+        CpuSysRegs.PCLKCR3.all |= 1<<(ECapRegs - &ECap1Regs);
+        EDIS;
+
+        EALLOW;
+        *(&InputXbarRegs.INPUT7SELECT + (ECapRegs - &ECap1Regs)) = RX_pin;         // Set eCAPx source to GPIO-pin
+        EDIS;
+
+        //
+        // Configure peripheral registers
+        //
+        ECapRegs->ECCTL2.bit.CONT_ONESHT = 0;   // Continuous
+        ECapRegs->ECCTL2.bit.STOP_WRAP = 1;     // Stop at 2 events
+        ECapRegs->ECCTL1.bit.CAP1POL = 0;       // Rising edge
+        ECapRegs->ECCTL1.bit.CAP2POL = 1;       // Falling edge
+        ECapRegs->ECCTL1.bit.CTRRST1 = 1;       // Reset counter after latch
+        ECapRegs->ECCTL1.bit.CTRRST2 = 1;       // Reset counter after latch
+        ECapRegs->ECCTL1.bit.CAPLDEN = 1;       // Enable capture units
+
+        ECapRegs->ECCTL2.bit.TSCTRSTOP = 1;     // Start Counter
+        ECapRegs->ECCTL2.bit.REARM = 1;         // arm one-shot
+        ECapRegs->ECCTL1.bit.CAPLDEN = 1;       // Enable CAP1-CAP4 register loads
+
+        Sci_words_x35 = ((float)CPU_CLK / (float)baudrate) * 3.5f * 10.0f;//3.5 times 10bits
+        Sci_words_x1 = ((float)CPU_CLK / (float)baudrate) * 1.0f * 10.0f;//1.0 times 10bits
+
+        while(!SciRegs->SCICTL2.bit.TXRDY);
+        GPIO_Setup(TX_pin);
     }
-
-    EALLOW;
-    CpuSysRegs.PCLKCR7.all |= 1<<(SciRegs - &SciaRegs);
-    EDIS;
-
-    SciRegs->SCICTL1.bit.SWRESET = 0;
-    SciRegs->SCIFFTX.bit.SCIRST = 0;
-    SciRegs->SCIFFTX.bit.TXFIFORESET = 0;
-    SciRegs->SCIFFRX.bit.RXFIFORESET = 0;
-
-    SciRegs->SCICCR.all = 0x0007;      // 1 stop bit,  No loopback
-                                     // No parity,8 char bits,
-                                     // async mode, idle-line protocol
-    SciRegs->SCICTL1.bit.TXENA = 1;
-    SciRegs->SCICTL1.bit.RXENA = 1;
-
-    Uint16 Baudrate_reg = CALC_BAUDRATE(baudrate);
-    SciRegs->SCIHBAUD.bit.BAUD = Baudrate_reg >> 8;
-    SciRegs->SCILBAUD.bit.BAUD = Baudrate_reg;
-    SciRegs->SCIFFTX.bit.SCIFFENA = 1;
-
-    SciRegs->SCICTL1.bit.SWRESET = 1;
-    SciRegs->SCIFFTX.bit.SCIRST = 1;
-    SciRegs->SCIFFTX.bit.TXFIFORESET = 1;
-    SciRegs->SCIFFRX.bit.RXFIFORESET = 1;
-
-    SciRegs->SCITXBUF.all = 0xA;
-
-    EALLOW;
-    CpuSysRegs.PCLKCR3.all |= 1<<(ECapRegs - &ECap1Regs);
-    EDIS;
-
-    EALLOW;
-    *(&InputXbarRegs.INPUT7SELECT + (ECapRegs - &ECap1Regs)) = RX_pin;         // Set eCAPx source to GPIO-pin
-    EDIS;
-
-    //
-    // Configure peripheral registers
-    //
-    ECapRegs->ECCTL2.bit.CONT_ONESHT = 0;   // Continuous
-    ECapRegs->ECCTL2.bit.STOP_WRAP = 1;     // Stop at 2 events
-    ECapRegs->ECCTL1.bit.CAP1POL = 0;       // Rising edge
-    ECapRegs->ECCTL1.bit.CAP2POL = 1;       // Falling edge
-    ECapRegs->ECCTL1.bit.CTRRST1 = 1;       // Reset counter after latch
-    ECapRegs->ECCTL1.bit.CTRRST2 = 1;       // Reset counter after latch
-    ECapRegs->ECCTL1.bit.CAPLDEN = 1;       // Enable capture units
-
-    ECapRegs->ECCTL2.bit.TSCTRSTOP = 1;     // Start Counter
-    ECapRegs->ECCTL2.bit.REARM = 1;         // arm one-shot
-    ECapRegs->ECCTL1.bit.CAPLDEN = 1;       // Enable CAP1-CAP4 register loads
-
-    Sci_words_x35 = ((float)CPU_CLK / (float)baudrate) * 3.5f * 10.0f;//3.5 times 10bits
-    Sci_words_x1 = ((float)CPU_CLK / (float)baudrate) * 1.0f * 10.0f;//1.0 times 10bits
-
-    while(!SciRegs->SCICTL2.bit.TXRDY);
-    GPIO_Setup(TX_pin);
 
     state = Modbus_RTU_idle;
 

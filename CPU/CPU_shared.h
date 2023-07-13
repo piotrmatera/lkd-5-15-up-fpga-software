@@ -67,7 +67,11 @@ union FPGA_master_sync_flags_union
         Uint16 slave_rdy_5:1;
         Uint16 slave_rdy_6:1;
         Uint16 slave_rdy_7:1;
-        Uint16 rsvd:8;
+        Uint16 node_number:3;
+        Uint16 node_number_rdy:1;
+        Uint16 sync_rdy:1;
+        Uint16 master_slave_selector:1;
+        Uint16 rsvd:2;
     }bit;
 };
 
@@ -243,8 +247,7 @@ union EMIF_union
         struct EMIF_SD_struct SD_avg;
         union FPGA_master_flags_union FPGA_flags;
         union FPGA_master_sync_flags_union Sync_flags;
-        int16 clock_offsets[8];
-        int16 comm_delays[8];
+        //16 Uint32
         Uint32 SD_sync_val;
         Uint32 dsc;
         Uint32 Scope_data_out1;
@@ -259,14 +262,18 @@ union EMIF_union
         Uint16 sd_shift;
         struct
         {
-            Uint32 sync_phase:1;
             Uint32 Resonant1_WIP:1;
             Uint32 Resonant2_WIP:1;
             Uint32 Resonant3_WIP:1;
+            Uint32 Resonant4_WIP:1;
+            Uint32 Resonant5_WIP:1;
+            Uint32 Resonant6_WIP:1;
             Uint32 Kalman_DC_WIP:1;
-            Uint32 Kalman1_WIP:1;
+            Uint32 Kalman_WIP:1;
+            Uint32 sync_phase:1;
         }flags;
-        Uint32 mux_rsvd[512-35];
+        Uint32 next_period;
+        Uint32 mux_rsvd[512-28];
         Uint32 rx1_lopri_msg[8][32];
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];

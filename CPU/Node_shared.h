@@ -134,7 +134,9 @@ union ALARM_master
         Uint16 Not_enough_data_master : 1;
         Uint16 Driver_soft_error : 1;
         Uint16 FPGA_parameters : 1;
-        Uint16 rsvd1:5;
+        Uint16 lopri_timeout : 1;
+        Uint16 lopri_error : 1;
+        Uint16 rsvd1:3;
         //64bits
 
         Uint16 rsvd2:16;
@@ -380,11 +382,8 @@ union COMM_async_msg_union
         struct COMM_header_struct comm_header;
         enum comm_func_enum comm_func;
         Uint32 code_version;
-        Uint32 FatFS_time;
-        float w_filter;
         struct Measurements_master_gain_offset_struct Meas_master_gain;
         struct Measurements_master_gain_offset_struct Meas_master_offset;
-        float compensation2;
         Uint16 crc;
     }async_master;
     struct

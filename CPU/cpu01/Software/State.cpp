@@ -23,6 +23,7 @@
 #include "Modbus_devices.h"
 
 #include "Fiber_comm_master.h"
+#include "Fiber_comm_slave.h"
 
 #include "Software/driver_mosfet/MosfetDriver.h"
 #include "MosfetCtrlApp.h"
@@ -501,10 +502,10 @@ void Machine_class::Background()
 
     case mdb_request_wrong_address:
         Modbus_slave_LCD.RTU->signal_data_processed();//skoro wykrylo zly adres to musialy byc dane
-        Fiber_comm[0].input_flags.send_modbus = 1;
-//        Fiber_comm[1].input_flags.send_modbus = 1;
-//        Fiber_comm[2].input_flags.send_modbus = 1;
-//        Fiber_comm[3].input_flags.send_modbus = 1;
+        Fiber_comm_master[0].input_flags.send_modbus = 1;
+        Fiber_comm_master[1].input_flags.send_modbus = 1;
+        Fiber_comm_master[2].input_flags.send_modbus = 1;
+        Fiber_comm_master[3].input_flags.send_modbus = 1;
         break;
     }
 
@@ -529,10 +530,20 @@ void Machine_class::Background()
         }
     }
 
-    Fiber_comm[0].Main();//musza byc wszystkie
-    Fiber_comm[1].Main();
-    Fiber_comm[2].Main();
-    Fiber_comm[3].Main();
+
+    static Uint32 master_slave_selector = 0;
+    union FPGA_master_sync_flags_union Sync_flags;
+    Sync_flags.all = EMIF_mem.read.Sync_flags.all;
+    if(Sync_flags.bit.master_slave_selector || master_slave_selector)
+    {
+//        master_slave_selector = 1;
+        Fiber_comm_master[0].Main();//musza byc wszystkie
+        Fiber_comm_master[1].Main();
+        Fiber_comm_master[2].Main();
+        Fiber_comm_master[3].Main();
+    }
+    Fiber_comm_slave.Main();
+
 
     SD_card.Scope_snapshot_task();
 
@@ -791,7 +802,8 @@ void Machine_class::Background()
 
     if(control_master.triggers.bit.CPU_reset
             && Modbus_slave_LCD.RTU->state == Modbus_RTU_class::Modbus_RTU_idle
-            && Modbus_slave_EXT.RTU->state == Modbus_RTU_class::Modbus_RTU_idle)
+            && Modbus_slave_EXT.RTU->state == Modbus_RTU_class::Modbus_RTU_idle
+            && Modbus_slave_FIBER.RTU->state == Modbus_RTU_class::Modbus_RTU_idle)
     {
         control_master.triggers.bit.CPU_reset = 0;
 
@@ -841,10 +853,10 @@ void Machine_class::init()
     memset(&alarm_master, 0, sizeof(alarm_master));
     memset(&alarm_master_snapshot, 0, sizeof(alarm_master_snapshot));
 
-    Fiber_comm[0].node_number = 0;
-    Fiber_comm[1].node_number = 1;
-    Fiber_comm[2].node_number = 2;
-    Fiber_comm[3].node_number = 3;
+    Fiber_comm_master[0].node_number = 0;
+    Fiber_comm_master[1].node_number = 1;
+    Fiber_comm_master[2].node_number = 2;
+    Fiber_comm_master[3].node_number = 3;
 
     if(L_grid_FLASH.retrieve()) L_grid_meas.L_grid_previous[0] = 100e-6;
     error_retry_FLASH.retrieve();
@@ -993,8 +1005,6 @@ void Machine_class::init()
     Machine.switch_timer = 1e6;
     Machine.ONOFF_temp = Machine.ONOFF;
 
-    Machine.node_number = 0x0F;
-
     Init.Variables();
 
     union
@@ -1029,6 +1039,7 @@ void Machine_class::init()
     EMIF_mem.write.U_grid_c_lim = Meas_alarm_int.u32;
 
     Modbus_RTU_class::Modbus_RTU_parameters_struct RTU_LCD_parameters;
+    RTU_LCD_parameters.is_fiber = 0;
     RTU_LCD_parameters.use_DERE = 1;
     RTU_LCD_parameters.DERE_pin = EN_Mod_1_CM;
     RTU_LCD_parameters.RX_pin = RX_Mod_1_CM;
@@ -1039,6 +1050,7 @@ void Machine_class::init()
     Modbus_slave_LCD.RTU->init(&RTU_LCD_parameters);
 
     Modbus_RTU_class::Modbus_RTU_parameters_struct RTU_EXT_parameters;
+    RTU_EXT_parameters.is_fiber = 0;
     RTU_EXT_parameters.use_DERE = 1;
     RTU_EXT_parameters.DERE_pin = EN_Mod_2_CM;
     RTU_EXT_parameters.RX_pin = RX_Mod_2_CM;
@@ -1048,6 +1060,10 @@ void Machine_class::init()
     if(SD_card.settings.Baudrate >= 9600) RTU_EXT_parameters.baudrate = SD_card.settings.Baudrate;
     else RTU_EXT_parameters.baudrate = 9600;
     Modbus_slave_EXT.RTU->init(&RTU_EXT_parameters);
+
+    Modbus_RTU_class::Modbus_RTU_parameters_struct RTU_FIBER_parameters;
+    RTU_FIBER_parameters.is_fiber = 1;
+    Modbus_slave_FIBER.RTU->init(&RTU_FIBER_parameters);
 
     Uint32 delay_timer = IpcRegs.IPCCOUNTERL;
     while(!RTC_current_time.year10 && !RTC_current_time.year)
