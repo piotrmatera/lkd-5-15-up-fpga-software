@@ -765,6 +765,7 @@ module top_ACDC(CPU_io, FPGA_io);
  
 	reg local_counter_timestamp_new = 0;  
 	reg [15:0] local_counter_timestamp = 0;
+	reg local_counter_timestamp_phase = 0;
 	reg local_counter_pulse_last = 0;
 	reg[8:0] local_counter_pulse_delay_counter = 0;
 	always @(posedge clk_5x) begin
@@ -774,7 +775,10 @@ module top_ACDC(CPU_io, FPGA_io);
 		if((local_counter_pulse && !local_counter_pulse_last) | (|local_counter_pulse_delay_counter)) local_counter_pulse_delay_counter <= local_counter_pulse_delay_counter + 1'b1;
 			
 		local_counter_timestamp_new <= local_free_counter == 0;
-		if(local_counter_timestamp_new) local_counter_timestamp <= local_counter;
+		if(local_counter_timestamp_new) begin
+			local_counter_timestamp <= local_counter;
+			local_counter_timestamp_phase <= local_counter_phase;
+		end
 	end
 
 /////////////////////////////////////////////////////////////////////   
@@ -800,7 +804,8 @@ module top_ACDC(CPU_io, FPGA_io);
 	wire[31:0] Kalman_rate;  
 	wire[15:0] offset_memory;  
 	wire sync_rdy; 
-	Slave_sync Slave_sync(.clk_i(clk_1x), .local_counter_timestamp_i(local_counter_timestamp), .local_counter_timestamp_new_i(local_counter_timestamp_new), .msg_rdy_i(rx1_hipri_msg_rdy[0]),
+	Slave_sync Slave_sync(.clk_i(clk_1x), .msg_rdy_i(rx1_hipri_msg_rdy[0]),
+	.local_counter_timestamp_i(local_counter_timestamp), .local_counter_timestamp_phase_i(local_counter_timestamp_phase), .local_counter_timestamp_new_i(local_counter_timestamp_new),
 	.rx_addrw_i(Comm_rx1_addrw), .rx_dataw_i(Comm_rx1_dataw), .rx_we_i(Comm_rx1_we), 
 	.node_number_i(node_number), .node_number_rdy_i(node_number_rdy),
 	.Kalman_offset_o(Kalman_offset), .Kalman_rate_o(Kalman_rate), .offset_memory_o(offset_memory),
@@ -860,7 +865,7 @@ module top_ACDC(CPU_io, FPGA_io);
 			11'h400 : Comm_tx2_mux_datar_r <= {4'd0, 4'd0}; 
 			11'h401 : Comm_tx2_mux_datar_r <= 8'd9 - 8'd1; 
 			11'h402 : Comm_tx2_mux_datar_r <= {{8-`HIPRI_MAILBOXES_NUMBER{1'b0}}, rx_ok}; 
-			11'h403 : Comm_tx2_mux_datar_r <= {7'b0, local_counter_phase}; 
+			11'h403 : Comm_tx2_mux_datar_r <= {6'b0, local_counter_timestamp_phase, local_counter_phase}; 
 			11'h404 : Comm_tx2_mux_datar_r <= clock_offsets[0*8 +: 8]; 
 			11'h405 : Comm_tx2_mux_datar_r <= clock_offsets[1*8 +: 8]; 
 			11'h406 : Comm_tx2_mux_datar_r <= clock_offsets[2*8 +: 8]; 
@@ -869,10 +874,10 @@ module top_ACDC(CPU_io, FPGA_io);
 			11'h409 : Comm_tx2_mux_datar_r <= clock_offsets[5*8 +: 8];  
 			11'h40A : Comm_tx2_mux_datar_r <= clock_offsets[6*8 +: 8];  
 			11'h40B : Comm_tx2_mux_datar_r <= clock_offsets[7*8 +: 8]; 
-			11'h40C : Comm_tx1_mux_datar_r <= `CYCLE_PERIOD;
-			11'h40D : Comm_tx1_mux_datar_r <= `CYCLE_PERIOD>>8;
-			11'h40E : Comm_tx1_mux_datar_r <= local_counter_timestamp[0*8 +: 8];
-			11'h40F : Comm_tx1_mux_datar_r <= local_counter_timestamp[1*8 +: 8];
+			11'h40C : Comm_tx2_mux_datar_r <= `CYCLE_PERIOD;
+			11'h40D : Comm_tx2_mux_datar_r <= `CYCLE_PERIOD>>8;
+			11'h40E : Comm_tx2_mux_datar_r <= local_counter_timestamp[0*8 +: 8];
+			11'h40F : Comm_tx2_mux_datar_r <= local_counter_timestamp[1*8 +: 8];
 			default : begin 
 				tx2_select_memory <= 1'b0; 
 				Comm_tx2_mux_datar_r <= 8'd0; 

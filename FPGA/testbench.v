@@ -23,12 +23,11 @@ module SerDes_tb;
 	end
 
 	wire[15:0] next_period;
-	assign next_period = `CYCLE_PERIOD-1;
 	wire[15:0] current_period;
 	wire[15:0] local_counter;
 	wire sync_phase;
-	Local_counter	#(.INITIAL_PHASE(0)) Local_counter(.clk_i(XTAL1_25MHz_i), .next_period_i(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase),
-	.snapshot_start_i(4'b0), .snapshot_value_o()); 
+	Local_counter #(.INITIAL_PHASE(0)) Local_counter(.clk_i(XTAL1_25MHz_i), .shift_value_i(0), .shift_start_i(0),
+	.next_period_o(next_period), .current_period_o(current_period), .local_counter_o(local_counter), .sync_phase_o(sync_phase)); 
 	
 	
 	reg[15:0] duty_r; 

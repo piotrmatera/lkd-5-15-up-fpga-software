@@ -294,7 +294,8 @@ union EMIF_union
         Uint32 U_grid_a_lim;
         Uint32 U_grid_b_lim;
         Uint32 U_grid_c_lim;
-        Uint32 mux_rsvd[512-18];
+        int32 local_counter_phase_shift;
+        Uint32 mux_rsvd[512-19];
         Uint32 tx1_lopri_msg[8][32];
         Uint32 tx1_hipri_msg[8][32];
         Uint32 tx2_lopri_msg[8][32];

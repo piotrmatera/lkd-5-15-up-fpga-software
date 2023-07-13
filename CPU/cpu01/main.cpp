@@ -18,6 +18,7 @@ Rtc rtc;
 FATFS fs;           /* Filesystem object */
 MosfetCtrlApp mosfet_ctrl_app;
 int32 SD_phase = -500;
+int32 FPGA_phase = 0;
 
 #pragma CODE_SECTION(".TI.ramfunc");
 interrupt void NMI_INT()
@@ -122,6 +123,7 @@ void main()
         if(SD_phase_temp < 0) SD_phase_temp = 0;
         if(SD_phase_temp > max_period) SD_phase_temp = max_period;
         *(Uint32 *)&EMIF_mem.write.SD_sync_val = *(Uint32 *)&SD_phase_temp;
+        *(Uint32 *)&EMIF_mem.write.local_counter_phase_shift = *(Uint32 *)&FPGA_phase;
 
         static Uint64 benchmark_timer;
         static volatile float benchmark;

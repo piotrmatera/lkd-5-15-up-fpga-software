@@ -1,126 +1,126 @@
-<Project ModBy="Inserter" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-11">
-    <Core Name="top_ACDC_comm">
-        <Setting>
-            <Capture SamplesPerTrig="2048" NumTrigsCap="1"/>
-            <Event EventCnt="0" CntEnableRun="0"/>
-            <TrigSetting PreTrgSamples="" AND_ALL="0" PostTrgSamples="" TURadix="0"/>
-        </Setting>
-        <Dataset Name="Base">
-            <Trace>
-                <Sig Name="local_counter_phase"/>
-                <Bus Name="Slave_sync/Kalman_offset_o" Radix="0">
-                    <Sig Name="Slave_sync/Kalman_offset_o:0"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:1"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:2"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:3"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:4"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:5"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:6"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:7"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:8"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:9"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:10"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:11"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:12"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:13"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:14"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:15"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:16"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:17"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:18"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:19"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:20"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:21"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:22"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:23"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:24"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:25"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:26"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:27"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:28"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:29"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:30"/>
-                    <Sig Name="Slave_sync/Kalman_offset_o:31"/>
-                </Bus>
-                <Bus Name="Slave_sync/Kalman_rate_o" Radix="0">
-                    <Sig Name="Slave_sync/Kalman_rate_o:0"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:1"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:2"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:3"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:4"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:5"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:6"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:7"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:8"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:9"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:10"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:11"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:12"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:13"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:14"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:15"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:16"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:17"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:18"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:19"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:20"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:21"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:22"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:23"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:24"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:25"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:26"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:27"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:28"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:29"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:30"/>
-                    <Sig Name="Slave_sync/Kalman_rate_o:31"/>
-                </Bus>
-                <Bus Name="Slave_sync/offset_memory_o" Radix="0">
-                    <Sig Name="Slave_sync/offset_memory_o:0"/>
-                    <Sig Name="Slave_sync/offset_memory_o:1"/>
-                    <Sig Name="Slave_sync/offset_memory_o:2"/>
-                    <Sig Name="Slave_sync/offset_memory_o:3"/>
-                    <Sig Name="Slave_sync/offset_memory_o:4"/>
-                    <Sig Name="Slave_sync/offset_memory_o:5"/>
-                    <Sig Name="Slave_sync/offset_memory_o:6"/>
-                    <Sig Name="Slave_sync/offset_memory_o:7"/>
-                    <Sig Name="Slave_sync/offset_memory_o:8"/>
-                    <Sig Name="Slave_sync/offset_memory_o:9"/>
-                    <Sig Name="Slave_sync/offset_memory_o:10"/>
-                    <Sig Name="Slave_sync/offset_memory_o:11"/>
-                    <Sig Name="Slave_sync/offset_memory_o:12"/>
-                    <Sig Name="Slave_sync/offset_memory_o:13"/>
-                    <Sig Name="Slave_sync/offset_memory_o:14"/>
-                    <Sig Name="Slave_sync/offset_memory_o:15"/>
-                </Bus>
-                <Bus Name="Slave_sync/shift_value_o" Radix="0">
-                    <Sig Name="Slave_sync/shift_value_o:0"/>
-                    <Sig Name="Slave_sync/shift_value_o:1"/>
-                </Bus>
-                <Bus Name="local_free_counter" Radix="0">
-                    <Sig Name="local_free_counter:0"/>
-                    <Sig Name="local_free_counter:1"/>
-                    <Sig Name="local_free_counter:2"/>
-                    <Sig Name="local_free_counter:3"/>
-                    <Sig Name="local_free_counter:4"/>
-                    <Sig Name="local_free_counter:5"/>
-                    <Sig Name="local_free_counter:6"/>
-                    <Sig Name="local_free_counter:7"/>
-                    <Sig Name="local_free_counter:8"/>
-                    <Sig Name="local_free_counter:9"/>
-                    <Sig Name="local_free_counter:10"/>
-                    <Sig Name="local_free_counter:11"/>
-                    <Sig Name="local_free_counter:12"/>
-                    <Sig Name="local_free_counter:13"/>
-                    <Sig Name="local_free_counter:14"/>
-                    <Sig Name="local_free_counter:15"/>
-                </Bus>
-            </Trace>
-            <Trigger>
-                <TU Operator="0" Name="TU1" ID="1" Value="0" Radix="0"/>
-                <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
-            </Trigger>
-        </Dataset>
-    </Core>
+<Project ModBy="Analyzer" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvs" Date="2023-07-13">
+ <Core Name="top_ACDC_comm">
+  <Setting>
+   <Capture SamplesPerTrig="1024" NumTrigsCap="1"/>
+   <Event EventCnt="0" CntEnableRun="0"/>
+   <TrigSetting PreTrgSamples="" AND_ALL="0" PostTrgSamples="" TURadix="0"/>
+  </Setting>
+  <Dataset Name="Base">
+   <Trace>
+    <Sig Name="local_counter_phase"/>
+    <Bus Name="Slave_sync/local_counter_timestamp_memory" Radix="0">
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:0"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:1"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:2"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:3"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:4"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:5"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:6"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:7"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:8"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:9"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:10"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:11"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:12"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:13"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:14"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_memory:15"/>
+    </Bus>
+    <Bus Name="Slave_sync/local_counter_timestamp_i" Radix="0">
+     <Sig Name="Slave_sync/local_counter_timestamp_i:0"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:1"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:2"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:3"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:4"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:5"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:6"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:7"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:8"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:9"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:10"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:11"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:12"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:13"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:14"/>
+     <Sig Name="Slave_sync/local_counter_timestamp_i:15"/>
+    </Bus>
+    <Bus Name="Slave_sync/local_counter_error" Radix="0">
+     <Sig Name="Slave_sync/local_counter_error:0"/>
+     <Sig Name="Slave_sync/local_counter_error:1"/>
+     <Sig Name="Slave_sync/local_counter_error:2"/>
+     <Sig Name="Slave_sync/local_counter_error:3"/>
+     <Sig Name="Slave_sync/local_counter_error:4"/>
+     <Sig Name="Slave_sync/local_counter_error:5"/>
+     <Sig Name="Slave_sync/local_counter_error:6"/>
+     <Sig Name="Slave_sync/local_counter_error:7"/>
+     <Sig Name="Slave_sync/local_counter_error:8"/>
+     <Sig Name="Slave_sync/local_counter_error:9"/>
+     <Sig Name="Slave_sync/local_counter_error:10"/>
+     <Sig Name="Slave_sync/local_counter_error:11"/>
+     <Sig Name="Slave_sync/local_counter_error:12"/>
+     <Sig Name="Slave_sync/local_counter_error:13"/>
+     <Sig Name="Slave_sync/local_counter_error:14"/>
+     <Sig Name="Slave_sync/local_counter_error:15"/>
+    </Bus>
+    <Bus Name="Slave_sync/local_counter_error2" Radix="0">
+     <Sig Name="Slave_sync/local_counter_error2:0"/>
+     <Sig Name="Slave_sync/local_counter_error2:1"/>
+     <Sig Name="Slave_sync/local_counter_error2:2"/>
+     <Sig Name="Slave_sync/local_counter_error2:3"/>
+     <Sig Name="Slave_sync/local_counter_error2:4"/>
+     <Sig Name="Slave_sync/local_counter_error2:5"/>
+     <Sig Name="Slave_sync/local_counter_error2:6"/>
+     <Sig Name="Slave_sync/local_counter_error2:7"/>
+     <Sig Name="Slave_sync/local_counter_error2:8"/>
+     <Sig Name="Slave_sync/local_counter_error2:9"/>
+     <Sig Name="Slave_sync/local_counter_error2:10"/>
+     <Sig Name="Slave_sync/local_counter_error2:11"/>
+     <Sig Name="Slave_sync/local_counter_error2:12"/>
+     <Sig Name="Slave_sync/local_counter_error2:13"/>
+     <Sig Name="Slave_sync/local_counter_error2:14"/>
+     <Sig Name="Slave_sync/local_counter_error2:15"/>
+    </Bus>
+    <Bus Name="Slave_sync/local_counter_error3" Radix="0">
+     <Sig Name="Slave_sync/local_counter_error3:0"/>
+     <Sig Name="Slave_sync/local_counter_error3:1"/>
+     <Sig Name="Slave_sync/local_counter_error3:2"/>
+     <Sig Name="Slave_sync/local_counter_error3:3"/>
+     <Sig Name="Slave_sync/local_counter_error3:4"/>
+     <Sig Name="Slave_sync/local_counter_error3:5"/>
+     <Sig Name="Slave_sync/local_counter_error3:6"/>
+     <Sig Name="Slave_sync/local_counter_error3:7"/>
+     <Sig Name="Slave_sync/local_counter_error3:8"/>
+     <Sig Name="Slave_sync/local_counter_error3:9"/>
+     <Sig Name="Slave_sync/local_counter_error3:10"/>
+     <Sig Name="Slave_sync/local_counter_error3:11"/>
+     <Sig Name="Slave_sync/local_counter_error3:12"/>
+     <Sig Name="Slave_sync/local_counter_error3:13"/>
+     <Sig Name="Slave_sync/local_counter_error3:14"/>
+     <Sig Name="Slave_sync/local_counter_error3:15"/>
+    </Bus>
+    <Bus Name="Slave_sync/local_counter_error4" Radix="0">
+     <Sig Name="Slave_sync/local_counter_error4:0"/>
+     <Sig Name="Slave_sync/local_counter_error4:1"/>
+     <Sig Name="Slave_sync/local_counter_error4:2"/>
+     <Sig Name="Slave_sync/local_counter_error4:3"/>
+     <Sig Name="Slave_sync/local_counter_error4:4"/>
+     <Sig Name="Slave_sync/local_counter_error4:5"/>
+     <Sig Name="Slave_sync/local_counter_error4:6"/>
+     <Sig Name="Slave_sync/local_counter_error4:7"/>
+     <Sig Name="Slave_sync/local_counter_error4:8"/>
+     <Sig Name="Slave_sync/local_counter_error4:9"/>
+     <Sig Name="Slave_sync/local_counter_error4:10"/>
+     <Sig Name="Slave_sync/local_counter_error4:11"/>
+     <Sig Name="Slave_sync/local_counter_error4:12"/>
+     <Sig Name="Slave_sync/local_counter_error4:13"/>
+     <Sig Name="Slave_sync/local_counter_error4:14"/>
+     <Sig Name="Slave_sync/local_counter_error4:15"/>
+    </Bus>
+   </Trace>
+   <Trigger>
+    <TU Operator="0" Name="TU1" ID="1" Value="0" Radix="0"/>
+    <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
+   </Trigger>
+  </Dataset>
+ </Core>
 </Project>

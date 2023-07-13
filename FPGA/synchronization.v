@@ -286,6 +286,7 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 	wire[15:0] timestamp_memory_read;
 	assign timestamp_memory_read = {timestamp_memory1[read_address], timestamp_memory0[read_address]};
  
+	reg[3:0] timestamp_sign; 
 	reg[15:0] ALU_offset; 
 	reg[15:0] ALU_delay; 
 	reg[15:0] clock_offsets_r[`HIPRI_MAILBOXES_NUMBER-1:0]; 
@@ -312,21 +313,25 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 				end
 			end 
 			S_MS_1 : begin 
+				timestamp_sign <= {timestamp_memory_read[14], timestamp_sign[3:1]};
 				ALU_delay <= ALU_delay + timestamp_memory_read;
 				ALU_offset <= ALU_offset + timestamp_memory_read;
 				state_reg <= S_MS_2;
 			end
 			S_MS_2 : begin 
+				timestamp_sign <= {timestamp_memory_read[14], timestamp_sign[3:1]};
 				ALU_delay <= ALU_delay - timestamp_memory_read; 
 				ALU_offset <= ALU_offset + timestamp_memory_read; 
 				state_reg <= S_MS_3;
 			end
 			S_MS_3 : begin 
 				if(converter_number == {`HIPRI_MAILBOXES_WIDTH{1'b0}}) begin 
+					timestamp_sign <= {snapshot_value_tx2_codes[14], timestamp_sign[3:1]};
 					ALU_delay <= ALU_delay - snapshot_value_tx2_codes; 
 					ALU_offset <= ALU_offset - snapshot_value_tx2_codes; 
 				end  
 				else begin 
+					timestamp_sign <= {timestamp_memory_read[14], timestamp_sign[3:1]};
 					ALU_delay <= ALU_delay - timestamp_memory_read;
 					ALU_offset <= ALU_offset - timestamp_memory_read;					 
 				end
@@ -334,18 +339,19 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 			end
 			S_MS_4 : begin 
 				if(converter_number == {`HIPRI_MAILBOXES_WIDTH{1'b0}}) begin
+					timestamp_sign <= {snapshot_value_rx2_codes[14], timestamp_sign[3:1]};
 					ALU_delay <= ALU_delay + snapshot_value_rx2_codes;
 					ALU_offset <= ALU_offset - snapshot_value_rx2_codes;
 				end  
 				else begin
+					timestamp_sign <= {timestamp_memory_read[14], timestamp_sign[3:1]};
 					ALU_delay <= ALU_delay + timestamp_memory_read;
 					ALU_offset <= ALU_offset - timestamp_memory_read;					
 				end
 				state_reg <= S_MS_5;
 			end
 			S_MS_5 : begin 
-				if($signed(ALU_offset) > $signed(16'd16384)) ALU_offset <= ALU_offset - 16'd32768;
-				if($signed(ALU_offset) < $signed(-16'd16384)) ALU_offset <= ALU_offset + 16'd32768;
+				if(timestamp_sign == 4'b0100 || timestamp_sign == 4'b0010 || timestamp_sign == 4'b0111) ALU_offset <= ALU_offset + 16'h8000;
 				state_reg <= S_MS_6;
 			end
 			S_MS_6 : begin
@@ -391,7 +397,8 @@ module Master_sync(clk_i, pulse_cycle_i, rx_addrw_i, rx_dataw_i, rx_we_i, snapsh
 
 endmodule
  
-module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_i, msg_rdy_i,
+module Slave_sync(clk_i, msg_rdy_i,
+	local_counter_timestamp_i, local_counter_timestamp_phase_i, local_counter_timestamp_new_i, 
 	rx_addrw_i, rx_dataw_i, rx_we_i,
 	node_number_i, node_number_rdy_i,
 	Kalman_offset_o, Kalman_rate_o, offset_memory_o,
@@ -416,6 +423,7 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 	input clk_i;
 	
 	input[15:0] local_counter_timestamp_i;
+	input local_counter_timestamp_phase_i;
 	input local_counter_timestamp_new_i;
 	input msg_rdy_i; 
 	input[`POINTER_WIDTH-1:0] rx_addrw_i;
@@ -429,17 +437,15 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 	output reg[15:0] offset_memory_o; 
 	output reg[1:0] shift_value_o;
 	output reg shift_start_o; 
-	output [1:0] shift_value2_o;
-	output shift_start2_o;
+	output reg [1:0] shift_value2_o;
+	output reg shift_start2_o;
 	input [15:0] phase_shift_i;
 	output reg sync_rdy_o; 
-	
-	assign shift_value2_o = shift_value_o;
-	assign shift_start2_o = shift_start_o;
-	
+		
 /////////////////////////////////////////////////////////////////////
 
 	wire local_counter_timestamp_new_latch;
+	reg local_counter_timestamp_new_latch_last = 0;
 	Sync_latch_input #(.OUT_POLARITY(1), .STEPS(2)) Sync_latch_local_counter_timestamp(.clk_i(clk_i),
 	.in(local_counter_timestamp_new_i),	.out(local_counter_timestamp_new_latch), .reset_i(state_reg == S_SS_1), .set_i(1'b0));  
 	
@@ -458,14 +464,14 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 			offset_memory_o[15:8] <= rx_dataw_i; 
 			
 		if(rx_addrw_i == 12 + `HIPRI_MSG_LENGTH*0 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)
-			local_counter_timestamp_memory[7:0] <= rx_dataw_i;
+			cycle_period_memory[7:0] <= rx_dataw_i;
 		if(rx_addrw_i == 13 + `HIPRI_MSG_LENGTH*0 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)
-			local_counter_timestamp_memory[15:8] <= rx_dataw_i; 
+			cycle_period_memory[15:8] <= rx_dataw_i; 
 		
 		if(rx_addrw_i == 14 + `HIPRI_MSG_LENGTH*0 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)
-			cycle_period_memory[7:0] <= rx_dataw_i;
+			local_counter_timestamp_memory[7:0] <= rx_dataw_i;
 		if(rx_addrw_i == 15 + `HIPRI_MSG_LENGTH*0 + `LOPRI_MSG_LENGTH*`LOPRI_MAILBOXES_NUMBER)
-			cycle_period_memory[15:8] <= rx_dataw_i; 
+			local_counter_timestamp_memory[15:8] <= rx_dataw_i; 
 	end
 	 
 	initial begin
@@ -486,6 +492,11 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 	wire[31:0] Kalman_error;
 	assign Kalman_error = {offset_memory_o, 16'b0} - Kalman_offset_o; 
 	 
+	reg[15:0] local_counter_error; 
+	reg[15:0] local_counter_error2; 
+	reg[15:0] local_counter_error3; 
+	reg[15:0] local_counter_error4; 
+	reg[15:0] local_counter_error_last; 
 	reg[15:0] offset_memory_r; 
 	reg[15:0] sync_counter;
 	reg[15:0] timeout_counter;
@@ -499,6 +510,7 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 		msg_rdy_r <= msg_rdy_i;
 		start_r <= 1'b0; 
 		shift_start_o <= 1'b0;
+		shift_start2_o <= 1'b0;
 					
 		timeout_counter <= timeout_counter + 1'b1;
 		if(msg_rdy_pulse) timeout_counter <= 0;
@@ -513,7 +525,13 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 					state_reg <= S_SS_1;
 			end
 			S_SS_1 : begin 
+				local_counter_timestamp_new_latch_last <= local_counter_timestamp_new_latch;
 				offset_memory_r <= offset_memory_o;
+				
+				if(local_counter_timestamp_new_latch_last) begin
+					local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i;
+					local_counter_error_last <= local_counter_error4;
+				end
 				
 				if($signed(Kalman_offset_o) < $signed(65536+(65536>>2)) && $signed(Kalman_offset_o) > $signed(-65536-(65536>>2)) && 
 				   node_number_rdy_i) begin
@@ -533,6 +551,11 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 				state_reg <= S_SS_2;
 			end 
 			S_SS_2 : begin 
+				if(local_counter_timestamp_new_latch_last) begin
+					local_counter_error2 <= local_counter_error;
+					if(local_counter_error[15]) local_counter_error2 <= local_counter_error + `CYCLE_PERIOD;
+				end
+				
 				if(rdy_mult && !start_r) begin
 					state_reg <= S_SS_3; 
 					Kalman_offset_o <= Kalman_offset_o + Y_mult[32 +: 32]; 
@@ -540,12 +563,20 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 				end
 			end
 			S_SS_3 : begin 
+				if(local_counter_timestamp_new_latch_last) local_counter_error3 <= local_counter_error2 + phase_shift_i;
+										
 				A_r <= Kalman_rate_o;
 				B_r <= (2.0**32.0)*`KALMAN_TIME;
 				start_r <= 1'b1;
 				state_reg <= S_SS_4;
 			end
 			S_SS_4 : begin
+				if(local_counter_timestamp_new_latch_last) begin
+					local_counter_error4 <= local_counter_error3;
+					if($signed(local_counter_error3) >= $signed(`CYCLE_PERIOD>>1)) local_counter_error4 <= local_counter_error3 - `CYCLE_PERIOD;
+					if($signed(-local_counter_error3) >= $signed(`CYCLE_PERIOD>>1)) local_counter_error4 <= local_counter_error3 + `CYCLE_PERIOD;
+				end
+					
 				if(rdy_mult && !start_r) begin
 					state_reg <= S_SS_5;
 					Kalman_offset_o <= Kalman_offset_o + Y_mult[32 +: 32];
@@ -567,14 +598,21 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 				state_reg <= S_SS_6;
 			end
 			S_SS_6 : begin 
-				shift_start_o <= 1'b1;
-				
+				shift_value2_o <= shift_value_o;
+				if(!shift_value_o && sync_rdy_o && local_counter_timestamp_new_latch_last && local_counter_error_last == local_counter_error4) begin
+					if($signed(local_counter_error4) > $signed(16'd0))
+						shift_value2_o <= -2'd1;
+					else if($signed(local_counter_error4) < $signed(16'd0))
+						shift_value2_o <= 2'd1;
+				end
 				A_r <= Kalman_rate_o;
 				B_r <= (2.0**32.0)*`KALMAN_TIME*2.0;
 				start_r <= 1'b1;
 				state_reg <= S_SS_7;
 			end
 			S_SS_7 : begin
+				shift_start_o <= 1'b1;
+				shift_start2_o <= 1'b1;
 				if(rdy_mult && !start_r) begin
 					state_reg <= S_SS_idle;
 					Kalman_offset_predict <= Kalman_offset_o + Y_mult[32 +: 32];
@@ -584,6 +622,10 @@ module Slave_sync(clk_i, local_counter_timestamp_i, local_counter_timestamp_new_
 	end
  
 	initial begin
+		local_counter_error = 0;
+		local_counter_error2 = 0;
+		local_counter_error3 = 0;
+		local_counter_error4 = 0;
 		shift_start_o = 0;
 		sync_rdy_o = 0;
 		sync_counter = 0;

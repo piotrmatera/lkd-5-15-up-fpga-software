@@ -20,11 +20,10 @@ def get_bits(num, start, end):
 file = open("demofile.vcd", "w")
 writer = VCDWriter(file, timescale='1 ns')
 vars = [writer.register_var('top', 'sync_phase', 'integer', size=1)]
-vars.append(writer.register_var('top', 'Kalman_offset_o', 'integer', size=32))
-vars.append(writer.register_var('top', 'Kalman_rate_o', 'integer', size=32))
-vars.append(writer.register_var('top', 'offset_memory_o', 'integer', size=16))
-vars.append(writer.register_var('top', 'shift_value_o', 'integer', size=2))
+vars.append(writer.register_var('top', 'local_counter', 'integer', size=16))
 vars.append(writer.register_var('top', 'local_free_counter', 'integer', size=16))
+vars.append(writer.register_var('top', 'local_counter_timestamp_master', 'integer', size=16))
+vars.append(writer.register_var('top', 'local_counter_timestamp_slave', 'integer', size=16))
 i=0
 for integer in lines:
     if integer == 0: break
