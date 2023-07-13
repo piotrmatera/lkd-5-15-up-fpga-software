@@ -529,7 +529,12 @@ module Slave_sync(clk_i, msg_rdy_i,
 				offset_memory_r <= offset_memory_o;
 				
 				if(local_counter_timestamp_new_latch_last) begin
-					local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i;
+					case({local_counter_timestamp_phase_i, flags_memory[9]})
+						2'b00: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i;
+						2'b01: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i + `CYCLE_PERIOD;
+						2'b10: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i - `CYCLE_PERIOD;
+						2'b11: local_counter_error <= local_counter_timestamp_memory - local_counter_timestamp_i;
+					endcase
 					local_counter_error_last <= local_counter_error4;
 				end
 				
@@ -553,7 +558,7 @@ module Slave_sync(clk_i, msg_rdy_i,
 			S_SS_2 : begin 
 				if(local_counter_timestamp_new_latch_last) begin
 					local_counter_error2 <= local_counter_error;
-					if(local_counter_error[15]) local_counter_error2 <= local_counter_error + `CYCLE_PERIOD;
+					if(local_counter_error[15]) local_counter_error2 <= local_counter_error + (`CYCLE_PERIOD<<1);
 				end
 				
 				if(rdy_mult && !start_r) begin
@@ -573,8 +578,8 @@ module Slave_sync(clk_i, msg_rdy_i,
 			S_SS_4 : begin
 				if(local_counter_timestamp_new_latch_last) begin
 					local_counter_error4 <= local_counter_error3;
-					if($signed(local_counter_error3) >= $signed(`CYCLE_PERIOD>>1)) local_counter_error4 <= local_counter_error3 - `CYCLE_PERIOD;
-					if($signed(-local_counter_error3) >= $signed(`CYCLE_PERIOD>>1)) local_counter_error4 <= local_counter_error3 + `CYCLE_PERIOD;
+					if($signed(local_counter_error3) >= $signed(`CYCLE_PERIOD)) local_counter_error4 <= local_counter_error3 - (`CYCLE_PERIOD<<1);
+					if($signed(-local_counter_error3) >= $signed(`CYCLE_PERIOD)) local_counter_error4 <= local_counter_error3 + (`CYCLE_PERIOD<<1);
 				end
 					
 				if(rdy_mult && !start_r) begin
