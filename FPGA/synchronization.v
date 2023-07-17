@@ -49,7 +49,7 @@ module Node_number_eval(clk_1x_i, fifo_clk_i, fifo_we_i, fifo_i, node_number_o, 
 				stable_counter <= 2'b0;
 		end
 		
-		if(timeout_counter == `CYCLE_PERIOD >> 2)
+		if(timeout_counter == `KALMAN_CYCLE_PERIOD >> 2)
 			stable_counter <= 2'b0;
 	end
 
@@ -68,6 +68,9 @@ endmodule
 
 module Local_counter(clk_i, shift_value_i, shift_start_i, next_period_o, current_period_o, local_counter_o, sync_phase_o, sync_rate_o, sync_o); 
 	parameter INITIAL_PHASE = 0;
+	parameter CYCLE_PERIOD = `CYCLE_PERIOD;
+	parameter CONTROL_RATE_WIDTH = `CONTROL_RATE_WIDTH;
+	parameter CONTROL_RATE = `CONTROL_RATE;
 	input clk_i;
 	input[1:0] shift_value_i;
 	input shift_start_i;
@@ -84,11 +87,11 @@ module Local_counter(clk_i, shift_value_i, shift_start_i, next_period_o, current
 	
 	reg[1:0] shift_value_r; 
 	
-	reg [`CONTROL_RATE_WIDTH-1:0] avg_counter;	
+	reg [CONTROL_RATE_WIDTH-1:0] avg_counter;	
 	always @(posedge clk_i) begin
 		if(shift_start_r) shift_value_r <= shift_value_i;
 			
- 		if(local_counter_o == `CYCLE_PERIOD/2) begin
+ 		if(local_counter_o == CYCLE_PERIOD/2) begin
 			sync_rate_o <= 1'b0;
 			sync_o <= 1'b0;
 		end
@@ -97,12 +100,12 @@ module Local_counter(clk_i, shift_value_i, shift_start_i, next_period_o, current
 			avg_counter <= avg_counter + 1'b1;
 			sync_phase_o <= ~sync_phase_o;
 			sync_o <= 1'b1;
-			if(`CONTROL_RATE > 1)
+			if(CONTROL_RATE > 1)
 				sync_rate_o <= &avg_counter;
 			else
 				sync_rate_o <= 1'b1;
 				
-			next_period_o <= `CYCLE_PERIOD - 16'd1 + {{14{shift_value_r[1]}}, shift_value_r};
+			next_period_o <= CYCLE_PERIOD - 16'd1 + {{14{shift_value_r[1]}}, shift_value_r};
 			shift_value_r <= 0;
 			current_period_o <= next_period_o;
 
@@ -118,8 +121,8 @@ module Local_counter(clk_i, shift_value_i, shift_start_i, next_period_o, current
 		sync_phase_o = INITIAL_PHASE;
 		sync_rate_o = 0;
 		sync_o = 0;
-		current_period_o = `CYCLE_PERIOD - 16'd1; 
-		next_period_o = `CYCLE_PERIOD - 16'd1; 
+		current_period_o = CYCLE_PERIOD - 16'd1; 
+		next_period_o = CYCLE_PERIOD - 16'd1; 
 		local_counter_o = 0;
 	end 
 endmodule 
@@ -535,9 +538,9 @@ module Slave_sync(clk_i, msg_rdy_i,
 			local_counter_error4 <= local_counter_error3;
 			if($signed(local_counter_error3) >= $signed(`CYCLE_PERIOD)) local_counter_error4 <= local_counter_error3 - (`CYCLE_PERIOD<<1);
 			if($signed(-local_counter_error3) >= $signed(`CYCLE_PERIOD)) local_counter_error4 <= local_counter_error3 + (`CYCLE_PERIOD<<1);
-				
-			local_counter_update_condition <= sync_rdy_o && local_counter_timestamp_new_latch_last && local_counter_error_last == local_counter_error4 && cycle_period_memory == `CYCLE_PERIOD;
 		end
+				
+		local_counter_update_condition <= sync_rdy_o && local_counter_timestamp_new_latch_last && local_counter_error_last == local_counter_error4 && cycle_period_memory == `CYCLE_PERIOD;
 		
 		case (state_reg)
 			S_SS_idle : begin

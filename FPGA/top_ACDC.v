@@ -762,17 +762,12 @@ module top_ACDC(CPU_io, FPGA_io);
 	.next_period_o(next_period), .current_period_o(current_period), .local_counter_o(local_counter),
 	.sync_phase_o(local_counter_phase), .sync_rate_o(local_counter_pulse_rate), .sync_o(local_counter_pulse));  
  
+ 	always @(posedge clk_5x) SD_sync_pulse <= local_counter >= EMIF_RX_reg [2][15:0];
+		
 	reg local_counter_timestamp_new = 0;  
 	reg [15:0] local_counter_timestamp = 0;
 	reg local_counter_timestamp_phase = 0;
-	reg local_counter_pulse_last = 0;
-	reg[8:0] local_counter_pulse_delay_counter = 0;
 	always @(posedge clk_5x) begin
-		SD_sync_pulse <= local_counter >= EMIF_RX_reg [2][15:0];
-		
-		local_counter_pulse_last <= local_counter_pulse;
-		if((local_counter_pulse && !local_counter_pulse_last) | (|local_counter_pulse_delay_counter)) local_counter_pulse_delay_counter <= local_counter_pulse_delay_counter + 1'b1;
-			
 		local_counter_timestamp_new <= local_free_counter == 0;
 		if(local_counter_timestamp_new) begin
 			local_counter_timestamp <= local_counter;
@@ -780,6 +775,11 @@ module top_ACDC(CPU_io, FPGA_io);
 		end
 	end
 
+	wire comm_pulse; 
+	Local_counter #(.CYCLE_PERIOD(`KALMAN_CYCLE_PERIOD)) Local_counter2(.clk_i(clk_5x), .shift_value_i(shift_value), .shift_start_i(shift_start),
+	.next_period_o(), .current_period_o(), .local_counter_o(),
+	.sync_phase_o(), .sync_rate_o(), .sync_o(comm_pulse));  
+	
 /////////////////////////////////////////////////////////////////////   
 		 
 	wire [`HIPRI_MAILBOXES_NUMBER*16-1:0] clock_offsets; 
@@ -788,7 +788,7 @@ module top_ACDC(CPU_io, FPGA_io);
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] sync_ok;  
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] slave_rdy; 
 	wire [`HIPRI_MAILBOXES_NUMBER-1:0] scope_trigger_request; 
-	Master_sync Master_sync(.clk_i(clk_1x), .pulse_cycle_i(local_counter_pulse), 
+	Master_sync Master_sync(.clk_i(clk_1x), .pulse_cycle_i(tx2_code_start), 
 	.rx_addrw_i(Comm_rx2_addrw), .rx_dataw_i(Comm_rx2_dataw), .rx_we_i(Comm_rx2_we), 
 	.snapshot_value_i(snapshot_value), .clock_offsets_o(clock_offsets), .comm_delays_o(comm_delays), 
 	.rx_ok_o(rx_ok), .sync_ok_o(sync_ok), .slave_rdy_o(slave_rdy), .scope_trigger_request_o(scope_trigger_request)); 
@@ -814,9 +814,16 @@ module top_ACDC(CPU_io, FPGA_io);
 	.sync_rdy_o(sync_rdy)); 
 
 /////////////////////////////////////////////////////////////////////   
-
+	
 	reg master_slave_selector;
-	always @(posedge clk_5x) master_slave_selector <= !rx1_port_rdy && rx2_port_rdy;
+	reg tx2_code_start_last = 0;
+	reg[8:0] tx2_code_start_delay_counter = 0;
+	always @(posedge clk_5x) begin
+		master_slave_selector <= !rx1_port_rdy && rx2_port_rdy;
+		
+		tx2_code_start_last <= tx2_code_start;
+		if((tx2_code_start && !tx2_code_start_last) | (|tx2_code_start_delay_counter)) tx2_code_start_delay_counter <= tx2_code_start_delay_counter + 1'b1;
+	end
 	
 	assign rx1_hipri_msg_ack = {EMIF_RX_reg[1][1*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], rx1_hipri_msg_rdy[0]}; 
 	assign rx2_hipri_msg_ack = rx2_hipri_msg_rdy;//EMIF_RX_reg [1][3*8 +: `HIPRI_MAILBOXES_NUMBER];  
@@ -825,7 +832,7 @@ module top_ACDC(CPU_io, FPGA_io);
 	assign rx2_lopri_msg_ack = EMIF_RX_reg [1][2*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	 
 	assign tx1_hipri_msg_start = {EMIF_RX_reg[0][1*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], rx1_hipri_msg_wip[0]}; 
-	assign tx2_hipri_msg_start = {EMIF_RX_reg [0][3*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], local_counter_pulse_delay_counter[8] && master_slave_selector};  
+	assign tx2_hipri_msg_start = {EMIF_RX_reg [0][3*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], tx2_code_start_delay_counter[8] && master_slave_selector};  
 	 
 	assign tx1_lopri_msg_start = EMIF_RX_reg [0][0*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	assign tx2_lopri_msg_start = EMIF_RX_reg [0][2*8 +: `LOPRI_MAILBOXES_NUMBER];  
@@ -833,7 +840,7 @@ module top_ACDC(CPU_io, FPGA_io);
  	assign tx1_code = `K_Timestamp_slave; 
 	assign tx2_code = master_slave_selector ? `K_Timestamp_master : `K_Enum_nodes; 
 	assign tx1_code_start = timestamp_code_rx1;  
-	assign tx2_code_start = master_slave_selector ? local_counter_pulse : timestamp_code_rx1; 
+	assign tx2_code_start = master_slave_selector ? comm_pulse : timestamp_code_rx1; 
 	
 	wire PWM_EN_r;
 	wire scope_trigger_request_slave;
@@ -844,7 +851,7 @@ module top_ACDC(CPU_io, FPGA_io);
 		
 		case(Comm_tx1_addrr)
 			11'h400 : Comm_tx1_mux_datar_r <= {4'h0, {4-`HIPRI_MAILBOXES_WIDTH{1'b0}}, node_number};
-			11'h401 : Comm_tx1_mux_datar_r <= 8'd7 - 8'd1;
+			11'h401 : Comm_tx1_mux_datar_r <= 8'd15 - 8'd1;
 			11'h402 : Comm_tx1_mux_datar_r <= {5'b0, scope_trigger_request_slave, PWM_EN_r, sync_rdy}; 
 			11'h403 : Comm_tx1_mux_datar_r <= 8'b0; 
 			11'h404 : Comm_tx1_mux_datar_r <= snapshot_value[0*8 +: 8];
@@ -862,7 +869,7 @@ module top_ACDC(CPU_io, FPGA_io);
 		endcase
 		case(Comm_tx2_addrr) 
 			11'h400 : Comm_tx2_mux_datar_r <= {4'd0, 4'd0}; 
-			11'h401 : Comm_tx2_mux_datar_r <= 8'd9 - 8'd1; 
+			11'h401 : Comm_tx2_mux_datar_r <= 8'd17 - 8'd1; 
 			11'h402 : Comm_tx2_mux_datar_r <= {{8-`HIPRI_MAILBOXES_NUMBER{1'b0}}, rx_ok}; 
 			11'h403 : Comm_tx2_mux_datar_r <= {6'b0, local_counter_timestamp_phase, local_counter_phase}; 
 			11'h404 : Comm_tx2_mux_datar_r <= clock_offsets[0*8 +: 8]; 
@@ -1291,6 +1298,6 @@ module top_ACDC(CPU_io, FPGA_io);
 	BB BB_COMM_RX0(.I(1'b0), .T(1'b1), .O(rx_i[0]), .B(FPGA_io[`RX1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 	BB BB_COMM_RX1(.I(1'b0), .T(1'b1), .O(rx_i[1]), .B(FPGA_io[`RX2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
 	  
-	BB BB_TEST(.I(local_counter_phase), .T(1'b0), .O(), .B(FPGA_io[`K+4]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
+	BB BB_TEST(.I(local_free_counter[10]), .T(1'b0), .O(), .B(FPGA_io[`K+4]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 	BB BB_TEST2(.I(local_counter_pulse), .T(1'b0), .O(), .B(FPGA_io[`L+5]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 endmodule  

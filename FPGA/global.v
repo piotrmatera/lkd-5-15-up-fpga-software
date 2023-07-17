@@ -110,16 +110,17 @@
 
 `define PWM_CLOCK 125000000
 `define SD_CLOCK 20000000
-`define CONV_FREQUENCY 31250
+`define CONV_FREQUENCY 40000
 
 `define CYCLE_PERIOD (`PWM_CLOCK/`CONV_FREQUENCY/2)
 `define DEF_OSR (`SD_CLOCK/`CONV_FREQUENCY/2)
-`define CONTROL_RATE 2
+`define CONTROL_RATE 4
 `define CONTROL_RATE_WIDTH $clog2(`CONTROL_RATE)
 
 /////////////////////////////////////////////////////////////////////
 
-`define KALMAN_TIME (8e-9*2000.0)
+`define KALMAN_CYCLE_PERIOD 2000
+`define KALMAN_TIME (8e-9*`KALMAN_CYCLE_PERIOD)
 `define KALMAN_GAIN 0.005
 
 `define HIPRI_MAILBOXES_NUMBER 8

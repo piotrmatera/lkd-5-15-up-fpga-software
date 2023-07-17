@@ -320,6 +320,9 @@ struct COMM_slave_sync_msg_struct
     struct COMM_header_struct header;
     struct COMM_slave_flags_struct flags;
     struct timestamp_struct timestamp;
+    struct abc_struct P_conv_1h;
+    struct abc_struct Q_conv_1h;
+    float I_lim;
     Uint16 crc;
 };
 
@@ -329,12 +332,12 @@ union COMM_master_sync_msg0_union
     struct
     {
         struct COMM_header_struct header;
-        int16 U_grid_a;
-        int16 U_grid_b;
-        int16 U_grid_c;
-        int16 I_grid_a;
-        int16 I_grid_b;
-        int16 I_grid_c;
+        Uint16 clock_offsets[4];
+        Uint16 cycle_period;
+        Uint16 local_counter_timestamp;
+        struct abc_struct id_ref;
+        struct abc_struct iq_ref;
+        float I_lim_avg;
         Uint16 crc;
     }fields;
 };
@@ -382,8 +385,6 @@ union COMM_async_msg_union
         struct COMM_header_struct comm_header;
         enum comm_func_enum comm_func;
         Uint32 code_version;
-        struct Measurements_master_gain_offset_struct Meas_master_gain;
-        struct Measurements_master_gain_offset_struct Meas_master_offset;
         Uint16 crc;
     }async_master;
     struct
@@ -391,7 +392,6 @@ union COMM_async_msg_union
         struct COMM_header_struct comm_header;
         enum comm_func_enum comm_func;
         Uint32 code_version;
-        float I_lim;
         Uint16 crc;
     }async_slave;
 };

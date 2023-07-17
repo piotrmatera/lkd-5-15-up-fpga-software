@@ -52,6 +52,7 @@ class Fiber_comm_master_class
         Uint16 timeout_error : 1;
         Uint16 msg_error : 1;
         Uint16 wait_for_async_data : 1;
+        Uint16 comm_active : 1;
     }status_flags;
     private:
 

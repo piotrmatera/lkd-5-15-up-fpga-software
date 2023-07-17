@@ -28,6 +28,7 @@ void Fiber_comm_slave_class::Main()
             case comm_func_async_data_mosi: async_data_mosi(); break;
             default: status_flags.msg_error = 1; break;
         }
+        status_flags.comm_active = 1;
     }
     Uint32 time_passed = IpcRegs.IPCCOUNTERL - timer_timeout;
     if(time_passed > 80000000UL && first)
@@ -40,11 +41,13 @@ void Fiber_comm_slave_class::Main()
     {
         alarm_master.bit.lopri_timeout = 1;
         status_flags.timeout = 0;
+        status_flags.comm_active = 0;
     }
     if(status_flags.msg_error)
     {
         alarm_master.bit.lopri_error = 1;
         status_flags.msg_error = 0;
+        status_flags.comm_active = 0;
     }
 }
 
@@ -114,7 +117,6 @@ void Fiber_comm_slave_class::async_data_mosi()
     if(SW_ID == msg.async_master.code_version)
     {
         msg.async_slave.code_version = SW_ID;
-        msg.async_slave.I_lim = Conv.I_lim;
 
         Send(sizeof(msg.async_slave), comm_func_async_data_miso);
     }

@@ -19,6 +19,7 @@ class Fiber_comm_slave_class
     {
         Uint32 msg_error : 1;
         Uint32 timeout : 1;
+        Uint32 comm_active : 1;
     }status_flags;
     Uint32 timer_timeout_val;
     private:

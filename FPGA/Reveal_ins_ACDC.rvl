@@ -1,9 +1,9 @@
-<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-13">
+<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-17">
     <IP Version="1_6_042617"/>
     <Design DesignEntry="Schematic/Verilog HDL" Synthesis="lse" DeviceFamily="ECP5U" DesignName="SKJEE"/>
-    <Core InsertDataset="0" Insert="1" Reveal_sig="500869365" Name="top_ACDC_comm" ID="0">
+    <Core InsertDataset="0" Insert="1" Reveal_sig="501424481" Name="top_ACDC_comm" ID="0">
         <Setting>
-            <Clock SampleClk="clk_1x" SampleEnable="0" EnableClk="{}" EnableClk_Pri="0"/>
+            <Clock SampleClk="clk_1x" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
             <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="1024"/>
             <Capture Mode="0" MinSamplesPerTrig="16"/>
             <Event CntEnable="0" MaxEventCnt="8"/>
@@ -31,6 +31,7 @@
                     <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:14"/>
                     <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:15"/>
                 </Bus>
+                <Sig Type="SIG" Name="Slave_sync/flags_memory:9"/>
                 <Bus Name="Slave_sync/local_counter_timestamp_i">
                     <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:0"/>
                     <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:1"/>
@@ -49,6 +50,7 @@
                     <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:14"/>
                     <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:15"/>
                 </Bus>
+                <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_phase_i"/>
                 <Bus Name="Slave_sync/local_counter_error">
                     <Sig Type="SIG" Name="Slave_sync/local_counter_error:0"/>
                     <Sig Type="SIG" Name="Slave_sync/local_counter_error:1"/>
@@ -121,9 +123,20 @@
                     <Sig Type="SIG" Name="Slave_sync/local_counter_error4:14"/>
                     <Sig Type="SIG" Name="Slave_sync/local_counter_error4:15"/>
                 </Bus>
+                <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_new_latch"/>
+                <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_new_latch_last"/>
+                <Sig Type="SIG" Name="Slave_sync/local_counter_update_condition"/>
+                <Bus Name="Slave_sync/state_reg">
+                    <Sig Type="SIG" Name="Slave_sync/state_reg:0"/>
+                    <Sig Type="SIG" Name="Slave_sync/state_reg:1"/>
+                    <Sig Type="SIG" Name="Slave_sync/state_reg:2"/>
+                </Bus>
             </Trace>
             <Trigger>
-                <TU Serialbits="0" Type="0" ID="1" Sig="local_counter_phase,"/>
+                <TU Serialbits="0" Type="0" ID="1" Sig="(BUS)Slave_sync/local_counter_error4[15:0],"/>
+                <TU Serialbits="0" Type="0" ID="2" Sig="(BUS)Slave_sync/local_counter_error4[15:0],"/>
+                <TU Serialbits="0" Type="0" ID="3" Sig="(BUS)Slave_sync/state_reg[2:0],"/>
+                <TU Serialbits="0" Type="0" ID="4" Sig="Slave_sync/local_counter_update_condition,"/>
                 <TE MaxSequence="2" MaxEvnCnt="1" ID="1" Resource="0"/>
             </Trigger>
         </Dataset>

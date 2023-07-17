@@ -1,4 +1,4 @@
-<Project ModBy="Analyzer" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvs" Date="2023-07-13">
+<Project ModBy="Analyzer" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvs" Date="2023-07-17">
  <Core Name="top_ACDC_comm">
   <Setting>
    <Capture SamplesPerTrig="1024" NumTrigsCap="1"/>
@@ -26,6 +26,7 @@
      <Sig Name="Slave_sync/local_counter_timestamp_memory:14"/>
      <Sig Name="Slave_sync/local_counter_timestamp_memory:15"/>
     </Bus>
+    <Sig Name="Slave_sync/flags_memory:9"/>
     <Bus Name="Slave_sync/local_counter_timestamp_i" Radix="0">
      <Sig Name="Slave_sync/local_counter_timestamp_i:0"/>
      <Sig Name="Slave_sync/local_counter_timestamp_i:1"/>
@@ -44,6 +45,7 @@
      <Sig Name="Slave_sync/local_counter_timestamp_i:14"/>
      <Sig Name="Slave_sync/local_counter_timestamp_i:15"/>
     </Bus>
+    <Sig Name="Slave_sync/local_counter_timestamp_phase_i"/>
     <Bus Name="Slave_sync/local_counter_error" Radix="0">
      <Sig Name="Slave_sync/local_counter_error:0"/>
      <Sig Name="Slave_sync/local_counter_error:1"/>
@@ -116,10 +118,21 @@
      <Sig Name="Slave_sync/local_counter_error4:14"/>
      <Sig Name="Slave_sync/local_counter_error4:15"/>
     </Bus>
+    <Sig Name="Slave_sync/local_counter_timestamp_new_latch"/>
+    <Sig Name="Slave_sync/local_counter_timestamp_new_latch_last"/>
+    <Sig Name="Slave_sync/local_counter_update_condition"/>
+    <Bus Name="Slave_sync/state_reg" Radix="0">
+     <Sig Name="Slave_sync/state_reg:0"/>
+     <Sig Name="Slave_sync/state_reg:1"/>
+     <Sig Name="Slave_sync/state_reg:2"/>
+    </Bus>
    </Trace>
    <Trigger>
-    <TU Operator="0" Name="TU1" ID="1" Value="0" Radix="0"/>
-    <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
+    <TU Operator="5" Name="TU1" ID="1" Value="FFFF" Radix="3"/>
+    <TU Operator="3" Name="TU2" ID="2" Value="0001" Radix="3"/>
+    <TU Operator="0" Name="TU3" ID="3" Value="6" Radix="2"/>
+    <TU Operator="0" Name="TU4" ID="4" Value="1" Radix="0"/>
+    <TE Enable="1" Expression="TU1&amp;TU2&amp;TU3&amp;TU4" Name="TE1" ID="1"/>
    </Trigger>
   </Dataset>
  </Core>
