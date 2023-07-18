@@ -1,7 +1,7 @@
-<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-17">
+<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-18">
     <IP Version="1_6_042617"/>
     <Design DesignEntry="Schematic/Verilog HDL" Synthesis="lse" DeviceFamily="ECP5U" DesignName="SKJEE"/>
-    <Core InsertDataset="0" Insert="1" Reveal_sig="501424481" Name="top_ACDC_comm" ID="0">
+    <Core InsertDataset="0" Insert="1" Reveal_sig="501549354" Name="top_ACDC_comm" ID="0">
         <Setting>
             <Clock SampleClk="clk_1x" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
             <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="1024"/>
@@ -137,7 +137,7 @@
                 <TU Serialbits="0" Type="0" ID="2" Sig="(BUS)Slave_sync/local_counter_error4[15:0],"/>
                 <TU Serialbits="0" Type="0" ID="3" Sig="(BUS)Slave_sync/state_reg[2:0],"/>
                 <TU Serialbits="0" Type="0" ID="4" Sig="Slave_sync/local_counter_update_condition,"/>
-                <TE MaxSequence="2" MaxEvnCnt="1" ID="1" Resource="0"/>
+                <TE MaxSequence="2" MaxEvnCnt="1" ID="1" Resource="1"/>
             </Trigger>
         </Dataset>
     </Core>

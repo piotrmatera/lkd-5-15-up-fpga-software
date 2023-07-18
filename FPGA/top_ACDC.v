@@ -767,8 +767,10 @@ module top_ACDC(CPU_io, FPGA_io);
 	reg local_counter_timestamp_new = 0;  
 	reg [15:0] local_counter_timestamp = 0;
 	reg local_counter_timestamp_phase = 0;
+	reg local_free_counter14_last = 0;
 	always @(posedge clk_5x) begin
-		local_counter_timestamp_new <= local_free_counter == 0;
+		local_free_counter14_last <= local_free_counter[14];
+		local_counter_timestamp_new <= local_free_counter[14] ^ local_free_counter14_last;
 		if(local_counter_timestamp_new) begin
 			local_counter_timestamp <= local_counter;
 			local_counter_timestamp_phase <= local_counter_phase;

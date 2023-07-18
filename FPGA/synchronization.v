@@ -86,16 +86,32 @@ module Local_counter(clk_i, shift_value_i, shift_start_i, next_period_o, current
 	Sync_latch_input #(.OUT_POLARITY(1), .STEPS(4)) shift_start(.clk_i(clk_i), .in(shift_start_i), .out(shift_start_r), .reset_i(shift_start_r), .set_i(1'b0)); 
 	
 	reg[1:0] shift_value_r; 
+	reg[1:0] shift_value_fifo[3:0]; 
+	reg[1:0] shift_value_fifo_write_pointer; 
+	reg[1:0] shift_value_fifo_read_pointer; 
+	reg consume_fifo;
 	
 	reg [CONTROL_RATE_WIDTH-1:0] avg_counter;	
 	always @(posedge clk_i) begin
-		if(shift_start_r) shift_value_r <= shift_value_i;
-			
+		if(shift_start_r) begin
+			shift_value_fifo_write_pointer <= shift_value_fifo_write_pointer + 1'b1;
+			shift_value_fifo[shift_value_fifo_write_pointer] <= shift_value_i;
+		end
+		if(consume_fifo) begin
+			shift_value_r <= 0;
+			if(shift_value_fifo_write_pointer != shift_value_fifo_read_pointer) begin
+				shift_value_fifo_read_pointer <= shift_value_fifo_read_pointer + 1'b1;
+				shift_value_r <= shift_value_fifo[shift_value_fifo_read_pointer];
+			end
+		end
+		
  		if(local_counter_o == CYCLE_PERIOD/2) begin
 			sync_rate_o <= 1'b0;
 			sync_o <= 1'b0;
 		end
 			
+		consume_fifo <= 1'b0;
+		local_counter_o <= local_counter_o + 1'b1; 
 		if(local_counter_o == current_period_o) begin
 			avg_counter <= avg_counter + 1'b1;
 			sync_phase_o <= ~sync_phase_o;
@@ -105,17 +121,23 @@ module Local_counter(clk_i, shift_value_i, shift_start_i, next_period_o, current
 			else
 				sync_rate_o <= 1'b1;
 				
+			consume_fifo <= 1'b1;
 			next_period_o <= CYCLE_PERIOD - 16'd1 + {{14{shift_value_r[1]}}, shift_value_r};
 			shift_value_r <= 0;
 			current_period_o <= next_period_o;
 
 			local_counter_o <= 0; 
 		end
-		else 
-			local_counter_o <= local_counter_o + 1'b1; 
 	end 
  
 	initial begin 
+		shift_value_fifo[0] = 0;
+		shift_value_fifo[1] = 0;
+		shift_value_fifo[2] = 0;
+		shift_value_fifo[3] = 0;
+		shift_value_fifo_read_pointer = 0;
+		shift_value_fifo_write_pointer = 0;
+		consume_fifo = 0;
 		shift_value_r = 0;
 		avg_counter = 0;
 		sync_phase_o = INITIAL_PHASE;
