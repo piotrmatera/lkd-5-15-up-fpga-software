@@ -41,6 +41,30 @@ struct Converter_struct
 
     //////////////////////////////
 
+    float I_lim_total;
+    float I_lim_total_prefilter;
+    struct Filter1_struct I_lim_prefilter;
+    struct Filter1_struct I_lim_slave_prefilter[4];
+    struct abc_struct id_conv_slave, iq_conv_slave;
+    struct abc_struct id_ref, iq_ref;
+    float ratio[4];
+    float ratio_local;
+    float ratio_node;
+    struct
+    {
+        struct abc_struct id_lim;
+        struct abc_struct iq_lim;
+        float ratio[4];
+    }from_master;
+    struct
+    {
+        struct abc_struct id_conv;
+        struct abc_struct iq_conv;
+        float I_lim;
+    }from_slave[4];
+
+    //////////////////////////////
+
     float U_grid_phph_max;
 
     float U_dc_ref;
@@ -122,6 +146,7 @@ extern float on_off_even_a[25];
 extern float on_off_even_b[25];
 extern float on_off_even_c[25];
 
-void Converter_calc();
+void Converter_calc_slave();
+void Converter_calc_master();
 
 #endif /* Converter_H_ */

@@ -22,18 +22,20 @@ interrupt void SD_AVG_NT()
 
     GPIO_SET(TRIGGER_CM);
 
-    register Uint32 *src;
-    register Uint32 *dest;
+    {
+        register Uint32 *src;
+        register Uint32 *dest;
 
-    src = (Uint32 *)&EMIF_mem.read.SD_avg;
-    dest = (Uint32 *)&EMIF_CLA;
+        src = (Uint32 *)&EMIF_mem.read.SD_avg;
+        dest = (Uint32 *)&EMIF_CLA;
 
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
-    *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+    }
 
     Cla1ForceTask1();
 
@@ -320,6 +322,136 @@ interrupt void SD_AVG_NT()
 //    {
 //       GPIO_CLEAR(PWM_EN_CM);
 //    }
+
+    static Uint32 zeroes[7] = {0,0,0,0,0,0,0};
+
+    static volatile union FPGA_master_sync_flags_union Sync_flags;
+    Sync_flags.all = EMIF_mem.read.Sync_flags.all;
+    status_ACDC.master_slave_selector = Sync_flags.bit.master_slave_selector;
+    status_ACDC.master_rdy = Sync_flags.bit.master_rdy;
+    status_ACDC.slave_rdy_0 = Sync_flags.bit.slave_rdy_0;
+    status_ACDC.slave_rdy_1 = Sync_flags.bit.slave_rdy_1;
+    status_ACDC.slave_rdy_2 = Sync_flags.bit.slave_rdy_2;
+    status_ACDC.slave_rdy_3 = Sync_flags.bit.slave_rdy_3;
+
+    if(status_ACDC.master_slave_selector)
+    {
+        register Uint32 *src;
+        register Uint32 *dest;
+
+        struct COMM_header_struct comm_header;
+        comm_header.length = sizeof(COMM_master_sync_msg1_struct)-1;
+        comm_header.rsvd = 0;
+        comm_header.destination_mailbox = 1;
+        Uint32 header_temp = *(Uint16 *)&comm_header;
+
+        dest = (Uint32 *)&EMIF_mem.write.tx2_hipri_msg[1];
+        src = (Uint32 *)&Conv.id_ref;
+        while(EMIF_mem.read.tx_wip.bit.port2_hipri_msg & (1<<1));
+        *dest++ = header_temp;
+
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+
+        union COMM_flags_union flags_temp;
+        flags_temp.all = 0;
+        flags_temp.bit.port2_hipri_msg = 1 << 1;
+        EMIF_mem.write.tx_start.all = flags_temp.all;
+
+        //////////////////////////////
+
+        dest = (Uint32 *)&Conv.from_slave[3];
+        src = (Uint32 *)((Uint16 *)EMIF_mem.read.rx2_hipri_msg[3] + offsetof(COMM_slave_sync_msg_struct, id_conv));
+        if(!status_ACDC.slave_rdy_3) src = zeroes;
+        while(EMIF_mem.read.rx_wip.bit.port2_hipri_msg & (1<<3));
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+
+        dest = (Uint32 *)&Conv.from_slave[2];
+        src = (Uint32 *)((Uint16 *)EMIF_mem.read.rx2_hipri_msg[2] + offsetof(COMM_slave_sync_msg_struct, id_conv));
+        if(!status_ACDC.slave_rdy_2) src = zeroes;
+        while(EMIF_mem.read.rx_wip.bit.port2_hipri_msg & (1<<2));
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+
+        dest = (Uint32 *)&Conv.from_slave[1];
+        src = (Uint32 *)((Uint16 *)EMIF_mem.read.rx2_hipri_msg[1] + offsetof(COMM_slave_sync_msg_struct, id_conv));
+        if(!status_ACDC.slave_rdy_1) src = zeroes;
+        while(EMIF_mem.read.rx_wip.bit.port2_hipri_msg & (1<<1));
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+
+        dest = (Uint32 *)&Conv.from_slave[0];
+        src = (Uint32 *)((Uint16 *)EMIF_mem.read.rx2_hipri_msg[0] + offsetof(COMM_slave_sync_msg_struct, id_conv));
+        if(!status_ACDC.slave_rdy_0) src = zeroes;
+        while(EMIF_mem.read.rx_wip.bit.port2_hipri_msg & (1<<0));
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+    }
+    else
+    {
+        register Uint32 *src;
+        register Uint32 *dest;
+
+        dest = (Uint32 *)((Uint16 *)EMIF_mem.write.tx1_hipri_msg[0] + offsetof(COMM_slave_sync_msg_struct, id_conv));
+        src = (Uint32 *)&Conv.id_conv;
+        while(EMIF_mem.read.tx_wip.bit.port1_hipri_msg & (1<<0));
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        src = (Uint32 *)&Conv.I_lim;
+        *dest++ = *src++;
+
+        //////////////////////////////
+
+        dest = (Uint32 *)&Conv.from_master;
+        src = (Uint32 *)((Uint16 *)EMIF_mem.read.rx1_hipri_msg[1] + offsetof(COMM_master_sync_msg1_struct, id_ref));
+        if(!status_ACDC.master_rdy) src = zeroes;
+        while(EMIF_mem.read.rx_wip.bit.port1_hipri_msg & (1<<1));
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+
+        Conv.ratio_node = Conv.ratio[Sync_flags.bit.node_number];
+    }
 
     GPIO_CLEAR(TRIGGER_CM);
 

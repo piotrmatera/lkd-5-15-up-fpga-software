@@ -177,8 +177,15 @@ struct STATUS_ACDC
     Uint16 CT_connection_b : 2;
     Uint16 CT_connection_c : 2;
 
-    Uint16 dummy3 : 4;
-    Uint16 dummy4 : 3;
+    Uint16 slave_rdy_0 : 1;
+    Uint16 slave_rdy_1 : 1;
+    Uint16 slave_rdy_2 : 1;
+    Uint16 slave_rdy_3 : 1;
+
+    Uint16 master_rdy : 1;
+    Uint16 master_slave_selector : 1;
+
+    Uint16 dummy4 : 1;
     //48
     Uint16 error_retry : 4;
     Uint16 rsvd : 12;
@@ -320,26 +327,29 @@ struct COMM_slave_sync_msg_struct
     struct COMM_header_struct header;
     struct COMM_slave_flags_struct flags;
     struct timestamp_struct timestamp;
-    struct abc_struct P_conv_1h;
-    struct abc_struct Q_conv_1h;
+    struct abc_struct id_conv;
+    struct abc_struct iq_conv;
     float I_lim;
     Uint16 crc;
 };
 
-union COMM_master_sync_msg0_union
+struct COMM_master_sync_msg0_struct
 {
-    Uint32 all[32];
-    struct
-    {
-        struct COMM_header_struct header;
-        Uint16 clock_offsets[4];
-        Uint16 cycle_period;
-        Uint16 local_counter_timestamp;
-        struct abc_struct id_ref;
-        struct abc_struct iq_ref;
-        float I_lim_avg;
-        Uint16 crc;
-    }fields;
+    struct COMM_header_struct header;
+    Uint16 clock_offsets[4];
+    Uint16 cycle_period;
+    Uint16 local_counter_timestamp;
+    Uint16 crc;
+};
+
+struct COMM_master_sync_msg1_struct
+{
+    struct COMM_header_struct header;
+    Uint16 dummy;
+    struct abc_struct id_ref;
+    struct abc_struct iq_ref;
+    float ratio[4];
+    Uint16 crc;
 };
 
 union COMM_async_msg_union

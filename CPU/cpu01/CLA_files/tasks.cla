@@ -200,7 +200,8 @@ interrupt void Cla1Task1 ( void )
 
     ///////////////////////////////////////////////////////////////////
 
-    Converter_calc();
+    Converter_calc_master();
+    Converter_calc_slave();
 
     Timer_PWM.CLA_CONV_TASK1 = TIMESTAMP_PWM;
 

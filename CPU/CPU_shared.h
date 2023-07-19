@@ -71,7 +71,8 @@ union FPGA_master_sync_flags_union
         Uint16 node_number_rdy:1;
         Uint16 sync_rdy:1;
         Uint16 master_slave_selector:1;
-        Uint16 rsvd:2;
+        Uint16 master_rdy:1;
+        Uint16 rsvd:1;
     }bit;
 };
 
@@ -242,6 +243,7 @@ union EMIF_union
     struct
     {
         union COMM_flags_union tx_wip;
+        union COMM_flags_union rx_wip;
         union COMM_flags_union rx_rdy;
         struct EMIF_SD_struct SD_new;
         struct EMIF_SD_struct SD_avg;
@@ -273,7 +275,7 @@ union EMIF_union
             Uint32 sync_phase:1;
         }flags;
         Uint32 next_period;
-        Uint32 mux_rsvd[512-28];
+        Uint32 mux_rsvd[512-29];
         Uint32 rx1_lopri_msg[8][32];
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];

@@ -256,7 +256,8 @@ void Blink()
                 //zielony nie miga gdy alarm
                 if(Machine_slave.state == Machine_slave_class::state_operational)
                 {
-                    if(status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c) Blink_LED1.update_pattern(0.2f, 0.5f);
+                    if((status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c)
+                            && status_ACDC.master_slave_selector) Blink_LED1.update_pattern(0.2f, 0.5f);
                     else Blink_LED1.update_pattern(true);
                 }
                 else Blink_LED1.update_pattern(2.0f, 0.5f);
@@ -270,7 +271,7 @@ void Blink()
             }
             else
             {
-                if(Conv.enable)
+                if(status_ACDC.master_slave_selector)
                 {
                     if(Blink_LED2.zero_crossing)
                     {
@@ -537,9 +538,7 @@ void Machine_slave_class::Background()
 
 
     static Uint32 master_slave_selector = 0;
-    union FPGA_master_sync_flags_union Sync_flags;
-    Sync_flags.all = EMIF_mem.read.Sync_flags.all;
-    if(Sync_flags.bit.master_slave_selector || master_slave_selector)
+    if(status_ACDC.master_slave_selector || master_slave_selector)
     {
 //        master_slave_selector = 1;
         Fiber_comm_master[0].Main();//musza byc wszystkie
@@ -1570,6 +1569,9 @@ void Machine_slave_class::calibrate_DC_voltage_gain()
 
 void Machine_slave_class::start()
 {
+    static Uint16 state;
+    static Uint32 delay_timer;
+
     if(Machine_slave.state_last != Machine_slave.state)
     {
         Machine_slave.state_last = Machine_slave.state;
@@ -1582,6 +1584,7 @@ void Machine_slave_class::start()
         memset(&Timer_total, 0, sizeof(Timer_total));
         timer_update(&Timer_total, 0);
 
+        Conv.enable_H_comp_local =
         Conv.PI_U_dc.integrator =
         Conv.PI_Id[0].integrator =
         Conv.PI_Id[1].integrator =
@@ -1611,18 +1614,52 @@ void Machine_slave_class::start()
         }
 
         CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.a;
-        DELAY_US(50000);
-        Meas_ACDC_offset.I_conv.a += CIC2_calibration.out / Meas_ACDC_gain.I_conv.a;
 
-        CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.b;
-        DELAY_US(50000);
-        Meas_ACDC_offset.I_conv.b += CIC2_calibration.out / Meas_ACDC_gain.I_conv.b;
+        state = 0;
+        delay_timer = IpcRegs.IPCCOUNTERL;
+    }
 
-        CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.c;
-        DELAY_US(50000);
-        Meas_ACDC_offset.I_conv.c += CIC2_calibration.out / Meas_ACDC_gain.I_conv.c;
+    float compare_delay = 0.05f;
 
-        Conv.enable = 1;
+    switch(state)
+    {
+        case 0:
+        {
+            if((float)(IpcRegs.IPCCOUNTERL - delay_timer) * (1.0f/200000000.0f) > compare_delay)
+            {
+                Meas_ACDC_offset.I_conv.a += CIC2_calibration.out / Meas_ACDC_gain.I_conv.a;
+                CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.b;
+                delay_timer = IpcRegs.IPCCOUNTERL;
+                state++;
+            }
+            break;
+        }
+        case 1:
+        {
+            if((float)(IpcRegs.IPCCOUNTERL - delay_timer) * (1.0f/200000000.0f) > compare_delay)
+            {
+                Meas_ACDC_offset.I_conv.b += CIC2_calibration.out / Meas_ACDC_gain.I_conv.b;
+                CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.c;
+                delay_timer = IpcRegs.IPCCOUNTERL;
+                state++;
+            }
+            break;
+        }
+        case 2:
+        {
+            if((float)(IpcRegs.IPCCOUNTERL - delay_timer) * (1.0f/200000000.0f) > compare_delay)
+            {
+                Meas_ACDC_offset.I_conv.c += CIC2_calibration.out / Meas_ACDC_gain.I_conv.c;
+                delay_timer = IpcRegs.IPCCOUNTERL;
+                state++;
+            }
+            break;
+        }
+        case 3:
+        {
+            Conv.enable = 1;
+            break;
+        }
     }
 
     if(Conv.RDY2) Machine_slave.state = state_operational;
@@ -2024,42 +2061,47 @@ void Machine_master_class::idle()
     {
         Machine_master.state_last = Machine_master.state;
     }
+
+    Conv.tangens_range_local_prefilter[0].a.out =
+    Conv.tangens_range_local_prefilter[0].b.out =
+    Conv.tangens_range_local_prefilter[0].c.out =
+    Conv.tangens_range_local_prefilter[1].a.out =
+    Conv.tangens_range_local_prefilter[1].b.out =
+    Conv.tangens_range_local_prefilter[1].c.out =
+    Conv.Q_set_local_prefilter.a.out =
+    Conv.Q_set_local_prefilter.b.out =
+    Conv.Q_set_local_prefilter.c.out =
+    Conv.version_Q_comp_local_prefilter.a.out =
+    Conv.version_Q_comp_local_prefilter.b.out =
+    Conv.version_Q_comp_local_prefilter.c.out =
+    Conv.enable_Q_comp_local_prefilter.a.out =
+    Conv.enable_Q_comp_local_prefilter.b.out =
+    Conv.enable_Q_comp_local_prefilter.c.out =
+    Conv.version_P_sym_local_prefilter.out =
+    Conv.enable_P_sym_local_prefilter.out =
+    Conv.Q_set_local.a =
+    Conv.Q_set_local.b =
+    Conv.Q_set_local.c =
+    Conv.enable_Q_comp_local.a =
+    Conv.enable_Q_comp_local.b =
+    Conv.enable_Q_comp_local.c =
+    Conv.enable_P_sym_local =
+    Conv.enable_H_comp_local = 0.0f;
+
+    if(Conv.I_lim_total) Machine_master.state = state_start;
 }
 
 void Machine_master_class::start()
 {
+    static Uint32 delay_timer;
+
     if(Machine_master.state_last != Machine_master.state)
     {
+        delay_timer = IpcRegs.IPCCOUNTERL;
         Machine_master.state_last = Machine_master.state;
-
-        Conv.tangens_range_local_prefilter[0].a.out =
-        Conv.tangens_range_local_prefilter[0].b.out =
-        Conv.tangens_range_local_prefilter[0].c.out =
-        Conv.tangens_range_local_prefilter[1].a.out =
-        Conv.tangens_range_local_prefilter[1].b.out =
-        Conv.tangens_range_local_prefilter[1].c.out =
-        Conv.Q_set_local_prefilter.a.out =
-        Conv.Q_set_local_prefilter.b.out =
-        Conv.Q_set_local_prefilter.c.out =
-        Conv.version_Q_comp_local_prefilter.a.out =
-        Conv.version_Q_comp_local_prefilter.b.out =
-        Conv.version_Q_comp_local_prefilter.c.out =
-        Conv.enable_Q_comp_local_prefilter.a.out =
-        Conv.enable_Q_comp_local_prefilter.b.out =
-        Conv.enable_Q_comp_local_prefilter.c.out =
-        Conv.version_P_sym_local_prefilter.out =
-        Conv.enable_P_sym_local_prefilter.out =
-        Conv.Q_set_local.a =
-        Conv.Q_set_local.b =
-        Conv.Q_set_local.c =
-        Conv.enable_Q_comp_local.a =
-        Conv.enable_Q_comp_local.b =
-        Conv.enable_Q_comp_local.c =
-        Conv.enable_P_sym_local =
-        Conv.enable_H_comp_local = 0.0f;
     }
 
-    if(Conv.RDY2)
+    if((float)(IpcRegs.IPCCOUNTERL - delay_timer) * (1.0f/200000000.0f) > 0.1f)
     {
         if(status_ACDC.CT_connection_a != 1 || status_ACDC.CT_connection_b != 2 || status_ACDC.CT_connection_c != 3)
             Machine_master.state = state_CT_test;
@@ -2069,7 +2111,7 @@ void Machine_master_class::start()
             Machine_master.state = state_Lgrid_meas;
     }
 
-    if(1) Machine_master.state = state_idle;
+    if(!Conv.I_lim_total) Machine_master.state = state_idle;
 }
 
 void Machine_master_class::CT_test()
@@ -2252,7 +2294,7 @@ void Machine_master_class::CT_test()
     }
     }
 
-    if(1) Machine_master.state = state_idle;
+    if(!Conv.I_lim_total) Machine_master.state = state_idle;
 }
 
 void Machine_master_class::Lgrid_meas()
@@ -2420,7 +2462,7 @@ void Machine_master_class::Lgrid_meas()
     }
     }
 
-    if(1) Machine_master.state = state_idle;
+    if(!Conv.I_lim_total) Machine_master.state = state_idle;
 }
 
 void Machine_master_class::operational()
@@ -2762,5 +2804,5 @@ void Machine_master_class::operational()
     }
     }
 
-    if(1) Machine_master.state = state_idle;
+    if(!Conv.I_lim_total) Machine_master.state = state_idle;
 }
