@@ -33,17 +33,19 @@ extern Rtc rtc;
 struct time_BCD_struct RTC_current_time;
 struct time_BCD_struct RTC_new_time;
 
-class Machine_class Machine;
-void (*Machine_class::state_pointers[Machine_class::state_max])();
+class Machine_slave_class Machine_slave;
+class Machine_master_class Machine_master;
+void (*Machine_slave_class::state_pointers[Machine_slave_class::state_max])();
+void (*Machine_master_class::state_pointers[Machine_master_class::state_max])();
 struct CT_calc_struct CT_char_vars;
 struct L_grid_meas_struct L_grid_meas;
 struct timer_struct Timer_total;
 
 class FLASH_class switch_FLASH =
 {
- .address = {(Uint16 *)&Machine.ONOFF_FLASH, 0},
+ .address = {(Uint16 *)&Machine_slave.ONOFF_FLASH, 0},
  .sector = SectorM,
- .size16_each = {sizeof(Machine.ONOFF_FLASH), 0},
+ .size16_each = {sizeof(Machine_slave.ONOFF_FLASH), 0},
 };
 
 class FLASH_class L_grid_FLASH =
@@ -55,9 +57,9 @@ class FLASH_class L_grid_FLASH =
 
 class FLASH_class error_retry_FLASH =
 {
- .address = {(Uint16 *)&Machine.error_retry, 0},
+ .address = {(Uint16 *)&Machine_slave.error_retry, 0},
  .sector = SectorK,
- .size16_each = {sizeof(Machine.error_retry), 0},
+ .size16_each = {sizeof(Machine_slave.error_retry), 0},
 };
 
 static int compare_float (const void * a, const void * b)
@@ -73,9 +75,9 @@ void CT_char_calc()
     {
         if(CT_char_vars.CT_char.number_of_elements == 1)
         {
-            Meas_master_gain.I_grid.a = CT_char_vars.calibration.Meas_master_gain.I_grid.a * fabsf(CT_char_vars.CT_char.CT_ratio_a[0]);
-            Meas_master_gain.I_grid.b = CT_char_vars.calibration.Meas_master_gain.I_grid.b * fabsf(CT_char_vars.CT_char.CT_ratio_b[0]);
-            Meas_master_gain.I_grid.c = CT_char_vars.calibration.Meas_master_gain.I_grid.c * fabsf(CT_char_vars.CT_char.CT_ratio_c[0]);
+            Meas_ACDC_gain.I_grid.a = CT_char_vars.calibration.Meas_ACDC_gain.I_grid.a * fabsf(CT_char_vars.CT_char.CT_ratio_a[0]);
+            Meas_ACDC_gain.I_grid.b = CT_char_vars.calibration.Meas_ACDC_gain.I_grid.b * fabsf(CT_char_vars.CT_char.CT_ratio_b[0]);
+            Meas_ACDC_gain.I_grid.c = CT_char_vars.calibration.Meas_ACDC_gain.I_grid.c * fabsf(CT_char_vars.CT_char.CT_ratio_c[0]);
             register float degrees_kTs = 0.02f / (360.0f * Conv.Ts);
             CT_char_vars.CT_phase[0] = CT_char_vars.CT_char.phase_a[0] * degrees_kTs;
             CT_char_vars.CT_phase[1] = CT_char_vars.CT_char.phase_b[0] * degrees_kTs;
@@ -92,7 +94,7 @@ void CT_char_calc()
             X_point[1].c = CT_char_vars.CT_char.set_current[CT_char_vars.CT_char_index[2]+1];
 
             if(X_point[0].a == X_point[1].a || X_point[0].b == X_point[1].b || X_point[0].c == X_point[1].c)
-                alarm_master.bit.CT_char_error = 1;
+                alarm_ACDC.bit.CT_char_error = 1;
 
             struct abc_struct X_ratio;
             X_ratio.a = (Grid.I_grid.a - X_point[0].a) / (X_point[1].a - X_point[0].a);
@@ -114,9 +116,9 @@ void CT_char_calc()
             Y_interp.a = Y_point[0].a + X_ratio.a * (Y_point[1].a - Y_point[0].a);
             Y_interp.b = Y_point[0].b + X_ratio.b * (Y_point[1].b - Y_point[0].b);
             Y_interp.c = Y_point[0].c + X_ratio.c * (Y_point[1].c - Y_point[0].c);
-            Meas_master_gain.I_grid.a = CT_char_vars.calibration.Meas_master_gain.I_grid.a * fabsf(Y_interp.a);
-            Meas_master_gain.I_grid.b = CT_char_vars.calibration.Meas_master_gain.I_grid.b * fabsf(Y_interp.b);
-            Meas_master_gain.I_grid.c = CT_char_vars.calibration.Meas_master_gain.I_grid.c * fabsf(Y_interp.c);
+            Meas_ACDC_gain.I_grid.a = CT_char_vars.calibration.Meas_ACDC_gain.I_grid.a * fabsf(Y_interp.a);
+            Meas_ACDC_gain.I_grid.b = CT_char_vars.calibration.Meas_ACDC_gain.I_grid.b * fabsf(Y_interp.b);
+            Meas_ACDC_gain.I_grid.c = CT_char_vars.calibration.Meas_ACDC_gain.I_grid.c * fabsf(Y_interp.c);
 
             Y_point[0].a = CT_char_vars.CT_char.phase_a[CT_char_vars.CT_char_index[0]];
             Y_point[1].a = CT_char_vars.CT_char.phase_a[CT_char_vars.CT_char_index[0]+1];
@@ -165,8 +167,8 @@ void CT_char_calc()
     Conv.I_grid_rot[2].sine = sinf(rotation);
     Conv.I_grid_rot[2].cosine = cosf(rotation);
 
-    CPU1toCPU2.Meas_master_gain = Meas_master_gain;
-    CPU1toCPU2.Meas_master_offset = Meas_master_offset;
+    CPU1toCPU2.Meas_ACDC_gain = Meas_ACDC_gain;
+    CPU1toCPU2.Meas_ACDC_offset = Meas_ACDC_offset;
     IpcRegs.IPCSET.bit.IPC4 = 1;
 }
 
@@ -198,9 +200,9 @@ void Blink()
     static class Blink_class Blink_LED4(false);
     static class Blink_class Blink_LED5(false);
 
-    switch(Machine.state)
+    switch(Machine_slave.state)
     {
-        case Machine_class::state_calibrate_offsets:
+        case Machine_slave_class::state_calibrate_offsets:
         {
             Blink_LED1.update_pattern(true);
 
@@ -208,11 +210,11 @@ void Blink()
             static const float period = 1.1f;
             Blink_LED2.update_pattern(period, (float *)pattern);
 
-            Blink_LED3.update_pattern((bool)status_master.calibration_procedure_error);
+            Blink_LED3.update_pattern((bool)status_ACDC.calibration_procedure_error);
             break;
         }
 
-        case Machine_class::state_calibrate_curent_gain:
+        case Machine_slave_class::state_calibrate_curent_gain:
         {
             Blink_LED1.update_pattern(true);
 
@@ -220,11 +222,11 @@ void Blink()
             static const float period = 1.3f;
             Blink_LED2.update_pattern(period, (float *)pattern);
 
-            Blink_LED3.update_pattern((bool)status_master.calibration_procedure_error);
+            Blink_LED3.update_pattern((bool)status_ACDC.calibration_procedure_error);
             break;
         }
 
-        case Machine_class::state_calibrate_AC_voltage_gain:
+        case Machine_slave_class::state_calibrate_AC_voltage_gain:
         {
             Blink_LED1.update_pattern(true);
 
@@ -232,11 +234,11 @@ void Blink()
             static const float period = 1.5f;
             Blink_LED2.update_pattern(period, (float *)pattern);
 
-            Blink_LED3.update_pattern((bool)status_master.calibration_procedure_error);
+            Blink_LED3.update_pattern((bool)status_ACDC.calibration_procedure_error);
             break;
         }
 
-        case Machine_class::state_calibrate_DC_voltage_gain:
+        case Machine_slave_class::state_calibrate_DC_voltage_gain:
         {
             Blink_LED1.update_pattern(true);
 
@@ -244,24 +246,24 @@ void Blink()
             static const float period = 1.5f;
             Blink_LED2.update_pattern(period, (float *)pattern);
 
-            Blink_LED3.update_pattern((bool)status_master.calibration_procedure_error);
+            Blink_LED3.update_pattern((bool)status_ACDC.calibration_procedure_error);
             break;
         }
         default:
         {
-            if(Machine.ONOFF)
+            if(Machine_slave.ONOFF)
             {
                 //zielony nie miga gdy alarm
-                if(Machine.state == Machine_class::state_operational)
+                if(Machine_slave.state == Machine_slave_class::state_operational)
                 {
-                    if(status_master.no_CT_connected_a || status_master.no_CT_connected_b || status_master.no_CT_connected_c) Blink_LED1.update_pattern(0.2f, 0.5f);
+                    if(status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c) Blink_LED1.update_pattern(0.2f, 0.5f);
                     else Blink_LED1.update_pattern(true);
                 }
                 else Blink_LED1.update_pattern(2.0f, 0.5f);
             }
             else Blink_LED1.update_pattern(false);
 
-            if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2])
+            if(alarm_ACDC.all[0] | alarm_ACDC.all[1] | alarm_ACDC.all[2])
             {
                 Blink_LED2.update_pattern(false);
                 Blink_LED3.update_pattern(0.67f, 0.5f);
@@ -272,11 +274,11 @@ void Blink()
                 {
                     if(Blink_LED2.zero_crossing)
                     {
-                        if(status_master.in_limit_Q)
+                        if(status_ACDC.in_limit_Q)
                             Blink_LED2.update_pattern(true);
-                        else if(status_master.in_limit_P)
+                        else if(status_ACDC.in_limit_P)
                             Blink_LED2.update_pattern(2.0f, 0.67f);
-                        else if(status_master.in_limit_H)
+                        else if(status_ACDC.in_limit_H)
                             Blink_LED2.update_pattern(2.0f, 0.33f);
                         else
                             Blink_LED2.update_pattern(false);
@@ -293,13 +295,17 @@ void Blink()
         }
     }
 
-    if(Machine.recent_error && Conv.enable) Blink_LED4.update_pattern(true);
+    if(Machine_slave.recent_error && Conv.enable) Blink_LED4.update_pattern(true);
     else Blink_LED4.update_pattern(false);
+
+    if(status_ACDC.wifi_on) Blink_LED5.update_pattern(true);
+    else Blink_LED5.update_pattern(false);
 
     GPIO_WRITE(LED1_CM, Blink_LED1.task());
     GPIO_WRITE(LED2_CM, Blink_LED2.task());
     GPIO_WRITE(LED3_CM, Blink_LED3.task());
     GPIO_WRITE(LED4_CM, Blink_LED4.task());
+    GPIO_WRITE(LED5_CM, Blink_LED5.task());
 }
 
 void convert_harmonics_to_bits()
@@ -319,9 +325,9 @@ void convert_harmonics_to_bits()
             temp_harmonic_b |= (Uint32)((Uint16)*source_harmonic_b++ & 0x01)<<i;
             temp_harmonic_c |= (Uint32)((Uint16)*source_harmonic_c++ & 0x01)<<i;
         }
-        *(Uint32 *)&control_master.H_odd_a = temp_harmonic_a;
-        *(Uint32 *)&control_master.H_odd_b = temp_harmonic_b;
-        *(Uint32 *)&control_master.H_odd_c = temp_harmonic_c;
+        *(Uint32 *)&control_ACDC.H_odd_a = temp_harmonic_a;
+        *(Uint32 *)&control_ACDC.H_odd_b = temp_harmonic_b;
+        *(Uint32 *)&control_ACDC.H_odd_c = temp_harmonic_c;
     }
 
     {
@@ -339,9 +345,9 @@ void convert_harmonics_to_bits()
             temp_harmonic_b |= (Uint32)((Uint16)*source_harmonic_b++ & 0x01)<<i;
             temp_harmonic_c |= (Uint32)((Uint16)*source_harmonic_c++ & 0x01)<<i;
         }
-        *(Uint32 *)&control_master.H_even_a = temp_harmonic_a;
-        *(Uint32 *)&control_master.H_even_b = temp_harmonic_b;
-        *(Uint32 *)&control_master.H_even_c = temp_harmonic_c;
+        *(Uint32 *)&control_ACDC.H_even_a = temp_harmonic_a;
+        *(Uint32 *)&control_ACDC.H_even_b = temp_harmonic_b;
+        *(Uint32 *)&control_ACDC.H_even_c = temp_harmonic_c;
     }
 }
 
@@ -349,9 +355,9 @@ void convert_harmonics_to_floats()
 {
     {
         Uint16 i;
-        register Uint32 temp_harmonic_a = *(Uint32 *)&control_master.H_odd_a;
-        register Uint32 temp_harmonic_b = *(Uint32 *)&control_master.H_odd_b;
-        register Uint32 temp_harmonic_c = *(Uint32 *)&control_master.H_odd_c;
+        register Uint32 temp_harmonic_a = *(Uint32 *)&control_ACDC.H_odd_a;
+        register Uint32 temp_harmonic_b = *(Uint32 *)&control_ACDC.H_odd_b;
+        register Uint32 temp_harmonic_c = *(Uint32 *)&control_ACDC.H_odd_c;
         register float *dest_harmonic_a = on_off_odd_a;
         register float *dest_harmonic_b = on_off_odd_b;
         register float *dest_harmonic_c = on_off_odd_c;
@@ -365,9 +371,9 @@ void convert_harmonics_to_floats()
 
     {
         Uint16 i;
-        register Uint32 temp_harmonic_a = *(Uint32 *)&control_master.H_even_a;
-        register Uint32 temp_harmonic_b = *(Uint32 *)&control_master.H_even_b;
-        register Uint32 temp_harmonic_c = *(Uint32 *)&control_master.H_even_c;
+        register Uint32 temp_harmonic_a = *(Uint32 *)&control_ACDC.H_even_a;
+        register Uint32 temp_harmonic_b = *(Uint32 *)&control_ACDC.H_even_b;
+        register Uint32 temp_harmonic_c = *(Uint32 *)&control_ACDC.H_even_c;
         register float *dest_harmonic_a = on_off_even_a;
         register float *dest_harmonic_b = on_off_even_b;
         register float *dest_harmonic_c = on_off_even_c;
@@ -385,16 +391,16 @@ void update_harmonics()
     on_off_odd_a[0] =
     on_off_odd_b[0] =
     on_off_odd_c[0] = 0.0f;
-    *(Uint32 *)&control_master.H_odd_a &= 0xFFFFFFFE;
-    *(Uint32 *)&control_master.H_odd_b &= 0xFFFFFFFE;
-    *(Uint32 *)&control_master.H_odd_c &= 0xFFFFFFFE;
+    *(Uint32 *)&control_ACDC.H_odd_a &= 0xFFFFFFFE;
+    *(Uint32 *)&control_ACDC.H_odd_b &= 0xFFFFFFFE;
+    *(Uint32 *)&control_ACDC.H_odd_c &= 0xFFFFFFFE;
 
-    if(Machine.harmonics_odd_last != Machine.harmonics_odd)
+    if(Machine_slave.harmonics_odd_last != Machine_slave.harmonics_odd)
     {
-        Machine.harmonics_odd_last = Machine.harmonics_odd;
-        if(Machine.harmonics_odd > 24) Machine.harmonics_odd = 24;
+        Machine_slave.harmonics_odd_last = Machine_slave.harmonics_odd;
+        if(Machine_slave.harmonics_odd > 24) Machine_slave.harmonics_odd = 24;
         Uint16 count = 1;
-        while(count < Machine.harmonics_odd + 1)
+        while(count < Machine_slave.harmonics_odd + 1)
         {
             on_off_odd_a[count] =
             on_off_odd_b[count] =
@@ -414,12 +420,12 @@ void update_harmonics()
 
     ////////////////////////////////////////////////////////////////////////////////////////
 
-    if(Machine.harmonics_even_last != Machine.harmonics_even)
+    if(Machine_slave.harmonics_even_last != Machine_slave.harmonics_even)
     {
-        Machine.harmonics_even_last = Machine.harmonics_even;
-        if(Machine.harmonics_even > 25) Machine.harmonics_even = 25;
+        Machine_slave.harmonics_even_last = Machine_slave.harmonics_even;
+        if(Machine_slave.harmonics_even > 25) Machine_slave.harmonics_even = 25;
         Uint16 count = 0;
-        while(count < Machine.harmonics_even)
+        while(count < Machine_slave.harmonics_even)
         {
             on_off_even_a[count] =
             on_off_even_b[count] =
@@ -441,52 +447,51 @@ void update_harmonics()
 #pragma CODE_SECTION(".TI.ramfunc");
 void ONOFF_switch_interrupt()
 {
-    float switch_timer_temp = Machine.switch_timer;
-    if(GPIO_READ(ON_OFF_CM)) Machine.switch_timer = 0.0f;
-    else Machine.switch_timer += Conv.Ts;
+    float switch_timer_temp = Machine_slave.switch_timer;
+    if(GPIO_READ(ON_OFF_CM)) Machine_slave.switch_timer = 0.0f;
+    else Machine_slave.switch_timer += Conv.Ts;
 
-    Machine.ONOFF_switch_last = Machine.ONOFF_switch;
-    if(Machine.switch_timer > 0.05f) Machine.ONOFF_switch = 1;
-    else Machine.ONOFF_switch = 0;
+    Machine_slave.ONOFF_switch_last = Machine_slave.ONOFF_switch;
+    if(Machine_slave.switch_timer > 0.05f) Machine_slave.ONOFF_switch = 1;
+    else Machine_slave.ONOFF_switch = 0;
 
-    if( Machine.switch_timer >= 10.0f && switch_timer_temp < 10.0f ){
-        status_master.wifi_on ^= 1;
-        GPIO_WRITE( LED5_CM, status_master.wifi_on );
-        control_master.triggers.bit.SD_save_settings = 1;
+    if( Machine_slave.switch_timer >= 10.0f && switch_timer_temp < 10.0f ){
+        status_ACDC.wifi_on ^= 1;
+        control_ACDC.triggers.bit.SD_save_settings = 1;
     }
 
-    if(Machine.ONOFF == Machine.ONOFF_temp)
+    if(Machine_slave.ONOFF == Machine_slave.ONOFF_temp)
     {
         if(switch_timer_temp > 30.0f && switch_timer_temp < 1e6)
         {
-            control_master.triggers.bit.CPU_reset = 1;
+            control_ACDC.triggers.bit.CPU_reset = 1;
         }
         else if(switch_timer_temp > 2.0f)
         {
-            Machine.recent_error = 0;
+            Machine_slave.recent_error = 0;
         }
-        else if(Machine.ONOFF_switch_last && !Machine.ONOFF_switch)
+        else if(Machine_slave.ONOFF_switch_last && !Machine_slave.ONOFF_switch)
         {
-            Machine.ONOFF_temp = Machine.ONOFF ^ 1;
-            if(Machine.ONOFF_temp) Machine.recent_error = 0;
+            Machine_slave.ONOFF_temp = Machine_slave.ONOFF ^ 1;
+            if(Machine_slave.ONOFF_temp) Machine_slave.recent_error = 0;
         }
     }
 }
 
 void ONOFF_switch_func()
 {
-    Machine.ONOFF_last = Machine.ONOFF;
-    Machine.ONOFF = Machine.ONOFF_temp;
-    status_master.ONOFF = Machine.ONOFF;
+    Machine_slave.ONOFF_last = Machine_slave.ONOFF;
+    Machine_slave.ONOFF = Machine_slave.ONOFF_temp;
+    status_ACDC.ONOFF = Machine_slave.ONOFF;
 
-    if (Machine.ONOFF_FLASH != Machine.ONOFF)
+    if (Machine_slave.ONOFF_FLASH != Machine_slave.ONOFF)
     {
-        Machine.ONOFF_FLASH = Machine.ONOFF;
+        Machine_slave.ONOFF_FLASH = Machine_slave.ONOFF;
         switch_FLASH.save();
     }
 }
 
-void Machine_class::Background()
+void Machine_slave_class::Background()
 {
         Uint16 process_next_ADU = 0;
 
@@ -547,12 +552,12 @@ void Machine_class::Background()
 
     SD_card.Scope_snapshot_task();
 
-    if(Machine.error_retry)
+    if(Machine_slave.error_retry)
     {
-        if(Timer_total.minutes + Timer_total.hours + Timer_total.days || !Machine.ONOFF)
+        if(Timer_total.minutes + Timer_total.hours + Timer_total.days || !Machine_slave.ONOFF)
         {
-            Machine.error_retry = 0;
-            status_master.error_retry = Machine.error_retry;
+            Machine_slave.error_retry = 0;
+            status_ACDC.error_retry = Machine_slave.error_retry;
             error_retry_FLASH.save();
         }
     }
@@ -588,9 +593,9 @@ void Machine_class::Background()
     static class Blink_class Blink_idle(1.0f);
     if(Blink_idle.task_simple())
     {
-        if(Machine.save_to_RTC && !control_master.triggers.bit.CPU_reset)
+        if(Machine_slave.save_to_RTC && !control_ACDC.triggers.bit.CPU_reset)
         {
-            Machine.save_to_RTC = 0;
+            Machine_slave.save_to_RTC = 0;
 
             Rtc::datetime_bcd_s new_time;
             new_time.sec = RTC_new_time.second10<<4 | RTC_new_time.second;
@@ -738,21 +743,21 @@ void Machine_class::Background()
 
     ////////////////////////////////////////////////////////////////////////////////////////
 
-    if(control_master.triggers.bit.ONOFF_set)
+    if(control_ACDC.triggers.bit.ONOFF_set)
     {
-        control_master.triggers.bit.ONOFF_set = 0;
-        Machine.ONOFF_temp = 1;
+        control_ACDC.triggers.bit.ONOFF_set = 0;
+        Machine_slave.ONOFF_temp = 1;
     }
 
-    if(control_master.triggers.bit.ONOFF_reset)
+    if(control_ACDC.triggers.bit.ONOFF_reset)
     {
-        control_master.triggers.bit.ONOFF_reset = 0;
-        Machine.ONOFF_temp = 0;
+        control_ACDC.triggers.bit.ONOFF_reset = 0;
+        Machine_slave.ONOFF_temp = 0;
     }
 
-    if(control_master.triggers.bit.SD_save_H_settings)
+    if(control_ACDC.triggers.bit.SD_save_H_settings)
     {
-        control_master.triggers.bit.SD_save_H_settings = 0;
+        control_ACDC.triggers.bit.SD_save_H_settings = 0;
 
         memcpy(SD_card.harmonics.on_off_odd_a, on_off_odd_a, sizeof(SD_card.harmonics.on_off_odd_a));
         memcpy(SD_card.harmonics.on_off_odd_b, on_off_odd_b, sizeof(SD_card.harmonics.on_off_odd_b));
@@ -762,27 +767,27 @@ void Machine_class::Background()
         memcpy(SD_card.harmonics.on_off_even_c, on_off_even_c, sizeof(SD_card.harmonics.on_off_even_c));
         SD_card.harmonics.available = 1;
 
-        if(!SD_card.save_H_settings()) status_master.SD_no_harmonic_settings = 0;
-        else status_master.SD_no_harmonic_settings = 1;
+        if(!SD_card.save_H_settings()) status_ACDC.SD_no_harmonic_settings = 0;
+        else status_ACDC.SD_no_harmonic_settings = 1;
     }
 
-    if(control_master.triggers.bit.SD_save_settings)
+    if(control_ACDC.triggers.bit.SD_save_settings)
     {
-        control_master.triggers.bit.SD_save_settings = 0;
+        control_ACDC.triggers.bit.SD_save_settings = 0;
 
-        SD_card.settings.control = control_master;
+        SD_card.settings.control = control_ACDC;
         SD_card.settings.available = 1;
         SD_card.settings.Baudrate = 100.0*control_ext_modbus.fields.baudrate;
         SD_card.settings.modbus_ext_server_id = control_ext_modbus.fields.ext_server_id;
-        SD_card.settings.wifi_on = status_master.wifi_on;
+        SD_card.settings.wifi_on = status_ACDC.wifi_on;
 
-        if(!SD_card.save_settings()) status_master.SD_no_settings = 0;
-        else status_master.SD_no_settings = 1;
+        if(!SD_card.save_settings()) status_ACDC.SD_no_settings = 0;
+        else status_ACDC.SD_no_settings = 1;
     }
 
-    if(control_master.triggers.bit.SD_reset_energy_meter)
+    if(control_ACDC.triggers.bit.SD_reset_energy_meter)
     {
-        control_master.triggers.bit.SD_reset_energy_meter = 0;
+        control_ACDC.triggers.bit.SD_reset_energy_meter = 0;
 
         memset(&SD_card.meter.Energy_meter, 0, sizeof(SD_card.meter.Energy_meter));
 
@@ -800,12 +805,12 @@ void Machine_class::Background()
         SD_card.meter.available = 1;
     }
 
-    if(control_master.triggers.bit.CPU_reset
+    if(control_ACDC.triggers.bit.CPU_reset
             && Modbus_slave_LCD.RTU->state == Modbus_RTU_class::Modbus_RTU_idle
             && Modbus_slave_EXT.RTU->state == Modbus_RTU_class::Modbus_RTU_idle
             && Modbus_slave_FIBER.RTU->state == Modbus_RTU_class::Modbus_RTU_idle)
     {
-        control_master.triggers.bit.CPU_reset = 0;
+        control_ACDC.triggers.bit.CPU_reset = 0;
 
         EALLOW;
         NmiIntruptRegs.NMICFG.bit.NMIE = 1;
@@ -816,29 +821,29 @@ void Machine_class::Background()
 
 }
 
-void Machine_class::Main()
+void Machine_slave_class::Main()
 {
-    register void (*pointer_temp)() = Machine.state_pointers[Machine.state];
+    register void (*pointer_temp)() = Machine_slave.state_pointers[Machine_slave.state];
 
-    if(pointer_temp != NULL && Machine.state < sizeof(Machine_class::state_pointers)/sizeof(Machine_class::state_pointers[0]))
+    if(pointer_temp != NULL && Machine_slave.state < sizeof(Machine_slave_class::state_pointers)/sizeof(Machine_slave_class::state_pointers[0]))
         (*pointer_temp)();
     else
-        Machine.state = state_init;
+        Machine_slave.state = state_init;
 }
 
-void Machine_class::init()
+void Machine_slave_class::init()
 {
     memset(&Modbus_Converter.coils, 0, sizeof(Modbus_Converter.coils));
     memset(&Modbus_Converter.discrete_inputs, 0, sizeof(Modbus_Converter.discrete_inputs));
     memset(&Modbus_Converter.holding_registers, 0, sizeof(Modbus_Converter.holding_registers));
     memset(&Modbus_Converter.input_registers, 0, sizeof(Modbus_Converter.input_registers));
-    memset(&Machine, 0, sizeof(Machine));
+    memset(&Machine_slave, 0, sizeof(Machine_slave));
     memset(&Conv, 0, sizeof(Conv));
-    memset(&Meas_master, 0, sizeof(Meas_master));
-    memset(&Meas_master_offset, 0, sizeof(Meas_master_offset));
-    memset(&Meas_master_gain, 0, sizeof(Meas_master_gain));
-    memset(&Meas_alarm_H, 0, sizeof(Meas_alarm_H));
-    memset(&Meas_alarm_L, 0, sizeof(Meas_alarm_L));
+    memset(&Meas_ACDC, 0, sizeof(Meas_ACDC));
+    memset(&Meas_ACDC_offset, 0, sizeof(Meas_ACDC_offset));
+    memset(&Meas_ACDC_gain, 0, sizeof(Meas_ACDC_gain));
+    memset(&Meas_ACDC_alarm_H, 0, sizeof(Meas_ACDC_alarm_H));
+    memset(&Meas_ACDC_alarm_L, 0, sizeof(Meas_ACDC_alarm_L));
     memset(&CPU1toCPU2, 0, sizeof(CPU1toCPU2));
     memset(&CT_char_vars, 0, sizeof(CT_char_vars));
     memset(&Energy_meter, 0, sizeof(Energy_meter));
@@ -847,11 +852,11 @@ void Machine_class::init()
     memset(&Grid_params, 0, sizeof(Grid_params));
     memset(&Grid_filter_params, 0, sizeof(Grid_filter_params));
 
-    memset(&control_master, 0, sizeof(control_master));
+    memset(&control_ACDC, 0, sizeof(control_ACDC));
     memset(&control_ext_modbus, 0, sizeof(control_ext_modbus));
-    memset(&status_master, 0, sizeof(status_master));
-    memset(&alarm_master, 0, sizeof(alarm_master));
-    memset(&alarm_master_snapshot, 0, sizeof(alarm_master_snapshot));
+    memset(&status_ACDC, 0, sizeof(status_ACDC));
+    memset(&alarm_ACDC, 0, sizeof(alarm_ACDC));
+    memset(&alarm_ACDC_snapshot, 0, sizeof(alarm_ACDC_snapshot));
 
     Fiber_comm_master[0].node_number = 0;
     Fiber_comm_master[1].node_number = 1;
@@ -860,54 +865,64 @@ void Machine_class::init()
 
     if(L_grid_FLASH.retrieve()) L_grid_meas.L_grid_previous[0] = 100e-6;
     error_retry_FLASH.retrieve();
-    status_master.error_retry = Machine.error_retry;
+    status_ACDC.error_retry = Machine_slave.error_retry;
 
     SD_card.read_settings();
-    Modbus_slave_EXT_translated.slave_address = SD_card.settings.modbus_ext_server_id;
-    Modbus_slave_EXT.slave_address = MODBUS_EXT_ADDRESS;
-    status_master.wifi_on = SD_card.settings.wifi_on;
-    GPIO_WRITE( LED5_CM, status_master.wifi_on );
 
     SD_card.read_CT_characteristic();
     SD_card.read_H_settings();
     SD_card.read_calibration_data();
     SD_card.read_meter_data();
     if(SD_card.meter.available) memcpy(&Energy_meter.upper, &SD_card.meter.Energy_meter, sizeof(Energy_meter.upper));
-    else status_master.SD_no_meter = 1;
+    else status_ACDC.SD_no_meter = 1;
 
     if(!SD_card.harmonics.available || !SD_card.settings.available || !SD_card.calibration.available || !SD_card.CT_char.available)
-        status_master.SD_card_not_enough_data = 1;
+        status_ACDC.SD_card_not_enough_data = 1;
     else
-        status_master.SD_card_not_enough_data = 0;
+        status_ACDC.SD_card_not_enough_data = 0;
 
-    if(!SD_card.CT_char.available) status_master.SD_no_CT_characteristic = 1;
-    if(!SD_card.calibration.available) status_master.SD_no_calibration = 1;
-    if(!SD_card.settings.available) status_master.SD_no_settings = 1;
-    if(!SD_card.harmonics.available) status_master.SD_no_harmonic_settings = 1;
 
-    if(status_master.SD_card_not_enough_data)
+    if(!SD_card.settings.available)
     {
-        alarm_master.bit.Not_enough_data_master = 1;
+        Modbus_slave_EXT_translated.slave_address = 240;
+        Modbus_slave_EXT.slave_address = MODBUS_EXT_ADDRESS;
+        status_ACDC.wifi_on = 1;
+    }
+    else
+    {
+        Modbus_slave_EXT_translated.slave_address = SD_card.settings.modbus_ext_server_id;
+        Modbus_slave_EXT.slave_address = MODBUS_EXT_ADDRESS;
+        status_ACDC.wifi_on = SD_card.settings.wifi_on;
+    }
 
-        Meas_master_gain.def_osr = EMIF_mem.read.def_osr;
-        Meas_master_gain.sd_shift = EMIF_mem.read.sd_shift;
+    if(!SD_card.CT_char.available) status_ACDC.SD_no_CT_characteristic = 1;
+    if(!SD_card.calibration.available) status_ACDC.SD_no_calibration = 1;
+    if(!SD_card.settings.available) status_ACDC.SD_no_settings = 1;
+    if(!SD_card.harmonics.available) status_ACDC.SD_no_harmonic_settings = 1;
 
-        Meas_master_gain.U_grid.a =
-        Meas_master_gain.U_grid.b =
-        Meas_master_gain.U_grid.c = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*3.0 + 0.27)/(0.27)*(1.0 + (0.54/4.9));
+    if(status_ACDC.SD_card_not_enough_data)
+    {
+        alarm_ACDC.bit.Not_enough_data_master = 1;
 
-        Meas_master_gain.I_grid.a =
-        Meas_master_gain.I_grid.b =
-        Meas_master_gain.I_grid.c = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift/0.005;
+        Meas_ACDC_gain.def_osr = EMIF_mem.read.def_osr;
+        Meas_ACDC_gain.sd_shift = EMIF_mem.read.sd_shift;
 
-        Meas_master_gain.U_dc = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*6.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
+        Meas_ACDC_gain.U_grid.a =
+        Meas_ACDC_gain.U_grid.b =
+        Meas_ACDC_gain.U_grid.c = 0.064/(Meas_ACDC_gain.def_osr*Meas_ACDC_gain.def_osr)*Meas_ACDC_gain.sd_shift*(680.0*3.0 + 0.27)/(0.27)*(1.0 + (0.54/4.9));
 
-        Meas_master_gain.U_dc_n = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift*(680.0*3.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
+        Meas_ACDC_gain.I_grid.a =
+        Meas_ACDC_gain.I_grid.b =
+        Meas_ACDC_gain.I_grid.c = 0.064/(Meas_ACDC_gain.def_osr*Meas_ACDC_gain.def_osr)*Meas_ACDC_gain.sd_shift/0.005;
 
-        Meas_master_gain.I_conv.a =
-        Meas_master_gain.I_conv.b =
-        Meas_master_gain.I_conv.c =
-        Meas_master_gain.I_conv.n = 0.064/(Meas_master_gain.def_osr*Meas_master_gain.def_osr)*Meas_master_gain.sd_shift/0.001;
+        Meas_ACDC_gain.U_dc = 0.064/(Meas_ACDC_gain.def_osr*Meas_ACDC_gain.def_osr)*Meas_ACDC_gain.sd_shift*(680.0*6.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
+
+        Meas_ACDC_gain.U_dc_n = 0.064/(Meas_ACDC_gain.def_osr*Meas_ACDC_gain.def_osr)*Meas_ACDC_gain.sd_shift*(680.0*3.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
+
+        Meas_ACDC_gain.I_conv.a =
+        Meas_ACDC_gain.I_conv.b =
+        Meas_ACDC_gain.I_conv.c =
+        Meas_ACDC_gain.I_conv.n = 0.064/(Meas_ACDC_gain.def_osr*Meas_ACDC_gain.def_osr)*Meas_ACDC_gain.sd_shift/0.001;
 
         control_ext_modbus.fields.baudrate = 1152;
         control_ext_modbus.fields.ext_server_id = 1;
@@ -919,18 +934,18 @@ void Machine_class::init()
     }
     else
     {
-        control_master.Q_set = SD_card.settings.control.Q_set;
-        control_master.flags.bit.enable_Q_comp_a = SD_card.settings.control.flags.bit.enable_Q_comp_a;
-        control_master.flags.bit.enable_Q_comp_b = SD_card.settings.control.flags.bit.enable_Q_comp_b;
-        control_master.flags.bit.enable_Q_comp_c = SD_card.settings.control.flags.bit.enable_Q_comp_c;
-        control_master.flags.bit.enable_P_sym =  SD_card.settings.control.flags.bit.enable_P_sym;
-        control_master.flags.bit.enable_H_comp = SD_card.settings.control.flags.bit.enable_H_comp;
-        control_master.flags.bit.version_P_sym = SD_card.settings.control.flags.bit.version_P_sym;
-        control_master.flags.bit.version_Q_comp_a = SD_card.settings.control.flags.bit.version_Q_comp_a;
-        control_master.flags.bit.version_Q_comp_b = SD_card.settings.control.flags.bit.version_Q_comp_b;
-        control_master.flags.bit.version_Q_comp_c = SD_card.settings.control.flags.bit.version_Q_comp_c;
-        control_master.tangens_range[0] = SD_card.settings.control.tangens_range[0];
-        control_master.tangens_range[1] = SD_card.settings.control.tangens_range[1];
+        control_ACDC.Q_set = SD_card.settings.control.Q_set;
+        control_ACDC.flags.bit.enable_Q_comp_a = SD_card.settings.control.flags.bit.enable_Q_comp_a;
+        control_ACDC.flags.bit.enable_Q_comp_b = SD_card.settings.control.flags.bit.enable_Q_comp_b;
+        control_ACDC.flags.bit.enable_Q_comp_c = SD_card.settings.control.flags.bit.enable_Q_comp_c;
+        control_ACDC.flags.bit.enable_P_sym =  SD_card.settings.control.flags.bit.enable_P_sym;
+        control_ACDC.flags.bit.enable_H_comp = SD_card.settings.control.flags.bit.enable_H_comp;
+        control_ACDC.flags.bit.version_P_sym = SD_card.settings.control.flags.bit.version_P_sym;
+        control_ACDC.flags.bit.version_Q_comp_a = SD_card.settings.control.flags.bit.version_Q_comp_a;
+        control_ACDC.flags.bit.version_Q_comp_b = SD_card.settings.control.flags.bit.version_Q_comp_b;
+        control_ACDC.flags.bit.version_Q_comp_c = SD_card.settings.control.flags.bit.version_Q_comp_c;
+        control_ACDC.tangens_range[0] = SD_card.settings.control.tangens_range[0];
+        control_ACDC.tangens_range[1] = SD_card.settings.control.tangens_range[1];
         control_ext_modbus.fields.baudrate = SD_card.settings.Baudrate/100;
         control_ext_modbus.fields.ext_server_id = SD_card.settings.modbus_ext_server_id;
         Conv.C_dc = SD_card.settings.C_dc;
@@ -946,64 +961,64 @@ void Machine_class::init()
         memcpy(&CT_char_vars.CT_char, &SD_card.CT_char, sizeof(CT_char_vars.CT_char));
         memcpy(&CT_char_vars.calibration, &SD_card.calibration, sizeof(CT_char_vars.calibration));
 
-        Meas_master_gain = SD_card.calibration.Meas_master_gain;
-        Meas_master_offset = SD_card.calibration.Meas_master_offset;
-        register float ratio_SD = (SD_card.calibration.Meas_master_gain.def_osr * SD_card.calibration.Meas_master_gain.def_osr) / ((float)EMIF_mem.read.def_osr * (float)EMIF_mem.read.def_osr);
-        ratio_SD *= (float)EMIF_mem.read.sd_shift / SD_card.calibration.Meas_master_gain.sd_shift;
-        Meas_master_gain.U_grid.a *= ratio_SD;
-        Meas_master_gain.U_grid.b *= ratio_SD;
-        Meas_master_gain.U_grid.c *= ratio_SD;
-        Meas_master_gain.U_dc     *= ratio_SD;
-        Meas_master_gain.U_dc_n   *= ratio_SD;
-        Meas_master_gain.I_conv.a *= ratio_SD;
-        Meas_master_gain.I_conv.b *= ratio_SD;
-        Meas_master_gain.I_conv.c *= ratio_SD;
-        Meas_master_gain.I_conv.n *= ratio_SD;
-        Meas_master_gain.I_grid.a *= ratio_SD;
-        Meas_master_gain.I_grid.b *= ratio_SD;
-        Meas_master_gain.I_grid.c *= ratio_SD;
+        Meas_ACDC_gain = SD_card.calibration.Meas_ACDC_gain;
+        Meas_ACDC_offset = SD_card.calibration.Meas_ACDC_offset;
+        register float ratio_SD = (SD_card.calibration.Meas_ACDC_gain.def_osr * SD_card.calibration.Meas_ACDC_gain.def_osr) / ((float)EMIF_mem.read.def_osr * (float)EMIF_mem.read.def_osr);
+        ratio_SD *= (float)EMIF_mem.read.sd_shift / SD_card.calibration.Meas_ACDC_gain.sd_shift;
+        Meas_ACDC_gain.U_grid.a *= ratio_SD;
+        Meas_ACDC_gain.U_grid.b *= ratio_SD;
+        Meas_ACDC_gain.U_grid.c *= ratio_SD;
+        Meas_ACDC_gain.U_dc     *= ratio_SD;
+        Meas_ACDC_gain.U_dc_n   *= ratio_SD;
+        Meas_ACDC_gain.I_conv.a *= ratio_SD;
+        Meas_ACDC_gain.I_conv.b *= ratio_SD;
+        Meas_ACDC_gain.I_conv.c *= ratio_SD;
+        Meas_ACDC_gain.I_conv.n *= ratio_SD;
+        Meas_ACDC_gain.I_grid.a *= ratio_SD;
+        Meas_ACDC_gain.I_grid.b *= ratio_SD;
+        Meas_ACDC_gain.I_grid.c *= ratio_SD;
 
-        Meas_master_offset.U_grid.a *= ratio_SD;
-        Meas_master_offset.U_grid.b *= ratio_SD;
-        Meas_master_offset.U_grid.c *= ratio_SD;
-        Meas_master_offset.U_dc     *= ratio_SD;
-        Meas_master_offset.U_dc_n   *= ratio_SD;
-        Meas_master_offset.I_conv.a *= ratio_SD;
-        Meas_master_offset.I_conv.b *= ratio_SD;
-        Meas_master_offset.I_conv.c *= ratio_SD;
-        Meas_master_offset.I_conv.n *= ratio_SD;
-        Meas_master_offset.I_grid.a *= ratio_SD;
-        Meas_master_offset.I_grid.b *= ratio_SD;
-        Meas_master_offset.I_grid.c *= ratio_SD;
+        Meas_ACDC_offset.U_grid.a *= ratio_SD;
+        Meas_ACDC_offset.U_grid.b *= ratio_SD;
+        Meas_ACDC_offset.U_grid.c *= ratio_SD;
+        Meas_ACDC_offset.U_dc     *= ratio_SD;
+        Meas_ACDC_offset.U_dc_n   *= ratio_SD;
+        Meas_ACDC_offset.I_conv.a *= ratio_SD;
+        Meas_ACDC_offset.I_conv.b *= ratio_SD;
+        Meas_ACDC_offset.I_conv.c *= ratio_SD;
+        Meas_ACDC_offset.I_conv.n *= ratio_SD;
+        Meas_ACDC_offset.I_grid.a *= ratio_SD;
+        Meas_ACDC_offset.I_grid.b *= ratio_SD;
+        Meas_ACDC_offset.I_grid.c *= ratio_SD;
     }
 
-    CPU1toCPU2.Meas_master_gain = Meas_master_gain;
-    CPU1toCPU2.Meas_master_offset = Meas_master_offset;
+    CPU1toCPU2.Meas_ACDC_gain = Meas_ACDC_gain;
+    CPU1toCPU2.Meas_ACDC_offset = Meas_ACDC_offset;
     IpcRegs.IPCSET.bit.IPC4 = 1;
 
-    Machine.harmonics_odd_last =
-    Machine.harmonics_even_last =
-    Machine.harmonics_odd =
-    Machine.harmonics_even = 0;
+    Machine_slave.harmonics_odd_last =
+    Machine_slave.harmonics_even_last =
+    Machine_slave.harmonics_odd =
+    Machine_slave.harmonics_even = 0;
 
     update_harmonics();
     convert_harmonics_to_bits();
 
     if(!switch_FLASH.retrieve())
     {
-        Machine.ONOFF = Machine.ONOFF_FLASH;
-        Machine.ONOFF_last = !Machine.ONOFF_FLASH;
+        Machine_slave.ONOFF = Machine_slave.ONOFF_FLASH;
+        Machine_slave.ONOFF_last = !Machine_slave.ONOFF_FLASH;
     }
     else
     {
-        Machine.ONOFF =
-        Machine.ONOFF_last = 0;
+        Machine_slave.ONOFF =
+        Machine_slave.ONOFF_last = 0;
     }
 
-    Machine.ONOFF_switch = !GPIO_READ(ON_OFF_CM);
-    Machine.ONOFF_switch_last = Machine.ONOFF_switch;
-    Machine.switch_timer = 1e6;
-    Machine.ONOFF_temp = Machine.ONOFF;
+    Machine_slave.ONOFF_switch = !GPIO_READ(ON_OFF_CM);
+    Machine_slave.ONOFF_switch_last = Machine_slave.ONOFF_switch;
+    Machine_slave.switch_timer = 1e6;
+    Machine_slave.ONOFF_temp = Machine_slave.ONOFF;
 
     Init.Variables();
 
@@ -1013,29 +1028,29 @@ void Machine_class::init()
         int16 i16[2];
     }Meas_alarm_int;
 
-    Meas_alarm_int.i16[0] = Meas_alarm_H.I_conv / Meas_master_gain.I_conv.a + Meas_master_offset.I_conv.a;
-    Meas_alarm_int.i16[1] = Meas_alarm_L.I_conv / Meas_master_gain.I_conv.a + Meas_master_offset.I_conv.a;
+    Meas_alarm_int.i16[0] = Meas_ACDC_alarm_H.I_conv / Meas_ACDC_gain.I_conv.a + Meas_ACDC_offset.I_conv.a;
+    Meas_alarm_int.i16[1] = Meas_ACDC_alarm_L.I_conv / Meas_ACDC_gain.I_conv.a + Meas_ACDC_offset.I_conv.a;
     EMIF_mem.write.I_conv_a_lim = Meas_alarm_int.u32;
-    Meas_alarm_int.i16[0] = Meas_alarm_H.I_conv / Meas_master_gain.I_conv.b + Meas_master_offset.I_conv.b;
-    Meas_alarm_int.i16[1] = Meas_alarm_L.I_conv / Meas_master_gain.I_conv.b + Meas_master_offset.I_conv.b;
+    Meas_alarm_int.i16[0] = Meas_ACDC_alarm_H.I_conv / Meas_ACDC_gain.I_conv.b + Meas_ACDC_offset.I_conv.b;
+    Meas_alarm_int.i16[1] = Meas_ACDC_alarm_L.I_conv / Meas_ACDC_gain.I_conv.b + Meas_ACDC_offset.I_conv.b;
     EMIF_mem.write.I_conv_b_lim = Meas_alarm_int.u32;
-    Meas_alarm_int.i16[0] = Meas_alarm_H.I_conv / Meas_master_gain.I_conv.c + Meas_master_offset.I_conv.c;
-    Meas_alarm_int.i16[1] = Meas_alarm_L.I_conv / Meas_master_gain.I_conv.c + Meas_master_offset.I_conv.c;
+    Meas_alarm_int.i16[0] = Meas_ACDC_alarm_H.I_conv / Meas_ACDC_gain.I_conv.c + Meas_ACDC_offset.I_conv.c;
+    Meas_alarm_int.i16[1] = Meas_ACDC_alarm_L.I_conv / Meas_ACDC_gain.I_conv.c + Meas_ACDC_offset.I_conv.c;
     EMIF_mem.write.I_conv_c_lim = Meas_alarm_int.u32;
-    Meas_master_gain.I_conv.n = (Meas_master_gain.I_conv.a + Meas_master_gain.I_conv.b + Meas_master_gain.I_conv.c) * MATH_1_3;
-    Meas_master_offset.I_conv.n = Meas_master_offset.I_conv.a + Meas_master_offset.I_conv.b + Meas_master_offset.I_conv.c;
-    Meas_alarm_int.i16[0] = (Meas_alarm_H.I_conv / Meas_master_gain.I_conv.n + Meas_master_offset.I_conv.n) * 0.25f;
-    Meas_alarm_int.i16[1] = (Meas_alarm_L.I_conv / Meas_master_gain.I_conv.n + Meas_master_offset.I_conv.n) * 0.25f;
+    Meas_ACDC_gain.I_conv.n = (Meas_ACDC_gain.I_conv.a + Meas_ACDC_gain.I_conv.b + Meas_ACDC_gain.I_conv.c) * MATH_1_3;
+    Meas_ACDC_offset.I_conv.n = Meas_ACDC_offset.I_conv.a + Meas_ACDC_offset.I_conv.b + Meas_ACDC_offset.I_conv.c;
+    Meas_alarm_int.i16[0] = (Meas_ACDC_alarm_H.I_conv / Meas_ACDC_gain.I_conv.n + Meas_ACDC_offset.I_conv.n) * 0.25f;
+    Meas_alarm_int.i16[1] = (Meas_ACDC_alarm_L.I_conv / Meas_ACDC_gain.I_conv.n + Meas_ACDC_offset.I_conv.n) * 0.25f;
     EMIF_mem.write.I_conv_n_lim = Meas_alarm_int.u32;
 
-    Meas_alarm_int.i16[0] = +Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.a + Meas_master_offset.U_grid.a;
-    Meas_alarm_int.i16[1] = -Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.a + Meas_master_offset.U_grid.a;
+    Meas_alarm_int.i16[0] = +Meas_ACDC_alarm_H.U_grid_abs / Meas_ACDC_gain.U_grid.a + Meas_ACDC_offset.U_grid.a;
+    Meas_alarm_int.i16[1] = -Meas_ACDC_alarm_H.U_grid_abs / Meas_ACDC_gain.U_grid.a + Meas_ACDC_offset.U_grid.a;
     EMIF_mem.write.U_grid_a_lim = Meas_alarm_int.u32;
-    Meas_alarm_int.i16[0] = +Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.b + Meas_master_offset.U_grid.b;
-    Meas_alarm_int.i16[1] = -Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.b + Meas_master_offset.U_grid.b;
+    Meas_alarm_int.i16[0] = +Meas_ACDC_alarm_H.U_grid_abs / Meas_ACDC_gain.U_grid.b + Meas_ACDC_offset.U_grid.b;
+    Meas_alarm_int.i16[1] = -Meas_ACDC_alarm_H.U_grid_abs / Meas_ACDC_gain.U_grid.b + Meas_ACDC_offset.U_grid.b;
     EMIF_mem.write.U_grid_b_lim = Meas_alarm_int.u32;
-    Meas_alarm_int.i16[0] = +Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.c + Meas_master_offset.U_grid.c;
-    Meas_alarm_int.i16[1] = -Meas_alarm_H.U_grid_abs / Meas_master_gain.U_grid.c + Meas_master_offset.U_grid.c;
+    Meas_alarm_int.i16[0] = +Meas_ACDC_alarm_H.U_grid_abs / Meas_ACDC_gain.U_grid.c + Meas_ACDC_offset.U_grid.c;
+    Meas_alarm_int.i16[1] = -Meas_ACDC_alarm_H.U_grid_abs / Meas_ACDC_gain.U_grid.c + Meas_ACDC_offset.U_grid.c;
     EMIF_mem.write.U_grid_c_lim = Meas_alarm_int.u32;
 
     Modbus_RTU_class::Modbus_RTU_parameters_struct RTU_LCD_parameters;
@@ -1152,19 +1167,19 @@ void Machine_class::init()
 
     Init.clear_alarms();
 
-    status_master.Init_done = 1;
-    Machine.recent_error = 1;
-    Machine.state = state_idle;
+    status_ACDC.Init_done = 1;
+    Machine_slave.recent_error = 1;
+    Machine_slave.state = state_idle;
 }
 
-void Machine_class::idle()
+void Machine_slave_class::idle()
 {
     static Uint64 delay_timer;
     static float delay = 0.0f;
-    if(Machine.state_last != Machine.state)
+    if(Machine_slave.state_last != Machine_slave.state)
     {
         delay_timer = ReadIpcTimer();
-        Machine.state_last = Machine.state;
+        Machine_slave.state_last = Machine_slave.state;
         Conv.enable = 0;
     }
 
@@ -1177,11 +1192,11 @@ void Machine_class::idle()
 //            Init.clear_alarms();
 //    }
 
-    if(Machine.ONOFF)
+    if(Machine_slave.ONOFF)
     {
-        float Temp = fmaxf(Meas_master.Temperature1, fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
-        if(status_master.SD_no_calibration) Machine.state = state_calibrate_offsets;
-        else if(status_master.PLL_sync && status_master.Grid_present && Temp < Meas_alarm_H.Temp - 15.0f)
+        float Temp = fmaxf(Meas_ACDC.Temperature1, fmaxf(Meas_ACDC.Temperature2, Meas_ACDC.Temperature3));
+        if(status_ACDC.SD_no_calibration) Machine_slave.state = state_calibrate_offsets;
+        else if(status_ACDC.PLL_sync && status_ACDC.Grid_present && Temp < Meas_ACDC_alarm_H.Temp - 15.0f)
         {
             static const float delay_table[] =
             {
@@ -1201,7 +1216,7 @@ void Machine_class::idle()
                  [13] = 0.0f,
                  [14] = 24.0f * 60.0f * 60.0f,
             };
-            Uint16 index_temp = Machine.error_retry;
+            Uint16 index_temp = Machine_slave.error_retry;
             if (index_temp >= sizeof(delay_table)/sizeof(float) - 1) index_temp = sizeof(delay_table)/sizeof(float) - 1;
             delay = fmaxf(delay_table[index_temp], 10.0f * Conv.Ts);
 
@@ -1215,166 +1230,166 @@ void Machine_class::idle()
             static volatile float U32H = (float)(0x100000000)/200e6;
             static volatile float U32L = (float)(0x1)/200e6;
             delay_timer_real = (float)convert.l[1] * U32H + (float)convert.l[0] * U32L;
-            if(delay_timer_real > delay) Machine.state = state_start;
+            if(delay_timer_real > delay) Machine_slave.state = state_start;
         }
     }
 }
 
-void Machine_class::calibrate_offsets()
+void Machine_slave_class::calibrate_offsets()
 {
-    if(Machine.state_last != Machine.state)
+    if(Machine_slave.state_last != Machine_slave.state)
     {
-        Machine.state_last = Machine.state;
+        Machine_slave.state_last = Machine_slave.state;
     }
 
-    if(Machine.ONOFF_last != Machine.ONOFF)
+    if(Machine_slave.ONOFF_last != Machine_slave.ONOFF)
     {
         GPIO_SET(LED2_CM);
-        memcpy(&SD_card.calibration.Meas_master_gain, &Meas_master_gain, sizeof(Meas_master_gain));
+        memcpy(&SD_card.calibration.Meas_ACDC_gain, &Meas_ACDC_gain, sizeof(Meas_ACDC_gain));
 
-        CIC2_calibration_input.ptr = &Meas_master.I_grid.a;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_grid.a;
         DELAY_US(100000);
-        Meas_master_offset.I_grid.a += CIC2_calibration.out / Meas_master_gain.I_grid.a;
+        Meas_ACDC_offset.I_grid.a += CIC2_calibration.out / Meas_ACDC_gain.I_grid.a;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_grid.b;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_grid.b;
         DELAY_US(100000);
-        Meas_master_offset.I_grid.b += CIC2_calibration.out / Meas_master_gain.I_grid.b;
+        Meas_ACDC_offset.I_grid.b += CIC2_calibration.out / Meas_ACDC_gain.I_grid.b;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_grid.c;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_grid.c;
         DELAY_US(100000);
-        Meas_master_offset.I_grid.c += CIC2_calibration.out / Meas_master_gain.I_grid.c;
+        Meas_ACDC_offset.I_grid.c += CIC2_calibration.out / Meas_ACDC_gain.I_grid.c;
 
 
-        CIC2_calibration_input.ptr = &Meas_master.U_grid.a;
+        CIC2_calibration_input.ptr = &Meas_ACDC.U_grid.a;
         DELAY_US(100000);
-        Meas_master_offset.U_grid.a += CIC2_calibration.out / Meas_master_gain.U_grid.a;
+        Meas_ACDC_offset.U_grid.a += CIC2_calibration.out / Meas_ACDC_gain.U_grid.a;
 
-        CIC2_calibration_input.ptr = &Meas_master.U_grid.b;
+        CIC2_calibration_input.ptr = &Meas_ACDC.U_grid.b;
         DELAY_US(100000);
-        Meas_master_offset.U_grid.b += CIC2_calibration.out / Meas_master_gain.U_grid.b;
+        Meas_ACDC_offset.U_grid.b += CIC2_calibration.out / Meas_ACDC_gain.U_grid.b;
 
-        CIC2_calibration_input.ptr = &Meas_master.U_grid.c;
+        CIC2_calibration_input.ptr = &Meas_ACDC.U_grid.c;
         DELAY_US(100000);
-        Meas_master_offset.U_grid.c += CIC2_calibration.out / Meas_master_gain.U_grid.c;
+        Meas_ACDC_offset.U_grid.c += CIC2_calibration.out / Meas_ACDC_gain.U_grid.c;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv.a;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.a;
         DELAY_US(100000);
-        Meas_master_offset.I_conv.a += CIC2_calibration.out / Meas_master_gain.I_conv.a;
+        Meas_ACDC_offset.I_conv.a += CIC2_calibration.out / Meas_ACDC_gain.I_conv.a;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv.b;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.b;
         DELAY_US(100000);
-        Meas_master_offset.I_conv.b += CIC2_calibration.out / Meas_master_gain.I_conv.b;
+        Meas_ACDC_offset.I_conv.b += CIC2_calibration.out / Meas_ACDC_gain.I_conv.b;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv.c;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.c;
         DELAY_US(100000);
-        Meas_master_offset.I_conv.c += CIC2_calibration.out / Meas_master_gain.I_conv.c;
+        Meas_ACDC_offset.I_conv.c += CIC2_calibration.out / Meas_ACDC_gain.I_conv.c;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv.n;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.n;
         DELAY_US(100000);
-        Meas_master_offset.I_conv.n += CIC2_calibration.out / Meas_master_gain.I_conv.n;
+        Meas_ACDC_offset.I_conv.n += CIC2_calibration.out / Meas_ACDC_gain.I_conv.n;
 
-        CIC2_calibration_input.ptr = &Meas_master.U_dc;
+        CIC2_calibration_input.ptr = &Meas_ACDC.U_dc;
         DELAY_US(100000);
-        Meas_master_offset.U_dc += CIC2_calibration.out / Meas_master_gain.U_dc;
+        Meas_ACDC_offset.U_dc += CIC2_calibration.out / Meas_ACDC_gain.U_dc;
 
-        CIC2_calibration_input.ptr = &Meas_master.U_dc_n;
+        CIC2_calibration_input.ptr = &Meas_ACDC.U_dc_n;
         DELAY_US(100000);
-        Meas_master_offset.U_dc_n += CIC2_calibration.out / Meas_master_gain.U_dc_n;
+        Meas_ACDC_offset.U_dc_n += CIC2_calibration.out / Meas_ACDC_gain.U_dc_n;
 
-        Meas_master_offset_error.I_conv.a = fabsf(Meas_master_offset.I_conv.a * Meas_master_gain.I_conv.a);
-        Meas_master_offset_error.I_conv.b = fabsf(Meas_master_offset.I_conv.b * Meas_master_gain.I_conv.b);
-        Meas_master_offset_error.I_conv.c = fabsf(Meas_master_offset.I_conv.c * Meas_master_gain.I_conv.c);
-        Meas_master_offset_error.I_conv.n = fabsf(Meas_master_offset.I_conv.n * Meas_master_gain.I_conv.n);
-        Meas_master_offset_error.U_dc_n = fabsf(Meas_master_offset.U_dc_n * Meas_master_gain.U_dc_n);
-        Meas_master_offset_error.U_dc = fabsf(Meas_master_offset.U_dc * Meas_master_gain.U_dc);
+        Meas_ACDC_offset_error.I_conv.a = fabsf(Meas_ACDC_offset.I_conv.a * Meas_ACDC_gain.I_conv.a);
+        Meas_ACDC_offset_error.I_conv.b = fabsf(Meas_ACDC_offset.I_conv.b * Meas_ACDC_gain.I_conv.b);
+        Meas_ACDC_offset_error.I_conv.c = fabsf(Meas_ACDC_offset.I_conv.c * Meas_ACDC_gain.I_conv.c);
+        Meas_ACDC_offset_error.I_conv.n = fabsf(Meas_ACDC_offset.I_conv.n * Meas_ACDC_gain.I_conv.n);
+        Meas_ACDC_offset_error.U_dc_n = fabsf(Meas_ACDC_offset.U_dc_n * Meas_ACDC_gain.U_dc_n);
+        Meas_ACDC_offset_error.U_dc = fabsf(Meas_ACDC_offset.U_dc * Meas_ACDC_gain.U_dc);
 
 
-        Meas_master_offset_error.I_grid.a = fabsf(Meas_master_offset.I_grid.a * Meas_master_gain.I_grid.a);
-        Meas_master_offset_error.I_grid.b = fabsf(Meas_master_offset.I_grid.b * Meas_master_gain.I_grid.b);
-        Meas_master_offset_error.I_grid.c = fabsf(Meas_master_offset.I_grid.c * Meas_master_gain.I_grid.c);
-        Meas_master_offset_error.U_grid.a = fabsf(Meas_master_offset.U_grid.a * Meas_master_gain.U_grid.a);
-        Meas_master_offset_error.U_grid.b = fabsf(Meas_master_offset.U_grid.b * Meas_master_gain.U_grid.b);
-        Meas_master_offset_error.U_grid.c = fabsf(Meas_master_offset.U_grid.c * Meas_master_gain.U_grid.c);
+        Meas_ACDC_offset_error.I_grid.a = fabsf(Meas_ACDC_offset.I_grid.a * Meas_ACDC_gain.I_grid.a);
+        Meas_ACDC_offset_error.I_grid.b = fabsf(Meas_ACDC_offset.I_grid.b * Meas_ACDC_gain.I_grid.b);
+        Meas_ACDC_offset_error.I_grid.c = fabsf(Meas_ACDC_offset.I_grid.c * Meas_ACDC_gain.I_grid.c);
+        Meas_ACDC_offset_error.U_grid.a = fabsf(Meas_ACDC_offset.U_grid.a * Meas_ACDC_gain.U_grid.a);
+        Meas_ACDC_offset_error.U_grid.b = fabsf(Meas_ACDC_offset.U_grid.b * Meas_ACDC_gain.U_grid.b);
+        Meas_ACDC_offset_error.U_grid.c = fabsf(Meas_ACDC_offset.U_grid.c * Meas_ACDC_gain.U_grid.c);
 
-        if (Meas_master_offset_error.I_grid.a > 0.05f ||
-            Meas_master_offset_error.I_grid.b > 0.05f ||
-            Meas_master_offset_error.I_grid.c > 0.05f ||
-            Meas_master_offset_error.U_grid.a > 2.0f ||
-            Meas_master_offset_error.U_grid.b > 2.0f ||
-            Meas_master_offset_error.U_grid.c > 2.0f ||
-            Meas_master_offset_error.I_conv.a > 0.1f ||
-            Meas_master_offset_error.I_conv.b > 0.1f ||
-            Meas_master_offset_error.I_conv.c > 0.1f ||
-            Meas_master_offset_error.I_conv.n > 0.1f ||
-            Meas_master_offset_error.U_dc_n > 1.0f ||
-            Meas_master_offset_error.U_dc > 1.0f)
+        if (Meas_ACDC_offset_error.I_grid.a > 0.05f ||
+            Meas_ACDC_offset_error.I_grid.b > 0.05f ||
+            Meas_ACDC_offset_error.I_grid.c > 0.05f ||
+            Meas_ACDC_offset_error.U_grid.a > 2.0f ||
+            Meas_ACDC_offset_error.U_grid.b > 2.0f ||
+            Meas_ACDC_offset_error.U_grid.c > 2.0f ||
+            Meas_ACDC_offset_error.I_conv.a > 0.1f ||
+            Meas_ACDC_offset_error.I_conv.b > 0.1f ||
+            Meas_ACDC_offset_error.I_conv.c > 0.1f ||
+            Meas_ACDC_offset_error.I_conv.n > 0.1f ||
+            Meas_ACDC_offset_error.U_dc_n > 1.0f ||
+            Meas_ACDC_offset_error.U_dc > 1.0f)
         {
-            status_master.calibration_procedure_error = 1;
+            status_ACDC.calibration_procedure_error = 1;
         }
         else
         {
-            status_master.calibration_procedure_error = 0;
-            Machine.state = state_calibrate_curent_gain;
+            status_ACDC.calibration_procedure_error = 0;
+            Machine_slave.state = state_calibrate_curent_gain;
         }
     }
 }
 
-void Machine_class::calibrate_curent_gain()
+void Machine_slave_class::calibrate_curent_gain()
 {
     static Uint16 calib_rdy;
     static Uint16 calib_rdy_last;
-    if(Machine.state_last != Machine.state)
+    if(Machine_slave.state_last != Machine_slave.state)
     {
-        Machine.state_last = Machine.state;
+        Machine_slave.state_last = Machine_slave.state;
         calib_rdy = 0;
         calib_rdy_last = 0;
     }
 
-    if(Machine.ONOFF_last != Machine.ONOFF)
+    if(Machine_slave.ONOFF_last != Machine_slave.ONOFF)
     {
         GPIO_SET(LED2_CM);
 
         float I_cal = 2.0f;
-        if(fabsf(Meas_master.I_grid.a) > I_cal)
+        if(fabsf(Meas_ACDC.I_grid.a) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_grid.a;
+            CIC2_calibration_input.ptr = &Meas_ACDC.I_grid.a;
             DELAY_US(100000);
-            Meas_master_gain.I_grid.a = fabsf(Meas_master_gain.I_grid.a * 5.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.I_grid.a = fabsf(Meas_ACDC_gain.I_grid.a * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<0;
         }
-        if(fabsf(Meas_master.I_grid.b) > I_cal)
+        if(fabsf(Meas_ACDC.I_grid.b) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_grid.b;
+            CIC2_calibration_input.ptr = &Meas_ACDC.I_grid.b;
             DELAY_US(100000);
-            Meas_master_gain.I_grid.b = fabsf(Meas_master_gain.I_grid.b * 5.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.I_grid.b = fabsf(Meas_ACDC_gain.I_grid.b * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<1;
         }
-        if(fabsf(Meas_master.I_grid.c) > I_cal)
+        if(fabsf(Meas_ACDC.I_grid.c) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_grid.c;
+            CIC2_calibration_input.ptr = &Meas_ACDC.I_grid.c;
             DELAY_US(100000);
-            Meas_master_gain.I_grid.c = fabsf(Meas_master_gain.I_grid.c * 5.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.I_grid.c = fabsf(Meas_ACDC_gain.I_grid.c * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<2;
         }
-        if(fabsf(Meas_master.I_conv.a) > I_cal)
+        if(fabsf(Meas_ACDC.I_conv.a) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_conv.a;
+            CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.a;
             DELAY_US(100000);
-            Meas_master_gain.I_conv.a = fabsf(Meas_master_gain.I_conv.a * 5.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.I_conv.a = fabsf(Meas_ACDC_gain.I_conv.a * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<3;
         }
-        if(fabsf(Meas_master.I_conv.b) > I_cal)
+        if(fabsf(Meas_ACDC.I_conv.b) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_conv.b;
+            CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.b;
             DELAY_US(100000);
-            Meas_master_gain.I_conv.b = fabsf(Meas_master_gain.I_conv.b * 5.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.I_conv.b = fabsf(Meas_ACDC_gain.I_conv.b * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<4;
         }
-        if(fabsf(Meas_master.I_conv.c) > I_cal)
+        if(fabsf(Meas_ACDC.I_conv.c) > I_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.I_conv.c;
+            CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.c;
             DELAY_US(100000);
-            Meas_master_gain.I_conv.c = fabsf(Meas_master_gain.I_conv.c * 5.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.I_conv.c = fabsf(Meas_ACDC_gain.I_conv.c * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<5;
         }
 //        if(fabsf(Meas_master.I_conv.n) > I_cal)
@@ -1387,211 +1402,185 @@ void Machine_class::calibrate_curent_gain()
 
         if(calib_rdy == calib_rdy_last)
         {
-            status_master.calibration_procedure_error = 1;
+            status_ACDC.calibration_procedure_error = 1;
         }
         calib_rdy_last = calib_rdy;
 
         if(calib_rdy == 0x3F)
         {
-            Meas_master_gain_error.I_grid.a = fabsf((Meas_master_gain.I_grid.a/SD_card.calibration.Meas_master_gain.I_grid.a) - 1.0f);
-            Meas_master_gain_error.I_grid.b = fabsf((Meas_master_gain.I_grid.b/SD_card.calibration.Meas_master_gain.I_grid.b) - 1.0f);
-            Meas_master_gain_error.I_grid.c = fabsf((Meas_master_gain.I_grid.c/SD_card.calibration.Meas_master_gain.I_grid.c) - 1.0f);
+            Meas_ACDC_gain_error.I_grid.a = fabsf((Meas_ACDC_gain.I_grid.a/SD_card.calibration.Meas_ACDC_gain.I_grid.a) - 1.0f);
+            Meas_ACDC_gain_error.I_grid.b = fabsf((Meas_ACDC_gain.I_grid.b/SD_card.calibration.Meas_ACDC_gain.I_grid.b) - 1.0f);
+            Meas_ACDC_gain_error.I_grid.c = fabsf((Meas_ACDC_gain.I_grid.c/SD_card.calibration.Meas_ACDC_gain.I_grid.c) - 1.0f);
 
-            float mean_gain_meas = (Meas_master_gain.I_conv.a + Meas_master_gain.I_conv.b + Meas_master_gain.I_conv.c) / 3.0f;
-            Meas_master_gain_error.I_conv.a = fabsf((Meas_master_gain.I_conv.a/mean_gain_meas) - 1.0f);
-            Meas_master_gain_error.I_conv.b = fabsf((Meas_master_gain.I_conv.b/mean_gain_meas) - 1.0f);
-            Meas_master_gain_error.I_conv.c = fabsf((Meas_master_gain.I_conv.c/mean_gain_meas) - 1.0f);
+            float mean_gain_meas = (Meas_ACDC_gain.I_conv.a + Meas_ACDC_gain.I_conv.b + Meas_ACDC_gain.I_conv.c) / 3.0f;
+            Meas_ACDC_gain_error.I_conv.a = fabsf((Meas_ACDC_gain.I_conv.a/mean_gain_meas) - 1.0f);
+            Meas_ACDC_gain_error.I_conv.b = fabsf((Meas_ACDC_gain.I_conv.b/mean_gain_meas) - 1.0f);
+            Meas_ACDC_gain_error.I_conv.c = fabsf((Meas_ACDC_gain.I_conv.c/mean_gain_meas) - 1.0f);
 //            Meas_master_gain_error.I_conv.n = fabsf((Meas_master_gain.I_conv.n/mean_gain_meas) - 1.0f);
 
-            if (Meas_master_gain_error.I_grid.a > 0.03f ||
-                Meas_master_gain_error.I_grid.b > 0.03f ||
-                Meas_master_gain_error.I_grid.c > 0.03f ||
-                Meas_master_gain_error.I_conv.a > 0.03f ||
-                Meas_master_gain_error.I_conv.b > 0.03f ||
-                Meas_master_gain_error.I_conv.c > 0.03f ||
-                Meas_master_gain_error.I_conv.n > 0.03f)
+            if (Meas_ACDC_gain_error.I_grid.a > 0.03f ||
+                Meas_ACDC_gain_error.I_grid.b > 0.03f ||
+                Meas_ACDC_gain_error.I_grid.c > 0.03f ||
+                Meas_ACDC_gain_error.I_conv.a > 0.03f ||
+                Meas_ACDC_gain_error.I_conv.b > 0.03f ||
+                Meas_ACDC_gain_error.I_conv.c > 0.03f ||
+                Meas_ACDC_gain_error.I_conv.n > 0.03f)
             {
-                status_master.calibration_procedure_error = 1;
+                status_ACDC.calibration_procedure_error = 1;
             }
             else
             {
-                status_master.calibration_procedure_error = 0;
-                Machine.state = state_calibrate_AC_voltage_gain;
+                status_ACDC.calibration_procedure_error = 0;
+                Machine_slave.state = state_calibrate_AC_voltage_gain;
             }
         }
     }
 }
 
-void Machine_class::calibrate_AC_voltage_gain()
+void Machine_slave_class::calibrate_AC_voltage_gain()
 {
     static Uint16 calib_rdy;
     static Uint16 calib_rdy_last;
-    if(Machine.state_last != Machine.state)
+    if(Machine_slave.state_last != Machine_slave.state)
     {
-        Machine.state_last = Machine.state;
+        Machine_slave.state_last = Machine_slave.state;
         calib_rdy = 0;
         calib_rdy_last = 0;
     }
 
-    if(Machine.ONOFF_last != Machine.ONOFF)
+    if(Machine_slave.ONOFF_last != Machine_slave.ONOFF)
     {
         GPIO_SET(LED2_CM);
 
         float U_cal = 28.0f;
-        if(fabsf(Meas_master.U_grid.a) > U_cal)
+        if(fabsf(Meas_ACDC.U_grid.a) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_grid.a;
+            CIC2_calibration_input.ptr = &Meas_ACDC.U_grid.a;
             DELAY_US(100000);
-            Meas_master_gain.U_grid.a = fabsf(Meas_master_gain.U_grid.a * 30.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.U_grid.a = fabsf(Meas_ACDC_gain.U_grid.a * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<0;
         }
-        if(fabsf(Meas_master.U_grid.b) > U_cal)
+        if(fabsf(Meas_ACDC.U_grid.b) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_grid.b;
+            CIC2_calibration_input.ptr = &Meas_ACDC.U_grid.b;
             DELAY_US(100000);
-            Meas_master_gain.U_grid.b = fabsf(Meas_master_gain.U_grid.b * 30.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.U_grid.b = fabsf(Meas_ACDC_gain.U_grid.b * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<1;
         }
-        if(fabsf(Meas_master.U_grid.c) > U_cal)
+        if(fabsf(Meas_ACDC.U_grid.c) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_grid.c;
+            CIC2_calibration_input.ptr = &Meas_ACDC.U_grid.c;
             DELAY_US(100000);
-            Meas_master_gain.U_grid.c = fabsf(Meas_master_gain.U_grid.c * 30.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.U_grid.c = fabsf(Meas_ACDC_gain.U_grid.c * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<2;
         }
 
         if(calib_rdy == calib_rdy_last)
         {
-            status_master.calibration_procedure_error = 1;
+            status_ACDC.calibration_procedure_error = 1;
         }
         calib_rdy_last = calib_rdy;
 
         if(calib_rdy == 7)
         {
-            Meas_master_gain_error.U_grid.a = fabsf((Meas_master_gain.U_grid.a/SD_card.calibration.Meas_master_gain.U_grid.a) - 1.0f);
-            Meas_master_gain_error.U_grid.b = fabsf((Meas_master_gain.U_grid.b/SD_card.calibration.Meas_master_gain.U_grid.b) - 1.0f);
-            Meas_master_gain_error.U_grid.c = fabsf((Meas_master_gain.U_grid.c/SD_card.calibration.Meas_master_gain.U_grid.c) - 1.0f);
+            Meas_ACDC_gain_error.U_grid.a = fabsf((Meas_ACDC_gain.U_grid.a/SD_card.calibration.Meas_ACDC_gain.U_grid.a) - 1.0f);
+            Meas_ACDC_gain_error.U_grid.b = fabsf((Meas_ACDC_gain.U_grid.b/SD_card.calibration.Meas_ACDC_gain.U_grid.b) - 1.0f);
+            Meas_ACDC_gain_error.U_grid.c = fabsf((Meas_ACDC_gain.U_grid.c/SD_card.calibration.Meas_ACDC_gain.U_grid.c) - 1.0f);
 
-            if (Meas_master_gain_error.U_grid.a > 0.03f ||
-                Meas_master_gain_error.U_grid.b > 0.03f ||
-                Meas_master_gain_error.U_grid.c > 0.03f)
+            if (Meas_ACDC_gain_error.U_grid.a > 0.03f ||
+                Meas_ACDC_gain_error.U_grid.b > 0.03f ||
+                Meas_ACDC_gain_error.U_grid.c > 0.03f)
             {
-                status_master.calibration_procedure_error = 1;
+                status_ACDC.calibration_procedure_error = 1;
             }
             else
             {
-                status_master.calibration_procedure_error = 0;
-                Machine.state = state_calibrate_DC_voltage_gain;
+                status_ACDC.calibration_procedure_error = 0;
+                Machine_slave.state = state_calibrate_DC_voltage_gain;
             }
         }
     }
 }
 
-void Machine_class::calibrate_DC_voltage_gain()
+void Machine_slave_class::calibrate_DC_voltage_gain()
 {
     static Uint16 calib_rdy;
     static Uint16 calib_rdy_last;
-    if(Machine.state_last != Machine.state)
+    if(Machine_slave.state_last != Machine_slave.state)
     {
-        Machine.state_last = Machine.state;
+        Machine_slave.state_last = Machine_slave.state;
         calib_rdy = 0;
         calib_rdy_last = 0;
     }
 
-    if(Machine.ONOFF_last != Machine.ONOFF)
+    if(Machine_slave.ONOFF_last != Machine_slave.ONOFF)
     {
         GPIO_SET(LED2_CM);
         float U_cal = 28.0f;
 
-        if(fabsf(Meas_master.U_dc) > U_cal)
+        if(fabsf(Meas_ACDC.U_dc) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_dc;
+            CIC2_calibration_input.ptr = &Meas_ACDC.U_dc;
             DELAY_US(100000);
-            Meas_master_gain.U_dc = fabsf(Meas_master_gain.U_dc * 30.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.U_dc = fabsf(Meas_ACDC_gain.U_dc * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<0;
         }
 
-        if(fabsf(Meas_master.U_dc_n) > U_cal)
+        if(fabsf(Meas_ACDC.U_dc_n) > U_cal)
         {
-            CIC2_calibration_input.ptr = &Meas_master.U_dc_n;
+            CIC2_calibration_input.ptr = &Meas_ACDC.U_dc_n;
             DELAY_US(100000);
-            Meas_master_gain.U_dc_n = fabsf(Meas_master_gain.U_dc_n * 30.0f / CIC2_calibration.out);
+            Meas_ACDC_gain.U_dc_n = fabsf(Meas_ACDC_gain.U_dc_n * 30.0f / CIC2_calibration.out);
             calib_rdy |= 1<<1;
         }
 
         if(calib_rdy == calib_rdy_last)
         {
-            status_master.calibration_procedure_error = 1;
+            status_ACDC.calibration_procedure_error = 1;
         }
         calib_rdy_last = calib_rdy;
 
         if(calib_rdy == 3)
         {
-            Meas_master_gain_error.U_dc = fabsf((Meas_master_gain.U_dc/SD_card.calibration.Meas_master_gain.U_dc) - 1.0f);
-            Meas_master_gain_error.U_dc_n = fabsf((Meas_master_gain.U_dc_n/SD_card.calibration.Meas_master_gain.U_dc_n) - 1.0f);
+            Meas_ACDC_gain_error.U_dc = fabsf((Meas_ACDC_gain.U_dc/SD_card.calibration.Meas_ACDC_gain.U_dc) - 1.0f);
+            Meas_ACDC_gain_error.U_dc_n = fabsf((Meas_ACDC_gain.U_dc_n/SD_card.calibration.Meas_ACDC_gain.U_dc_n) - 1.0f);
 
-            if (Meas_master_gain_error.U_dc_n > 0.03f ||
-                Meas_master_gain_error.U_dc > 0.03f)
+            if (Meas_ACDC_gain_error.U_dc_n > 0.03f ||
+                Meas_ACDC_gain_error.U_dc > 0.03f)
             {
-                status_master.calibration_procedure_error = 1;
+                status_ACDC.calibration_procedure_error = 1;
             }
             else
             {
-                status_master.calibration_procedure_error = 0;
-                memcpy(&SD_card.calibration.Meas_master_gain, &Meas_master_gain, sizeof(Meas_master_gain));
-                memcpy(&SD_card.calibration.Meas_master_offset, &Meas_master_offset, sizeof(Meas_master_offset));
+                status_ACDC.calibration_procedure_error = 0;
+                memcpy(&SD_card.calibration.Meas_ACDC_gain, &Meas_ACDC_gain, sizeof(Meas_ACDC_gain));
+                memcpy(&SD_card.calibration.Meas_ACDC_offset, &Meas_ACDC_offset, sizeof(Meas_ACDC_offset));
                 SD_card.save_calibration_data();
-                Machine.state = state_init;
-                control_master.triggers.bit.CPU_reset = 1;
+                Machine_slave.state = state_init;
+                control_ACDC.triggers.bit.CPU_reset = 1;
             }
         }
         else
         {
-            status_master.calibration_procedure_error = 1;
+            status_ACDC.calibration_procedure_error = 1;
         }
     }
 
 }
 
-void Machine_class::start()
+void Machine_slave_class::start()
 {
-    if(Machine.state_last != Machine.state)
+    if(Machine_slave.state_last != Machine_slave.state)
     {
-        Machine.state_last = Machine.state;
+        Machine_slave.state_last = Machine_slave.state;
 
-        if(Machine.error_retry) Machine.recent_error = 1;
-        if(++Machine.error_retry >= 16) Machine.error_retry = 15;
-        status_master.error_retry = Machine.error_retry;
+        if(Machine_slave.error_retry) Machine_slave.recent_error = 1;
+        if(++Machine_slave.error_retry >= 16) Machine_slave.error_retry = 15;
+        status_ACDC.error_retry = Machine_slave.error_retry;
         error_retry_FLASH.save();
 
         memset(&Timer_total, 0, sizeof(Timer_total));
         timer_update(&Timer_total, 0);
-
-        Conv.tangens_range_local_prefilter[0].a.out =
-        Conv.tangens_range_local_prefilter[0].b.out =
-        Conv.tangens_range_local_prefilter[0].c.out =
-        Conv.tangens_range_local_prefilter[1].a.out =
-        Conv.tangens_range_local_prefilter[1].b.out =
-        Conv.tangens_range_local_prefilter[1].c.out =
-        Conv.Q_set_local_prefilter.a.out =
-        Conv.Q_set_local_prefilter.b.out =
-        Conv.Q_set_local_prefilter.c.out =
-        Conv.version_Q_comp_local_prefilter.a.out =
-        Conv.version_Q_comp_local_prefilter.b.out =
-        Conv.version_Q_comp_local_prefilter.c.out =
-        Conv.enable_Q_comp_local_prefilter.a.out =
-        Conv.enable_Q_comp_local_prefilter.b.out =
-        Conv.enable_Q_comp_local_prefilter.c.out =
-        Conv.version_P_sym_local_prefilter.out =
-        Conv.enable_P_sym_local_prefilter.out =
-        Conv.Q_set_local.a =
-        Conv.Q_set_local.b =
-        Conv.Q_set_local.c =
-        Conv.enable_Q_comp_local.a =
-        Conv.enable_Q_comp_local.b =
-        Conv.enable_Q_comp_local.c =
-        Conv.enable_P_sym_local =
-        Conv.enable_H_comp_local = 0.0f;
 
         Conv.PI_U_dc.integrator =
         Conv.PI_Id[0].integrator =
@@ -1618,39 +1607,472 @@ void Machine_class::start()
             if( (mosfet_errors & 0xFF) == 0 )
                 mosfet_errors = 0xFF;
 
-            alarm_master.bit.Driver_soft_error = 1;
+            alarm_ACDC.bit.Driver_soft_error = 1;
         }
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv.a;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.a;
         DELAY_US(50000);
-        Meas_master_offset.I_conv.a += CIC2_calibration.out / Meas_master_gain.I_conv.a;
+        Meas_ACDC_offset.I_conv.a += CIC2_calibration.out / Meas_ACDC_gain.I_conv.a;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv.b;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.b;
         DELAY_US(50000);
-        Meas_master_offset.I_conv.b += CIC2_calibration.out / Meas_master_gain.I_conv.b;
+        Meas_ACDC_offset.I_conv.b += CIC2_calibration.out / Meas_ACDC_gain.I_conv.b;
 
-        CIC2_calibration_input.ptr = &Meas_master.I_conv.c;
+        CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.c;
         DELAY_US(50000);
-        Meas_master_offset.I_conv.c += CIC2_calibration.out / Meas_master_gain.I_conv.c;
+        Meas_ACDC_offset.I_conv.c += CIC2_calibration.out / Meas_ACDC_gain.I_conv.c;
 
         Conv.enable = 1;
     }
 
-    if(Conv.RDY2)
-    {
-        if(status_master.CT_connection_a != 1 || status_master.CT_connection_b != 2 || status_master.CT_connection_c != 3)
-            Machine.state = state_CT_test;
-        else if(status_master.L_grid_measured)
-            Machine.state = state_operational;
-        else
-            Machine.state = state_Lgrid_meas;
-    }
+    if(Conv.RDY2) Machine_slave.state = state_operational;
 
-    if(!Machine.ONOFF) Machine.state = state_idle;
-    if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) Machine.state = state_cleanup;
+    if(!Machine_slave.ONOFF) Machine_slave.state = state_idle;
+    if(alarm_ACDC.all[0] | alarm_ACDC.all[1] | alarm_ACDC.all[2]) Machine_slave.state = state_cleanup;
 }
 
-void Machine_class::CT_test()
+void Machine_slave_class::operational()
+{
+    static struct test_CT_struct
+    {
+        Uint16 state, state_last;
+        float I_grid_val;
+        float test_delay_timer_Kahan[4];
+        float test_delay_timer[4];
+        float test_delay_timer_compare;
+        float test_request_integrator[7];
+        float test_request_filtered[7];
+        float test_request_period_counter;
+        float test_request_period;
+        struct abc_struct Q_grid_last;
+        struct abc_struct Q_conv_step;
+        struct abc_struct tested_current;
+        struct abc_struct I_grid_filter_last;
+        union
+        {
+            Uint16 all;
+            struct
+            {
+                Uint16 I_grid_back_a : 1;
+                Uint16 I_grid_back_b : 1;
+                Uint16 I_grid_back_c : 1;
+                Uint16 I_grid_under_val_a : 1;
+                Uint16 I_grid_under_val_b : 1;
+                Uint16 I_grid_under_val_c : 1;
+                Uint16 In_limit : 1;
+            }bit;
+        }test_request_flags;
+    }CT_test_online;
+
+    Uint64 timer_new = ReadIpcTimer();
+    Uint32 timer_new32 = timer_new;
+    static Uint32 timer_last32;
+
+    if(Machine_slave.state_last != Machine_slave.state)
+    {
+        Machine_slave.state_last = Machine_slave.state;
+
+        timer_last32 = timer_new32;
+
+        memset(&CT_test_online, 0, sizeof(CT_test_online));
+        CT_test_online.state_last = 1;
+        CT_test_online.I_grid_val = 1.0f;
+        CT_test_online.test_request_period = 2.0f;
+        CT_test_online.test_delay_timer_compare = 900.0f;
+        CT_test_online.test_delay_timer[0] =
+        CT_test_online.test_delay_timer[1] =
+        CT_test_online.test_delay_timer[2] =
+        CT_test_online.test_delay_timer[3] = CT_test_online.test_delay_timer_compare;
+    }
+
+    switch (CT_test_online.state)
+    {
+    case 0:
+    {
+        if (CT_test_online.state != CT_test_online.state_last)
+        {
+            CT_test_online.state_last = CT_test_online.state;
+            CT_test_online.test_request_flags.all = 0;
+        }
+
+        float time_delay = (float)(timer_new32 - timer_last32) * (1.0f/200000000.0f);
+        timer_last32 = timer_new32;
+        CT_test_online.test_request_period_counter += time_delay;
+
+        float timer_last;
+        float y;
+        CT_test_online.test_delay_timer[0] = (timer_last = CT_test_online.test_delay_timer[0]) + (y = time_delay - CT_test_online.test_delay_timer_Kahan[0]);
+        CT_test_online.test_delay_timer_Kahan[0] = (CT_test_online.test_delay_timer[0] - timer_last) - y;
+
+        CT_test_online.test_delay_timer[1] = (timer_last = CT_test_online.test_delay_timer[1]) + (y = time_delay - CT_test_online.test_delay_timer_Kahan[1]);
+        CT_test_online.test_delay_timer_Kahan[1] = (CT_test_online.test_delay_timer[1] - timer_last) - y;
+
+        CT_test_online.test_delay_timer[2] = (timer_last = CT_test_online.test_delay_timer[2]) + (y = time_delay - CT_test_online.test_delay_timer_Kahan[2]);
+        CT_test_online.test_delay_timer_Kahan[2] = (CT_test_online.test_delay_timer[2] - timer_last) - y;
+
+        CT_test_online.test_delay_timer[3] = (timer_last = CT_test_online.test_delay_timer[3]) + (y = time_delay - CT_test_online.test_delay_timer_Kahan[3]);
+        CT_test_online.test_delay_timer_Kahan[3] = (CT_test_online.test_delay_timer[3] - timer_last) - y;
+
+        if (Grid_filter.I_grid_1h.a < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[0] > CT_test_online.test_delay_timer_compare)
+            CT_test_online.test_request_integrator[0] += time_delay;
+        if (Grid_filter.I_grid_1h.b < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[1] > CT_test_online.test_delay_timer_compare)
+            CT_test_online.test_request_integrator[1] += time_delay;
+        if (Grid_filter.I_grid_1h.c < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[2] > CT_test_online.test_delay_timer_compare)
+            CT_test_online.test_request_integrator[2] += time_delay;
+
+        Uint16 in_limit = status_ACDC.in_limit_Q && (Conv.version_Q_comp_local.a + Conv.version_Q_comp_local.b + Conv.version_Q_comp_local.c < 3.0f);
+        in_limit = in_limit || status_ACDC.in_limit_H || status_ACDC.in_limit_P;
+        Uint16 test_val =
+                Grid_filter.I_grid_1h.a < CT_test_online.I_grid_val &&
+                Grid_filter.I_grid_1h.b < CT_test_online.I_grid_val &&
+                Grid_filter.I_grid_1h.c < CT_test_online.I_grid_val;
+
+        if (test_val && in_limit && CT_test_online.test_delay_timer[3] > CT_test_online.test_delay_timer_compare)
+            CT_test_online.test_request_integrator[3] += time_delay;
+
+        if (Grid_filter.I_grid_1h.a > CT_test_online.I_grid_val && status_ACDC.no_CT_connected_a)
+            CT_test_online.test_request_integrator[4] += time_delay;
+        if (Grid_filter.I_grid_1h.b > CT_test_online.I_grid_val && status_ACDC.no_CT_connected_b)
+            CT_test_online.test_request_integrator[5] += time_delay;
+        if (Grid_filter.I_grid_1h.c > CT_test_online.I_grid_val && status_ACDC.no_CT_connected_c)
+            CT_test_online.test_request_integrator[6] += time_delay;
+
+        if(CT_test_online.test_request_period_counter > CT_test_online.test_request_period)
+        {
+            CT_test_online.test_request_filtered[0] = CT_test_online.test_request_integrator[0] / CT_test_online.test_request_period_counter;
+            CT_test_online.test_request_filtered[1] = CT_test_online.test_request_integrator[1] / CT_test_online.test_request_period_counter;
+            CT_test_online.test_request_filtered[2] = CT_test_online.test_request_integrator[2] / CT_test_online.test_request_period_counter;
+            CT_test_online.test_request_filtered[3] = CT_test_online.test_request_integrator[3] / CT_test_online.test_request_period_counter;
+            CT_test_online.test_request_filtered[4] = CT_test_online.test_request_integrator[4] / CT_test_online.test_request_period_counter;
+            CT_test_online.test_request_filtered[5] = CT_test_online.test_request_integrator[5] / CT_test_online.test_request_period_counter;
+            CT_test_online.test_request_filtered[6] = CT_test_online.test_request_integrator[6] / CT_test_online.test_request_period_counter;
+            CT_test_online.test_request_integrator[0] =
+            CT_test_online.test_request_integrator[1] =
+            CT_test_online.test_request_integrator[2] =
+            CT_test_online.test_request_integrator[3] =
+            CT_test_online.test_request_integrator[4] =
+            CT_test_online.test_request_integrator[5] =
+            CT_test_online.test_request_integrator[6] =
+            CT_test_online.test_request_period_counter = 0.0f;
+        }
+
+        if (CT_test_online.test_request_filtered[4] > 0.9f)
+            CT_test_online.test_request_flags.bit.I_grid_back_a = 1;
+        else if (CT_test_online.test_request_filtered[5] > 0.9f)
+            CT_test_online.test_request_flags.bit.I_grid_back_b = 1;
+        else if (CT_test_online.test_request_filtered[6] > 0.9f)
+            CT_test_online.test_request_flags.bit.I_grid_back_c = 1;
+        else if (CT_test_online.test_request_filtered[0] > 0.9f)
+            CT_test_online.test_request_flags.bit.I_grid_under_val_a = 1;
+        else if (CT_test_online.test_request_filtered[1] > 0.9f)
+            CT_test_online.test_request_flags.bit.I_grid_under_val_b = 1;
+        else if (CT_test_online.test_request_filtered[2] > 0.9f)
+            CT_test_online.test_request_flags.bit.I_grid_under_val_c = 1;
+        else if (CT_test_online.test_request_filtered[3] > 0.9f)
+            CT_test_online.test_request_flags.bit.In_limit = 1;
+
+        if(CT_test_online.test_request_flags.all)
+            CT_test_online.state = 1;
+
+        ////////////////////////////////////////////////////////////////////
+
+        Conv.tangens_range_local[0].a = Saturation(control_ACDC.tangens_range[0].a, -1.0f, 1.0f);
+        Conv.tangens_range_local[0].b = Saturation(control_ACDC.tangens_range[0].b, -1.0f, 1.0f);
+        Conv.tangens_range_local[0].c = Saturation(control_ACDC.tangens_range[0].c, -1.0f, 1.0f);
+        Conv.tangens_range_local[1].a = Saturation(control_ACDC.tangens_range[1].a, -1.0f, 1.0f);
+        Conv.tangens_range_local[1].b = Saturation(control_ACDC.tangens_range[1].b, -1.0f, 1.0f);
+        Conv.tangens_range_local[1].c = Saturation(control_ACDC.tangens_range[1].c, -1.0f, 1.0f);
+
+        Conv.version_P_sym_local = control_ACDC.flags.bit.version_P_sym;
+        Conv.enable_Q_comp_local.a = control_ACDC.flags.bit.enable_Q_comp_a;
+        Conv.enable_Q_comp_local.b = control_ACDC.flags.bit.enable_Q_comp_b;
+        Conv.enable_Q_comp_local.c = control_ACDC.flags.bit.enable_Q_comp_c;
+
+        if(status_ACDC.no_CT_connected_a)
+        {
+            Conv.Q_set_local.a = Saturation(control_ACDC.Q_set.a + Grid.U_grid_1h.a * Grid.U_grid_1h.a * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
+            Conv.version_Q_comp_local.a = 1.0f;
+        }
+        else
+        {
+            Conv.Q_set_local.a = Saturation(control_ACDC.Q_set.a, -10000.0f, 10000.0f);
+            Conv.version_Q_comp_local.a = control_ACDC.flags.bit.version_Q_comp_a;
+        }
+
+        if(status_ACDC.no_CT_connected_b)
+        {
+            Conv.Q_set_local.b = Saturation(control_ACDC.Q_set.b + Grid.U_grid_1h.b * Grid.U_grid_1h.b * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
+            Conv.version_Q_comp_local.b = 1.0f;
+        }
+        else
+        {
+            Conv.Q_set_local.b = Saturation(control_ACDC.Q_set.b, -10000.0f, 10000.0f);
+            Conv.version_Q_comp_local.b = control_ACDC.flags.bit.version_Q_comp_b;
+        }
+
+        if(status_ACDC.no_CT_connected_c)
+        {
+            Conv.Q_set_local.c = Saturation(control_ACDC.Q_set.c + Grid.U_grid_1h.c * Grid.U_grid_1h.c * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
+            Conv.version_Q_comp_local.c = 1.0f;
+        }
+        else
+        {
+            Conv.Q_set_local.c = Saturation(control_ACDC.Q_set.c, -10000.0f, 10000.0f);
+            Conv.version_Q_comp_local.c = control_ACDC.flags.bit.version_Q_comp_c;
+        }
+
+        if (status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c)
+        {
+            Conv.enable_P_sym_local = 0.0f;
+            Conv.enable_H_comp_local = 0.0f;
+        }
+        else
+        {
+            Conv.enable_P_sym_local = control_ACDC.flags.bit.enable_P_sym;
+            Conv.enable_H_comp_local = control_ACDC.flags.bit.enable_H_comp;
+        }
+
+        break;
+    }
+    case 1:
+    {
+        static Uint32 timer_last32;
+        static float step;
+
+        if (CT_test_online.state != CT_test_online.state_last)
+        {
+            CT_test_online.state_last = CT_test_online.state;
+
+            timer_last32 = timer_new32;
+
+            CT_test_online.I_grid_filter_last.a = Grid_filter.I_grid_1h.a;
+            CT_test_online.I_grid_filter_last.b = Grid_filter.I_grid_1h.b;
+            CT_test_online.I_grid_filter_last.c = Grid_filter.I_grid_1h.c;
+
+            CT_test_online.Q_grid_last.a = Grid.Q_grid_1h.a;
+            CT_test_online.Q_grid_last.b = Grid.Q_grid_1h.b;
+            CT_test_online.Q_grid_last.c = Grid.Q_grid_1h.c;
+
+            step = fminf(2.0f * CT_test_online.I_grid_val, Conv.I_lim);
+            CT_test_online.Q_conv_step.a = Grid.U_grid_1h.a * step;
+            CT_test_online.Q_conv_step.b = Grid.U_grid_1h.b * step;
+            CT_test_online.Q_conv_step.c = Grid.U_grid_1h.c * step;
+            if (Grid.Q_conv_1h.a < 0.0f) CT_test_online.Q_conv_step.a = -CT_test_online.Q_conv_step.a;
+            if (Grid.Q_conv_1h.b < 0.0f) CT_test_online.Q_conv_step.b = -CT_test_online.Q_conv_step.b;
+            if (Grid.Q_conv_1h.c < 0.0f) CT_test_online.Q_conv_step.c = -CT_test_online.Q_conv_step.c;
+
+            Conv.Q_set_local.a = CT_test_online.Q_conv_step.a - Grid.Q_conv_1h.a;
+            Conv.Q_set_local.b = CT_test_online.Q_conv_step.b - Grid.Q_conv_1h.b;
+            Conv.Q_set_local.c = CT_test_online.Q_conv_step.c - Grid.Q_conv_1h.c;
+            Conv.enable_Q_comp_local.a =
+            Conv.enable_Q_comp_local.b =
+            Conv.enable_Q_comp_local.c =
+            Conv.version_Q_comp_local.a =
+            Conv.version_Q_comp_local.b =
+            Conv.version_Q_comp_local.c = 1.0f;
+        }
+
+        if (timer_new32 - timer_last32 > 30000000UL)
+        {
+            CT_test_online.tested_current.a = fabsf(Grid.Q_grid_1h.a - CT_test_online.Q_grid_last.a - CT_test_online.Q_conv_step.a) / Grid.U_grid_1h.a;
+            CT_test_online.tested_current.b = fabsf(Grid.Q_grid_1h.b - CT_test_online.Q_grid_last.b - CT_test_online.Q_conv_step.b) / Grid.U_grid_1h.b;
+            CT_test_online.tested_current.c = fabsf(Grid.Q_grid_1h.c - CT_test_online.Q_grid_last.c - CT_test_online.Q_conv_step.c) / Grid.U_grid_1h.c;
+
+            Uint16 test_result[3];
+            test_result[0] = CT_test_online.tested_current.a > step * 0.5f;
+            test_result[1] = CT_test_online.tested_current.b > step * 0.5f;
+            test_result[2] = CT_test_online.tested_current.c > step * 0.5f;
+
+            CT_test_online.test_request_filtered[0] =
+            CT_test_online.test_request_filtered[1] =
+            CT_test_online.test_request_filtered[2] =
+            CT_test_online.test_request_filtered[3] =
+            CT_test_online.test_request_filtered[4] =
+            CT_test_online.test_request_filtered[5] =
+            CT_test_online.test_request_filtered[6] =
+            CT_test_online.test_request_period_counter = 0.0f;
+
+            if (CT_test_online.test_request_flags.bit.I_grid_back_a | CT_test_online.test_request_flags.bit.I_grid_back_b | CT_test_online.test_request_flags.bit.I_grid_back_c)
+            {
+                if(CT_test_online.I_grid_filter_last.a < CT_test_online.I_grid_val)
+                {
+                    status_ACDC.no_CT_connected_a = test_result[0];
+                    CT_test_online.test_delay_timer[0] = 0.0f;
+                }
+                else
+                {
+                    status_ACDC.no_CT_connected_a = 0;
+                    CT_test_online.test_delay_timer[0] = CT_test_online.test_delay_timer_compare;
+                }
+
+                if(CT_test_online.I_grid_filter_last.b < CT_test_online.I_grid_val)
+                {
+                    status_ACDC.no_CT_connected_b = test_result[1];
+                    CT_test_online.test_delay_timer[1] = 0.0f;
+                }
+                else
+                {
+                    status_ACDC.no_CT_connected_b = 0;
+                    CT_test_online.test_delay_timer[1] = CT_test_online.test_delay_timer_compare;
+                }
+
+                if(CT_test_online.I_grid_filter_last.c < CT_test_online.I_grid_val)
+                {
+                    status_ACDC.no_CT_connected_c = test_result[2];
+                    CT_test_online.test_delay_timer[2] = 0.0f;
+                }
+                else
+                {
+                    status_ACDC.no_CT_connected_c = 0;
+                    CT_test_online.test_delay_timer[2] = CT_test_online.test_delay_timer_compare;
+                }
+
+                CT_test_online.test_delay_timer[3] = CT_test_online.test_delay_timer_compare;
+            }
+            else if (CT_test_online.test_request_flags.bit.I_grid_under_val_a || CT_test_online.test_request_flags.bit.I_grid_under_val_b || CT_test_online.test_request_flags.bit.I_grid_under_val_c)
+            {
+                if(CT_test_online.I_grid_filter_last.a < CT_test_online.I_grid_val || CT_test_online.test_request_flags.bit.I_grid_under_val_a)
+                {
+                    status_ACDC.no_CT_connected_a = test_result[0];
+                    CT_test_online.test_delay_timer[0] = 0.0f;
+                }
+
+                if(CT_test_online.I_grid_filter_last.b < CT_test_online.I_grid_val || CT_test_online.test_request_flags.bit.I_grid_under_val_b)
+                {
+                    status_ACDC.no_CT_connected_b = test_result[1];
+                    CT_test_online.test_delay_timer[1] = 0.0f;
+                }
+
+                if(CT_test_online.I_grid_filter_last.c < CT_test_online.I_grid_val || CT_test_online.test_request_flags.bit.I_grid_under_val_c)
+                {
+                    status_ACDC.no_CT_connected_c = test_result[2];
+                    CT_test_online.test_delay_timer[2] = 0.0f;
+                }
+            }
+            else if (CT_test_online.test_request_flags.bit.In_limit)
+            {
+                if(test_result[0])
+                    status_ACDC.no_CT_connected_a = 1;
+                if(test_result[1])
+                    status_ACDC.no_CT_connected_b = 1;
+                if(test_result[2])
+                    status_ACDC.no_CT_connected_c = 1;
+
+                if(test_result[0] + test_result[1] + test_result[2])
+                    CT_test_online.test_delay_timer[3] = CT_test_online.test_delay_timer_compare;
+                else
+                    CT_test_online.test_delay_timer[3] = 0.0f;
+            }
+
+            CT_test_online.state = 0;
+        }
+        break;
+    }
+    }
+
+    timer_update(&Timer_total, 1);
+
+    if(!Machine_slave.ONOFF) Machine_slave.state = state_idle;
+    if(alarm_ACDC.all[0] | alarm_ACDC.all[1] | alarm_ACDC.all[2]) Machine_slave.state = state_cleanup;
+}
+
+void Machine_slave_class::cleanup()
+{
+    if(Machine_slave.state_last != Machine_slave.state)
+    {
+        Machine_slave.state_last = Machine_slave.state;
+        Conv.enable = 0;
+        Scope_trigger_unc();
+        EMIF_mem.write.Scope_trigger = 1;
+        Machine_slave.recent_error = 1;
+        if(mosfet_ctrl_app.getState() == MosfetCtrlApp::state_error){
+            //gdy wystapil jakis blad to proba zrestartowania maszyn stanowych
+            mosfet_ctrl_app.process_event(MosfetCtrlApp::event_restart, NULL);
+        }
+        mosfet_ctrl_app.process_event( MosfetCtrlApp::event_get_status );
+    }
+
+    if(Scope.finished_sorting && !status_ACDC.Scope_snapshot_pending && !control_ACDC.triggers.bit.Scope_snapshot
+            && mosfet_ctrl_app.finished() && EMIF_mem.read.Scope_rdy)
+    {
+        SD_card.save_state();
+        EMIF_mem.write.Scope_trigger = 0;
+        if(Machine_slave.error_retry == 4) control_ACDC.triggers.bit.CPU_reset = 1;
+        Machine_slave.state = state_idle;
+    }
+}
+
+
+void Machine_master_class::Main()
+{
+    register void (*pointer_temp)() = Machine_master.state_pointers[Machine_master.state];
+
+    if(pointer_temp != NULL && Machine_master.state < sizeof(Machine_master_class::state_pointers)/sizeof(Machine_master_class::state_pointers[0]))
+        (*pointer_temp)();
+    else
+        Machine_master.state = state_init;
+}
+
+void Machine_master_class::init()
+{
+    Machine_master.state = state_idle;
+}
+
+void Machine_master_class::idle()
+{
+    if(Machine_master.state_last != Machine_master.state)
+    {
+        Machine_master.state_last = Machine_master.state;
+    }
+}
+
+void Machine_master_class::start()
+{
+    if(Machine_master.state_last != Machine_master.state)
+    {
+        Machine_master.state_last = Machine_master.state;
+
+        Conv.tangens_range_local_prefilter[0].a.out =
+        Conv.tangens_range_local_prefilter[0].b.out =
+        Conv.tangens_range_local_prefilter[0].c.out =
+        Conv.tangens_range_local_prefilter[1].a.out =
+        Conv.tangens_range_local_prefilter[1].b.out =
+        Conv.tangens_range_local_prefilter[1].c.out =
+        Conv.Q_set_local_prefilter.a.out =
+        Conv.Q_set_local_prefilter.b.out =
+        Conv.Q_set_local_prefilter.c.out =
+        Conv.version_Q_comp_local_prefilter.a.out =
+        Conv.version_Q_comp_local_prefilter.b.out =
+        Conv.version_Q_comp_local_prefilter.c.out =
+        Conv.enable_Q_comp_local_prefilter.a.out =
+        Conv.enable_Q_comp_local_prefilter.b.out =
+        Conv.enable_Q_comp_local_prefilter.c.out =
+        Conv.version_P_sym_local_prefilter.out =
+        Conv.enable_P_sym_local_prefilter.out =
+        Conv.Q_set_local.a =
+        Conv.Q_set_local.b =
+        Conv.Q_set_local.c =
+        Conv.enable_Q_comp_local.a =
+        Conv.enable_Q_comp_local.b =
+        Conv.enable_Q_comp_local.c =
+        Conv.enable_P_sym_local =
+        Conv.enable_H_comp_local = 0.0f;
+    }
+
+    if(Conv.RDY2)
+    {
+        if(status_ACDC.CT_connection_a != 1 || status_ACDC.CT_connection_b != 2 || status_ACDC.CT_connection_c != 3)
+            Machine_master.state = state_CT_test;
+        else if(status_ACDC.L_grid_measured)
+            Machine_master.state = state_operational;
+        else
+            Machine_master.state = state_Lgrid_meas;
+    }
+
+    if(1) Machine_master.state = state_idle;
+}
+
+void Machine_master_class::CT_test()
 {
     static struct CT_test_struct
     {
@@ -1664,9 +2086,9 @@ void Machine_class::CT_test()
     static Uint16 CT_test_state;
     static Uint16 CT_test_state_last;
     static Uint16 repeat_counter;
-    if(Machine.state_last != Machine.state)
+    if(Machine_master.state_last != Machine_master.state)
     {
-        Machine.state_last = Machine.state;
+        Machine_master.state_last = Machine_master.state;
 
         timer_old = ReadIpcTimer();
         CT_test_state_last = 1;
@@ -1783,68 +2205,65 @@ void Machine_class::CT_test()
             CT_test_startup.CT_gain[2].c = 16.0f / CT_test_startup.Iq_diff[2].c;
 
             if(fabsf(CT_test_startup.CT_gain[0].a-1.0f) < 0.5f)
-                status_master.CT_connection_a = 1;
+                status_ACDC.CT_connection_a = 1;
             else if(fabsf(CT_test_startup.CT_gain[1].a-1.0f) < 0.5f)
-                status_master.CT_connection_a = 2;
+                status_ACDC.CT_connection_a = 2;
             else if(fabsf(CT_test_startup.CT_gain[2].a-1.0f) < 0.5f)
-                status_master.CT_connection_a = 3;
+                status_ACDC.CT_connection_a = 3;
             else
-                status_master.CT_connection_a = 0;
+                status_ACDC.CT_connection_a = 0;
 
             if(fabsf(CT_test_startup.CT_gain[0].b-1.0f) < 0.5f)
-                status_master.CT_connection_b = 1;
+                status_ACDC.CT_connection_b = 1;
             else if(fabsf(CT_test_startup.CT_gain[1].b-1.0f) < 0.5f)
-                status_master.CT_connection_b = 2;
+                status_ACDC.CT_connection_b = 2;
             else if(fabsf(CT_test_startup.CT_gain[2].b-1.0f) < 0.5f)
-                status_master.CT_connection_b = 3;
+                status_ACDC.CT_connection_b = 3;
             else
-                status_master.CT_connection_b = 0;
+                status_ACDC.CT_connection_b = 0;
 
             if(fabsf(CT_test_startup.CT_gain[0].c-1.0f) < 0.5f)
-                status_master.CT_connection_c = 1;
+                status_ACDC.CT_connection_c = 1;
             else if(fabsf(CT_test_startup.CT_gain[1].c-1.0f) < 0.5f)
-                status_master.CT_connection_c = 2;
+                status_ACDC.CT_connection_c = 2;
             else if(fabsf(CT_test_startup.CT_gain[2].c-1.0f) < 0.5f)
-                status_master.CT_connection_c = 3;
+                status_ACDC.CT_connection_c = 3;
             else
-                status_master.CT_connection_c = 0;
+                status_ACDC.CT_connection_c = 0;
 
 
-            if(status_master.CT_connection_a == 1) status_master.no_CT_connected_a = 0;
-            else status_master.no_CT_connected_a = 1;
-            if(status_master.CT_connection_b == 2) status_master.no_CT_connected_b = 0;
-            else status_master.no_CT_connected_b = 1;
-            if(status_master.CT_connection_c == 3) status_master.no_CT_connected_c = 0;
-            else status_master.no_CT_connected_c = 1;
+            if(status_ACDC.CT_connection_a == 1) status_ACDC.no_CT_connected_a = 0;
+            else status_ACDC.no_CT_connected_a = 1;
+            if(status_ACDC.CT_connection_b == 2) status_ACDC.no_CT_connected_b = 0;
+            else status_ACDC.no_CT_connected_b = 1;
+            if(status_ACDC.CT_connection_c == 3) status_ACDC.no_CT_connected_c = 0;
+            else status_ACDC.no_CT_connected_c = 1;
         }
 
         if(elapsed_time > 50000000ULL)
         {
             Conv.compensation2 = 4000.0f * Saturation(L_grid_meas.L_grid_previous[0], 50e-6, 800e-6) + 1.8f;
-            if(status_master.L_grid_measured || status_master.CT_connection_a != 1 || status_master.CT_connection_b != 2 || status_master.CT_connection_c != 3)
-                Machine.state = state_operational;
+            if(status_ACDC.L_grid_measured || status_ACDC.CT_connection_a != 1 || status_ACDC.CT_connection_b != 2 || status_ACDC.CT_connection_c != 3)
+                Machine_master.state = state_operational;
             else
-                Machine.state = state_Lgrid_meas;
+                Machine_master.state = state_Lgrid_meas;
         }
         break;
     }
     }
 
-    timer_update(&Timer_total, 1);
-
-    if(!Machine.ONOFF) Machine.state = state_idle;
-    if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) Machine.state = state_cleanup;
+    if(1) Machine_master.state = state_idle;
 }
 
-void Machine_class::Lgrid_meas()
+void Machine_master_class::Lgrid_meas()
 {
     static Uint64 timer_old;
     static Uint16 Lgrid_meas_state;
     static Uint16 Lgrid_meas_state_last;
     static Uint16 repeat_counter;
-    if(Machine.state_last != Machine.state)
+    if(Machine_master.state_last != Machine_master.state)
     {
-        Machine.state_last = Machine.state;
+        Machine_master.state_last = Machine_master.state;
 
         timer_old = ReadIpcTimer();
         Lgrid_meas_state_last = 1;
@@ -1964,13 +2383,13 @@ void Machine_class::Lgrid_meas()
         L_grid_meas.CT_gain_rounded.c = (float)__f32toi16r(L_grid_meas.CT_gain.c * 1.0f) * 1.0f;
 
         Uint16 save = 0;
-        if(L_grid_meas.CT_gain_rounded.a < 0.0f) CT_char_vars.calibration.Meas_master_gain.I_grid.a *= -1.0f, save = 1;
-        if(L_grid_meas.CT_gain_rounded.b < 0.0f) CT_char_vars.calibration.Meas_master_gain.I_grid.b *= -1.0f, save = 1;
-        if(L_grid_meas.CT_gain_rounded.c < 0.0f) CT_char_vars.calibration.Meas_master_gain.I_grid.c *= -1.0f, save = 1;
+        if(L_grid_meas.CT_gain_rounded.a < 0.0f) CT_char_vars.calibration.Meas_ACDC_gain.I_grid.a *= -1.0f, save = 1;
+        if(L_grid_meas.CT_gain_rounded.b < 0.0f) CT_char_vars.calibration.Meas_ACDC_gain.I_grid.b *= -1.0f, save = 1;
+        if(L_grid_meas.CT_gain_rounded.c < 0.0f) CT_char_vars.calibration.Meas_ACDC_gain.I_grid.c *= -1.0f, save = 1;
 
         if(save)
         {
-            memcpy(&SD_card.calibration.Meas_master_gain, &CT_char_vars.calibration.Meas_master_gain, sizeof(SD_card.calibration.Meas_master_gain));
+            memcpy(&SD_card.calibration.Meas_ACDC_gain, &CT_char_vars.calibration.Meas_ACDC_gain, sizeof(SD_card.calibration.Meas_ACDC_gain));
             SD_card.save_calibration_data();
         }
 
@@ -1994,20 +2413,17 @@ void Machine_class::Lgrid_meas()
     {
         if(elapsed_time > 75000000ULL)
         {
-            Machine.state = state_operational;
-            status_master.L_grid_measured = 1;
+            Machine_master.state = state_operational;
+            status_ACDC.L_grid_measured = 1;
         }
         break;
     }
     }
 
-    timer_update(&Timer_total, 1);
-
-    if(!Machine.ONOFF) Machine.state = state_idle;
-    if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) Machine.state = state_cleanup;
+    if(1) Machine_master.state = state_idle;
 }
 
-void Machine_class::operational()
+void Machine_master_class::operational()
 {
     static struct test_CT_struct
     {
@@ -2044,9 +2460,9 @@ void Machine_class::operational()
     Uint32 timer_new32 = timer_new;
     static Uint32 timer_last32;
 
-    if(Machine.state_last != Machine.state)
+    if(Machine_master.state_last != Machine_master.state)
     {
-        Machine.state_last = Machine.state;
+        Machine_master.state_last = Machine_master.state;
 
         timer_last32 = timer_new32;
 
@@ -2096,8 +2512,8 @@ void Machine_class::operational()
         if (Grid_filter.I_grid_1h.c < CT_test_online.I_grid_val && CT_test_online.test_delay_timer[2] > CT_test_online.test_delay_timer_compare)
             CT_test_online.test_request_integrator[2] += time_delay;
 
-        Uint16 in_limit = status_master.in_limit_Q && (Conv.version_Q_comp_local.a + Conv.version_Q_comp_local.b + Conv.version_Q_comp_local.c < 3.0f);
-        in_limit = in_limit || status_master.in_limit_H || status_master.in_limit_P;
+        Uint16 in_limit = status_ACDC.in_limit_Q && (Conv.version_Q_comp_local.a + Conv.version_Q_comp_local.b + Conv.version_Q_comp_local.c < 3.0f);
+        in_limit = in_limit || status_ACDC.in_limit_H || status_ACDC.in_limit_P;
         Uint16 test_val =
                 Grid_filter.I_grid_1h.a < CT_test_online.I_grid_val &&
                 Grid_filter.I_grid_1h.b < CT_test_online.I_grid_val &&
@@ -2106,11 +2522,11 @@ void Machine_class::operational()
         if (test_val && in_limit && CT_test_online.test_delay_timer[3] > CT_test_online.test_delay_timer_compare)
             CT_test_online.test_request_integrator[3] += time_delay;
 
-        if (Grid_filter.I_grid_1h.a > CT_test_online.I_grid_val && status_master.no_CT_connected_a)
+        if (Grid_filter.I_grid_1h.a > CT_test_online.I_grid_val && status_ACDC.no_CT_connected_a)
             CT_test_online.test_request_integrator[4] += time_delay;
-        if (Grid_filter.I_grid_1h.b > CT_test_online.I_grid_val && status_master.no_CT_connected_b)
+        if (Grid_filter.I_grid_1h.b > CT_test_online.I_grid_val && status_ACDC.no_CT_connected_b)
             CT_test_online.test_request_integrator[5] += time_delay;
-        if (Grid_filter.I_grid_1h.c > CT_test_online.I_grid_val && status_master.no_CT_connected_c)
+        if (Grid_filter.I_grid_1h.c > CT_test_online.I_grid_val && status_ACDC.no_CT_connected_c)
             CT_test_online.test_request_integrator[6] += time_delay;
 
         if(CT_test_online.test_request_period_counter > CT_test_online.test_request_period)
@@ -2152,60 +2568,60 @@ void Machine_class::operational()
 
         ////////////////////////////////////////////////////////////////////
 
-        Conv.tangens_range_local[0].a = Saturation(control_master.tangens_range[0].a, -1.0f, 1.0f);
-        Conv.tangens_range_local[0].b = Saturation(control_master.tangens_range[0].b, -1.0f, 1.0f);
-        Conv.tangens_range_local[0].c = Saturation(control_master.tangens_range[0].c, -1.0f, 1.0f);
-        Conv.tangens_range_local[1].a = Saturation(control_master.tangens_range[1].a, -1.0f, 1.0f);
-        Conv.tangens_range_local[1].b = Saturation(control_master.tangens_range[1].b, -1.0f, 1.0f);
-        Conv.tangens_range_local[1].c = Saturation(control_master.tangens_range[1].c, -1.0f, 1.0f);
+        Conv.tangens_range_local[0].a = Saturation(control_ACDC.tangens_range[0].a, -1.0f, 1.0f);
+        Conv.tangens_range_local[0].b = Saturation(control_ACDC.tangens_range[0].b, -1.0f, 1.0f);
+        Conv.tangens_range_local[0].c = Saturation(control_ACDC.tangens_range[0].c, -1.0f, 1.0f);
+        Conv.tangens_range_local[1].a = Saturation(control_ACDC.tangens_range[1].a, -1.0f, 1.0f);
+        Conv.tangens_range_local[1].b = Saturation(control_ACDC.tangens_range[1].b, -1.0f, 1.0f);
+        Conv.tangens_range_local[1].c = Saturation(control_ACDC.tangens_range[1].c, -1.0f, 1.0f);
 
-        Conv.version_P_sym_local = control_master.flags.bit.version_P_sym;
-        Conv.enable_Q_comp_local.a = control_master.flags.bit.enable_Q_comp_a;
-        Conv.enable_Q_comp_local.b = control_master.flags.bit.enable_Q_comp_b;
-        Conv.enable_Q_comp_local.c = control_master.flags.bit.enable_Q_comp_c;
+        Conv.version_P_sym_local = control_ACDC.flags.bit.version_P_sym;
+        Conv.enable_Q_comp_local.a = control_ACDC.flags.bit.enable_Q_comp_a;
+        Conv.enable_Q_comp_local.b = control_ACDC.flags.bit.enable_Q_comp_b;
+        Conv.enable_Q_comp_local.c = control_ACDC.flags.bit.enable_Q_comp_c;
 
-        if(status_master.no_CT_connected_a)
+        if(status_ACDC.no_CT_connected_a)
         {
-            Conv.Q_set_local.a = Saturation(control_master.Q_set.a + Grid.U_grid_1h.a * Grid.U_grid_1h.a * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
+            Conv.Q_set_local.a = Saturation(control_ACDC.Q_set.a + Grid.U_grid_1h.a * Grid.U_grid_1h.a * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
             Conv.version_Q_comp_local.a = 1.0f;
         }
         else
         {
-            Conv.Q_set_local.a = Saturation(control_master.Q_set.a, -10000.0f, 10000.0f);
-            Conv.version_Q_comp_local.a = control_master.flags.bit.version_Q_comp_a;
+            Conv.Q_set_local.a = Saturation(control_ACDC.Q_set.a, -10000.0f, 10000.0f);
+            Conv.version_Q_comp_local.a = control_ACDC.flags.bit.version_Q_comp_a;
         }
 
-        if(status_master.no_CT_connected_b)
+        if(status_ACDC.no_CT_connected_b)
         {
-            Conv.Q_set_local.b = Saturation(control_master.Q_set.b + Grid.U_grid_1h.b * Grid.U_grid_1h.b * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
+            Conv.Q_set_local.b = Saturation(control_ACDC.Q_set.b + Grid.U_grid_1h.b * Grid.U_grid_1h.b * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
             Conv.version_Q_comp_local.b = 1.0f;
         }
         else
         {
-            Conv.Q_set_local.b = Saturation(control_master.Q_set.b, -10000.0f, 10000.0f);
-            Conv.version_Q_comp_local.b = control_master.flags.bit.version_Q_comp_b;
+            Conv.Q_set_local.b = Saturation(control_ACDC.Q_set.b, -10000.0f, 10000.0f);
+            Conv.version_Q_comp_local.b = control_ACDC.flags.bit.version_Q_comp_b;
         }
 
-        if(status_master.no_CT_connected_c)
+        if(status_ACDC.no_CT_connected_c)
         {
-            Conv.Q_set_local.c = Saturation(control_master.Q_set.c + Grid.U_grid_1h.c * Grid.U_grid_1h.c * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
+            Conv.Q_set_local.c = Saturation(control_ACDC.Q_set.c + Grid.U_grid_1h.c * Grid.U_grid_1h.c * Conv.w_filter * (12.5e-6 + 4.4e-6), -10000.0f, 10000.0f);
             Conv.version_Q_comp_local.c = 1.0f;
         }
         else
         {
-            Conv.Q_set_local.c = Saturation(control_master.Q_set.c, -10000.0f, 10000.0f);
-            Conv.version_Q_comp_local.c = control_master.flags.bit.version_Q_comp_c;
+            Conv.Q_set_local.c = Saturation(control_ACDC.Q_set.c, -10000.0f, 10000.0f);
+            Conv.version_Q_comp_local.c = control_ACDC.flags.bit.version_Q_comp_c;
         }
 
-        if (status_master.no_CT_connected_a || status_master.no_CT_connected_b || status_master.no_CT_connected_c)
+        if (status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c)
         {
             Conv.enable_P_sym_local = 0.0f;
             Conv.enable_H_comp_local = 0.0f;
         }
         else
         {
-            Conv.enable_P_sym_local = control_master.flags.bit.enable_P_sym;
-            Conv.enable_H_comp_local = control_master.flags.bit.enable_H_comp;
+            Conv.enable_P_sym_local = control_ACDC.flags.bit.enable_P_sym;
+            Conv.enable_H_comp_local = control_ACDC.flags.bit.enable_H_comp;
         }
 
         break;
@@ -2272,34 +2688,34 @@ void Machine_class::operational()
             {
                 if(CT_test_online.I_grid_filter_last.a < CT_test_online.I_grid_val)
                 {
-                    status_master.no_CT_connected_a = test_result[0];
+                    status_ACDC.no_CT_connected_a = test_result[0];
                     CT_test_online.test_delay_timer[0] = 0.0f;
                 }
                 else
                 {
-                    status_master.no_CT_connected_a = 0;
+                    status_ACDC.no_CT_connected_a = 0;
                     CT_test_online.test_delay_timer[0] = CT_test_online.test_delay_timer_compare;
                 }
 
                 if(CT_test_online.I_grid_filter_last.b < CT_test_online.I_grid_val)
                 {
-                    status_master.no_CT_connected_b = test_result[1];
+                    status_ACDC.no_CT_connected_b = test_result[1];
                     CT_test_online.test_delay_timer[1] = 0.0f;
                 }
                 else
                 {
-                    status_master.no_CT_connected_b = 0;
+                    status_ACDC.no_CT_connected_b = 0;
                     CT_test_online.test_delay_timer[1] = CT_test_online.test_delay_timer_compare;
                 }
 
                 if(CT_test_online.I_grid_filter_last.c < CT_test_online.I_grid_val)
                 {
-                    status_master.no_CT_connected_c = test_result[2];
+                    status_ACDC.no_CT_connected_c = test_result[2];
                     CT_test_online.test_delay_timer[2] = 0.0f;
                 }
                 else
                 {
-                    status_master.no_CT_connected_c = 0;
+                    status_ACDC.no_CT_connected_c = 0;
                     CT_test_online.test_delay_timer[2] = CT_test_online.test_delay_timer_compare;
                 }
 
@@ -2309,30 +2725,30 @@ void Machine_class::operational()
             {
                 if(CT_test_online.I_grid_filter_last.a < CT_test_online.I_grid_val || CT_test_online.test_request_flags.bit.I_grid_under_val_a)
                 {
-                    status_master.no_CT_connected_a = test_result[0];
+                    status_ACDC.no_CT_connected_a = test_result[0];
                     CT_test_online.test_delay_timer[0] = 0.0f;
                 }
 
                 if(CT_test_online.I_grid_filter_last.b < CT_test_online.I_grid_val || CT_test_online.test_request_flags.bit.I_grid_under_val_b)
                 {
-                    status_master.no_CT_connected_b = test_result[1];
+                    status_ACDC.no_CT_connected_b = test_result[1];
                     CT_test_online.test_delay_timer[1] = 0.0f;
                 }
 
                 if(CT_test_online.I_grid_filter_last.c < CT_test_online.I_grid_val || CT_test_online.test_request_flags.bit.I_grid_under_val_c)
                 {
-                    status_master.no_CT_connected_c = test_result[2];
+                    status_ACDC.no_CT_connected_c = test_result[2];
                     CT_test_online.test_delay_timer[2] = 0.0f;
                 }
             }
             else if (CT_test_online.test_request_flags.bit.In_limit)
             {
                 if(test_result[0])
-                    status_master.no_CT_connected_a = 1;
+                    status_ACDC.no_CT_connected_a = 1;
                 if(test_result[1])
-                    status_master.no_CT_connected_b = 1;
+                    status_ACDC.no_CT_connected_b = 1;
                 if(test_result[2])
-                    status_master.no_CT_connected_c = 1;
+                    status_ACDC.no_CT_connected_c = 1;
 
                 if(test_result[0] + test_result[1] + test_result[2])
                     CT_test_online.test_delay_timer[3] = CT_test_online.test_delay_timer_compare;
@@ -2346,34 +2762,5 @@ void Machine_class::operational()
     }
     }
 
-    timer_update(&Timer_total, 1);
-
-    if(!Machine.ONOFF) Machine.state = state_idle;
-    if(alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]) Machine.state = state_cleanup;
-}
-
-void Machine_class::cleanup()
-{
-    if(Machine.state_last != Machine.state)
-    {
-        Machine.state_last = Machine.state;
-        Conv.enable = 0;
-        Scope_trigger_unc();
-        EMIF_mem.write.Scope_trigger = 1;
-        Machine.recent_error = 1;
-        if(mosfet_ctrl_app.getState() == MosfetCtrlApp::state_error){
-            //gdy wystapil jakis blad to proba zrestartowania maszyn stanowych
-            mosfet_ctrl_app.process_event(MosfetCtrlApp::event_restart, NULL);
-        }
-        mosfet_ctrl_app.process_event( MosfetCtrlApp::event_get_status );
-    }
-
-    if(Scope.finished_sorting && !status_master.Scope_snapshot_pending && !control_master.triggers.bit.Scope_snapshot
-            && mosfet_ctrl_app.finished() && EMIF_mem.read.Scope_rdy)
-    {
-        SD_card.save_state();
-        EMIF_mem.write.Scope_trigger = 0;
-        if(Machine.error_retry == 4) control_master.triggers.bit.CPU_reset = 1;
-        Machine.state = state_idle;
-    }
+    if(1) Machine_master.state = state_idle;
 }

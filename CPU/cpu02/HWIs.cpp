@@ -75,18 +75,18 @@ interrupt void SD_NEW_INT()
     if(!Conv.enable)
     {
         Conv.zero_error = 1.0f;
-        Conv.I_err.a = Meas_master.U_grid.a - Conv.MR_ref.a;
-        Conv.I_err.b = Meas_master.U_grid.b - Conv.MR_ref.b;
-        Conv.I_err.c = Meas_master.U_grid.c - Conv.MR_ref.c;
+        Conv.I_err.a = Meas_ACDC.U_grid.a - Conv.MR_ref.a;
+        Conv.I_err.b = Meas_ACDC.U_grid.b - Conv.MR_ref.b;
+        Conv.I_err.c = Meas_ACDC.U_grid.c - Conv.MR_ref.c;
     }
 
     register float modifier2 = Conv.range_modifier_Resonant_values;
     CPU2toCPU1.Resonant_error[0] = Conv.I_err.a * modifier2;
     CPU2toCPU1.Resonant_error[2] = Conv.I_err.b * modifier2;
     CPU2toCPU1.Resonant_error[4] = Conv.I_err.c * modifier2;
-    CPU2toCPU1.Resonant_error[1] = Meas_master.I_grid.a * modifier2;
-    CPU2toCPU1.Resonant_error[3] = Meas_master.I_grid.b * modifier2;
-    CPU2toCPU1.Resonant_error[5] = Meas_master.I_grid.c * modifier2;
+    CPU2toCPU1.Resonant_error[1] = Meas_ACDC.I_grid.a * modifier2;
+    CPU2toCPU1.Resonant_error[3] = Meas_ACDC.I_grid.b * modifier2;
+    CPU2toCPU1.Resonant_error[5] = Meas_ACDC.I_grid.c * modifier2;
     CPU2toCPU1.ZR = Conv.zero_error * Conv.range_modifier_Resonant_coefficients;
 
     static volatile Uint32 Resonant_WIP;

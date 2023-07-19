@@ -39,13 +39,13 @@ void Fiber_comm_slave_class::Main()
     }
     if(status_flags.timeout)
     {
-        alarm_master.bit.lopri_timeout = 1;
+        alarm_ACDC.bit.lopri_timeout = 1;
         status_flags.timeout = 0;
         status_flags.comm_active = 0;
     }
     if(status_flags.msg_error)
     {
-        alarm_master.bit.lopri_error = 1;
+        alarm_ACDC.bit.lopri_error = 1;
         status_flags.msg_error = 0;
         status_flags.comm_active = 0;
     }

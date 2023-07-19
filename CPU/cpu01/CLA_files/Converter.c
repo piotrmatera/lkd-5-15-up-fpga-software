@@ -4,23 +4,23 @@
 
 void Converter_calc()
 {
-    Conv.U_dc_filter = CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Conv.CIC1_U_dc, Meas_master.U_dc);
+    Conv.U_dc_filter = CIC1_adaptive_filter_CLAasm(&CIC1_adaptive_global__50Hz, &Conv.CIC1_U_dc, Meas_ACDC.U_dc);
 
     ////////////////////////////////////////////////////////////////////////////////////////////
 
     float U_grid_phph[3];
-    U_grid_phph[0] = fabsf(Meas_master.U_grid.a - Meas_master.U_grid.b);
-    U_grid_phph[1] = fabsf(Meas_master.U_grid.b - Meas_master.U_grid.c);
-    U_grid_phph[2] = fabsf(Meas_master.U_grid.c - Meas_master.U_grid.a);
+    U_grid_phph[0] = fabsf(Meas_ACDC.U_grid.a - Meas_ACDC.U_grid.b);
+    U_grid_phph[1] = fabsf(Meas_ACDC.U_grid.b - Meas_ACDC.U_grid.c);
+    U_grid_phph[2] = fabsf(Meas_ACDC.U_grid.c - Meas_ACDC.U_grid.a);
     float voltage_max_temp = fmaxf(fmaxf(U_grid_phph[0], U_grid_phph[1]), U_grid_phph[2]);
 
     ////////////////////////////////////////////////////////////////////////////////////////////
 
     static struct abcn_struct I_conv_running_max;
-    I_conv_running_max.a = fmaxf(fabsf(Meas_master.I_conv.a), I_conv_running_max.a);
-    I_conv_running_max.b = fmaxf(fabsf(Meas_master.I_conv.b), I_conv_running_max.b);
-    I_conv_running_max.c = fmaxf(fabsf(Meas_master.I_conv.c), I_conv_running_max.c);
-    I_conv_running_max.n = fmaxf(fabsf(Meas_master.I_conv.n), I_conv_running_max.n);
+    I_conv_running_max.a = fmaxf(fabsf(Meas_ACDC.I_conv.a), I_conv_running_max.a);
+    I_conv_running_max.b = fmaxf(fabsf(Meas_ACDC.I_conv.b), I_conv_running_max.b);
+    I_conv_running_max.c = fmaxf(fabsf(Meas_ACDC.I_conv.c), I_conv_running_max.c);
+    I_conv_running_max.n = fmaxf(fabsf(Meas_ACDC.I_conv.n), I_conv_running_max.n);
 
     static float U_grid_phph_running_max;
     U_grid_phph_running_max = fmaxf(voltage_max_temp, U_grid_phph_running_max);
@@ -52,7 +52,7 @@ void Converter_calc()
 
 //    Conv.U_dc_ref += Conv.Ts * (1.0f / 0.1f) *(fminf(Conv.U_grid_phph_max + 85.0f, 650.0f) - Conv.U_dc_ref);
 
-    if (!Conv.enable || (alarm_master.all[0] | alarm_master.all[1] | alarm_master.all[2]))
+    if (!Conv.enable || (alarm_ACDC.all[0] | alarm_ACDC.all[1] | alarm_ACDC.all[2]))
     {
         GPIO_CLEAR(PWM_EN_CM);
         GPIO_CLEAR(SS_DClink_CM);
@@ -65,7 +65,7 @@ void Converter_calc()
         GPIO_CLEAR(C_SS_RLY_L3_CM);
         GPIO_CLEAR(C_SS_RLY_N_CM);
 
-        Meas_alarm_L.U_dc = -5.0f;
+        Meas_ACDC_alarm_L.U_dc = -5.0f;
 
         Conv.I_lim =
         Conv.RDY =
@@ -96,7 +96,7 @@ void Converter_calc()
                 Conv.state_last = Conv.state;
             }
 
-            integrated_current += Conv.Ts * (voltage_max_temp - Meas_master.U_dc - integrated_voltage - 6.0f) / (2.0f * (Conv.L_conv + 100e-6));
+            integrated_current += Conv.Ts * (voltage_max_temp - Meas_ACDC.U_dc - integrated_voltage - 6.0f) / (2.0f * (Conv.L_conv + 100e-6));
             integrated_current = fmaxf(0.0f, integrated_current);
             integrated_voltage += Conv.Ts * integrated_current / Conv.C_dc;
 
@@ -108,13 +108,13 @@ void Converter_calc()
             }
             if (counter_ss - counter_ss_last > 1.0f)
             {
-                if ((Meas_master.U_dc > 0.8f*Conv.U_grid_phph_max) && (current_running_max < 20.0f * MATH_SQRT2) && (Grid.average.U_grid_1h > 10.0f)) Conv.state++;
+                if ((Meas_ACDC.U_dc > 0.8f*Conv.U_grid_phph_max) && (current_running_max < 20.0f * MATH_SQRT2) && (Grid.average.U_grid_1h > 10.0f)) Conv.state++;
                 current_running_max = 0;
                 counter_ss_last = counter_ss;
             }
 
             counter_ss += Conv.Ts;
-            if (counter_ss > 60.0f) alarm_master.bit.CONV_SOFTSTART = 1;
+            if (counter_ss > 60.0f) alarm_ACDC.bit.CONV_SOFTSTART = 1;
             break;
         }
         case CONV_grid_relay:
@@ -172,11 +172,11 @@ void Converter_calc()
 
             if(Conv.RDY2)
             {
-                Meas_alarm_L.U_dc = Conv.U_grid_phph_max + 20.0f;//#TODO do zmianyw w finalnej wersji
+                Meas_ACDC_alarm_L.U_dc = Conv.U_grid_phph_max + 20.0f;//#TODO do zmianyw w finalnej wersji
 //                Meas_alarm_L.U_dc = 670.0f;
                 register float Temp_power = 0;
-                Temp_power = fmaxf(Meas_master.Temperature1,  fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
-                float duty_power = fmaxf(1.0f - fmaxf((Temp_power - (Meas_alarm_H.Temp - 5.0f)) * 0.2, 0.0f), 0.0f);
+                Temp_power = fmaxf(Meas_ACDC.Temperature1,  fmaxf(Meas_ACDC.Temperature2, Meas_ACDC.Temperature3));
+                float duty_power = fmaxf(1.0f - fmaxf((Temp_power - (Meas_ACDC_alarm_H.Temp - 5.0f)) * 0.2, 0.0f), 0.0f);
                 Conv.I_lim = fmaxf(Conv.I_lim_nominal * duty_power, 1.0f);
             }
             else if(fabsf(Conv.U_dc_filter - Conv.U_dc_ref) < 1.0f)
@@ -302,8 +302,8 @@ void Converter_calc()
             Conv.iq_lim.c = iq_lim.c * ratio_q;
             Conv.iq_lim.n = iq_lim.n * ratio_q;
 
-            if(not_in_limit * not_in_limit_n == 0.0f && Conv.enable_Q_comp_local.a + Conv.enable_Q_comp_local.b + Conv.enable_Q_comp_local.c >= 1.0f) status_master.in_limit_Q = 1;
-            else status_master.in_limit_Q = 0;
+            if(not_in_limit * not_in_limit_n == 0.0f && Conv.enable_Q_comp_local.a + Conv.enable_Q_comp_local.b + Conv.enable_Q_comp_local.c >= 1.0f) status_ACDC.in_limit_Q = 1;
+            else status_ACDC.in_limit_Q = 0;
 
             //////////////////////////////////////////////////////////////////////////////////
 
@@ -365,8 +365,8 @@ void Converter_calc()
             Conv.id_lim.c = id_lim.c * ratio_p_min;
             Conv.id_lim.n = id_lim.n * ratio_p_min;
 
-            if(ratio_p_min != 1.0f && Conv.enable_P_sym_local_prefilter.out == 1.0f) status_master.in_limit_P = 1;
-            else status_master.in_limit_P = 0;
+            if(ratio_p_min != 1.0f && Conv.enable_P_sym_local_prefilter.out == 1.0f) status_ACDC.in_limit_P = 1;
+            else status_ACDC.in_limit_P = 0;
 
             PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[0], Conv.iq_lim.a - Conv.iq_conv.a);
             PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[1], Conv.iq_lim.b - Conv.iq_conv.b);
@@ -418,8 +418,8 @@ void Converter_calc()
             PI_antiwindup_CLAasm(&Conv.PI_I_harm_ratio[2], error.c);
 
             if (Conv.PI_I_harm_ratio[0].out * Conv.PI_I_harm_ratio[1].out * Conv.PI_I_harm_ratio[2].out != 1.0f && Conv.enable_H_comp_local)
-                status_master.in_limit_H = 1;
-            else status_master.in_limit_H = 0;
+                status_ACDC.in_limit_H = 1;
+            else status_ACDC.in_limit_H = 0;
             break;
         }
         default:

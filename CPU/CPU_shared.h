@@ -11,7 +11,7 @@
 #include "IO.h"
 #include "Node_shared.h"
 
-struct Measurements_alarm_struct
+struct Measurements_ACDC_alarm_struct
 {
     float U_grid_abs;
     float U_grid_rms;
@@ -335,8 +335,8 @@ struct CLA2toCLA1_struct
 struct CPU1toCPU2_struct
 {
     struct CLA1toCLA2_struct CLA1toCLA2;
-    struct Measurements_master_gain_offset_struct Meas_master_gain;
-    struct Measurements_master_gain_offset_struct Meas_master_offset;
+    struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain;
+    struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset;
     float clear_alarms;
 };
 
@@ -348,7 +348,7 @@ struct CPU2toCPU1_struct
     float sign;
     float PLL_RDY;
     float sag;
-    union ALARM_master alarm_master;
+    union ALARM_ACDC alarm_master;
     int32 Resonant_error[6];
     Uint32 ZR;
     Uint32 Resonant_start;

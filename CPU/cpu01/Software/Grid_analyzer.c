@@ -97,18 +97,18 @@ void Grid_analyzer_calc()
 
     ///////////////////////////////////////////////////////////////////
 
-    Grid.U_grid.a = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_U_grid[0], Meas_master.U_grid.a*Meas_master.U_grid.a));
-    Grid.U_grid.b = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_U_grid[1], Meas_master.U_grid.b*Meas_master.U_grid.b));
-    Grid.U_grid.c = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_U_grid[2], Meas_master.U_grid.c*Meas_master.U_grid.c));
+    Grid.U_grid.a = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_U_grid[0], Meas_ACDC.U_grid.a*Meas_ACDC.U_grid.a));
+    Grid.U_grid.b = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_U_grid[1], Meas_ACDC.U_grid.b*Meas_ACDC.U_grid.b));
+    Grid.U_grid.c = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_U_grid[2], Meas_ACDC.U_grid.c*Meas_ACDC.U_grid.c));
 
-    Grid.I_grid.a = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_grid[0], Meas_master.I_grid.a*Meas_master.I_grid.a));
-    Grid.I_grid.b = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_grid[1], Meas_master.I_grid.b*Meas_master.I_grid.b));
-    Grid.I_grid.c = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_grid[2], Meas_master.I_grid.c*Meas_master.I_grid.c));
+    Grid.I_grid.a = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_grid[0], Meas_ACDC.I_grid.a*Meas_ACDC.I_grid.a));
+    Grid.I_grid.b = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_grid[1], Meas_ACDC.I_grid.b*Meas_ACDC.I_grid.b));
+    Grid.I_grid.c = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_grid[2], Meas_ACDC.I_grid.c*Meas_ACDC.I_grid.c));
 
-    Grid.I_conv.a = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_conv[0], Meas_master.I_conv.a*Meas_master.I_conv.a));
-    Grid.I_conv.b = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_conv[1], Meas_master.I_conv.b*Meas_master.I_conv.b));
-    Grid.I_conv.c = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_conv[2], Meas_master.I_conv.c*Meas_master.I_conv.c));
-    Grid.I_conv.n = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_conv[3], Meas_master.I_conv.n*Meas_master.I_conv.n));
+    Grid.I_conv.a = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_conv[0], Meas_ACDC.I_conv.a*Meas_ACDC.I_conv.a));
+    Grid.I_conv.b = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_conv[1], Meas_ACDC.I_conv.b*Meas_ACDC.I_conv.b));
+    Grid.I_conv.c = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_conv[2], Meas_ACDC.I_conv.c*Meas_ACDC.I_conv.c));
+    Grid.I_conv.n = sqrtf(CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_I_conv[3], Meas_ACDC.I_conv.n*Meas_ACDC.I_conv.n));
 
     ///////////////////////////////////////////////////////////////////
 

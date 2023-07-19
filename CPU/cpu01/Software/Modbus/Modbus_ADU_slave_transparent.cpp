@@ -379,13 +379,13 @@ Modbus_error_enum_t Modbus_ADU_slave_transparent::Fcn_before_processed()
                                                                             + Modbus_Converter.input_registers.Energy_meter.QIV[1]
                                                                             + Modbus_Converter.input_registers.Energy_meter.QIV[2];
 
-            Modbus_Converter.input_registers.Temp1 = Meas_master.Temperature1;
-            Modbus_Converter.input_registers.Temp2 = Meas_master.Temperature2;
-            Modbus_Converter.input_registers.Temp3 = Meas_master.Temperature3;
+            Modbus_Converter.input_registers.Temp1 = Meas_ACDC.Temperature1;
+            Modbus_Converter.input_registers.Temp2 = Meas_ACDC.Temperature2;
+            Modbus_Converter.input_registers.Temp3 = Meas_ACDC.Temperature3;
             Modbus_Converter.input_registers.Temp_CPU = 0.0f;
             Modbus_Converter.input_registers.file_number_logs = SD_card.file_number_logs;
             Modbus_Converter.input_registers.file_number_errors = SD_card.file_number_errors;
-            Modbus_Converter.input_registers.status_master = status_master;
+            Modbus_Converter.input_registers.status_ACDC = status_ACDC;
 //            Modbus_Converter.input_registers.alarm_master = alarm_master;
 //            Modbus_Converter.input_registers.alarm_master_snapshot = alarm_master_snapshot;
             Modbus_Converter.input_registers.L_grid_previous[0] = L_grid_meas.L_grid_previous[0];
@@ -403,7 +403,7 @@ Modbus_error_enum_t Modbus_ADU_slave_transparent::Fcn_before_processed()
             Modbus_Converter.input_registers.Grid_filter.THD_U_grid.c = Conv.P_conv_filter.out;
             Modbus_Converter.input_registers.RTC_current_time = RTC_current_time;
             Modbus_Converter.input_registers.rtu_port_id = this->RTU->get_sci_id();
-            Modbus_Converter.input_registers.Machine_state = Machine.state;
+            Modbus_Converter.input_registers.Machine_slave_state = Machine_slave.state;
         }
         if(Mdb_slave_ADU.start_address < sizeof(Modbus_Converter.input_registers.FatFS_response))
         {
@@ -413,7 +413,7 @@ Modbus_error_enum_t Modbus_ADU_slave_transparent::Fcn_before_processed()
 
     if(Mdb_slave_ADU.function == Read_Holding_Registers || Mdb_slave_ADU.function == Write_Multiple_Registers || Mdb_slave_ADU.function == Write_Single_Register)
     {
-        Modbus_Converter.holding_registers.control_master = control_master;
+        Modbus_Converter.holding_registers.control_ACDC = control_ACDC;
         Modbus_Converter.holding_registers.control_ext_modbus = control_ext_modbus;
         memcpy(Modbus_Converter.holding_registers.FatFS_request, request, sizeof(Modbus_Converter.holding_registers.FatFS_request));
     }
@@ -427,7 +427,7 @@ void Modbus_ADU_slave_transparent::Fcn_after_processed()
     {
         memcpy(request, Modbus_Converter.holding_registers.FatFS_request, sizeof(request));
         process_FatFS_request();
-        control_master = Modbus_Converter.holding_registers.control_master;
+        control_ACDC = Modbus_Converter.holding_registers.control_ACDC;
         control_ext_modbus = Modbus_Converter.holding_registers.control_ext_modbus;
 
         extern Modbus_ADU_slave_general * pModbus_slave_EXT_translated;
@@ -439,7 +439,7 @@ void Modbus_ADU_slave_transparent::Fcn_after_processed()
         Uint16 time_size = sizeof(Modbus_Converter.holding_registers.RTC_new_time);
         if(Mdb_slave_ADU.start_address <= time_offset && Mdb_slave_ADU.end_address >= time_offset + time_size - 1)
         {
-            Machine.save_to_RTC = 1;
+            Machine_slave.save_to_RTC = 1;
         }
     }
 
@@ -447,7 +447,7 @@ void Modbus_ADU_slave_transparent::Fcn_after_processed()
     {
         if(Mdb_slave_ADU.start_address <= sizeof(Modbus_Converter.input_registers.FatFS_response))
         {
-            if(control_master.flags.bit.Modbus_FatFS_repeat && function == FatFS_f_read)
+            if(control_ACDC.flags.bit.Modbus_FatFS_repeat && function == FatFS_f_read)
             {
                 __byte_array(request, 0) = FatFS_f_read;
                 process_FatFS_request();

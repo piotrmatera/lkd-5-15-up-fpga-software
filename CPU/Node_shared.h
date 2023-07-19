@@ -92,7 +92,7 @@ union FPGA_master_flags_union
     }bit;
 };
 
-union ALARM_master
+union ALARM_ACDC
 {
     Uint32 all[3];
     struct
@@ -144,7 +144,7 @@ union ALARM_master
     }bit;
 };
 
-struct STATUS_master
+struct STATUS_ACDC
 {
     Uint16 Init_done:1;
     Uint16 ONOFF:1;
@@ -184,7 +184,7 @@ struct STATUS_master
     Uint16 rsvd : 12;
 };
 
-struct CONTROL_master
+struct CONTROL_ACDC
 {
     struct harmonic_odd_struct H_odd_a, H_odd_b, H_odd_c;
     struct harmonic_even_struct H_even_a, H_even_b, H_even_c;
@@ -226,7 +226,7 @@ struct CONTROL_master
     struct abc_struct tangens_range[2];
 };
 
-struct Measurements_master_struct
+struct Measurements_ACDC_struct
 {
     struct abc_struct U_grid_avg;
     struct abc_struct I_grid_avg;
@@ -246,7 +246,7 @@ struct Measurements_master_struct
     float Supply_24V;
 };
 
-struct Measurements_master_gain_offset_struct
+struct Measurements_ACDC_gain_offset_struct
 {
     struct abc_struct U_grid;
     struct abc_struct I_grid;

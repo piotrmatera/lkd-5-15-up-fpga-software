@@ -35,14 +35,14 @@ struct harmonics_struct
 struct calibration_struct
 {
     Uint16 available;
-    struct Measurements_master_gain_offset_struct Meas_master_gain;
-    struct Measurements_master_gain_offset_struct Meas_master_offset;
+    struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain;
+    struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset;
 };
 
 struct settings_struct
 {
     Uint16 available;
-    struct CONTROL_master control;
+    struct CONTROL_ACDC control;
     float Baudrate;
     float modbus_ext_server_id;
     float wifi_on;
@@ -95,7 +95,54 @@ extern struct timer_struct Timer_total;
 
 void timer_update(struct timer_struct *Timer, Uint16 enable_counting);
 
-class Machine_class
+class Machine_master_class
+{
+    public:
+
+    static void Main();
+
+    enum state_enum
+    {
+        state_init,
+        state_idle,
+        state_start,
+        state_CT_test,
+        state_Lgrid_meas,
+        state_operational,
+        state_max,
+        __dummybig_state = 300000
+    };
+
+    enum state_enum state, state_last;
+
+    Machine_master_class()
+    {
+        for(Uint16 i = 0; i < state_max; i++)
+            Machine_master_class::state_pointers[i] = NULL;
+
+        state_pointers[state_init] = &Machine_master_class::init;
+        state_pointers[state_idle] = &Machine_master_class::idle;
+        state_pointers[state_start] = &Machine_master_class::start;
+        state_pointers[state_CT_test] = &Machine_master_class::CT_test;
+        state_pointers[state_Lgrid_meas] = &Machine_master_class::Lgrid_meas;
+        state_pointers[state_operational] = &Machine_master_class::operational;
+
+        for(Uint16 i = 0; i < state_max; i++)
+            if(Machine_master_class::state_pointers[i] == NULL) ESTOP0;
+    }
+
+    private:
+    static void init();
+    static void idle();
+    static void start();
+    static void CT_test();
+    static void Lgrid_meas();
+    static void operational();
+
+    static void (*state_pointers[state_max])();
+};
+
+class Machine_slave_class
 {
     public:
 
@@ -124,8 +171,6 @@ class Machine_class
         state_calibrate_AC_voltage_gain,
         state_calibrate_DC_voltage_gain,
         state_start,
-        state_CT_test,
-        state_Lgrid_meas,
         state_operational,
         state_cleanup,
         state_max,
@@ -134,25 +179,23 @@ class Machine_class
 
     enum state_enum state, state_last;
 
-    Machine_class()
+    Machine_slave_class()
     {
         for(Uint16 i = 0; i < state_max; i++)
-            Machine_class::state_pointers[i] = NULL;
+            Machine_slave_class::state_pointers[i] = NULL;
 
-        state_pointers[state_init] = &Machine_class::init;
-        state_pointers[state_idle] = &Machine_class::idle;
-        state_pointers[state_calibrate_offsets] = &Machine_class::calibrate_offsets;
-        state_pointers[state_calibrate_curent_gain] = &Machine_class::calibrate_curent_gain;
-        state_pointers[state_calibrate_AC_voltage_gain] = &Machine_class::calibrate_AC_voltage_gain;
-        state_pointers[state_calibrate_DC_voltage_gain] = &Machine_class::calibrate_DC_voltage_gain;
-        state_pointers[state_start] = &Machine_class::start;
-        state_pointers[state_CT_test] = &Machine_class::CT_test;
-        state_pointers[state_Lgrid_meas] = &Machine_class::Lgrid_meas;
-        state_pointers[state_operational] = &Machine_class::operational;
-        state_pointers[state_cleanup] = &Machine_class::cleanup;
+        state_pointers[state_init] = &Machine_slave_class::init;
+        state_pointers[state_idle] = &Machine_slave_class::idle;
+        state_pointers[state_calibrate_offsets] = &Machine_slave_class::calibrate_offsets;
+        state_pointers[state_calibrate_curent_gain] = &Machine_slave_class::calibrate_curent_gain;
+        state_pointers[state_calibrate_AC_voltage_gain] = &Machine_slave_class::calibrate_AC_voltage_gain;
+        state_pointers[state_calibrate_DC_voltage_gain] = &Machine_slave_class::calibrate_DC_voltage_gain;
+        state_pointers[state_start] = &Machine_slave_class::start;
+        state_pointers[state_operational] = &Machine_slave_class::operational;
+        state_pointers[state_cleanup] = &Machine_slave_class::cleanup;
 
         for(Uint16 i = 0; i < state_max; i++)
-            if(Machine_class::state_pointers[i] == NULL) ESTOP0;
+            if(Machine_slave_class::state_pointers[i] == NULL) ESTOP0;
     }
 
     private:
@@ -163,8 +206,6 @@ class Machine_class
     static void calibrate_AC_voltage_gain();
     static void calibrate_DC_voltage_gain();
     static void start();
-    static void CT_test();
-    static void Lgrid_meas();
     static void operational();
     static void cleanup();
 
@@ -183,7 +224,8 @@ struct CT_calc_struct
 
 extern struct L_grid_meas_struct L_grid_meas;
 extern struct CT_calc_struct CT_char_vars;
-extern class Machine_class Machine;
+extern class Machine_slave_class Machine_slave;
+extern class Machine_master_class Machine_master;
 extern struct time_BCD_struct RTC_current_time;
 extern struct time_BCD_struct RTC_new_time;
 

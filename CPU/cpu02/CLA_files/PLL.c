@@ -5,7 +5,7 @@
 void PLL_calc()
 {
     struct abg_struct U_grid;
-    abc_ab(U_grid, Meas_master.U_grid_avg);
+    abc_ab(U_grid, Meas_ACDC.U_grid_avg);
 
     switch (PLL.state)
     {

@@ -55,9 +55,9 @@ extern struct Timer_PWM_struct Timer_PWM;
 
 extern struct CLA1toCLA2_struct CLA1toCLA2;
 
-extern struct Measurements_master_struct Meas_master;
-extern struct Measurements_master_gain_offset_struct Meas_master_gain;
-extern struct Measurements_master_gain_offset_struct Meas_master_offset;
+extern struct Measurements_ACDC_struct Meas_ACDC;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset;
 extern struct EMIF_SD_struct EMIF_CLA;
 
 //

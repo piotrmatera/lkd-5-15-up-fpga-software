@@ -71,15 +71,15 @@ void Init_class::clear_alarms()
     CPU1toCPU2.clear_alarms = 0.0f;
 
     DELAY_US(1000);
-    union ALARM_master alarm_temp = alarm_master;
-    alarm_master_snapshot.all[0] =
-    alarm_master_snapshot.all[1] =
-    alarm_master_snapshot.all[2] =
-    alarm_master.all[0] =
-    alarm_master.all[1] =
-    alarm_master.all[2] = 0;
-    alarm_master.bit.Not_enough_data_master = alarm_temp.bit.Not_enough_data_master;
-    alarm_master.bit.FPGA_parameters = alarm_temp.bit.FPGA_parameters;
+    union ALARM_ACDC alarm_temp = alarm_ACDC;
+    alarm_ACDC_snapshot.all[0] =
+    alarm_ACDC_snapshot.all[1] =
+    alarm_ACDC_snapshot.all[2] =
+    alarm_ACDC.all[0] =
+    alarm_ACDC.all[1] =
+    alarm_ACDC.all[2] = 0;
+    alarm_ACDC.bit.Not_enough_data_master = alarm_temp.bit.Not_enough_data_master;
+    alarm_ACDC.bit.FPGA_parameters = alarm_temp.bit.FPGA_parameters;
 }
 
 void Init_class::ADC()
@@ -307,20 +307,20 @@ void Init_class::Variables()
     Conv.f_filter = 50.0f;
     float full_OSR = (Uint16)(1.0f / Conv.f_filter / Conv.Ts + 0.5f);
 
-    Meas_alarm_L.U_grid_rms = 5.0f;
-    Meas_alarm_H.U_grid_abs = 380.0f;
+    Meas_ACDC_alarm_L.U_grid_rms = 5.0f;
+    Meas_ACDC_alarm_H.U_grid_abs = 380.0f;
 
-    Meas_alarm_H.Temp = 95.0f;
-    Meas_alarm_L.Temp = -40.0f;
+    Meas_ACDC_alarm_H.Temp = 95.0f;
+    Meas_ACDC_alarm_L.Temp = -40.0f;
 
-    Meas_alarm_H.U_dc = 750.0f;
-    Meas_alarm_L.U_dc = -5.0f;
-    Meas_alarm_H.U_dc_balance = 30.0f;
+    Meas_ACDC_alarm_H.U_dc = 750.0f;
+    Meas_ACDC_alarm_L.U_dc = -5.0f;
+    Meas_ACDC_alarm_H.U_dc_balance = 30.0f;
 
-    Meas_alarm_H.I_conv_rms = Conv.I_lim_nominal * 1.1f;
-    float min_Current = fabsf(Meas_master_gain.def_osr * Meas_master_gain.def_osr / Meas_master_gain.sd_shift * fminf(Meas_master_gain.I_conv.a, fminf(Meas_master_gain.I_conv.b, fminf(Meas_master_gain.I_conv.c, Meas_master_gain.I_conv.n))));
-    Meas_alarm_H.I_conv = fminf(min_Current - 10.0f, Conv.I_lim_nominal * 2.0f);
-    Meas_alarm_L.I_conv = -Meas_alarm_H.I_conv;
+    Meas_ACDC_alarm_H.I_conv_rms = Conv.I_lim_nominal * 1.1f;
+    float min_Current = fabsf(Meas_ACDC_gain.def_osr * Meas_ACDC_gain.def_osr / Meas_ACDC_gain.sd_shift * fminf(Meas_ACDC_gain.I_conv.a, fminf(Meas_ACDC_gain.I_conv.b, fminf(Meas_ACDC_gain.I_conv.c, Meas_ACDC_gain.I_conv.n))));
+    Meas_ACDC_alarm_H.I_conv = fminf(min_Current - 10.0f, Conv.I_lim_nominal * 2.0f);
+    Meas_ACDC_alarm_L.I_conv = -Meas_ACDC_alarm_H.I_conv;
 
     ///////////////////////////////////////////////////////////////////
 
@@ -328,15 +328,15 @@ void Init_class::Variables()
     while (full_OSR / decimation > 100.0f) decimation++;
     Uint16 OSR_calib = full_OSR / decimation + 0.5f;
     CIC2_filter(&CIC2_calibration, 35.0f, OSR_calib, decimation);
-    CIC2_calibration_input.ptr = &Meas_master.I_grid.b;
+    CIC2_calibration_input.ptr = &Meas_ACDC.I_grid.b;
 
     CIC1_adaptive_global__50Hz.Ts = Conv.Ts;
 
     ///////////////////////////////////////////////////////////////////
 
     FAN.on_duty = 0.5f;
-    FAN.on_temp = Meas_alarm_H.Temp - 35.0f;
-    FAN.full_temp = Meas_alarm_H.Temp - 5.0f;
+    FAN.on_temp = Meas_ACDC_alarm_H.Temp - 35.0f;
+    FAN.full_temp = Meas_ACDC_alarm_H.Temp - 5.0f;
     FAN.slope = (1.0f - FAN.on_duty)/(FAN.full_temp - FAN.on_temp);
 
     ///////////////////////////////////////////////////////////////////
@@ -796,7 +796,7 @@ void Init_class::PWMs()
 void Init_class::Fan_speed()
 {
     static volatile float Temp_fan = 0;
-    Temp_fan = fmaxf(Meas_master.Temperature1,  fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
+    Temp_fan = fmaxf(Meas_ACDC.Temperature1,  fmaxf(Meas_ACDC.Temperature2, Meas_ACDC.Temperature3));
     static volatile float duty_f;
     duty_f = fminf(fmaxf((Temp_fan - FAN.on_temp) * FAN.slope + FAN.on_duty, 0.0f), 1.0f);
     static volatile float duty_f2;

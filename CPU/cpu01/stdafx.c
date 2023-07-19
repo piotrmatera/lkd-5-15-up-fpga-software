@@ -17,10 +17,10 @@ struct Thermistor_struct Therm;
 
 union CONTROL_EXT_MODBUS control_ext_modbus;
 
-struct CONTROL_master control_master;
-struct STATUS_master status_master;
-union ALARM_master alarm_master;
-union ALARM_master alarm_master_snapshot;
+struct CONTROL_ACDC control_ACDC;
+struct STATUS_ACDC status_ACDC;
+union ALARM_ACDC alarm_ACDC;
+union ALARM_ACDC alarm_ACDC_snapshot;
 
 struct Timer_PWM_struct Timer_PWM;
 
@@ -28,13 +28,13 @@ struct CIC2_struct CIC2_calibration;
 CLA_FPTR CIC2_calibration_input;
 struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
 
-struct Measurements_master_struct Meas_master;
-struct Measurements_master_gain_offset_struct Meas_master_gain_error;
-struct Measurements_master_gain_offset_struct Meas_master_offset_error;
-struct Measurements_master_gain_offset_struct Meas_master_gain;
-struct Measurements_master_gain_offset_struct Meas_master_offset;
-struct Measurements_alarm_struct Meas_alarm_H;
-struct Measurements_alarm_struct Meas_alarm_L;
+struct Measurements_ACDC_struct Meas_ACDC;
+struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain_error;
+struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset_error;
+struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain;
+struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset;
+struct Measurements_ACDC_alarm_struct Meas_ACDC_alarm_H;
+struct Measurements_ACDC_alarm_struct Meas_ACDC_alarm_L;
 
 struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];

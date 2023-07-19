@@ -134,21 +134,21 @@ extern struct Energy_meter_struct Energy_meter;
 
 extern struct Thermistor_struct Therm;
 
-extern struct Measurements_master_struct Meas_master;
-extern struct Measurements_master_gain_offset_struct Meas_master_gain_error;
-extern struct Measurements_master_gain_offset_struct Meas_master_offset_error;
-extern struct Measurements_master_gain_offset_struct Meas_master_gain;
-extern struct Measurements_master_gain_offset_struct Meas_master_offset;
-extern struct Measurements_alarm_struct Meas_alarm_H;
-extern struct Measurements_alarm_struct Meas_alarm_L;
+extern struct Measurements_ACDC_struct Meas_ACDC;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain_error;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset_error;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset;
+extern struct Measurements_ACDC_alarm_struct Meas_ACDC_alarm_H;
+extern struct Measurements_ACDC_alarm_struct Meas_ACDC_alarm_L;
 extern struct EMIF_SD_struct EMIF_CLA;
 
 extern union CONTROL_EXT_MODBUS control_ext_modbus;
 
-extern struct CONTROL_master control_master;
-extern struct STATUS_master status_master;
-extern union ALARM_master alarm_master;
-extern union ALARM_master alarm_master_snapshot;
+extern struct CONTROL_ACDC control_ACDC;
+extern struct STATUS_ACDC status_ACDC;
+extern union ALARM_ACDC alarm_ACDC;
+extern union ALARM_ACDC alarm_ACDC_snapshot;
 
 extern struct CIC2_struct CIC2_calibration;
 extern CLA_FPTR CIC2_calibration_input;

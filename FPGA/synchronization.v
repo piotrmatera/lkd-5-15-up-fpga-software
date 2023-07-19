@@ -652,22 +652,21 @@ module Slave_sync(clk_i, msg_rdy_i,
 		endcase 
 	end
  
-		initial begin
-			local_counter_update_condition = 0;
-			local_counter_error_last = 0;
-			local_counter_error = 0;
-			local_counter_error2 = 0;
-			local_counter_error3 = 0;
-			local_counter_error4 = 0;
-			shift_start_o = 0;
-			sync_rdy_o = 0;
-			sync_counter = 0;
-			timeout_counter = 0;
-			shift_value_o = 0;
-			state_reg = 0; 
-			Kalman_offset_o = 0; 
-			Kalman_offset_predict = 0; 
-			Kalman_rate_o = 0;
-		end
-
+	initial begin
+		local_counter_update_condition = 0;
+		local_counter_error_last = 0;
+		local_counter_error = 0;
+		local_counter_error2 = 0;
+		local_counter_error3 = 0;
+		local_counter_error4 = 0;
+		shift_start_o = 0;
+		sync_rdy_o = 0;
+		sync_counter = 0;
+		timeout_counter = 0;
+		shift_value_o = 0;
+		state_reg = 0; 
+		Kalman_offset_o = 0; 
+		Kalman_offset_predict = 0; 
+		Kalman_rate_o = 0;
+	end
 endmodule

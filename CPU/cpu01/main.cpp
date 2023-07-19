@@ -108,14 +108,17 @@ void main()
 
     mosfet_ctrl_app.init();
 
-    if(EMIF_mem.read.cycle_period != CYCLE_PERIOD) alarm_master.bit.FPGA_parameters = 1;
-    if(EMIF_mem.read.control_rate != CONTROL_RATE) alarm_master.bit.FPGA_parameters = 1;
+    if(EMIF_mem.read.cycle_period != CYCLE_PERIOD) alarm_ACDC.bit.FPGA_parameters = 1;
+    if(EMIF_mem.read.control_rate != CONTROL_RATE) alarm_ACDC.bit.FPGA_parameters = 1;
 
-    Machine.state = Machine_class::state_init;
+    Machine_slave.state = Machine_slave_class::state_init;
+    Machine_master.state = Machine_master_class::state_init;
+
     while(1)
     {
-        Machine.Main();
-        Machine.Background();
+        Machine_slave.Main();
+        Machine_master.Main();
+        Machine_slave.Background();
 
         int32 max_period = (int32)EMIF_mem.read.cycle_period - 1L;
         int32 SD_phase_temp = SD_phase;
