@@ -43,15 +43,15 @@ PAGE 0 :
 
    /* Flash sectors */
 	#ifdef _BOOTLOADER
-   BEGIN		    : origin = 0x084000,   length = 0x000002
-   FLASHC           : origin = 0x084002,   length = 0x001FFE
+   BEGIN		    : origin = 0x086000,   length = 0x000002
+   //FLASHC           : origin = 0x084002,   length = 0x001FFE
 	#else
    BEGIN     		: origin = 0x080000,   length = 0x000002
    FLASHA           : origin = 0x080002,   length = 0x001FFE
    FLASHB           : origin = 0x082000,   length = 0x002000
    FLASHC           : origin = 0x084000,   length = 0x002000
 	#endif
-   FLASHD           : origin = 0x086000,   length = 0x002000
+   FLASHD           : origin = 0x086002,   length = 0x001FFE
    FLASHE           : origin = 0x088000,   length = 0x018000
    //FLASHF           : origin = 0x090000,   length = 0x008000
    //FLASHG           : origin = 0x098000,   length = 0x008000
@@ -85,16 +85,16 @@ SECTIONS
 
    codestart: 	>  BEGIN: {_start_code=.;}
    /* Allocate program areas: */
-   .binit:   	>  FLASHC
-   .cinit:   	>  FLASHC
-   .pinit:   	>  FLASHC,   PAGE = 0
+   .binit:   	>  FLASHD
+   .cinit:   	>  FLASHD
+   .pinit:   	>  FLASHD,   PAGE = 0
    .text:    	>  FLASHE
    .TI.ramfunc: {-l F021_API_F2837xD_FPU32.lib} LOAD = FLASHE
                      RUN = RAMGS0_3,
                      table(BINIT)
 
    /* Initalized sections go in Flash */
-   .switch:  	>  FLASHC,   PAGE = 0
+   .switch:  	>  FLASHD,   PAGE = 0
    .econst:  	>  FLASHE
 
    .files_ro:   >  FLASHJ
@@ -123,7 +123,7 @@ SECTIONS
                    RUN  = RAMLS0_2, PAGE = 0
                    table(BINIT)
 
-   .const_cla: 	   LOAD = FLASHC, PAGE = 0
+   .const_cla: 	   LOAD = FLASHD, PAGE = 0
                    RUN  = RAMLS3_5, PAGE = 0
                    table(BINIT)
 
