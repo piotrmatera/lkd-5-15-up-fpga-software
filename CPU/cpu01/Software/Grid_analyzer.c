@@ -1,8 +1,8 @@
 // Tomasz �wi�chowicz swiechowicz.tomasz@gmail.com
 
-#include "stdafx.h"
-#include "math.h"
+#include <math.h>
 
+#include "stdafx.h"
 
 #pragma CODE_SECTION(CIC1_adaptive_filter_CPU, ".TI.ramfunc");
 float CIC1_adaptive_filter_CPU(struct CIC1_adaptive_global_struct *CIC_global, struct CIC1_adaptive_struct *CIC, float input)

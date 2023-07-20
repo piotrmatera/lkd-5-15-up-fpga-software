@@ -38,7 +38,7 @@ struct EMIF_SD_struct
     int16 I_conv_n;
 };
 
-union FPGA_master_sync_flags_union
+union FPGA_ACDC_sync_flags_union
 {
     Uint32 all;
     struct
@@ -70,9 +70,9 @@ union FPGA_master_sync_flags_union
         Uint16 node_number:3;
         Uint16 node_number_rdy:1;
         Uint16 sync_rdy:1;
-        Uint16 master_slave_selector:1;
         Uint16 master_rdy:1;
-        Uint16 rsvd:1;
+        Uint16 rx1_port_rdy:1;
+        Uint16 rx2_port_rdy:1;
     }bit;
 };
 
@@ -248,7 +248,7 @@ union EMIF_union
         struct EMIF_SD_struct SD_new;
         struct EMIF_SD_struct SD_avg;
         union FPGA_master_flags_union FPGA_flags;
-        union FPGA_master_sync_flags_union Sync_flags;
+        union FPGA_ACDC_sync_flags_union Sync_flags;
         //16 Uint32
         Uint32 SD_sync_val;
         Uint32 dsc;

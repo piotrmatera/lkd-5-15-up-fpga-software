@@ -19,8 +19,6 @@
 #include "diskio.h"
 #include "Scope.h"
 #include "SD_card.h"
-#include "State.h"
-
 #include "Fiber_comm_master.h"
 
 #include "MosfetCtrlApp.h"
@@ -734,11 +732,14 @@ Uint16 SD_card_class::read_settings()
         if(!strncmp(working_buffer, "I", sizeof("I")-1))
             settings.I_lim = value;
 
+        if(!strncmp(working_buffer, "NUMBER OF SLAVES", sizeof("NUMBER OF SLAVES")-1))
+            settings.number_of_slaves = value;
     }
     if(fresult = f_close(&fil)) return fresult;
 
     if(settings.modbus_ext_server_id <1 || settings.modbus_ext_server_id>230 )
         settings.modbus_ext_server_id = 1;
+    if(settings.number_of_slaves < 0.0f || settings.number_of_slaves > 4.0f) return fresult;
     if(settings.control.tangens_range[0].a < -1.0f || settings.control.tangens_range[0].a > 1.0f) return fresult;
     if(settings.control.tangens_range[0].b < -1.0f || settings.control.tangens_range[0].b > 1.0f) return fresult;
     if(settings.control.tangens_range[0].c < -1.0f || settings.control.tangens_range[0].c > 1.0f) return fresult;
@@ -867,6 +868,12 @@ Uint16 SD_card_class::save_settings()
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.I_lim);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
+
+    f_puts("NUMBER OF SLAVES;", &fil);
+    snprintf(working_buffer, WBUF_SIZE, "%g", settings.number_of_slaves);
+    f_puts(working_buffer, &fil);
+    f_putc('\n', &fil);
+
     fresult = f_close(&fil);
     return fresult;
 }

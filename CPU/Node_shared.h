@@ -148,7 +148,7 @@ struct STATUS_ACDC
 {
     Uint16 Init_done:1;
     Uint16 ONOFF:1;
-    Uint16 dummy1:8;
+    Uint16 rsvd1:8;
     Uint16 calibration_procedure_error:1;
     Uint16 L_grid_measured:1;
     Uint16 Scope_snapshot_pending:1;
@@ -159,7 +159,7 @@ struct STATUS_ACDC
     Uint16 SD_no_calibration : 1;
     Uint16 SD_no_harmonic_settings : 1;
     Uint16 SD_no_settings : 1;
-    Uint16 dummy2:5;
+    Uint16 rsvd2:5;
     Uint16 in_limit_Q : 1;
     Uint16 in_limit_P : 1;
     Uint16 in_limit_H : 1;
@@ -183,12 +183,18 @@ struct STATUS_ACDC
     Uint16 slave_rdy_3 : 1;
 
     Uint16 master_rdy : 1;
-    Uint16 master_slave_selector : 1;
+    Uint16 rx1_port_rdy : 1;
+    Uint16 rx2_port_rdy : 1;
 
-    Uint16 dummy4 : 1;
     //48
     Uint16 error_retry : 4;
-    Uint16 rsvd : 12;
+    Uint16 expected_number_of_slaves : 4;
+
+    Uint16 rsvd3 : 1;
+    Uint16 master_slave_selector : 1;
+    Uint16 incorrect_number_of_slaves : 1;
+
+    Uint16 rsvd4 : 5;
 };
 
 struct CONTROL_ACDC
@@ -220,7 +226,7 @@ struct CONTROL_ACDC
         struct
         {
             Uint16 Scope_snapshot:1;
-            Uint16 dummy:1;
+            Uint16 save_to_RTC:1;
             Uint16 SD_save_H_settings:1;
             Uint16 SD_save_settings:1;
             Uint16 CPU_reset:1;

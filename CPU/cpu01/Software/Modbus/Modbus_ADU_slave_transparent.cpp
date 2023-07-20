@@ -6,13 +6,13 @@
  */
 #include <string.h>
 
-#include <Modbus_ADU_slave_transparent.h>
+#include "Modbus_ADU_slave_transparent.h"
+#include "State_master.h"
+#include "State_slave.h"
 #include "Modbus_Converter_memory.h"
 
 #include "Modbus_RTU.h"
 #include "SD_card.h"
-#include "State.h"
-
 #include "Modbus_ADU_api.h"
 
 
@@ -439,7 +439,7 @@ void Modbus_ADU_slave_transparent::Fcn_after_processed()
         Uint16 time_size = sizeof(Modbus_Converter.holding_registers.RTC_new_time);
         if(Mdb_slave_ADU.start_address <= time_offset && Mdb_slave_ADU.end_address >= time_offset + time_size - 1)
         {
-            Machine_slave.save_to_RTC = 1;
+            control_ACDC.triggers.bit.save_to_RTC = 1;
         }
     }
 

@@ -5,11 +5,12 @@
  *      Author: MrTea
  */
 
+#include "State_master.h"
+#include "State_slave.h"
 #include "Fiber_comm_master.h"
 #include "Modbus_devices.h"
 #include "version.h"
 #include "diskio.h"
-#include "State.h"
 #include "Scope.h"
 
 class Fiber_comm_master_class Fiber_comm_master[4];

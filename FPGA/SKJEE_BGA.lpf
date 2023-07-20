@@ -37,6 +37,7 @@ LOCATE COMP "CPU_io[23]" SITE "G1" ;
 LOCATE COMP "CPU_io[36]" SITE "D19" ;
 LOCATE COMP "CPU_io[84]" SITE "W1" ;
 LOCATE COMP "CPU_io[133]" SITE "L18" ;
+LOCATE COMP "CPU_clk_o" SITE "K20" ;
 /////////////////////////////////////// EMIF_DATA
 LOCATE COMP "CPU_io[85]" SITE "U18" ;
 LOCATE COMP "CPU_io[83]" SITE "T18" ;

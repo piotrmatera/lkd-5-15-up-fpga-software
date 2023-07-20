@@ -6,13 +6,13 @@
  */
 
 
+#include "State_master.h"
+#include "State_slave.h"
 #include "Modbus_ADU_slave_translated.h"
 #include "Modbus_Converter_memory.h"
 
 #include "Modbus_RTU.h"
 #include "SD_card.h"
-#include "State.h"
-
 #include "Modbus_ADU_api.h"
 
 Modbus_ADU_slave_translated::Modbus_ADU_slave_translated( Uint8 slave_address,

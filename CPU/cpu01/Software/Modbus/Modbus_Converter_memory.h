@@ -4,10 +4,10 @@
 #define SOFTWARE_MODBUS_CONVERTER_MEMORY_H_
 
 #include <limits.h>
-#include "Modbus_ADU_slave.h"
+
 #include "stdafx.h"
-#include "State.h"
-#include "ff.h"
+#include "State_background.h"
+#include "Modbus_ADU_slave.h"
 
 struct Modbus_Converter_memory_struct
 {

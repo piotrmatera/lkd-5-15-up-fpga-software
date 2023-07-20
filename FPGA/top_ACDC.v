@@ -133,12 +133,10 @@
 //H18 -> D12 
 //C17 -> D17 
  
-//`define BGA
-`define HLQFP
- 
-module top_ACDC(CPU_io, FPGA_io); 
+module top_ACDC(CPU_io, FPGA_io, CPU_clk_o); 
 	inout[168:0] CPU_io;  
 	inout[400:1] FPGA_io; 
+	output CPU_clk_o/*synthesis IO_TYPE="LVCMOS33"*/;  
   	parameter INITIAL_COUNTER = 0;
 	
 	integer i;  
@@ -146,13 +144,7 @@ module top_ACDC(CPU_io, FPGA_io);
 	BB BB_XTAL_25MHz(.I(1'b0), .T(1'b1), .O(XTAL_25MHz_i), .B(FPGA_io[`G+2]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_XTAL_20MHz(.I(1'b0), .T(1'b1), .O(XTAL_20MHz_i), .B(FPGA_io[`G+3]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;
 	
-	`ifdef BGA 
-		BB BB_CLK_CPU(.I(XTAL_20MHz_i), .T(1'b0), .O(), .B(FPGA_io[`K+20]))/*synthesis IO_TYPE="LVCMOS33"*/;  
-	`endif
-	`ifdef HLQFP 
-		BB BB_CLK_CPU(.I(XTAL_20MHz_i), .T(1'b0), .O(), .B(FPGA_io[`P+16]))/*synthesis IO_TYPE="LVCMOS33"*/;  
-	`endif
-	assign XTAL_20MHz_i2 = XTAL_20MHz_i; 
+	assign CPU_clk_o = XTAL_20MHz_i;
 	 
 	GSR GSR_INST (.GSR (1'b1));  
 	PUR PUR_INST (.PUR (1'b1));  
@@ -821,7 +813,7 @@ module top_ACDC(CPU_io, FPGA_io);
 	reg tx2_code_start_last = 0;
 	reg[8:0] tx2_code_start_delay_counter = 0;
 	always @(posedge clk_5x) begin
-		master_slave_selector <= !rx1_port_rdy && rx2_port_rdy;
+		master_slave_selector <= !rx1_port_rdy;
 		
 		tx2_code_start_last <= tx2_code_start;
 		if((tx2_code_start && !tx2_code_start_last) | (|tx2_code_start_delay_counter)) tx2_code_start_delay_counter <= tx2_code_start_delay_counter + 1'b1;
@@ -1053,7 +1045,7 @@ module top_ACDC(CPU_io, FPGA_io);
 	assign EMIF_TX_mux[13] = SD_dat_avg[4*32 +: 32]; 
 	assign EMIF_TX_mux[14] = SD_dat_avg[5*32 +: 16]; 
 	assign EMIF_TX_mux[15] = {{32-FAULT_NUMBER{1'b0}}, FLT_REG_O};  
-	assign EMIF_TX_mux[16] = {1'b0, master_rdy, master_slave_selector, sync_rdy, node_number_rdy, node_number, slave_rdy, sync_ok, rx_ok};
+	assign EMIF_TX_mux[16] = {rx2_port_rdy, rx1_port_rdy, master_rdy, sync_rdy, node_number_rdy, node_number, slave_rdy, sync_ok, rx_ok};
 	assign EMIF_TX_mux[17] = EMIF_RX_reg[2]; 
 	assign EMIF_TX_mux[18] = `VERSION; 
 	assign EMIF_TX_mux[19] = Scope_data_out[31:0]; 

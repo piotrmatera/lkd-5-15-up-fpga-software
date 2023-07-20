@@ -6,17 +6,19 @@
  */
 
 #include <math.h>
+
 #include "stdafx.h"
+
+#include "State_master.h"
+#include "State_background.h"
+
 #include "HWIs.h"
 #include "Scope.h"
-#include "State.h"
 #include "SD_card.h"
 #include "Modbus_devices.h"
-#include "Modbus_Converter_memory.h"
-#include "version.h"
 
 #pragma CODE_SECTION(".TI.ramfunc");
-interrupt void SD_AVG_NT()
+interrupt void SD_AVG_INT()
 {
     Timer_PWM.CPU_SD = TIMESTAMP_PWM;
 
@@ -242,7 +244,7 @@ interrupt void SD_AVG_NT()
         static Uint16 decimation = 0;
 
         static float trigger_temp;
-        trigger_temp = Machine_slave.state == Machine_master_class::state_Lgrid_meas;
+        trigger_temp = Machine_master.state == Machine_master_class::state_Lgrid_meas;
         static float* volatile trigger_pointer = &trigger_temp;
         static volatile float trigger_val = (float)Machine_master_class::state_Lgrid_meas;
         static volatile float edge = 1;
@@ -304,35 +306,22 @@ interrupt void SD_AVG_NT()
 
     Timer_PWM.CPU_GRID = TIMESTAMP_PWM;
 
-//    static volatile union double_pulse_union
-//    {
-//       Uint32 u32;
-//       Uint16 u16[2];
-//    }double_pulse = {.u16 = {700, 15}};
-//    EMIF_mem.write.double_pulse = double_pulse.u32;
-//
-//    static volatile float counter = 0;
-//    if(Machine.ONOFF != Machine.ONOFF_last)
-//    {
-//        counter = 0;
-//        GPIO_SET(PWM_EN_CM);
-//    }
-//    counter += Conv.Ts;
-//    if(counter >= 1.0f)
-//    {
-//       GPIO_CLEAR(PWM_EN_CM);
-//    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     static Uint32 zeroes[7] = {0,0,0,0,0,0,0};
 
-    static volatile union FPGA_master_sync_flags_union Sync_flags;
+    static volatile union FPGA_ACDC_sync_flags_union Sync_flags;
     Sync_flags.all = EMIF_mem.read.Sync_flags.all;
-    status_ACDC.master_slave_selector = Sync_flags.bit.master_slave_selector;
+    status_ACDC.master_slave_selector = !Sync_flags.bit.rx1_port_rdy;
     status_ACDC.master_rdy = Sync_flags.bit.master_rdy;
     status_ACDC.slave_rdy_0 = Sync_flags.bit.slave_rdy_0;
     status_ACDC.slave_rdy_1 = Sync_flags.bit.slave_rdy_1;
     status_ACDC.slave_rdy_2 = Sync_flags.bit.slave_rdy_2;
     status_ACDC.slave_rdy_3 = Sync_flags.bit.slave_rdy_3;
+    status_ACDC.rx1_port_rdy = Sync_flags.bit.rx1_port_rdy;
+    status_ACDC.rx2_port_rdy = Sync_flags.bit.rx2_port_rdy;
+    register Uint16 number_of_slaves = Sync_flags.bit.slave_rdy_0 + Sync_flags.bit.slave_rdy_1 + Sync_flags.bit.slave_rdy_2 + Sync_flags.bit.slave_rdy_3;
+    status_ACDC.incorrect_number_of_slaves = number_of_slaves != status_ACDC.expected_number_of_slaves;
 
     if(status_ACDC.master_slave_selector)
     {
@@ -453,8 +442,35 @@ interrupt void SD_AVG_NT()
         Conv.ratio_node = Conv.ratio[Sync_flags.bit.node_number];
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //    static volatile union double_pulse_union
+    //    {
+    //       Uint32 u32;
+    //       Uint16 u16[2];
+    //    }double_pulse = {.u16 = {700, 15}};
+    //    EMIF_mem.write.double_pulse = double_pulse.u32;
+    //
+    //    static volatile float counter = 0;
+    //    if(Machine.ONOFF != Machine.ONOFF_last)
+    //    {
+    //        counter = 0;
+    //        GPIO_SET(PWM_EN_CM);
+    //    }
+    //    counter += Conv.Ts;
+    //    if(counter >= 1.0f)
+    //    {
+    //       GPIO_CLEAR(PWM_EN_CM);
+    //    }
+
     GPIO_CLEAR(TRIGGER_CM);
 
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
     Timer_PWM.CPU_END = TIMESTAMP_PWM;
+}
+
+#pragma CODE_SECTION(".TI.ramfunc");
+interrupt void NMI_INT()
+{
+    ESTOP0;
 }

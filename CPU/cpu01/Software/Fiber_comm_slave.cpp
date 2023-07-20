@@ -63,7 +63,7 @@ void Fiber_comm_slave_class::modbus_request_mosi()
     }
     if(msg.modbus_data_frame.modbus_header.start_address + msg.modbus_data_frame.modbus_header.packet_length == msg.modbus_data_frame.modbus_header.total_length)
     {
-        union FPGA_master_sync_flags_union Sync_flags;
+        union FPGA_ACDC_sync_flags_union Sync_flags;
         Sync_flags.all = EMIF_mem.read.Sync_flags.all;
         if(Sync_flags.bit.node_number_rdy)
         {
@@ -128,7 +128,7 @@ void Fiber_comm_slave_class::async_data_mosi()
 
 void Fiber_comm_slave_class::Send(Uint16 length, enum comm_func_enum comm_func)
 {
-    union FPGA_master_sync_flags_union Sync_flags;
+    union FPGA_ACDC_sync_flags_union Sync_flags;
     Sync_flags.all = EMIF_mem.read.Sync_flags.all;
     Uint16 node_number = Sync_flags.bit.node_number;
 
@@ -154,7 +154,7 @@ void Fiber_comm_slave_class::Send(Uint16 length, enum comm_func_enum comm_func)
 
 Uint16 Fiber_comm_slave_class::Receive()
 {
-    union FPGA_master_sync_flags_union Sync_flags;
+    union FPGA_ACDC_sync_flags_union Sync_flags;
     union COMM_flags_union COMM_flags;
     Sync_flags.all = EMIF_mem.read.Sync_flags.all;
     COMM_flags.all = EMIF_mem.read.rx_rdy.all;

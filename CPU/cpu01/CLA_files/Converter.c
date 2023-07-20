@@ -442,7 +442,7 @@ void Converter_calc_slave()
 
             //////////////////////////////////////////////////////////////////////////////////
 
-            if (Conv.enable_H_comp_local)
+            if (Conv.enable_H_comp_local * Conv.RDY2)
             {
                 if(Conv.PI_I_harm_ratio[3].lim_H != 1.0f)
                 {
@@ -473,7 +473,7 @@ void Converter_calc_slave()
             PI_antiwindup_CLAasm(&Conv.PI_I_harm_ratio[1], error.b);
             PI_antiwindup_CLAasm(&Conv.PI_I_harm_ratio[2], error.c);
 
-            if (Conv.PI_I_harm_ratio[0].out * Conv.PI_I_harm_ratio[1].out * Conv.PI_I_harm_ratio[2].out != 1.0f && Conv.enable_H_comp_local)
+            if (Conv.PI_I_harm_ratio[0].out * Conv.PI_I_harm_ratio[1].out * Conv.PI_I_harm_ratio[2].out != 1.0f && Conv.RDY2 * Conv.enable_H_comp_local)
                 status_ACDC.in_limit_H = 1;
             else status_ACDC.in_limit_H = 0;
             break;

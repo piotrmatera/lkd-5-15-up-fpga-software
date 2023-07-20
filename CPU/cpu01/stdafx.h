@@ -19,11 +19,12 @@ typedef float scope_data_type;
 //
 // Included Files
 //
+#include <stdint.h>
+
 #include "F28x_Project.h"
 
 #include "F2837xD_Cla_defines.h"
 #include "CLAmath.h"
-#include <stdint.h>
 
 #include "Controllers.h"
 #include "Converter.h"

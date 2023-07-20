@@ -2,29 +2,15 @@
 /*
  *  ======== main.c ========
  */
-#include <string.h>
+
 #include "stdafx.h"
+
+#include "State_background.h"
+#include "State_master.h"
+#include "State_slave.h"
+
 #include "Init.h"
 #include "HWIs.h"
-#include "State.h"
-#include "ff.h"
-#include "Rtc.h"
-#include "diskio.h"
-#include "Software/driver_mosfet/MosfetDriver.h"
-#include "MosfetCtrlApp.h"
-#include "math.h"
-
-Rtc rtc;
-FATFS fs;           /* Filesystem object */
-MosfetCtrlApp mosfet_ctrl_app;
-int32 SD_phase = -500;
-int32 FPGA_phase = 0;
-
-#pragma CODE_SECTION(".TI.ramfunc");
-interrupt void NMI_INT()
-{
-    ESTOP0;
-}
 
 void main()
 {
@@ -52,7 +38,7 @@ void main()
     InputXbarRegs.INPUT4SELECT = SD_AVG_CM;
     XintRegs.XINT1CR.bit.POLARITY = 0;
     XintRegs.XINT1CR.bit.ENABLE = 1;
-    PieVectTable.XINT1_INT = &SD_AVG_NT;
+    PieVectTable.XINT1_INT = &SD_AVG_INT;
     EDIS;
     PieCtrlRegs.PIEIER1.bit.INTx4 = 1;
     IER |= M_INT1;
@@ -82,44 +68,16 @@ void main()
 
     Init.ADC();
 
-    rtc.init();
-    rtc.process_event(Rtc::event_init);
-    RTC_new_time.second = 0;
-    RTC_new_time.second10 = 0;
-    RTC_new_time.minute = 9;
-    RTC_new_time.minute10 = 4;
-    RTC_new_time.hour = 1;
-    RTC_new_time.hour10 = 1;
-    RTC_new_time.day = 8;
-    RTC_new_time.day10 = 0;
-    RTC_new_time.month = 3;
-    RTC_new_time.month10 = 0;
-    RTC_new_time.year = 1;
-    RTC_new_time.year10 = 2;
-
-    FatFS_time.second_2 = 5;
-    FatFS_time.minute = 10;
-    FatFS_time.hour = 10;
-    FatFS_time.day = 10;
-    FatFS_time.month = 10;
-    FatFS_time.year = 10 + 20;
-
-    f_mount(&fs, "", 1);
-
-    mosfet_ctrl_app.init();
-
-    if(EMIF_mem.read.cycle_period != CYCLE_PERIOD) alarm_ACDC.bit.FPGA_parameters = 1;
-    if(EMIF_mem.read.control_rate != CONTROL_RATE) alarm_ACDC.bit.FPGA_parameters = 1;
-
-    Machine_slave.state = Machine_slave_class::state_init;
-    Machine_master.state = Machine_master_class::state_init;
+    Background.init();
 
     while(1)
     {
         Machine_slave.Main();
         Machine_master.Main();
-        Machine_slave.Background();
+        Background.Main();
 
+        static volatile int32 SD_phase = -500;
+        static volatile int32 FPGA_phase = 0;
         int32 max_period = (int32)EMIF_mem.read.cycle_period - 1L;
         int32 SD_phase_temp = SD_phase;
         if(SD_phase < 0) SD_phase_temp = max_period + SD_phase;

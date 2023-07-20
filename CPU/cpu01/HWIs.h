@@ -8,7 +8,8 @@
 #ifndef HWIS_H_
 #define HWIS_H_
 
-interrupt void SD_AVG_NT();
+interrupt void NMI_INT();
+interrupt void SD_AVG_INT();
 interrupt void TX_MSG2_INT();
 
 #endif /* HWIS_H_ */

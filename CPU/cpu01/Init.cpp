@@ -7,11 +7,16 @@
 
 #include <string.h>
 #include <math.h>
-#include "HWIs.h"
+
 #include "stdafx.h"
+
+#include "State_background.h"
+#include "State_master.h"
+#include "State_slave.h"
+
+#include "HWIs.h"
 #include "F2837xD_Ipc_drivers.h"
 #include "Init.h"
-#include "State.h"
 #include "SD_card.h"
 #include "version.h"
 
@@ -313,7 +318,7 @@ void Init_class::Variables()
     Meas_ACDC_alarm_H.Temp = 95.0f;
     Meas_ACDC_alarm_L.Temp = -40.0f;
 
-    Meas_ACDC_alarm_H.U_dc = 750.0f;
+    Meas_ACDC_alarm_H.U_dc = 150.0f;
     Meas_ACDC_alarm_L.U_dc = -5.0f;
     Meas_ACDC_alarm_H.U_dc_balance = 30.0f;
 
@@ -353,6 +358,12 @@ void Init_class::Variables()
     CIC1_filter(&Conv.P_conv_filter, 1000.0f, full_OSR, 1);
     CIC1_filter(&Conv.C_dc_filter, 0.1f, full_OSR, 1);
 
+    Conv.I_lim_prefilter.Ts_Ti =
+    Conv.I_lim_slave_prefilter[0].Ts_Ti =
+    Conv.I_lim_slave_prefilter[1].Ts_Ti =
+    Conv.I_lim_slave_prefilter[2].Ts_Ti =
+    Conv.I_lim_slave_prefilter[3].Ts_Ti = Conv.Ts / 0.02f;
+
     Conv.version_Q_comp_local_prefilter.a.Ts_Ti =
     Conv.version_Q_comp_local_prefilter.b.Ts_Ti =
     Conv.version_Q_comp_local_prefilter.c.Ts_Ti =
@@ -374,7 +385,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.I_lim = Conv.I_lim_nominal;
-    Conv.U_dc_ref = 700.0f;
+    Conv.U_dc_ref = 100.0f;
 
     CIC1_adaptive_filter(&Conv.CIC1_U_dc, 1000.0f, full_OSR);
 

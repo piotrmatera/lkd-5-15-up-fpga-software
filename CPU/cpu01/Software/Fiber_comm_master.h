@@ -8,8 +8,9 @@
 #ifndef FIBER_COMM_MASTER_H_
 #define FIBER_COMM_MASTER_H_
 
-#include "stdafx.h"
 #include <string.h>
+
+#include "stdafx.h"
 
 class Fiber_comm_master_class
 {

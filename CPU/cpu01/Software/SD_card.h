@@ -8,9 +8,12 @@
 #ifndef SD_CARD_H_
 #define SD_CARD_H_
 
+#include "State_master.h"
+#include "State_slave.h"
 #include "stdafx.h"
 #include "ff.h"
-#include "State.h"
+
+#define WBUF_SIZE 100
 
 class SD_card_class
 {
