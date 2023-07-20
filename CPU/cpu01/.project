@@ -4,6 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>Master_cpu02</project>
+		<project>SKJEE_cpu02</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
