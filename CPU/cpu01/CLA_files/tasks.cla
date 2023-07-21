@@ -59,9 +59,9 @@ void Grid_analyzer_filter_calc()
     Grid_filter.Q_grid_1h.c = Grid_filter_params.CIC1_Q_grid_1h[2].out;
     Grid_filter.average.Q_grid_1h = Grid_filter.Q_grid_1h.a + Grid_filter.Q_grid_1h.b + Grid_filter.Q_grid_1h.c;
 
-    Grid_filter.Q_load_1h.a = Grid_filter.Q_grid_1h.a + Grid_filter.Q_conv_1h.a;
-    Grid_filter.Q_load_1h.b = Grid_filter.Q_grid_1h.b + Grid_filter.Q_conv_1h.b;
-    Grid_filter.Q_load_1h.c = Grid_filter.Q_grid_1h.c + Grid_filter.Q_conv_1h.c;
+    Grid_filter.Q_load_1h.a = Grid_filter.Q_grid_1h.a + Conv.master.total.Q_conv_1h_filter.a;
+    Grid_filter.Q_load_1h.b = Grid_filter.Q_grid_1h.b + Conv.master.total.Q_conv_1h_filter.b;
+    Grid_filter.Q_load_1h.c = Grid_filter.Q_grid_1h.c + Conv.master.total.Q_conv_1h_filter.c;
     Grid_filter.average.Q_load_1h = Grid_filter.Q_load_1h.a + Grid_filter.Q_load_1h.b + Grid_filter.Q_load_1h.c;
 
 
@@ -80,9 +80,9 @@ void Grid_analyzer_filter_calc()
     Grid_filter.P_grid_1h.c = Grid_filter_params.CIC1_P_grid_1h[2].out;
     Grid_filter.average.P_grid_1h = Grid_filter.P_grid_1h.a + Grid_filter.P_grid_1h.b + Grid_filter.P_grid_1h.c;
 
-    Grid_filter.P_load_1h.a = Grid_filter.P_grid_1h.a + Grid_filter.P_conv_1h.a;
-    Grid_filter.P_load_1h.b = Grid_filter.P_grid_1h.b + Grid_filter.P_conv_1h.b;
-    Grid_filter.P_load_1h.c = Grid_filter.P_grid_1h.c + Grid_filter.P_conv_1h.c;
+    Grid_filter.P_load_1h.a = Grid_filter.P_grid_1h.a + Conv.master.total.P_conv_1h_filter.a;
+    Grid_filter.P_load_1h.b = Grid_filter.P_grid_1h.b + Conv.master.total.P_conv_1h_filter.b;
+    Grid_filter.P_load_1h.c = Grid_filter.P_grid_1h.c + Conv.master.total.P_conv_1h_filter.c;
     Grid_filter.average.P_load_1h = Grid_filter.P_load_1h.a + Grid_filter.P_load_1h.b + Grid_filter.P_load_1h.c;
 
     ///////////////////////////////////////////////////////////////////

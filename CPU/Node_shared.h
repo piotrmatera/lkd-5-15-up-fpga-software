@@ -80,14 +80,13 @@ union FPGA_master_flags_union
         Uint16 U_grid_abs_b_H:1;
         Uint16 U_grid_abs_c_H:1;
         Uint16 sed_err:1;
-        Uint16 rsvd:4;
-//        Uint16 rx1_crc_error:1;
-//        Uint16 rx1_overrun_error:1;
-//        Uint16 rx1_frame_error:1;
+        Uint16 rx1_crc_error:1;
+        Uint16 rx1_overrun_error:1;
+        Uint16 rx1_frame_error:1;
+        Uint16 rx1_port_nrdy:1;
 //        Uint16 rx2_crc_error:1;
 //        Uint16 rx2_overrun_error:1;
 //        Uint16 rx2_frame_error:1;
-//        Uint16 rx1_port_nrdy:1;
 //        Uint16 rx2_port_nrdy:1;
     }bit;
 };
@@ -333,8 +332,8 @@ struct COMM_slave_sync_msg_struct
     struct COMM_header_struct header;
     struct COMM_slave_flags_struct flags;
     struct timestamp_struct timestamp;
-    struct abc_struct id_conv;
-    struct abc_struct iq_conv;
+    struct abc_struct P_conv_1h;
+    struct abc_struct Q_conv_1h;
     float I_lim;
     Uint16 crc;
 };
@@ -355,6 +354,7 @@ struct COMM_master_sync_msg1_struct
     struct abc_struct id_ref;
     struct abc_struct iq_ref;
     float ratio[4];
+    struct STATUS_ACDC status_ACDC;
     Uint16 crc;
 };
 
@@ -408,6 +408,9 @@ union COMM_async_msg_union
         struct COMM_header_struct comm_header;
         enum comm_func_enum comm_func;
         Uint32 code_version;
+        struct abc_struct P_conv_1h_filter;
+        struct abc_struct Q_conv_1h_filter;
+        float C_conv;
         Uint16 crc;
     }async_slave;
 };

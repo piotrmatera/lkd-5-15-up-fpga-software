@@ -148,6 +148,7 @@ extern union CONTROL_EXT_MODBUS control_ext_modbus;
 
 extern struct CONTROL_ACDC control_ACDC;
 extern struct STATUS_ACDC status_ACDC;
+extern struct STATUS_ACDC status_ACDC_master;
 extern union ALARM_ACDC alarm_ACDC;
 extern union ALARM_ACDC alarm_ACDC_snapshot;
 

@@ -349,12 +349,18 @@ void Blink()
         {
             if(ONOFF.ONOFF)
             {
-                //zielony nie miga gdy alarm
                 if(Machine_slave.state == Machine_slave_class::state_operational)
                 {
-                    if((status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c)
-                            && status_ACDC.master_slave_selector) Blink_LED1.update_pattern(0.2f, 0.5f);
-                    else Blink_LED1.update_pattern(true);
+                    if(status_ACDC.master_slave_selector)
+                    {
+                        if(status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c) Blink_LED1.update_pattern(0.2f, 0.5f);
+                        else Blink_LED1.update_pattern(true);
+                    }
+                    else
+                    {
+                        if(status_ACDC_master.no_CT_connected_a || status_ACDC_master.no_CT_connected_b || status_ACDC_master.no_CT_connected_c) Blink_LED1.update_pattern(0.2f, 0.5f);
+                        else Blink_LED1.update_pattern(true);
+                    }
                 }
                 else Blink_LED1.update_pattern(2.0f, 0.5f);
             }
@@ -367,9 +373,9 @@ void Blink()
             }
             else
             {
-                if(status_ACDC.master_slave_selector)
+                if(Blink_LED2.zero_crossing)
                 {
-                    if(Blink_LED2.zero_crossing)
+                    if(status_ACDC.master_slave_selector)
                     {
                         if(status_ACDC.in_limit_Q)
                             Blink_LED2.update_pattern(true);
@@ -380,13 +386,20 @@ void Blink()
                         else
                             Blink_LED2.update_pattern(false);
                     }
+                    else
+                    {
+                        if(status_ACDC_master.in_limit_Q)
+                            Blink_LED2.update_pattern(true);
+                        else if(status_ACDC_master.in_limit_P)
+                            Blink_LED2.update_pattern(2.0f, 0.67f);
+                        else if(status_ACDC_master.in_limit_H)
+                            Blink_LED2.update_pattern(2.0f, 0.33f);
+                        else
+                            Blink_LED2.update_pattern(false);
+                    }
                 }
-                else
-                {
-                    Blink_LED2.update_pattern(false);
-                }
-
-                Blink_LED3.update_pattern(false);
+                if(!status_ACDC.master_rdy && !status_ACDC.master_slave_selector) Blink_LED3.update_pattern(true);
+                else Blink_LED3.update_pattern(false);
             }
             break;
         }
@@ -580,6 +593,7 @@ void Background_class::init()
 
         SD_card.settings.C_dc = 990e-6;
         SD_card.settings.L_conv = 265e-6;
+        SD_card.settings.C_conv = 12.5e-6 + 4.4e-6;
         SD_card.settings.I_lim =
         Conv.I_lim_nominal = 24.0f;
     }
@@ -601,6 +615,7 @@ void Background_class::init()
         control_ext_modbus.fields.ext_server_id = SD_card.settings.modbus_ext_server_id;
         Conv.C_dc = SD_card.settings.C_dc;
         Conv.L_conv = SD_card.settings.L_conv;
+        Conv.C_conv = SD_card.settings.C_conv;
         Conv.I_lim_nominal = SD_card.settings.I_lim;
         status_ACDC.expected_number_of_slaves = SD_card.settings.number_of_slaves;
 

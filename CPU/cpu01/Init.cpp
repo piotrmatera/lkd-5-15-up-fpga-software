@@ -358,11 +358,12 @@ void Init_class::Variables()
     CIC1_filter(&Conv.P_conv_filter, 1000.0f, full_OSR, 1);
     CIC1_filter(&Conv.C_dc_filter, 0.1f, full_OSR, 1);
 
-    Conv.I_lim_prefilter.Ts_Ti =
-    Conv.I_lim_slave_prefilter[0].Ts_Ti =
-    Conv.I_lim_slave_prefilter[1].Ts_Ti =
-    Conv.I_lim_slave_prefilter[2].Ts_Ti =
-    Conv.I_lim_slave_prefilter[3].Ts_Ti = Conv.Ts / 0.02f;
+    Conv.master_slave_prefilter.Ts_Ti =
+    Conv.master.slave[0].I_lim_prefilter.Ts_Ti =
+    Conv.master.slave[1].I_lim_prefilter.Ts_Ti =
+    Conv.master.slave[2].I_lim_prefilter.Ts_Ti =
+    Conv.master.slave[3].I_lim_prefilter.Ts_Ti =
+    Conv.master.slave[4].I_lim_prefilter.Ts_Ti = Conv.Ts / 0.02f;
 
     Conv.version_Q_comp_local_prefilter.a.Ts_Ti =
     Conv.version_Q_comp_local_prefilter.b.Ts_Ti =

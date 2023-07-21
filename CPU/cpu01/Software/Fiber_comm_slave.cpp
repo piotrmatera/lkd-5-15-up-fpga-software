@@ -33,6 +33,7 @@ void Fiber_comm_slave_class::Main()
     Uint32 time_passed = IpcRegs.IPCCOUNTERL - timer_timeout;
     if(time_passed > 80000000UL && first)
     {
+        first = 0;
         timer_timeout = IpcRegs.IPCCOUNTERL;
         timer_timeout_val = time_passed;
         status_flags.timeout = 1;
@@ -117,6 +118,26 @@ void Fiber_comm_slave_class::async_data_mosi()
     if(SW_ID == msg.async_master.code_version)
     {
         msg.async_slave.code_version = SW_ID;
+
+        msg.async_slave.C_conv = Conv.C_conv;
+        if(Conv.RDY2)
+        {
+            msg.async_slave.P_conv_1h_filter.a = Grid_filter.P_conv_1h.a;
+            msg.async_slave.P_conv_1h_filter.b = Grid_filter.P_conv_1h.b;
+            msg.async_slave.P_conv_1h_filter.c = Grid_filter.P_conv_1h.c;
+            msg.async_slave.Q_conv_1h_filter.a = Grid_filter.Q_conv_1h.a;
+            msg.async_slave.Q_conv_1h_filter.b = Grid_filter.Q_conv_1h.b;
+            msg.async_slave.Q_conv_1h_filter.c = Grid_filter.Q_conv_1h.c;
+        }
+        else
+        {
+            msg.async_slave.P_conv_1h_filter.a =
+            msg.async_slave.P_conv_1h_filter.b =
+            msg.async_slave.P_conv_1h_filter.c =
+            msg.async_slave.Q_conv_1h_filter.a =
+            msg.async_slave.Q_conv_1h_filter.b =
+            msg.async_slave.Q_conv_1h_filter.c = 0.0f;
+        }
 
         Send(sizeof(msg.async_slave), comm_func_async_data_miso);
     }

@@ -140,9 +140,9 @@ void Grid_analyzer_calc()
     Grid.Q_grid_1h.c = CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_Q_grid_1h[2], Q_grid_temp.c);
     Grid.average.Q_grid_1h = Grid.Q_grid_1h.a + Grid.Q_grid_1h.b + Grid.Q_grid_1h.c;
 
-    Grid.Q_load_1h.a = Grid.Q_grid_1h.a + Grid.Q_conv_1h.a;
-    Grid.Q_load_1h.b = Grid.Q_grid_1h.b + Grid.Q_conv_1h.b;
-    Grid.Q_load_1h.c = Grid.Q_grid_1h.c + Grid.Q_conv_1h.c;
+    Grid.Q_load_1h.a = Grid.Q_grid_1h.a + Conv.master.total.Q_conv_1h.a;
+    Grid.Q_load_1h.b = Grid.Q_grid_1h.b + Conv.master.total.Q_conv_1h.b;
+    Grid.Q_load_1h.c = Grid.Q_grid_1h.c + Conv.master.total.Q_conv_1h.c;
     Grid.average.Q_load_1h = Grid.Q_load_1h.a + Grid.Q_load_1h.b + Grid.Q_load_1h.c;
 
 
@@ -163,9 +163,9 @@ void Grid_analyzer_calc()
     Grid.P_grid_1h.c = CIC1_adaptive_filter_CPU(&CIC1_adaptive_global__50Hz, &Grid_params.CIC1_P_grid_1h[2], P_grid_temp.c);
     Grid.average.P_grid_1h = Grid.P_grid_1h.a + Grid.P_grid_1h.b + Grid.P_grid_1h.c;
 
-    Grid.P_load_1h.a = Grid.P_grid_1h.a + Grid.P_conv_1h.a;//tylko tutaj wystarczy dodac pomiary slave
-    Grid.P_load_1h.b = Grid.P_grid_1h.b + Grid.P_conv_1h.b;
-    Grid.P_load_1h.c = Grid.P_grid_1h.c + Grid.P_conv_1h.c;
+    Grid.P_load_1h.a = Grid.P_grid_1h.a + Conv.master.total.P_conv_1h.a;
+    Grid.P_load_1h.b = Grid.P_grid_1h.b + Conv.master.total.P_conv_1h.b;
+    Grid.P_load_1h.c = Grid.P_grid_1h.c + Conv.master.total.P_conv_1h.c;
     Grid.average.P_load_1h = Grid.P_load_1h.a + Grid.P_load_1h.b + Grid.P_load_1h.c;
 
     ///////////////////////////////////////////////////////////////////

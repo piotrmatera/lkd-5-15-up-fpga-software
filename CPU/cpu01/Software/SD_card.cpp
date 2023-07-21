@@ -723,13 +723,16 @@ Uint16 SD_card_class::read_settings()
         if(!strncmp(working_buffer, "WIFI_ONOFF", sizeof("WIFI_ONOFF")-1))
             settings.wifi_on = value==0? 0 : 1;
 
-        if(!strncmp(working_buffer, "C", sizeof("C")-1))
+        if(!strncmp(working_buffer, "C_DC", sizeof("C_DC")-1))
             settings.C_dc = value;
 
-        if(!strncmp(working_buffer, "L", sizeof("L")-1))
+        if(!strncmp(working_buffer, "L_CONV", sizeof("L_CONV")-1))
             settings.L_conv = value;
 
-        if(!strncmp(working_buffer, "I", sizeof("I")-1))
+        if(!strncmp(working_buffer, "C_CONV", sizeof("C_CONV")-1))
+            settings.C_conv = value;
+
+        if(!strncmp(working_buffer, "I_LIM", sizeof("I_LIM")-1))
             settings.I_lim = value;
 
         if(!strncmp(working_buffer, "NUMBER OF SLAVES", sizeof("NUMBER OF SLAVES")-1))
@@ -748,6 +751,7 @@ Uint16 SD_card_class::read_settings()
     if(settings.control.tangens_range[1].c < -1.0f || settings.control.tangens_range[1].c > 1.0f) return fresult;
     if(settings.C_dc < 0.25e-3 || settings.C_dc > 5e-3) return fresult;
     if(settings.L_conv < 100e-6 || settings.L_conv > 2.5e-3) return fresult;
+    if(settings.C_conv < 5e-6 || settings.C_conv > 200e-6) return fresult;
     if(settings.I_lim < 8.0f || settings.I_lim > 40.0f) return fresult;
 
     settings.available = 1;
@@ -854,17 +858,22 @@ Uint16 SD_card_class::save_settings()
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
 
-    f_puts("C;", &fil);
+    f_puts("C_DC;", &fil);
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.C_dc);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
 
-    f_puts("L;", &fil);
+    f_puts("L_CONV;", &fil);
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.L_conv);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
 
-    f_puts("I;", &fil);
+    f_puts("C_CONV;", &fil);
+    snprintf(working_buffer, WBUF_SIZE, "%g", settings.C_conv);
+    f_puts(working_buffer, &fil);
+    f_putc('\n', &fil);
+
+    f_puts("I_LIM;", &fil);
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.I_lim);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);

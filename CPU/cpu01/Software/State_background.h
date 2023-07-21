@@ -72,6 +72,7 @@ struct settings_struct
     float wifi_on;
     float C_dc;
     float L_conv;
+    float C_conv;
     float I_lim;
     float number_of_slaves;
 };

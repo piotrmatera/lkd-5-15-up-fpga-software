@@ -216,10 +216,27 @@ void Fiber_comm_master_class::async_data_miso()
     if(result == result_rdy)
     {
         if(status_flags.wait_for_async_data) input_flags.read_async_data = 0;
+
+        Conv.master.from_slave[node_number].C_conv = msg.async_slave.C_conv;
+        Conv.master.from_slave[node_number].P_conv_1h_filter.a = msg.async_slave.P_conv_1h_filter.a;
+        Conv.master.from_slave[node_number].P_conv_1h_filter.b = msg.async_slave.P_conv_1h_filter.b;
+        Conv.master.from_slave[node_number].P_conv_1h_filter.c = msg.async_slave.P_conv_1h_filter.c;
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.a = msg.async_slave.Q_conv_1h_filter.a;
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.b = msg.async_slave.Q_conv_1h_filter.b;
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.c = msg.async_slave.Q_conv_1h_filter.c;
+
         state = state_idle;
     }
     else if(result == result_error)
     {
+        Conv.master.from_slave[node_number].C_conv =
+        Conv.master.from_slave[node_number].P_conv_1h_filter.a =
+        Conv.master.from_slave[node_number].P_conv_1h_filter.b =
+        Conv.master.from_slave[node_number].P_conv_1h_filter.c =
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.a =
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.b =
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.c = 0.0f;
+
         state = state_idle;
     }
     status_flags.wait_for_async_data = 0;

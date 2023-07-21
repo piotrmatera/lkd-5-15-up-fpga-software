@@ -703,7 +703,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	wire SED_enable; 
 	SED_machine SED_machine(.clk_i(XTAL_20MHz_i), .enable_i(SED_enable), .err_o(sed_err)); 
  
-	localparam FAULT_NUMBER = 28;  
+	localparam FAULT_NUMBER = 32;  
   
 	wire [FAULT_NUMBER-1:0] FLT_REG_O;  
 	wire [FAULT_NUMBER-1:0] FLT_bus;  
@@ -713,13 +713,13 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	assign FLT_bus[25] = ~|compare_o[11:10];  
 	assign FLT_bus[26] = ~|compare_o[13:12];   
 	assign FLT_bus[27] = !sed_err; 
-	//assign FLT_bus[16] = !rx1_crc_error;  
-	//assign FLT_bus[17] = !rx1_overrun_error;  
-	//assign FLT_bus[18] = !rx1_frame_error;  
+	assign FLT_bus[28] = !rx1_crc_error || master_slave_selector;  
+	assign FLT_bus[29] = !rx1_overrun_error || master_slave_selector;  
+	assign FLT_bus[30] = !rx1_frame_error || master_slave_selector;  
+	assign FLT_bus[31] = rx1_port_rdy || master_slave_selector;  
 	//assign FLT_bus[19] = !rx2_crc_error;  
 	//assign FLT_bus[20] = !rx2_overrun_error;  
 	//assign FLT_bus[21] = !rx2_frame_error;  
-	//assign FLT_bus[22] = rx1_port_rdy;  
 	//assign FLT_bus[23] = rx2_port_rdy;
   
  	wire rst_faults; 
@@ -836,9 +836,9 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	assign tx1_code_start = timestamp_code_rx1;  
 	assign tx2_code_start = master_slave_selector ? comm_pulse : timestamp_code_rx1; 
 	
-	reg[11:0] master_timeout;
+	reg[12:0] master_timeout;
 	wire master_rdy;
-	assign master_rdy = !master_timeout[11];
+	assign master_rdy = !master_timeout[12];
 	wire PWM_EN_r;
 	wire scope_trigger_request_slave;
 	assign scope_trigger_request_slave = 0;

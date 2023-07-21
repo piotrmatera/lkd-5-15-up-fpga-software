@@ -78,7 +78,7 @@ void Machine_master_class::idle()
     Conv.enable_P_sym_local =
     Conv.enable_H_comp_local = 0.0f;
 
-    if(Conv.I_lim_total) Machine_master.state = state_start;
+    if(Conv.master.total.I_lim && !status_ACDC.master_rdy) Machine_master.state = state_start;
 }
 
 void Machine_master_class::start()
@@ -101,7 +101,7 @@ void Machine_master_class::start()
             Machine_master.state = state_Lgrid_meas;
     }
 
-    if(!Conv.I_lim_total) Machine_master.state = state_idle;
+    if(!Conv.master.total.I_lim || status_ACDC.master_rdy) Machine_master.state = state_idle;
 }
 
 void Machine_master_class::CT_test()
@@ -155,12 +155,12 @@ void Machine_master_class::CT_test()
 
         if(elapsed_time > 50000000ULL)
         {
-            CT_test_startup.Iq_pos[repeat_counter].a = Conv.iq_load.a - Conv.iq_conv.a;
-            CT_test_startup.Iq_pos[repeat_counter].b = Conv.iq_load.b - Conv.iq_conv.b;
-            CT_test_startup.Iq_pos[repeat_counter].c = Conv.iq_load.c - Conv.iq_conv.c;
-            CT_test_startup.Id_pos[repeat_counter].a = Conv.id_load.a - Conv.id_conv.a;
-            CT_test_startup.Id_pos[repeat_counter].b = Conv.id_load.b - Conv.id_conv.b;
-            CT_test_startup.Id_pos[repeat_counter].c = Conv.id_load.c - Conv.id_conv.c;
+            CT_test_startup.Iq_pos[repeat_counter].a = Conv.iq_grid.a;
+            CT_test_startup.Iq_pos[repeat_counter].b = Conv.iq_grid.b;
+            CT_test_startup.Iq_pos[repeat_counter].c = Conv.iq_grid.c;
+            CT_test_startup.Id_pos[repeat_counter].a = Conv.id_grid.a;
+            CT_test_startup.Id_pos[repeat_counter].b = Conv.id_grid.b;
+            CT_test_startup.Id_pos[repeat_counter].c = Conv.id_grid.c;
             C_dc_meas[repeat_counter] = Conv.C_dc_meas;
             CT_test_state++;
             timer_old = ReadIpcTimer();
@@ -180,12 +180,12 @@ void Machine_master_class::CT_test()
 
         if(elapsed_time > 50000000ULL)
         {
-            CT_test_startup.Iq_neg[repeat_counter].a = Conv.iq_load.a - Conv.iq_conv.a;
-            CT_test_startup.Iq_neg[repeat_counter].b = Conv.iq_load.b - Conv.iq_conv.b;
-            CT_test_startup.Iq_neg[repeat_counter].c = Conv.iq_load.c - Conv.iq_conv.c;
-            CT_test_startup.Id_neg[repeat_counter].a = Conv.id_load.a - Conv.id_conv.a;
-            CT_test_startup.Id_neg[repeat_counter].b = Conv.id_load.b - Conv.id_conv.b;
-            CT_test_startup.Id_neg[repeat_counter].c = Conv.id_load.c - Conv.id_conv.c;
+            CT_test_startup.Iq_neg[repeat_counter].a = Conv.iq_grid.a;
+            CT_test_startup.Iq_neg[repeat_counter].b = Conv.iq_grid.b;
+            CT_test_startup.Iq_neg[repeat_counter].c = Conv.iq_grid.c;
+            CT_test_startup.Id_neg[repeat_counter].a = Conv.id_grid.a;
+            CT_test_startup.Id_neg[repeat_counter].b = Conv.id_grid.b;
+            CT_test_startup.Id_neg[repeat_counter].c = Conv.id_grid.c;
             C_dc_meas[repeat_counter+3] = Conv.C_dc_filter.out;
             Conv.Q_set_local.a =
             Conv.Q_set_local.b =
@@ -284,7 +284,7 @@ void Machine_master_class::CT_test()
     }
     }
 
-    if(!Conv.I_lim_total) Machine_master.state = state_idle;
+    if(!Conv.master.total.I_lim || status_ACDC.master_rdy) Machine_master.state = state_idle;
 }
 
 void Machine_master_class::Lgrid_meas()
@@ -327,9 +327,9 @@ void Machine_master_class::Lgrid_meas()
 
         if(elapsed_time > 50000000ULL)
         {
-            L_grid_meas.Iq_pos[repeat_counter].a = Conv.iq_load.a - Conv.iq_conv.a;
-            L_grid_meas.Iq_pos[repeat_counter].b = Conv.iq_load.b - Conv.iq_conv.b;
-            L_grid_meas.Iq_pos[repeat_counter].c = Conv.iq_load.c - Conv.iq_conv.c;
+            L_grid_meas.Iq_pos[repeat_counter].a = Conv.iq_grid.a;
+            L_grid_meas.Iq_pos[repeat_counter].b = Conv.iq_grid.b;
+            L_grid_meas.Iq_pos[repeat_counter].c = Conv.iq_grid.c;
             L_grid_meas.U_pos[repeat_counter].a = Grid.U_grid.a;
             L_grid_meas.U_pos[repeat_counter].b = Grid.U_grid.b;
             L_grid_meas.U_pos[repeat_counter].c = Grid.U_grid.c;
@@ -351,9 +351,9 @@ void Machine_master_class::Lgrid_meas()
 
         if(elapsed_time > 50000000ULL)
         {
-            L_grid_meas.Iq_neg[repeat_counter].a = Conv.iq_load.a - Conv.iq_conv.a;
-            L_grid_meas.Iq_neg[repeat_counter].b = Conv.iq_load.b - Conv.iq_conv.b;
-            L_grid_meas.Iq_neg[repeat_counter].c = Conv.iq_load.c - Conv.iq_conv.c;
+            L_grid_meas.Iq_neg[repeat_counter].a = Conv.iq_grid.a;
+            L_grid_meas.Iq_neg[repeat_counter].b = Conv.iq_grid.b;
+            L_grid_meas.Iq_neg[repeat_counter].c = Conv.iq_grid.c;
             L_grid_meas.U_neg[repeat_counter].a = Grid.U_grid.a;
             L_grid_meas.U_neg[repeat_counter].b = Grid.U_grid.b;
             L_grid_meas.U_neg[repeat_counter].c = Grid.U_grid.c;
@@ -452,7 +452,7 @@ void Machine_master_class::Lgrid_meas()
     }
     }
 
-    if(!Conv.I_lim_total) Machine_master.state = state_idle;
+    if(!Conv.master.total.I_lim || status_ACDC.master_rdy) Machine_master.state = state_idle;
 }
 
 void Machine_master_class::operational()
@@ -614,7 +614,7 @@ void Machine_master_class::operational()
 
         if(status_ACDC.no_CT_connected_a)
         {
-            Conv.Q_set_local.a = control_ACDC.Q_set.a + Grid.U_grid_1h.a * Grid.U_grid_1h.a * Conv.w_filter * (12.5e-6 + 4.4e-6);
+            Conv.Q_set_local.a = control_ACDC.Q_set.a + Grid.U_grid_1h.a * Grid.U_grid_1h.a * Conv.w_filter * Conv.C_conv;
             Conv.version_Q_comp_local.a = 1.0f;
         }
         else
@@ -625,7 +625,7 @@ void Machine_master_class::operational()
 
         if(status_ACDC.no_CT_connected_b)
         {
-            Conv.Q_set_local.b = control_ACDC.Q_set.b + Grid.U_grid_1h.b * Grid.U_grid_1h.b * Conv.w_filter * (12.5e-6 + 4.4e-6);
+            Conv.Q_set_local.b = control_ACDC.Q_set.b + Grid.U_grid_1h.b * Grid.U_grid_1h.b * Conv.w_filter * Conv.C_conv;
             Conv.version_Q_comp_local.b = 1.0f;
         }
         else
@@ -636,7 +636,7 @@ void Machine_master_class::operational()
 
         if(status_ACDC.no_CT_connected_c)
         {
-            Conv.Q_set_local.c = control_ACDC.Q_set.c + Grid.U_grid_1h.c * Grid.U_grid_1h.c * Conv.w_filter * (12.5e-6 + 4.4e-6);
+            Conv.Q_set_local.c = control_ACDC.Q_set.c + Grid.U_grid_1h.c * Grid.U_grid_1h.c * Conv.w_filter * Conv.C_conv;
             Conv.version_Q_comp_local.c = 1.0f;
         }
         else
@@ -794,5 +794,5 @@ void Machine_master_class::operational()
     }
     }
 
-    if(!Conv.I_lim_total) Machine_master.state = state_idle;
+    if(!Conv.master.total.I_lim || status_ACDC.master_rdy) Machine_master.state = state_idle;
 }

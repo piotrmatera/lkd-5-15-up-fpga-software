@@ -4,36 +4,46 @@
 
 void Converter_calc_master()
 {
-    Filter1_calc_CLAasm(&Conv.I_lim_prefilter, Conv.I_lim);
-    Filter1_calc_CLAasm(&Conv.I_lim_slave_prefilter[0], Conv.from_slave[0].I_lim);
-    Filter1_calc_CLAasm(&Conv.I_lim_slave_prefilter[1], Conv.from_slave[1].I_lim);
-    Filter1_calc_CLAasm(&Conv.I_lim_slave_prefilter[2], Conv.from_slave[2].I_lim);
-    Filter1_calc_CLAasm(&Conv.I_lim_slave_prefilter[3], Conv.from_slave[3].I_lim);
-    if(!Conv.I_lim) Conv.I_lim_prefilter.out = 0;
-    if(!Conv.from_slave[0].I_lim) Conv.I_lim_slave_prefilter[0].out = 0;
-    if(!Conv.from_slave[1].I_lim) Conv.I_lim_slave_prefilter[1].out = 0;
-    if(!Conv.from_slave[2].I_lim) Conv.I_lim_slave_prefilter[2].out = 0;
-    if(!Conv.from_slave[3].I_lim) Conv.I_lim_slave_prefilter[3].out = 0;
+    Filter1_calc_CLAasm(&Conv.master.slave[0].I_lim_prefilter, Conv.master.from_slave[0].I_lim);
+    Filter1_calc_CLAasm(&Conv.master.slave[1].I_lim_prefilter, Conv.master.from_slave[1].I_lim);
+    Filter1_calc_CLAasm(&Conv.master.slave[2].I_lim_prefilter, Conv.master.from_slave[2].I_lim);
+    Filter1_calc_CLAasm(&Conv.master.slave[3].I_lim_prefilter, Conv.master.from_slave[3].I_lim);
+    Filter1_calc_CLAasm(&Conv.master.slave[4].I_lim_prefilter, Conv.I_lim);
+//    if(!Conv.master.from_slave[0].I_lim) Conv.master.slave[0].I_lim_prefilter.out = 0;
+//    if(!Conv.master.from_slave[1].I_lim) Conv.master.slave[1].I_lim_prefilter.out = 0;
+//    if(!Conv.master.from_slave[2].I_lim) Conv.master.slave[2].I_lim_prefilter.out = 0;
+//    if(!Conv.master.from_slave[3].I_lim) Conv.master.slave[3].I_lim_prefilter.out = 0;
+//    if(!Conv.I_lim) Conv.master.slave[4].I_lim_prefilter.out = 0;
 
-    Conv.I_lim_total = Conv.I_lim + Conv.from_slave[0].I_lim + Conv.from_slave[1].I_lim + Conv.from_slave[2].I_lim + Conv.from_slave[3].I_lim;
-    Conv.I_lim_total_prefilter = Conv.I_lim_prefilter.out +
-    Conv.I_lim_slave_prefilter[0].out + Conv.I_lim_slave_prefilter[1].out +
-    Conv.I_lim_slave_prefilter[2].out + Conv.I_lim_slave_prefilter[3].out;
+    Conv.master.total.C_conv = Conv.C_conv + Conv.master.from_slave[0].C_conv + Conv.master.from_slave[1].C_conv + Conv.master.from_slave[2].C_conv + Conv.master.from_slave[3].C_conv;
+    Conv.master.total.I_lim = Conv.I_lim + Conv.master.from_slave[0].I_lim + Conv.master.from_slave[1].I_lim + Conv.master.from_slave[2].I_lim + Conv.master.from_slave[3].I_lim;
+    Conv.master.total.I_lim_prefilter =
+    Conv.master.slave[0].I_lim_prefilter.out + Conv.master.slave[1].I_lim_prefilter.out +
+    Conv.master.slave[2].I_lim_prefilter.out + Conv.master.slave[3].I_lim_prefilter.out +
+    Conv.master.slave[4].I_lim_prefilter.out;
 
-    register float I_lim_div = Saturation(1.0f / Conv.I_lim_total_prefilter, 0.0f, 1.0f);
-    Conv.ratio_local = Conv.I_lim_prefilter.out * I_lim_div;
-    Conv.ratio[0] = Conv.I_lim_slave_prefilter[0].out * I_lim_div;
-    Conv.ratio[1] = Conv.I_lim_slave_prefilter[1].out * I_lim_div;
-    Conv.ratio[2] = Conv.I_lim_slave_prefilter[2].out * I_lim_div;
-    Conv.ratio[3] = Conv.I_lim_slave_prefilter[3].out * I_lim_div;
+    register float I_lim_div = Saturation(1.0f / Conv.master.total.I_lim_prefilter, 0.0f, 1.0f);
+    Conv.master.slave[0].ratio = Conv.master.slave[0].I_lim_prefilter.out * I_lim_div;
+    Conv.master.slave[1].ratio = Conv.master.slave[1].I_lim_prefilter.out * I_lim_div;
+    Conv.master.slave[2].ratio = Conv.master.slave[2].I_lim_prefilter.out * I_lim_div;
+    Conv.master.slave[3].ratio = Conv.master.slave[3].I_lim_prefilter.out * I_lim_div;
+    Conv.master.slave[4].ratio = Conv.master.slave[4].I_lim_prefilter.out * I_lim_div;
 
-    Conv.id_conv_slave.a = Conv.from_slave[0].id_conv.a + Conv.from_slave[1].id_conv.a + Conv.from_slave[2].id_conv.a + Conv.from_slave[3].id_conv.a;
-    Conv.id_conv_slave.b = Conv.from_slave[0].id_conv.b + Conv.from_slave[1].id_conv.b + Conv.from_slave[2].id_conv.b + Conv.from_slave[3].id_conv.b;
-    Conv.id_conv_slave.c = Conv.from_slave[0].id_conv.c + Conv.from_slave[1].id_conv.c + Conv.from_slave[2].id_conv.c + Conv.from_slave[3].id_conv.c;
+    Conv.master.total.P_conv_1h.a = Conv.master.from_slave[0].P_conv_1h.a + Conv.master.from_slave[1].P_conv_1h.a + Conv.master.from_slave[2].P_conv_1h.a + Conv.master.from_slave[3].P_conv_1h.a + Grid.P_conv_1h.a;
+    Conv.master.total.P_conv_1h.b = Conv.master.from_slave[0].P_conv_1h.b + Conv.master.from_slave[1].P_conv_1h.b + Conv.master.from_slave[2].P_conv_1h.b + Conv.master.from_slave[3].P_conv_1h.b + Grid.P_conv_1h.b;
+    Conv.master.total.P_conv_1h.c = Conv.master.from_slave[0].P_conv_1h.c + Conv.master.from_slave[1].P_conv_1h.c + Conv.master.from_slave[2].P_conv_1h.c + Conv.master.from_slave[3].P_conv_1h.c + Grid.P_conv_1h.c;
 
-    Conv.iq_conv_slave.a = Conv.from_slave[0].iq_conv.a + Conv.from_slave[1].iq_conv.a + Conv.from_slave[2].iq_conv.a + Conv.from_slave[3].iq_conv.a;
-    Conv.iq_conv_slave.b = Conv.from_slave[0].iq_conv.b + Conv.from_slave[1].iq_conv.b + Conv.from_slave[2].iq_conv.b + Conv.from_slave[3].iq_conv.b;
-    Conv.iq_conv_slave.c = Conv.from_slave[0].iq_conv.c + Conv.from_slave[1].iq_conv.c + Conv.from_slave[2].iq_conv.c + Conv.from_slave[3].iq_conv.c;
+    Conv.master.total.Q_conv_1h.a = Conv.master.from_slave[0].Q_conv_1h.a + Conv.master.from_slave[1].Q_conv_1h.a + Conv.master.from_slave[2].Q_conv_1h.a + Conv.master.from_slave[3].Q_conv_1h.a + Grid.Q_conv_1h.a;
+    Conv.master.total.Q_conv_1h.b = Conv.master.from_slave[0].Q_conv_1h.b + Conv.master.from_slave[1].Q_conv_1h.b + Conv.master.from_slave[2].Q_conv_1h.b + Conv.master.from_slave[3].Q_conv_1h.b + Grid.Q_conv_1h.b;
+    Conv.master.total.Q_conv_1h.c = Conv.master.from_slave[0].Q_conv_1h.c + Conv.master.from_slave[1].Q_conv_1h.c + Conv.master.from_slave[2].Q_conv_1h.c + Conv.master.from_slave[3].Q_conv_1h.c + Grid.Q_conv_1h.c;
+
+    Conv.master.total.P_conv_1h_filter.a = Conv.master.from_slave[0].P_conv_1h_filter.a + Conv.master.from_slave[1].P_conv_1h_filter.a + Conv.master.from_slave[2].P_conv_1h_filter.a + Conv.master.from_slave[3].P_conv_1h_filter.a + Grid_filter.P_conv_1h.a;
+    Conv.master.total.P_conv_1h_filter.b = Conv.master.from_slave[0].P_conv_1h_filter.b + Conv.master.from_slave[1].P_conv_1h_filter.b + Conv.master.from_slave[2].P_conv_1h_filter.b + Conv.master.from_slave[3].P_conv_1h_filter.b + Grid_filter.P_conv_1h.b;
+    Conv.master.total.P_conv_1h_filter.c = Conv.master.from_slave[0].P_conv_1h_filter.c + Conv.master.from_slave[1].P_conv_1h_filter.c + Conv.master.from_slave[2].P_conv_1h_filter.c + Conv.master.from_slave[3].P_conv_1h_filter.c + Grid_filter.P_conv_1h.c;
+
+    Conv.master.total.Q_conv_1h_filter.a = Conv.master.from_slave[0].Q_conv_1h_filter.a + Conv.master.from_slave[1].Q_conv_1h_filter.a + Conv.master.from_slave[2].Q_conv_1h_filter.a + Conv.master.from_slave[3].Q_conv_1h_filter.a + Grid_filter.Q_conv_1h.a;
+    Conv.master.total.Q_conv_1h_filter.b = Conv.master.from_slave[0].Q_conv_1h_filter.b + Conv.master.from_slave[1].Q_conv_1h_filter.b + Conv.master.from_slave[2].Q_conv_1h_filter.b + Conv.master.from_slave[3].Q_conv_1h_filter.b + Grid_filter.Q_conv_1h.b;
+    Conv.master.total.Q_conv_1h_filter.c = Conv.master.from_slave[0].Q_conv_1h_filter.c + Conv.master.from_slave[1].Q_conv_1h_filter.c + Conv.master.from_slave[2].Q_conv_1h_filter.c + Conv.master.from_slave[3].Q_conv_1h_filter.c + Grid_filter.Q_conv_1h.c;
 
     //////////////////////////////////////////////////////////////////////////////////
 
@@ -42,21 +52,29 @@ void Converter_calc_master()
     U_grid_1h_div.b = 1.0f / fmaxf(Grid.U_grid_1h.b, 1.0f);
     U_grid_1h_div.c = 1.0f / fmaxf(Grid.U_grid_1h.c, 1.0f);
 
-    Conv.id_conv.a = Grid.P_conv_1h.a * U_grid_1h_div.a + Conv.id_conv_slave.a;
-    Conv.id_conv.b = Grid.P_conv_1h.b * U_grid_1h_div.b + Conv.id_conv_slave.b;
-    Conv.id_conv.c = Grid.P_conv_1h.c * U_grid_1h_div.c + Conv.id_conv_slave.c;
+    Conv.id_conv.a = Grid.P_conv_1h.a * U_grid_1h_div.a;
+    Conv.id_conv.b = Grid.P_conv_1h.b * U_grid_1h_div.b;
+    Conv.id_conv.c = Grid.P_conv_1h.c * U_grid_1h_div.c;
 
-    Conv.iq_conv.a = Grid.Q_conv_1h.a * U_grid_1h_div.a + Conv.iq_conv_slave.a;
-    Conv.iq_conv.b = Grid.Q_conv_1h.b * U_grid_1h_div.b + Conv.iq_conv_slave.b;
-    Conv.iq_conv.c = Grid.Q_conv_1h.c * U_grid_1h_div.c + Conv.iq_conv_slave.c;
+    Conv.iq_conv.a = Grid.Q_conv_1h.a * U_grid_1h_div.a;
+    Conv.iq_conv.b = Grid.Q_conv_1h.b * U_grid_1h_div.b;
+    Conv.iq_conv.c = Grid.Q_conv_1h.c * U_grid_1h_div.c;
 
-    Conv.id_load.a = Grid.P_load_1h.a * U_grid_1h_div.a - Conv.id_conv_slave.a;
-    Conv.id_load.b = Grid.P_load_1h.b * U_grid_1h_div.b - Conv.id_conv_slave.b;
-    Conv.id_load.c = Grid.P_load_1h.c * U_grid_1h_div.c - Conv.id_conv_slave.c;
+    Conv.id_load.a = Grid.P_load_1h.a * U_grid_1h_div.a;
+    Conv.id_load.b = Grid.P_load_1h.b * U_grid_1h_div.b;
+    Conv.id_load.c = Grid.P_load_1h.c * U_grid_1h_div.c;
 
-    Conv.iq_load.a = Grid.Q_load_1h.a * U_grid_1h_div.a - Conv.iq_conv_slave.a;
-    Conv.iq_load.b = Grid.Q_load_1h.b * U_grid_1h_div.b - Conv.iq_conv_slave.b;
-    Conv.iq_load.c = Grid.Q_load_1h.c * U_grid_1h_div.c - Conv.iq_conv_slave.c;
+    Conv.iq_load.a = Grid.Q_load_1h.a * U_grid_1h_div.a;
+    Conv.iq_load.b = Grid.Q_load_1h.b * U_grid_1h_div.b;
+    Conv.iq_load.c = Grid.Q_load_1h.c * U_grid_1h_div.c;
+
+    Conv.id_grid.a = Grid.P_grid_1h.a * U_grid_1h_div.a;
+    Conv.id_grid.b = Grid.P_grid_1h.b * U_grid_1h_div.b;
+    Conv.id_grid.c = Grid.P_grid_1h.c * U_grid_1h_div.c;
+
+    Conv.iq_grid.a = Grid.Q_grid_1h.a * U_grid_1h_div.a;
+    Conv.iq_grid.b = Grid.Q_grid_1h.b * U_grid_1h_div.b;
+    Conv.iq_grid.c = Grid.Q_grid_1h.c * U_grid_1h_div.c;
 
     Filter1_calc_CLAasm(&Conv.version_Q_comp_local_prefilter.a, Conv.version_Q_comp_local.a);
     Filter1_calc_CLAasm(&Conv.version_Q_comp_local_prefilter.b, Conv.version_Q_comp_local.b);
@@ -120,14 +138,14 @@ void Converter_calc_master()
     Conv.iq_load_ref.c = (iq_tangens.c * (1.0f - Conv.version_Q_comp_local_prefilter.c.out) - Conv.Q_set_local_prefilter.c.out * U_grid_1h_div.c) * Conv.enable_Q_comp_local_prefilter.c.out;
 
     struct abc_struct iq_lim_sat;
-    register float I_lim_q = Conv.I_lim_total_prefilter;
+    register float I_lim_q = Conv.master.total.I_lim_prefilter;
     register float I_lim_q_n = -I_lim_q;
     iq_lim_sat.a = Saturation(Conv.iq_load_ref.a, I_lim_q_n, I_lim_q);
     iq_lim_sat.b = Saturation(Conv.iq_load_ref.b, I_lim_q_n, I_lim_q);
     iq_lim_sat.c = Saturation(Conv.iq_load_ref.c, I_lim_q_n, I_lim_q);
 
     static struct abcn_struct iq_lim;
-    register float rate = fmaxf(Conv.I_lim_total_prefilter * 0.0016f, 24.0f * 0.0016f);
+    register float rate = fmaxf(Conv.master.total.I_lim_prefilter * 0.0016f, 24.0f * 0.0016f);
     register float rate_n = -rate;
     iq_lim.a += Saturation(iq_lim_sat.a - iq_lim.a, rate_n, rate);
     iq_lim.b += Saturation(iq_lim_sat.b - iq_lim.b, rate_n, rate);
@@ -146,10 +164,10 @@ void Converter_calc_master()
     iq_lim.n = sqrtf(Iq_x * Iq_x + Iq_y * Iq_y);
     float not_in_limit_n = fminf(I_lim_q, iq_lim.n) - I_lim_q;
     register float ratio_q = Saturation(I_lim_q / fmaxf(I_lim_q, iq_lim.n), 0.0f, 1.0f);
-    Conv.iq_lim.a = iq_lim.a * ratio_q;
-    Conv.iq_lim.b = iq_lim.b * ratio_q;
-    Conv.iq_lim.c = iq_lim.c * ratio_q;
-    Conv.iq_lim.n = iq_lim.n * ratio_q;
+    Conv.master.total.iq_lim.a = iq_lim.a * ratio_q;
+    Conv.master.total.iq_lim.b = iq_lim.b * ratio_q;
+    Conv.master.total.iq_lim.c = iq_lim.c * ratio_q;
+    Conv.master.total.iq_lim.n = iq_lim.n * ratio_q;
 
     if(not_in_limit * not_in_limit_n == 0.0f && Conv.enable_Q_comp_local.a + Conv.enable_Q_comp_local.b + Conv.enable_Q_comp_local.c >= 1.0f) status_ACDC.in_limit_Q = 1;
     else status_ACDC.in_limit_Q = 0;
@@ -164,9 +182,9 @@ void Converter_calc_master()
     id_lim.c = Conv.id_load.c - P_avg * (U_grid_1h_div.c * Conv.version_P_sym_local_prefilter.out + U_grid_1h_avg_div_ratio);
 
     static struct abcn_struct ratio_p;
-    ratio_p.a = Saturation(sqrtf(Conv.I_lim_total_prefilter * Conv.I_lim_total_prefilter - Conv.iq_lim.a * Conv.iq_lim.a) / fabsf(id_lim.a), 0.0f, 1.0f);
-    ratio_p.b = Saturation(sqrtf(Conv.I_lim_total_prefilter * Conv.I_lim_total_prefilter - Conv.iq_lim.b * Conv.iq_lim.b) / fabsf(id_lim.b), 0.0f, 1.0f);
-    ratio_p.c = Saturation(sqrtf(Conv.I_lim_total_prefilter * Conv.I_lim_total_prefilter - Conv.iq_lim.c * Conv.iq_lim.c) / fabsf(id_lim.c), 0.0f, 1.0f);
+    ratio_p.a = Saturation(sqrtf(Conv.master.total.I_lim_prefilter * Conv.master.total.I_lim_prefilter - Conv.master.total.iq_lim.a * Conv.master.total.iq_lim.a) / fabsf(id_lim.a), 0.0f, 1.0f);
+    ratio_p.b = Saturation(sqrtf(Conv.master.total.I_lim_prefilter * Conv.master.total.I_lim_prefilter - Conv.master.total.iq_lim.b * Conv.master.total.iq_lim.b) / fabsf(id_lim.b), 0.0f, 1.0f);
+    ratio_p.c = Saturation(sqrtf(Conv.master.total.I_lim_prefilter * Conv.master.total.I_lim_prefilter - Conv.master.total.iq_lim.c * Conv.master.total.iq_lim.c) / fabsf(id_lim.c), 0.0f, 1.0f);
 
     register float Id_x = id_lim.a - 0.5f*(id_lim.b + id_lim.c);
     register float Id_y = MATH_SQRT3_2 * (id_lim.c - id_lim.b);
@@ -176,7 +194,7 @@ void Converter_calc_master()
     register float Iy = Conv.Iq_y + Id_y;
     id_lim.n = sqrtf(Ix * Ix + Iy * Iy);
 
-    if(id_lim.n < Conv.I_lim_total_prefilter)
+    if(id_lim.n < Conv.master.total.I_lim_prefilter)
     {
         ratio_p.n = 1.0f;
     }
@@ -184,7 +202,7 @@ void Converter_calc_master()
     {
         float a = Conv.Id_x * Conv.Id_x + Conv.Id_y * Conv.Id_y;
         float b = 2.0f * (Conv.Iq_x * Conv.Id_x + Conv.Iq_y * Conv.Id_y);
-        float c = Conv.Iq_x * Conv.Iq_x + Conv.Iq_y * Conv.Iq_y - Conv.I_lim_total_prefilter * Conv.I_lim_total_prefilter;
+        float c = Conv.Iq_x * Conv.Iq_x + Conv.Iq_y * Conv.Iq_y - Conv.master.total.I_lim_prefilter * Conv.master.total.I_lim_prefilter;
         float delta = b * b - 4.0f * a * c;
         if(delta >= 0.0f)
         {
@@ -209,33 +227,24 @@ void Converter_calc_master()
     }
 
     register float ratio_p_min = fminf(fminf(fminf(ratio_p.a, ratio_p.b), ratio_p.c), ratio_p.n) * Conv.enable_P_sym_local_prefilter.out;
-    Conv.id_lim.a = id_lim.a * ratio_p_min;
-    Conv.id_lim.b = id_lim.b * ratio_p_min;
-    Conv.id_lim.c = id_lim.c * ratio_p_min;
-    Conv.id_lim.n = id_lim.n * ratio_p_min;
+    Conv.master.total.id_lim.a = id_lim.a * ratio_p_min;
+    Conv.master.total.id_lim.b = id_lim.b * ratio_p_min;
+    Conv.master.total.id_lim.c = id_lim.c * ratio_p_min;
+    Conv.master.total.id_lim.n = id_lim.n * ratio_p_min;
 
     if(ratio_p_min != 1.0f && Conv.enable_P_sym_local_prefilter.out == 1.0f) status_ACDC.in_limit_P = 1;
     else status_ACDC.in_limit_P = 0;
 
-    if(status_ACDC.master_slave_selector)
-    {
-        Conv.id_ref.a = Conv.id_lim.a * Conv.ratio_local;
-        Conv.id_ref.b = Conv.id_lim.b * Conv.ratio_local;
-        Conv.id_ref.c = Conv.id_lim.c * Conv.ratio_local;
-        Conv.iq_ref.a = Conv.iq_lim.a * Conv.ratio_local;
-        Conv.iq_ref.b = Conv.iq_lim.b * Conv.ratio_local;
-        Conv.iq_ref.c = Conv.iq_lim.c * Conv.ratio_local;
-    }
-    else
-    {
 
-        Conv.id_ref.a = Conv.from_master.id_lim.a * Conv.ratio_node;
-        Conv.id_ref.b = Conv.from_master.id_lim.b * Conv.ratio_node;
-        Conv.id_ref.c = Conv.from_master.id_lim.c * Conv.ratio_node;
-        Conv.iq_ref.a = Conv.from_master.iq_lim.a * Conv.ratio_node;
-        Conv.iq_ref.b = Conv.from_master.iq_lim.b * Conv.ratio_node;
-        Conv.iq_ref.c = Conv.from_master.iq_lim.c * Conv.ratio_node;
-    }
+    Filter1_calc_CLAasm(&Conv.master_slave_prefilter, (float)(status_ACDC.master_slave_selector || !status_ACDC.master_rdy));
+    register float ratio_local1 = Conv.master.slave[4].ratio * Conv.master_slave_prefilter.out;
+    register float ratio_local2 = Conv.slave.ratio_local * (1.0f - Conv.master_slave_prefilter.out);
+    Conv.id_ref.a = Conv.master.total.id_lim.a * ratio_local1 + Conv.slave.from_master.id_lim.a * ratio_local2;
+    Conv.id_ref.b = Conv.master.total.id_lim.b * ratio_local1 + Conv.slave.from_master.id_lim.b * ratio_local2;
+    Conv.id_ref.c = Conv.master.total.id_lim.c * ratio_local1 + Conv.slave.from_master.id_lim.c * ratio_local2;
+    Conv.iq_ref.a = Conv.master.total.iq_lim.a * ratio_local1 + Conv.slave.from_master.iq_lim.a * ratio_local2;
+    Conv.iq_ref.b = Conv.master.total.iq_lim.b * ratio_local1 + Conv.slave.from_master.iq_lim.b * ratio_local2;
+    Conv.iq_ref.c = Conv.master.total.iq_lim.c * ratio_local1 + Conv.slave.from_master.iq_lim.c * ratio_local2;
 }
 
 void Converter_calc_slave()

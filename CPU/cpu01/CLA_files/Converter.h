@@ -41,27 +41,62 @@ struct Converter_struct
 
     //////////////////////////////
 
-    float I_lim_total;
-    float I_lim_total_prefilter;
-    struct Filter1_struct I_lim_prefilter;
-    struct Filter1_struct I_lim_slave_prefilter[4];
-    struct abc_struct id_conv_slave, iq_conv_slave;
-    struct abc_struct id_ref, iq_ref;
-    float ratio[4];
-    float ratio_local;
-    float ratio_node;
     struct
     {
-        struct abc_struct id_lim;
-        struct abc_struct iq_lim;
-        float ratio[4];
-    }from_master;
+        struct
+        {
+            struct abc_struct P_conv_1h;
+            struct abc_struct Q_conv_1h;
+            float I_lim;
+            struct abc_struct P_conv_1h_filter;
+            struct abc_struct Q_conv_1h_filter;
+            float C_conv;
+        }from_slave[4];
+        struct
+        {
+            float ratio;
+            struct Filter1_struct I_lim_prefilter;
+        }slave[5];
+        struct
+        {
+            struct abcn_struct id_lim, iq_lim;
+            struct abc_struct P_conv_1h, Q_conv_1h;
+            struct abc_struct P_conv_1h_filter, Q_conv_1h_filter;
+            float I_lim;
+            float I_lim_prefilter;
+            float C_conv;
+        }total;
+    }master;
+
+    struct abc_struct id_conv, iq_conv;
+    struct abc_struct id_load, iq_load;
+    struct abc_struct id_grid, iq_grid;
+
+    struct abc_struct tangens_range_local[2];
+    struct abc_Filter1_struct tangens_range_local_prefilter[2];
+    struct abc_struct version_Q_comp_local, enable_Q_comp_local;
+    struct abc_Filter1_struct version_Q_comp_local_prefilter, enable_Q_comp_local_prefilter;
+    struct abc_struct Q_set_local;
+    struct abc_Filter1_struct Q_set_local_prefilter;
+    struct abc_struct iq_load_ref;
+    float Iq_x, Iq_y;
+
+    float version_P_sym_local, enable_P_sym_local;
+    struct Filter1_struct version_P_sym_local_prefilter, enable_P_sym_local_prefilter;
+    float Id_x, Id_y;
+
+    //////////////////////////////
+
     struct
     {
-        struct abc_struct id_conv;
-        struct abc_struct iq_conv;
-        float I_lim;
-    }from_slave[4];
+        struct
+        {
+            struct abc_struct id_lim;
+            struct abc_struct iq_lim;
+            float ratio[4];
+        }from_master;
+        float ratio_local;
+    }slave;
 
     //////////////////////////////
 
@@ -73,24 +108,8 @@ struct Converter_struct
     float U_dc_kalman;
     struct PI_struct PI_U_dc;
 
-    struct abc_struct id_conv, iq_conv;
-    struct abc_struct id_load, iq_load;
-
-    struct abc_struct tangens_range_local[2];
-    struct abc_Filter1_struct tangens_range_local_prefilter[2];
-    struct abc_struct version_Q_comp_local, enable_Q_comp_local;
-    struct abc_Filter1_struct version_Q_comp_local_prefilter, enable_Q_comp_local_prefilter;
-    struct abc_struct Q_set_local;
-    struct abc_Filter1_struct Q_set_local_prefilter;
-    struct abc_struct iq_load_ref;
-    struct abcn_struct iq_lim;
-    float Iq_x, Iq_y;
-
-    float version_P_sym_local, enable_P_sym_local;
-    struct Filter1_struct version_P_sym_local_prefilter, enable_P_sym_local_prefilter;
-    struct abcn_struct id_lim;
-    float Id_x, Id_y;
-
+    struct Filter1_struct master_slave_prefilter;
+    struct abc_struct id_ref, iq_ref;
     struct PI_struct PI_Iq[3];
     struct PI_struct PI_Id[3];
 
