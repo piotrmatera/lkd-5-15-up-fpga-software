@@ -357,11 +357,12 @@ Uint16 SD_card_class::log_data()
         if(fresult = f_open(&log_file, filename_buffer, FA_WRITE | FA_CREATE_ALWAYS)) return fresult;
     }
 
-    float temp_array[21];
+    float temp_array[27];
     temp_array[0] = *(float *)&FatFS_time;
     temp_array[1] = Grid_filter.U_grid_1h.a;
     temp_array[2] = Grid_filter.U_grid_1h.b;
     temp_array[3] = Grid_filter.U_grid_1h.c;
+
     temp_array[4] = Grid_filter.Q_grid_1h.a;
     temp_array[5] = Grid_filter.Q_grid_1h.b;
     temp_array[6] = Grid_filter.Q_grid_1h.c;
@@ -369,17 +370,25 @@ Uint16 SD_card_class::log_data()
     temp_array[8] = Grid_filter.P_grid_1h.b;
     temp_array[9] = Grid_filter.P_grid_1h.c;
 
-    temp_array[10] = Grid_filter.Q_conv_1h.a;
-    temp_array[11] = Grid_filter.Q_conv_1h.b;
-    temp_array[12] = Grid_filter.Q_conv_1h.c;
-    temp_array[13] = Grid_filter.P_conv_1h.a;
-    temp_array[14] = Grid_filter.P_conv_1h.b;
-    temp_array[15] = Grid_filter.P_conv_1h.c;
-    temp_array[16] = Meas_ACDC.Temperature1;
-    temp_array[17] = Meas_ACDC.Temperature2;
-    temp_array[18] = Meas_ACDC.Temperature3;
-    temp_array[19] = Conv.RDY2;
-    temp_array[20] = Conv.P_conv_filter.out;
+    temp_array[10] = Grid_filter.Q_load_1h.a;
+    temp_array[11] = Grid_filter.Q_load_1h.b;
+    temp_array[12] = Grid_filter.Q_load_1h.c;
+    temp_array[13] = Grid_filter.P_load_1h.a;
+    temp_array[14] = Grid_filter.P_load_1h.b;
+    temp_array[15] = Grid_filter.P_load_1h.c;
+
+    temp_array[16] = Grid_filter.Q_conv_1h.a;
+    temp_array[17] = Grid_filter.Q_conv_1h.b;
+    temp_array[18] = Grid_filter.Q_conv_1h.c;
+    temp_array[19] = Grid_filter.P_conv_1h.a;
+    temp_array[20] = Grid_filter.P_conv_1h.b;
+    temp_array[21] = Grid_filter.P_conv_1h.c;
+
+    temp_array[22] = Meas_ACDC.Temperature1;
+    temp_array[23] = Meas_ACDC.Temperature2;
+    temp_array[24] = Meas_ACDC.Temperature3;
+    temp_array[25] = Conv.RDY2;
+    temp_array[26] = Conv.P_conv_filter.out;
 
     save_memory(&log_file, (Uint16 *)temp_array, sizeof(temp_array));
     fresult = f_sync(&log_file);
@@ -389,14 +398,11 @@ Uint16 SD_card_class::log_data()
 
 void SD_card_class::save_single_state_ACDC(FIL *fil, union ALARM_ACDC alarm_ACDC_temp)
 {
-//    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_crc_error    ) f_puts("\t\trx1_crc_error \n", fil);
-//    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_overrun_error) f_puts("\t\trx1_overrun_error \n", fil);
-//    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_frame_error  ) f_puts("\t\trx1_frame_error \n", fil);
-//    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx2_crc_error    ) f_puts("\t\trx2_crc_error \n", fil);
-//    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx2_overrun_error) f_puts("\t\trx2_overrun_error \n", fil);
-//    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx2_frame_error  ) f_puts("\t\trx2_frame_error \n", fil);
-//    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_port_nrdy    ) f_puts("\t\trx1_port_nrdy \n", fil);
-//    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx2_port_nrdy    ) f_puts("\t\trx2_port_nrdy \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_crc_error    ) f_puts("\t\trx1_crc_error \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_overrun_error) f_puts("\t\trx1_overrun_error \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_frame_error  ) f_puts("\t\trx1_frame_error \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_port_nrdy    ) f_puts("\t\trx1_port_nrdy \n", fil);
+
     if(alarm_ACDC_temp.bit.FPGA_errors.bit.sed_err          ) f_puts("\t\tsed_err \n", fil);
 
     if(alarm_ACDC_temp.bit.Not_enough_data_master) f_puts("\t\tNot_enough_data_master \n", fil);

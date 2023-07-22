@@ -31,7 +31,7 @@ void Fiber_comm_slave_class::Main()
         status_flags.comm_active = 1;
     }
     Uint32 time_passed = IpcRegs.IPCCOUNTERL - timer_timeout;
-    if(time_passed > 80000000UL && first)
+    if(time_passed > 200000000UL && first)
     {
         first = 0;
         timer_timeout = IpcRegs.IPCCOUNTERL;

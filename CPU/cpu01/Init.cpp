@@ -318,7 +318,7 @@ void Init_class::Variables()
     Meas_ACDC_alarm_H.Temp = 95.0f;
     Meas_ACDC_alarm_L.Temp = -40.0f;
 
-    Meas_ACDC_alarm_H.U_dc = 150.0f;
+    Meas_ACDC_alarm_H.U_dc = 750.0f;
     Meas_ACDC_alarm_L.U_dc = -5.0f;
     Meas_ACDC_alarm_H.U_dc_balance = 30.0f;
 
@@ -386,7 +386,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.I_lim = Conv.I_lim_nominal;
-    Conv.U_dc_ref = 100.0f;
+    Conv.U_dc_ref = 700.0f;
 
     CIC1_adaptive_filter(&Conv.CIC1_U_dc, 1000.0f, full_OSR);
 
@@ -732,7 +732,7 @@ void Init_class::Variables()
     Conv.Resonant_I_conv[1].gain =
     Conv.Resonant_I_conv[2].gain = 2.0f / (MATH_2PI * 50.0f) / (MATH_1_E * 0.02f);
 
-    Grid_params.Accumulator_gain = ((float)0x80000000 * 2.0f / 3600.0f) * Grid_params.Ts;
+    Energy_meter_params.Accumulator_gain = ((float)0x80000000 * 2.0f / 3600.0f) * Grid_params.Ts;
 }
 
 void Init_class::PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg)

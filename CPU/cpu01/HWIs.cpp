@@ -302,6 +302,7 @@ interrupt void SD_AVG_INT()
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Grid_analyzer_calc();
+    Energy_meter_calc();
     Energy_meter_CPUasm();
 
     Timer_PWM.CPU_GRID = TIMESTAMP_PWM;
@@ -365,11 +366,12 @@ interrupt void SD_AVG_INT()
         register Uint32 *dest;
 
         dest = (Uint32 *)((Uint16 *)EMIF_mem.write.tx1_hipri_msg[0] + offsetof(COMM_slave_sync_msg_struct, P_conv_1h));
-        src = (Uint32 *)&Conv.P_conv;
+        src = (Uint32 *)&Grid.P_conv_1h;
         while(EMIF_mem.read.tx_wip.bit.port1_hipri_msg & (1<<0));
         *dest++ = *src++;
         *dest++ = *src++;
         *dest++ = *src++;
+        src = (Uint32 *)&Grid.Q_conv_1h;
         *dest++ = *src++;
         *dest++ = *src++;
         *dest++ = *src++;

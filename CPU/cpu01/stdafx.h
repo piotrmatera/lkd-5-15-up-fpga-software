@@ -75,50 +75,6 @@ struct Thermistor_struct
     float DIV_Rinf;
 };
 
-struct Energy_meter_upper_struct
-{
-    Uint64 P_p[3];
-    Uint64 P_n[3];
-    Uint64 QI[3];
-    Uint64 QII[3];
-    Uint64 QIII[3];
-    Uint64 QIV[3];
-    struct
-    {
-        Uint64 P_p;
-        Uint64 P_n;
-        Uint64 QI;
-        Uint64 QII;
-        Uint64 QIII;
-        Uint64 QIV;
-    }sum;
-};
-
-struct Energy_meter_lower_struct
-{
-    Uint32 P_p[3];
-    Uint32 P_n[3];
-    Uint32 QI[3];
-    Uint32 QII[3];
-    Uint32 QIII[3];
-    Uint32 QIV[3];
-    struct
-    {
-        Uint32 P_p;
-        Uint32 P_n;
-        Uint32 QI;
-        Uint32 QII;
-        Uint32 QIII;
-        Uint32 QIV;
-    }sum;
-};
-
-struct Energy_meter_struct
-{
-    struct Energy_meter_upper_struct upper;
-    struct Energy_meter_lower_struct lower;
-};
-
 union CONTROL_EXT_MODBUS
 {
     Uint16 all[2];
@@ -131,8 +87,6 @@ union CONTROL_EXT_MODBUS
 //
 //Task 1 (C) Variables
 //
-extern struct Energy_meter_struct Energy_meter;
-
 extern struct Thermistor_struct Therm;
 
 extern struct Measurements_ACDC_struct Meas_ACDC;

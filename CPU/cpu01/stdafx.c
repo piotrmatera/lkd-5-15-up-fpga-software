@@ -62,6 +62,7 @@ volatile union EMIF_union EMIF_mem;
 #pragma SET_DATA_SECTION("Grid")
 
 struct Grid_analyzer_struct Grid_params;
+struct Energy_meter_params_struct Energy_meter_params;
 
 #pragma SET_DATA_SECTION()
 

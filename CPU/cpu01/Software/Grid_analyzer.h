@@ -65,24 +65,14 @@ struct Grid_analyzer_struct
     struct CIC1_adaptive_struct CIC1_P_conv_1h[3];
     struct CIC1_adaptive_struct CIC1_Q_grid_1h[3];
     struct CIC1_adaptive_struct CIC1_Q_conv_1h[3];
-
-    float Accumulator_gain;
-    Uint32 input_P_p[3];
-    Uint32 input_P_n[3];
-    Uint32 input_QI[3];
-    Uint32 input_QII[3];
-    Uint32 input_QIII[3];
-    Uint32 input_QIV[3];
-    struct
-    {
-        Uint32 input_P_p;
-        Uint32 input_P_n;
-        Uint32 input_QI;
-        Uint32 input_QII;
-        Uint32 input_QIII;
-        Uint32 input_QIV;
-    }sum;
 };
+
+extern struct Grid_analyzer_struct Grid_params;
+extern struct Grid_parameters_struct Grid;
+
+void Grid_analyzer_calc();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct Grid_analyzer_filter_struct
 {
@@ -102,13 +92,81 @@ struct Grid_analyzer_filter_struct
     struct CIC1_struct CIC1_THD_I_grid[3];
 };
 
-extern struct Grid_analyzer_struct Grid_params;
 extern struct Grid_analyzer_filter_struct Grid_filter_params;
-extern struct Grid_parameters_struct Grid;
 extern struct Grid_parameters_struct Grid_filter;
 
-void Grid_analyzer_calc();
 void Grid_analyzer_filter_calc();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct Energy_meter_upper_struct
+{
+    Uint64 P_p[3];
+    Uint64 P_n[3];
+    Uint64 QI[3];
+    Uint64 QII[3];
+    Uint64 QIII[3];
+    Uint64 QIV[3];
+    struct
+    {
+        Uint64 P_p;
+        Uint64 P_n;
+        Uint64 QI;
+        Uint64 QII;
+        Uint64 QIII;
+        Uint64 QIV;
+    }sum;
+};
+
+struct Energy_meter_lower_struct
+{
+    Uint32 P_p[3];
+    Uint32 P_n[3];
+    Uint32 QI[3];
+    Uint32 QII[3];
+    Uint32 QIII[3];
+    Uint32 QIV[3];
+    struct
+    {
+        Uint32 P_p;
+        Uint32 P_n;
+        Uint32 QI;
+        Uint32 QII;
+        Uint32 QIII;
+        Uint32 QIV;
+    }sum;
+};
+
+struct Energy_meter_struct
+{
+    struct Energy_meter_upper_struct upper;
+    struct Energy_meter_lower_struct lower;
+};
+
+struct Energy_meter_params_struct
+{
+    float Accumulator_gain;
+    Uint32 input_P_p[3];
+    Uint32 input_P_n[3];
+    Uint32 input_QI[3];
+    Uint32 input_QII[3];
+    Uint32 input_QIII[3];
+    Uint32 input_QIV[3];
+    struct
+    {
+        Uint32 input_P_p;
+        Uint32 input_P_n;
+        Uint32 input_QI;
+        Uint32 input_QII;
+        Uint32 input_QIII;
+        Uint32 input_QIV;
+    }sum;
+};
+
+extern struct Energy_meter_struct Energy_meter;
+extern struct Energy_meter_params_struct Energy_meter_params;
+
+void Energy_meter_calc();
 
 #ifdef __cplusplus
 }

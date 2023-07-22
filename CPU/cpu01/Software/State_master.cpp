@@ -384,6 +384,7 @@ void Machine_master_class::Lgrid_meas()
         L_grid_meas.Iq_diff_a[4] = L_grid_meas.Iq_pos[4].a - L_grid_meas.Iq_neg[4].a;
         L_grid_meas.Iq_diff_b[4] = L_grid_meas.Iq_pos[4].b - L_grid_meas.Iq_neg[4].b;
         L_grid_meas.Iq_diff_c[4] = L_grid_meas.Iq_pos[4].c - L_grid_meas.Iq_neg[4].c;
+        //#TODO czy tutaj nie powinno byc liczone z mocy zamiast z pradow? U^2/Q
         L_grid_meas.L_grid[0].a = (L_grid_meas.U_pos[0].a - L_grid_meas.U_neg[0].a) / (L_grid_meas.Iq_diff_a[0] * Conv.w_filter);
         L_grid_meas.L_grid[0].b = (L_grid_meas.U_pos[0].b - L_grid_meas.U_neg[0].b) / (L_grid_meas.Iq_diff_b[0] * Conv.w_filter);
         L_grid_meas.L_grid[0].c = (L_grid_meas.U_pos[0].c - L_grid_meas.U_neg[0].c) / (L_grid_meas.Iq_diff_c[0] * Conv.w_filter);
@@ -673,21 +674,21 @@ void Machine_master_class::operational()
             CT_test_online.I_grid_filter_last.b = Grid_filter.I_grid_1h.b;
             CT_test_online.I_grid_filter_last.c = Grid_filter.I_grid_1h.c;
 
-            CT_test_online.Q_grid_last.a = Grid.Q_grid_1h.a;
-            CT_test_online.Q_grid_last.b = Grid.Q_grid_1h.b;
-            CT_test_online.Q_grid_last.c = Grid.Q_grid_1h.c;
+            CT_test_online.Q_grid_last.a = Conv.master.total.Q_conv_1h.a;
+            CT_test_online.Q_grid_last.b = Conv.master.total.Q_conv_1h.b;
+            CT_test_online.Q_grid_last.c = Conv.master.total.Q_conv_1h.c;
 
             step = fminf(2.0f * CT_test_online.I_grid_val, Conv.I_lim);
             CT_test_online.Q_conv_step.a = Grid.U_grid_1h.a * step;
             CT_test_online.Q_conv_step.b = Grid.U_grid_1h.b * step;
             CT_test_online.Q_conv_step.c = Grid.U_grid_1h.c * step;
-            if (Grid.Q_conv_1h.a < 0.0f) CT_test_online.Q_conv_step.a = -CT_test_online.Q_conv_step.a;
-            if (Grid.Q_conv_1h.b < 0.0f) CT_test_online.Q_conv_step.b = -CT_test_online.Q_conv_step.b;
-            if (Grid.Q_conv_1h.c < 0.0f) CT_test_online.Q_conv_step.c = -CT_test_online.Q_conv_step.c;
+            if (Conv.master.total.Q_conv_1h.a < 0.0f) CT_test_online.Q_conv_step.a = -CT_test_online.Q_conv_step.a;
+            if (Conv.master.total.Q_conv_1h.b < 0.0f) CT_test_online.Q_conv_step.b = -CT_test_online.Q_conv_step.b;
+            if (Conv.master.total.Q_conv_1h.c < 0.0f) CT_test_online.Q_conv_step.c = -CT_test_online.Q_conv_step.c;
 
-            Conv.Q_set_local.a = CT_test_online.Q_conv_step.a - Grid.Q_conv_1h.a;
-            Conv.Q_set_local.b = CT_test_online.Q_conv_step.b - Grid.Q_conv_1h.b;
-            Conv.Q_set_local.c = CT_test_online.Q_conv_step.c - Grid.Q_conv_1h.c;
+            Conv.Q_set_local.a = CT_test_online.Q_conv_step.a - Conv.master.total.Q_conv_1h.a;
+            Conv.Q_set_local.b = CT_test_online.Q_conv_step.b - Conv.master.total.Q_conv_1h.b;
+            Conv.Q_set_local.c = CT_test_online.Q_conv_step.c - Conv.master.total.Q_conv_1h.c;
             Conv.enable_Q_comp_local.a =
             Conv.enable_Q_comp_local.b =
             Conv.enable_Q_comp_local.c =

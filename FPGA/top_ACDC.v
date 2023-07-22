@@ -716,11 +716,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	assign FLT_bus[28] = !rx1_crc_error || master_slave_selector;  
 	assign FLT_bus[29] = !rx1_overrun_error || master_slave_selector;  
 	assign FLT_bus[30] = !rx1_frame_error || master_slave_selector;  
-	assign FLT_bus[31] = rx1_port_rdy || master_slave_selector;  
-	//assign FLT_bus[19] = !rx2_crc_error;  
-	//assign FLT_bus[20] = !rx2_overrun_error;  
-	//assign FLT_bus[21] = !rx2_frame_error;  
-	//assign FLT_bus[23] = rx2_port_rdy;
+	assign FLT_bus[31] = rx1_port_rdy || master_slave_selector;
   
  	wire rst_faults; 
 	FD1P3BX FLT_ff[FAULT_NUMBER-1:0](.D(1'b0), .SP(rst_faults), .CK(clk_1x), .PD(~FLT_bus), .Q(FLT_REG_O));  

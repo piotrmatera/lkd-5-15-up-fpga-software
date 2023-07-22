@@ -82,15 +82,6 @@ void Machine_slave_class::idle()
         Conv.enable = 0;
     }
 
-//    if(ReadIpcTimer() < 2000000000ULL)//10s
-//    {
-//        if(alarm_master.bit.FPGA_errors.bit.rx1_port_nrdy ||
-//            alarm_master.bit.FPGA_errors.bit.rx1_overrun_error ||
-//            alarm_master.bit.FPGA_errors.bit.rx1_frame_error ||
-//            alarm_master.bit.FPGA_errors.bit.rx1_crc_error)
-//            Init.clear_alarms();
-//    }
-
     if(ONOFF.ONOFF)
     {
         float Temp = fmaxf(Meas_ACDC.Temperature1, fmaxf(Meas_ACDC.Temperature2, Meas_ACDC.Temperature3));
