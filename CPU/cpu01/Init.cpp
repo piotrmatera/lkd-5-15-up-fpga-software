@@ -298,6 +298,19 @@ void Init_class::CIC2_filter(struct CIC2_struct *CIC, float max_value, Uint16 OS
     CIC->div_range_modifier = 1.0f / CIC->range_modifier;
 }
 
+void Init_class::CIC1_global_init(struct CIC1_global_struct* CIC, float OSR, float decimation_ratio)
+{
+    CIC->decimation_ratio = decimation_ratio;
+    CIC->OSR = OSR;
+    CIC->div_OSR = 1.0f / OSR;
+}
+
+void Init_class::CIC1_local_init(struct CIC1_local_struct* CIC, float max_value, float OSR, float decimation_ratio)
+{
+    CIC->range_modifier = (float)(1UL << 31) / OSR / max_value;
+    CIC->div_range_modifier = 1.0f / CIC->range_modifier;
+}
+
 void Init_class::CIC1_adaptive_filter(struct CIC1_adaptive_struct *CIC, float max_value, Uint16 OSR)
 {
     CIC->range_modifier = (float)(1UL<<31) / (float)OSR / max_value;
@@ -586,6 +599,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Grid_params.Ts = Conv.Ts;
+    CIC1_global_init(&CIC1_global__50Hz, 50.0f, full_OSR);
 
     float decimation_grid = full_OSR;
     float OSR = 50.0f;
@@ -595,52 +609,52 @@ void Init_class::Variables()
     static const float additional_range = 2.0f;
 
     ///////////////////////////////////////////////////////////////////
-    CIC1_filter(&Grid_filter_params.CIC1_P_conv_1h[0], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_P_conv_1h[1], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_P_conv_1h[2], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_conv_1h[0], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_conv_1h[1], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_conv_1h[2], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_Q_conv_1h[0] = Grid_filter_params.CIC1_P_conv_1h[0];
     Grid_filter_params.CIC1_Q_conv_1h[1] = Grid_filter_params.CIC1_P_conv_1h[1];
     Grid_filter_params.CIC1_Q_conv_1h[2] = Grid_filter_params.CIC1_P_conv_1h[2];
 
-    CIC1_filter(&Grid_filter_params.CIC1_P_grid_1h[0], additional_range * U_grid_max * CT_SD_max_value[0], OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_P_grid_1h[1], additional_range * U_grid_max * CT_SD_max_value[1], OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_P_grid_1h[2], additional_range * U_grid_max * CT_SD_max_value[2], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_grid_1h[0], additional_range * U_grid_max * CT_SD_max_value[0], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_grid_1h[1], additional_range * U_grid_max * CT_SD_max_value[1], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_grid_1h[2], additional_range * U_grid_max * CT_SD_max_value[2], OSR, decimation_grid);
     Grid_filter_params.CIC1_Q_grid_1h[0] = Grid_filter_params.CIC1_P_grid_1h[0];
     Grid_filter_params.CIC1_Q_grid_1h[1] = Grid_filter_params.CIC1_P_grid_1h[1];
     Grid_filter_params.CIC1_Q_grid_1h[2] = Grid_filter_params.CIC1_P_grid_1h[2];
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_filter(&Grid_filter_params.CIC1_U_grid_1h[0], additional_range * U_grid_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_U_grid_1h[0], additional_range * U_grid_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_U_grid_1h[0] =
     Grid_filter_params.CIC1_U_grid_1h[1] =
     Grid_filter_params.CIC1_U_grid_1h[2] = Grid_filter_params.CIC1_U_grid_1h[0];
 
-    CIC1_filter(&Grid_filter_params.CIC1_I_grid_1h[0], additional_range * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_grid_1h[0], additional_range * I_conv_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_I_grid_1h[0] =
     Grid_filter_params.CIC1_I_grid_1h[1] =
     Grid_filter_params.CIC1_I_grid_1h[2] = Grid_filter_params.CIC1_I_grid_1h[0];
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_filter(&Grid_filter_params.CIC1_U_grid[0], additional_range * U_grid_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_U_grid[0], additional_range * U_grid_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_U_grid[0] =
     Grid_filter_params.CIC1_U_grid[1] =
     Grid_filter_params.CIC1_U_grid[2] = Grid_filter_params.CIC1_U_grid[0];
 
-    CIC1_filter(&Grid_filter_params.CIC1_I_conv[0], additional_range * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_conv[0], additional_range * I_conv_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_I_conv[0] =
     Grid_filter_params.CIC1_I_conv[1] =
     Grid_filter_params.CIC1_I_conv[2] =
     Grid_filter_params.CIC1_I_conv[3] = Grid_filter_params.CIC1_I_conv[0];
 
-    CIC1_filter(&Grid_filter_params.CIC1_I_grid[0], additional_range * CT_SD_max_value[0], OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_I_grid[1], additional_range * CT_SD_max_value[1], OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_I_grid[2], additional_range * CT_SD_max_value[2], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_grid[0], additional_range * CT_SD_max_value[0], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_grid[1], additional_range * CT_SD_max_value[1], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_grid[2], additional_range * CT_SD_max_value[2], OSR, decimation_grid);
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_filter(&Grid_filter_params.CIC1_THD_U_grid[0], 1000.0f, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_THD_U_grid[0], 1000.0f, OSR, decimation_grid);
     Grid_filter_params.CIC1_THD_U_grid[0] =
     Grid_filter_params.CIC1_THD_U_grid[1] =
     Grid_filter_params.CIC1_THD_U_grid[2] =

@@ -110,6 +110,7 @@ extern struct CIC2_struct CIC2_calibration;
 extern CLA_FPTR CIC2_calibration_input;
 extern struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
 extern struct CIC1_adaptive2_global_struct CIC1_adaptive2_global__50Hz;
+extern struct CIC1_global_struct CIC1_global__50Hz;
 
 extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 extern struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];

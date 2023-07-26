@@ -77,20 +77,20 @@ void Grid_analyzer_calc2();
 
 struct Grid_analyzer_filter_struct
 {
-    struct CIC1_struct CIC1_U_grid[3];
-    struct CIC1_struct CIC1_I_grid[3];
-    struct CIC1_struct CIC1_I_conv[4];
+    struct CIC1_local_struct CIC1_U_grid[3];
+    struct CIC1_local_struct CIC1_I_grid[3];
+    struct CIC1_local_struct CIC1_I_conv[4];
 
-    struct CIC1_struct CIC1_I_grid_1h[3];
-    struct CIC1_struct CIC1_U_grid_1h[3];
+    struct CIC1_local_struct CIC1_I_grid_1h[3];
+    struct CIC1_local_struct CIC1_U_grid_1h[3];
 
-    struct CIC1_struct CIC1_P_grid_1h[3];
-    struct CIC1_struct CIC1_P_conv_1h[3];
-    struct CIC1_struct CIC1_Q_grid_1h[3];
-    struct CIC1_struct CIC1_Q_conv_1h[3];
+    struct CIC1_local_struct CIC1_P_grid_1h[3];
+    struct CIC1_local_struct CIC1_P_conv_1h[3];
+    struct CIC1_local_struct CIC1_Q_grid_1h[3];
+    struct CIC1_local_struct CIC1_Q_conv_1h[3];
 
-    struct CIC1_struct CIC1_THD_U_grid[3];
-    struct CIC1_struct CIC1_THD_I_grid[3];
+    struct CIC1_local_struct CIC1_THD_U_grid[3];
+    struct CIC1_local_struct CIC1_THD_I_grid[3];
 };
 
 extern struct Grid_analyzer_filter_struct Grid_filter_params;

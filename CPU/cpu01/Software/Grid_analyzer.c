@@ -4,25 +4,6 @@
 
 #include "stdafx.h"
 
-#pragma CODE_SECTION(CIC1_filter_CPU, ".TI.ramfunc");
-void CIC1_filter_CPU(struct CIC1_struct *CIC, float input)
-{
-    if(CIC->decimation_counter-- <= 0.0f) CIC->decimation_counter = CIC->decimation_ratio - 1.0f;
-    else return;
-    CIC->integrator += (int32)(input * CIC->range_modifier);
-    register float counter_temp = CIC->counter;
-    if (counter_temp-- <= 0.0f) counter_temp = CIC->OSR - 1.0f;
-    CIC->counter = counter_temp;
-    register int32 div_memory_new = (int32)(counter_temp*CIC_upsample1*CIC->div_OSR);
-    if (CIC->div_memory != div_memory_new)
-    {
-        CIC->div_memory = div_memory_new;
-        register int32 *decimator = (int32 *)&CIC->decimator_memory + div_memory_new;
-        CIC->out = (float)(CIC->integrator - *decimator) * CIC->div_OSR * CIC->div_range_modifier;
-        *decimator = CIC->integrator;
-    }
-}
-
 #pragma CODE_SECTION(CIC1_adaptive2_global_calc_CPU, ".TI.ramfunc");
 void CIC1_adaptive2_global_calc_CPU(struct CIC1_adaptive2_global_struct* CIC_global, float frequency)
 {
@@ -84,6 +65,36 @@ float CIC1_adaptive2_filter_CPU(struct CIC1_adaptive2_global_struct* CIC_global,
     if (CIC_global->read_enable) CIC->out = (float)(CIC->integrator - CIC->decimator_memory[CIC_global->read_ptr]) * CIC_global->div_OSR_adaptive * CIC->div_range_modifier;;
     if (CIC_global->write_enable) CIC->decimator_memory[CIC_global->write_ptr] = CIC->integrator;
     return CIC->out;
+}
+
+#pragma CODE_SECTION(CIC1_filter_local_CPU, ".TI.ramfunc");
+void CIC1_filter_local_CPU(struct CIC1_global_struct* CIC_global, struct CIC1_local_struct* CIC, float input)
+{
+    if (!CIC_global->enable_int) return;
+    CIC->integrator += (int32)(input * CIC->range_modifier);
+    if (!CIC_global->enable_diff) return;
+    register int32* decimator = (int32*)&CIC->decimator_memory + CIC_global->div_memory;
+    CIC->out = (float)(CIC->integrator - *decimator) * CIC_global->div_OSR * CIC->div_range_modifier;
+    *decimator = CIC->integrator;
+}
+
+#pragma CODE_SECTION(CIC1_filter_global_CPU, ".TI.ramfunc");
+void CIC1_filter_global_CPU(struct CIC1_global_struct* CIC_global)
+{
+    CIC_global->enable_diff =
+    CIC_global->enable_int = 0;
+    if (CIC_global->decimation_counter-- <= 0) CIC_global->decimation_counter = CIC_global->decimation_ratio - 1;
+    else return;
+    CIC_global->enable_int = 1;
+    register float counter_temp = CIC_global->counter;
+    if (counter_temp-- <= 0) counter_temp = CIC_global->OSR - 1;
+    CIC_global->counter = counter_temp;
+    register int32 div_memory_new = (int32)(counter_temp * CIC_upsample1 * CIC_global->div_OSR);
+    if (CIC_global->div_memory != div_memory_new)
+    {
+        CIC_global->div_memory = div_memory_new;
+        CIC_global->enable_diff = 1;
+    }
 }
 
 #pragma CODE_SECTION(Grid_analyzer_calc, ".TI.ramfunc");
@@ -274,27 +285,29 @@ void Energy_meter_calc()
     Energy_meter_params.sum.input_QIV = fabsf(fminf(temp, 0.0f));
 }
 
-#pragma CODE_SECTION(Grid_analyzer_calc, ".TI.ramfunc");
+#pragma CODE_SECTION(Grid_analyzer_filter_calc, ".TI.ramfunc");
 void Grid_analyzer_filter_calc()
 {
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_U_grid[0], Grid.U_grid.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_U_grid[1], Grid.U_grid.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_U_grid[2], Grid.U_grid.c);
+    CIC1_filter_global_CPU(&CIC1_global__50Hz);
+
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_U_grid[0], Grid.U_grid.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_U_grid[1], Grid.U_grid.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_U_grid[2], Grid.U_grid.c);
     Grid_filter.U_grid.a = Grid_filter_params.CIC1_U_grid[0].out;
     Grid_filter.U_grid.b = Grid_filter_params.CIC1_U_grid[1].out;
     Grid_filter.U_grid.c = Grid_filter_params.CIC1_U_grid[2].out;
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_grid[0], Grid.I_grid.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_grid[1], Grid.I_grid.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_grid[2], Grid.I_grid.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_grid[0], Grid.I_grid.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_grid[1], Grid.I_grid.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_grid[2], Grid.I_grid.c);
     Grid_filter.I_grid.a = Grid_filter_params.CIC1_I_grid[0].out;
     Grid_filter.I_grid.b = Grid_filter_params.CIC1_I_grid[1].out;
     Grid_filter.I_grid.c = Grid_filter_params.CIC1_I_grid[2].out;
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_conv[0], Grid.I_conv.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_conv[1], Grid.I_conv.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_conv[2], Grid.I_conv.c);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_conv[3], Grid.I_conv.n);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_conv[0], Grid.I_conv.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_conv[1], Grid.I_conv.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_conv[2], Grid.I_conv.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_conv[3], Grid.I_conv.n);
     Grid_filter.I_conv.a = Grid_filter_params.CIC1_I_conv[0].out;
     Grid_filter.I_conv.b = Grid_filter_params.CIC1_I_conv[1].out;
     Grid_filter.I_conv.c = Grid_filter_params.CIC1_I_conv[2].out;
@@ -302,62 +315,62 @@ void Grid_analyzer_filter_calc()
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_U_grid_1h[0], Grid.U_grid_1h.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_U_grid_1h[1], Grid.U_grid_1h.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_U_grid_1h[2], Grid.U_grid_1h.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_U_grid_1h[0], Grid.U_grid_1h.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_U_grid_1h[1], Grid.U_grid_1h.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_U_grid_1h[2], Grid.U_grid_1h.c);
     Grid_filter.U_grid_1h.a = Grid_filter_params.CIC1_U_grid_1h[0].out;
     Grid_filter.U_grid_1h.b = Grid_filter_params.CIC1_U_grid_1h[1].out;
     Grid_filter.U_grid_1h.c = Grid_filter_params.CIC1_U_grid_1h[2].out;
     Grid_filter.average.U_grid_1h = (Grid_filter.U_grid_1h.a + Grid_filter.U_grid_1h.b + Grid_filter.U_grid_1h.c) * MATH_1_3;
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_grid_1h[0], Grid.I_grid_1h.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_grid_1h[1], Grid.I_grid_1h.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_I_grid_1h[2], Grid.I_grid_1h.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_grid_1h[0], Grid.I_grid_1h.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_grid_1h[1], Grid.I_grid_1h.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_I_grid_1h[2], Grid.I_grid_1h.c);
     Grid_filter.I_grid_1h.a = Grid_filter_params.CIC1_I_grid_1h[0].out;
     Grid_filter.I_grid_1h.b = Grid_filter_params.CIC1_I_grid_1h[1].out;
     Grid_filter.I_grid_1h.c = Grid_filter_params.CIC1_I_grid_1h[2].out;
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_Q_conv_1h[0], Grid.Q_conv_1h.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_Q_conv_1h[1], Grid.Q_conv_1h.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_Q_conv_1h[2], Grid.Q_conv_1h.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_Q_conv_1h[0], Grid.Q_conv_1h.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_Q_conv_1h[1], Grid.Q_conv_1h.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_Q_conv_1h[2], Grid.Q_conv_1h.c);
     Grid_filter.Q_conv_1h.a = Grid_filter_params.CIC1_Q_conv_1h[0].out;
     Grid_filter.Q_conv_1h.b = Grid_filter_params.CIC1_Q_conv_1h[1].out;
     Grid_filter.Q_conv_1h.c = Grid_filter_params.CIC1_Q_conv_1h[2].out;
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_Q_grid_1h[0], Grid.Q_grid_1h.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_Q_grid_1h[1], Grid.Q_grid_1h.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_Q_grid_1h[2], Grid.Q_grid_1h.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_Q_grid_1h[0], Grid.Q_grid_1h.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_Q_grid_1h[1], Grid.Q_grid_1h.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_Q_grid_1h[2], Grid.Q_grid_1h.c);
     Grid_filter.Q_grid_1h.a = Grid_filter_params.CIC1_Q_grid_1h[0].out;
     Grid_filter.Q_grid_1h.b = Grid_filter_params.CIC1_Q_grid_1h[1].out;
     Grid_filter.Q_grid_1h.c = Grid_filter_params.CIC1_Q_grid_1h[2].out;
     Grid_filter.average.Q_grid_1h = Grid_filter.Q_grid_1h.a + Grid_filter.Q_grid_1h.b + Grid_filter.Q_grid_1h.c;
 
-    Grid_filter.Q_load_1h.a = Grid_filter.Q_grid_1h.a + Conv.master.total.Q_conv_1h_filter.a;
-    Grid_filter.Q_load_1h.b = Grid_filter.Q_grid_1h.b + Conv.master.total.Q_conv_1h_filter.b;
-    Grid_filter.Q_load_1h.c = Grid_filter.Q_grid_1h.c + Conv.master.total.Q_conv_1h_filter.c;
+    Grid_filter.Q_load_1h.a = Grid_filter.Q_grid_1h.a;
+    Grid_filter.Q_load_1h.b = Grid_filter.Q_grid_1h.b;
+    Grid_filter.Q_load_1h.c = Grid_filter.Q_grid_1h.c;
     Grid_filter.average.Q_load_1h = Grid_filter.Q_load_1h.a + Grid_filter.Q_load_1h.b + Grid_filter.Q_load_1h.c;
 
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_P_conv_1h[0], Grid.P_conv_1h.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_P_conv_1h[1], Grid.P_conv_1h.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_P_conv_1h[2], Grid.P_conv_1h.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_P_conv_1h[0], Grid.P_conv_1h.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_P_conv_1h[1], Grid.P_conv_1h.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_P_conv_1h[2], Grid.P_conv_1h.c);
     Grid_filter.P_conv_1h.a = Grid_filter_params.CIC1_P_conv_1h[0].out;
     Grid_filter.P_conv_1h.b = Grid_filter_params.CIC1_P_conv_1h[1].out;
     Grid_filter.P_conv_1h.c = Grid_filter_params.CIC1_P_conv_1h[2].out;
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_P_grid_1h[0], Grid.P_grid_1h.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_P_grid_1h[1], Grid.P_grid_1h.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_P_grid_1h[2], Grid.P_grid_1h.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_P_grid_1h[0], Grid.P_grid_1h.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_P_grid_1h[1], Grid.P_grid_1h.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_P_grid_1h[2], Grid.P_grid_1h.c);
     Grid_filter.P_grid_1h.a = Grid_filter_params.CIC1_P_grid_1h[0].out;
     Grid_filter.P_grid_1h.b = Grid_filter_params.CIC1_P_grid_1h[1].out;
     Grid_filter.P_grid_1h.c = Grid_filter_params.CIC1_P_grid_1h[2].out;
     Grid_filter.average.P_grid_1h = Grid_filter.P_grid_1h.a + Grid_filter.P_grid_1h.b + Grid_filter.P_grid_1h.c;
 
-    Grid_filter.P_load_1h.a = Grid_filter.P_grid_1h.a + Conv.master.total.P_conv_1h_filter.a;
-    Grid_filter.P_load_1h.b = Grid_filter.P_grid_1h.b + Conv.master.total.P_conv_1h_filter.b;
-    Grid_filter.P_load_1h.c = Grid_filter.P_grid_1h.c + Conv.master.total.P_conv_1h_filter.c;
+    Grid_filter.P_load_1h.a = Grid_filter.P_grid_1h.a;
+    Grid_filter.P_load_1h.b = Grid_filter.P_grid_1h.b;
+    Grid_filter.P_load_1h.c = Grid_filter.P_grid_1h.c;
     Grid_filter.average.P_load_1h = Grid_filter.P_load_1h.a + Grid_filter.P_load_1h.b + Grid_filter.P_load_1h.c;
 
     ///////////////////////////////////////////////////////////////////
@@ -386,22 +399,22 @@ void Grid_analyzer_filter_calc()
     Grid_filter.PF_grid_1h.c = Grid_filter.P_grid_1h.c / fmaxf(Grid_filter.S_grid_1h.c, 1.0f);
     Grid_filter.average.PF_grid_1h = (fabsf(Grid_filter.P_grid_1h.a) + fabsf(Grid_filter.P_grid_1h.b) + fabsf(Grid_filter.P_grid_1h.c)) / fmaxf(Grid_filter.average.S_grid_1h, 1.0f);
 
-    register float div_I_lim = 1.0f / fmaxf(Conv.I_lim_nominal, 1.0f);
+    register float div_I_lim = 1.0f / fmaxf(Conv.I_lim, 1.0f);
     Grid_filter.Used_resources.a = Grid_filter.I_conv.a * div_I_lim;
     Grid_filter.Used_resources.b = Grid_filter.I_conv.b * div_I_lim;
     Grid_filter.Used_resources.c = Grid_filter.I_conv.c * div_I_lim;
     Grid_filter.Used_resources.n = Grid_filter.I_conv.n * div_I_lim;
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_THD_U_grid[0], Grid.THD_U_grid.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_THD_U_grid[1], Grid.THD_U_grid.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_THD_U_grid[2], Grid.THD_U_grid.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_THD_U_grid[0], Grid.THD_U_grid.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_THD_U_grid[1], Grid.THD_U_grid.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_THD_U_grid[2], Grid.THD_U_grid.c);
     Grid_filter.THD_U_grid.a = Grid_filter_params.CIC1_THD_U_grid[0].out;
     Grid_filter.THD_U_grid.b = Grid_filter_params.CIC1_THD_U_grid[1].out;
     Grid_filter.THD_U_grid.c = Grid_filter_params.CIC1_THD_U_grid[2].out;
 
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_THD_I_grid[0], Grid.THD_I_grid.a);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_THD_I_grid[1], Grid.THD_I_grid.b);
-    CIC1_filter_CPU(&Grid_filter_params.CIC1_THD_I_grid[2], Grid.THD_I_grid.c);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_THD_I_grid[0], Grid.THD_I_grid.a);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_THD_I_grid[1], Grid.THD_I_grid.b);
+    CIC1_filter_local_CPU(&CIC1_global__50Hz, &Grid_filter_params.CIC1_THD_I_grid[2], Grid.THD_I_grid.c);
     Grid_filter.THD_I_grid.a = Grid_filter_params.CIC1_THD_I_grid[0].out;
     Grid_filter.THD_I_grid.b = Grid_filter_params.CIC1_THD_I_grid[1].out;
     Grid_filter.THD_I_grid.c = Grid_filter_params.CIC1_THD_I_grid[2].out;

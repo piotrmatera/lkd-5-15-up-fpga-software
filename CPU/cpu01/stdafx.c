@@ -28,6 +28,7 @@ struct CIC2_struct CIC2_calibration;
 CLA_FPTR CIC2_calibration_input;
 struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
 struct CIC1_adaptive2_global_struct CIC1_adaptive2_global__50Hz;
+struct CIC1_global_struct CIC1_global__50Hz;
 
 struct Measurements_ACDC_struct Meas_ACDC;
 struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain_error;

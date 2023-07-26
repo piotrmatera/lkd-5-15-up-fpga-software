@@ -66,6 +66,34 @@ void CIC1_filter(struct CIC1_struct *CIC, float input)
     }
 }
 
+void CIC1_filter_local(struct CIC1_global_struct* CIC_global, struct CIC1_local_struct* CIC, float input)
+{
+    if (!CIC_global->enable_int) return;
+    CIC->integrator += (int32)(input * CIC->range_modifier);
+    if (!CIC_global->enable_diff) return;
+    register int32* decimator = (int32*)&CIC->decimator_memory + CIC_global->div_memory;
+    CIC->out = (float)(CIC->integrator - *decimator) * CIC_global->div_OSR * CIC->div_range_modifier;
+    *decimator = CIC->integrator;
+}
+
+void CIC1_filter_global(struct CIC1_global_struct* CIC_global)
+{
+    CIC_global->enable_diff =
+    CIC_global->enable_int = 0;
+    if (CIC_global->decimation_counter-- <= 0) CIC_global->decimation_counter = CIC_global->decimation_ratio - 1;
+    else return;
+    CIC_global->enable_int = 1;
+    register float counter_temp = CIC_global->counter;
+    if (counter_temp-- <= 0) counter_temp = CIC_global->OSR - 1;
+    CIC_global->counter = counter_temp;
+    register int32 div_memory_new = (int32)(counter_temp * CIC_upsample1 * CIC_global->div_OSR);
+    if (CIC_global->div_memory != div_memory_new)
+    {
+        CIC_global->div_memory = div_memory_new;
+        CIC_global->enable_diff = 1;
+    }
+}
+
 void PR_calc(struct PR_struct* PR, float error)
 {
     PR->y0 += PR->x1 * PR->Ts;

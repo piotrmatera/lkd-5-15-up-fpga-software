@@ -120,6 +120,27 @@ struct CIC1_struct
     float decimation_ratio;
 };
 
+struct CIC1_global_struct
+{
+    int32 enable_int;
+    int32 enable_diff;
+    int32 div_memory;
+    int32 counter;
+    float OSR;
+    float div_OSR;
+    int32 decimation_counter;
+    int32 decimation_ratio;
+};
+
+struct CIC1_local_struct
+{
+    int32 integrator;
+    int32 decimator_memory[CIC_upsample1];
+    float out;
+    float range_modifier;
+    float div_range_modifier;
+};
+
 struct CIC1_adaptive_global_struct
 {
     float cycle_enable[2];
@@ -285,6 +306,12 @@ float CIC1_adaptive2_filter(struct CIC1_adaptive2_global_struct* CIC_global, str
 
 extern void CIC1_adaptive2_global_CLAasm(struct CIC1_adaptive2_global_struct* CIC_global, float frequency);
 void CIC1_adaptive2_global_calc(struct CIC1_adaptive2_global_struct* CIC_global, float frequency);
+
+extern void CIC1_filter_global_CLAasm(struct CIC1_global_struct* CIC_global);
+void CIC1_filter_global(struct CIC1_global_struct* CIC_global);
+
+extern void CIC1_filter_local_CLAasm(struct CIC1_global_struct* CIC_global, struct CIC1_local_struct* CIC, float input);
+void CIC1_filter_local(struct CIC1_global_struct* CIC_global, struct CIC1_local_struct* CIC, float input);
 
 extern void CIC1_filter_CLAasm(struct CIC1_struct *CIC, float input);
 void CIC1_filter(struct CIC1_struct *CIC, float input);
