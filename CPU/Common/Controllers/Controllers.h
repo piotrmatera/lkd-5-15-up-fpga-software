@@ -122,11 +122,11 @@ struct CIC1_struct
 
 struct CIC1_adaptive_global_struct
 {
+    float cycle_enable[2];
+    int32 div_memory[2];
     float OSR_adaptive[2];
     float div_OSR_adaptive[2];
-    int32 div_memory[2];
     float counter[2];
-    float cycle_enable[2];
     float select_output;
     float change_timer;
     float Ts;
@@ -134,9 +134,35 @@ struct CIC1_adaptive_global_struct
 
 struct CIC1_adaptive_struct
 {
+    float range_modifier;
+    float out_temp[2];
+    float out;
+    float div_range_modifier;
     int32 integrator;
     int32 decimator_memory[2][CIC_upsample2];
-    float out_temp[2];
+};
+
+struct CIC1_adaptive2_global_struct
+{
+    int32 write_ptr;
+    int32 read_ptr;
+    int32 counter_WDIST;
+    int32 counter_WDIST_read_val;
+    int32 WDIST;
+    int32 read_enable;
+    int32 write_enable;
+    int32 inc_delay;
+    int32 dec_delay;
+    float new_OSR;
+    float OSR_adaptive;
+    float div_OSR_adaptive;
+    float Ts;
+};
+
+struct CIC1_adaptive2_struct
+{
+    int32 integrator;
+    int32 decimator_memory[CIC_upsample2];
     float out;
     float range_modifier;
     float div_range_modifier;
@@ -253,6 +279,12 @@ float CIC1_adaptive_filter(struct CIC1_adaptive_global_struct *CIC_global, struc
 
 extern void CIC1_adaptive_global_CLAasm(struct CIC1_adaptive_global_struct *CIC_global, float frequency);
 void CIC1_adaptive_global_calc(struct CIC1_adaptive_global_struct *CIC_global, float frequency);
+
+extern float CIC1_adaptive2_filter_CLAasm(struct CIC1_adaptive2_global_struct* CIC_global, struct CIC1_adaptive2_struct* CIC, float input);
+float CIC1_adaptive2_filter(struct CIC1_adaptive2_global_struct* CIC_global, struct CIC1_adaptive2_struct* CIC, float input);
+
+extern void CIC1_adaptive2_global_CLAasm(struct CIC1_adaptive2_global_struct* CIC_global, float frequency);
+void CIC1_adaptive2_global_calc(struct CIC1_adaptive2_global_struct* CIC_global, float frequency);
 
 extern void CIC1_filter_CLAasm(struct CIC1_struct *CIC, float input);
 void CIC1_filter(struct CIC1_struct *CIC, float input);

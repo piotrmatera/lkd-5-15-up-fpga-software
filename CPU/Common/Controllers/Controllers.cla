@@ -281,3 +281,64 @@ float CIC1_adaptive_filter(struct CIC1_adaptive_global_struct *CIC_global, struc
     }
     return CIC->out = CIC_global->select_output ? CIC->out_temp[1] : CIC->out_temp[0];
 }
+
+void CIC1_adaptive2_global_calc(struct CIC1_adaptive2_global_struct* CIC_global, float frequency)
+{
+    CIC_global->read_enable =
+    CIC_global->write_enable = 0.0f;
+
+    if (CIC_global->inc_delay)
+    {
+        CIC_global->inc_delay = 0;
+        if (++CIC_global->read_ptr >= CIC_upsample2) CIC_global->read_ptr = 0;
+    }
+    if (CIC_global->dec_delay)
+    {
+        CIC_global->dec_delay = 0;
+        if (--CIC_global->read_ptr < 0) CIC_global->read_ptr = CIC_upsample2 - 1;
+    }
+
+    if (CIC_global->counter_WDIST == CIC_global->counter_WDIST_read_val)
+    {
+        if (++CIC_global->read_ptr >= CIC_upsample2) CIC_global->read_ptr = 0;
+        CIC_global->read_enable = 1.0f;
+
+        CIC_global->OSR_adaptive = CIC_global->new_OSR;
+        CIC_global->div_OSR_adaptive = 1.0f / CIC_global->new_OSR;
+    }
+
+    if (++CIC_global->counter_WDIST >= CIC_global->WDIST)
+    {
+        CIC_global->counter_WDIST = 0;
+        if (++CIC_global->write_ptr >= CIC_upsample2) CIC_global->write_ptr = 0;
+        CIC_global->write_enable = 1.0f;
+
+        float new_osr = (Uint32)(1.0f / (frequency * CIC_global->Ts) + 0.5f);
+        new_osr = CIC_global->OSR_adaptive + Saturation(new_osr - CIC_global->OSR_adaptive, -CIC_global->WDIST, CIC_global->WDIST);
+
+        int32 READ_DIST = CIC_global->write_ptr - CIC_global->read_ptr;
+        if (READ_DIST < 0) READ_DIST += CIC_upsample2;
+        int32 diff = new_osr - 1 - (READ_DIST - 1) * CIC_global->WDIST;
+        if (diff < 0)
+        {
+            CIC_global->inc_delay = 1;
+            diff = diff + CIC_global->WDIST;
+        }
+        if (diff >= CIC_global->WDIST)
+        {
+            CIC_global->dec_delay = 1;
+            diff = diff - CIC_global->WDIST;
+        }
+
+        CIC_global->new_OSR = new_osr;
+        CIC_global->counter_WDIST_read_val = diff;
+    }
+}
+
+float CIC1_adaptive2_filter(struct CIC1_adaptive2_global_struct* CIC_global, struct CIC1_adaptive2_struct* CIC, float input)
+{
+    CIC->integrator += (int32)(input * CIC->range_modifier);
+    if (CIC_global->read_enable) CIC->out = (float)(CIC->integrator - CIC->decimator_memory[CIC_global->read_ptr]) * CIC_global->div_OSR_adaptive * CIC->div_range_modifier;
+    if (CIC_global->write_enable) CIC->decimator_memory[CIC_global->write_ptr] = CIC->integrator;
+    return CIC->out;
+}

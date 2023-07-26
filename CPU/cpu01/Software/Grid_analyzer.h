@@ -55,22 +55,23 @@ struct Grid_analyzer_struct
     struct Resonant_struct Resonant_I_grid[3];
     struct Resonant_struct Resonant_I_conv[3];
 
-    struct CIC1_adaptive_struct CIC1_U_grid[3];
-    struct CIC1_adaptive_struct CIC1_I_grid[3];
-    struct CIC1_adaptive_struct CIC1_I_conv[4];
-    struct CIC1_adaptive_struct CIC1_U_grid_1h[3];
-    struct CIC1_adaptive_struct CIC1_I_grid_1h[3];
+    struct CIC1_adaptive2_struct CIC1_U_grid[3];
+    struct CIC1_adaptive2_struct CIC1_I_grid[3];
+    struct CIC1_adaptive2_struct CIC1_I_conv[4];
+    struct CIC1_adaptive2_struct CIC1_U_grid_1h[3];
+    struct CIC1_adaptive2_struct CIC1_I_grid_1h[3];
 
-    struct CIC1_adaptive_struct CIC1_P_grid_1h[3];
-    struct CIC1_adaptive_struct CIC1_P_conv_1h[3];
-    struct CIC1_adaptive_struct CIC1_Q_grid_1h[3];
-    struct CIC1_adaptive_struct CIC1_Q_conv_1h[3];
+    struct CIC1_adaptive2_struct CIC1_P_grid_1h[3];
+    struct CIC1_adaptive2_struct CIC1_P_conv_1h[3];
+    struct CIC1_adaptive2_struct CIC1_Q_grid_1h[3];
+    struct CIC1_adaptive2_struct CIC1_Q_conv_1h[3];
 };
 
 extern struct Grid_analyzer_struct Grid_params;
 extern struct Grid_parameters_struct Grid;
 
 void Grid_analyzer_calc();
+void Grid_analyzer_calc2();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

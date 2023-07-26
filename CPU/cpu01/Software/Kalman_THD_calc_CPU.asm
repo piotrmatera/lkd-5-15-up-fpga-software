@@ -25,7 +25,7 @@ _Kalman_THD_calc_CPUasm:
 ;XAR4 EMIF_mem
 ;XAR4 Kalman_struct
 ;XAR5 amplitudes
-        MOVL     XAR1, XAR5
+        MOVL     XAR7, XAR5
         MOVL     XAR0, #6
 
         MOVL     XAR5, XAR4
@@ -38,26 +38,26 @@ _Kalman_THD_calc_CPUasm:
 		SETC AMODE ; Change to AMODE = 1
 		.lp_amode ; Tell assembler to check for AMODE = 1 syntax
 
-		NOP		 *, ARP1
-        I32TOF32 R4H,*0++, ARP1
-        I32TOF32 R5H,*0++, ARP1
+		NOP		 *, ARP7
+        I32TOF32 R4H,*0++, ARP7
+        I32TOF32 R5H,*0++, ARP7
         MPYF32   R2H, R4H, R7H
 
-        I32TOF32 R4H,*0++, ARP1
+        I32TOF32 R4H,*0++, ARP7
         MPYF32   R3H, R5H, R7H
 		SQRTF32  R0H,R2H
-        I32TOF32 R5H,*0++, ARP1
+        I32TOF32 R5H,*0++, ARP7
         MPYF32   R2H, R4H, R7H
 		SQRTF32  R1H,R3H
 
         .loop FPGA_KALMAN_STATES/2-1
         I32TOF32 R4H,*0++, ARP5
         MPYF32   R3H, R5H, R7H
-||        MOV32    *++, R0H, ARP1
+||        MOV32    *++, R0H, ARP7
 		SQRTF32  R0H,R2H
         I32TOF32 R5H,*0++, ARP5
         MPYF32   R2H, R4H, R7H
-||        MOV32    *++, R1H, ARP1
+||        MOV32    *++, R1H, ARP7
 		SQRTF32  R1H,R3H
         .endloop
 		NOP

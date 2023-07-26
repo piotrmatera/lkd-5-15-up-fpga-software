@@ -238,6 +238,20 @@ struct FPGA_Kalman_DC_M1_struct
     Uint32 rsvd[512 - FPGA_KALMAN_DC_SERIES - FPGA_KALMAN_DC_STATES*sizeof(struct FPGA_Kalman_states_M1_struct)/sizeof(Uint32)];
 };
 
+struct Grid_analyzer_FPGA_struct
+{
+    int32 CIC1_U_grid[3];
+    int32 CIC1_I_grid[3];
+    int32 CIC1_I_conv[4];
+    int32 CIC1_U_grid_1h[3];
+    int32 CIC1_I_grid_1h[3];
+
+    int32 CIC1_P_grid_1h[3];
+    int32 CIC1_P_conv_1h[3];
+    int32 CIC1_Q_grid_1h[3];
+    int32 CIC1_Q_conv_1h[3];
+};
+
 union EMIF_union
 {
     struct
@@ -283,6 +297,7 @@ union EMIF_union
         struct FPGA_Resonant_grid_M0_struct Resonant[6];
         struct FPGA_Kalman_DC_M0_struct Kalman_DC;
         struct FPGA_Kalman_M0_struct Kalman;
+        struct Grid_analyzer_FPGA_struct Grid;
     }read;
     struct
     {
@@ -312,6 +327,7 @@ union EMIF_union
         struct FPGA_Resonant_grid_M1_struct Resonant[6];
         struct FPGA_Kalman_DC_M1_struct Kalman_DC;
         struct FPGA_Kalman_M1_struct Kalman;
+        struct Grid_analyzer_FPGA_struct Grid;
     }write;
 };
 

@@ -12,7 +12,6 @@
 struct Converter_struct Conv;
 struct Grid_parameters_struct Grid;
 struct Grid_parameters_struct Grid_filter;
-struct Grid_analyzer_filter_struct Grid_filter_params;
 struct Thermistor_struct Therm;
 
 union CONTROL_EXT_MODBUS control_ext_modbus;
@@ -28,6 +27,7 @@ struct Timer_PWM_struct Timer_PWM;
 struct CIC2_struct CIC2_calibration;
 CLA_FPTR CIC2_calibration_input;
 struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
+struct CIC1_adaptive2_global_struct CIC1_adaptive2_global__50Hz;
 
 struct Measurements_ACDC_struct Meas_ACDC;
 struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain_error;
@@ -62,6 +62,7 @@ volatile union EMIF_union EMIF_mem;
 #pragma SET_DATA_SECTION("Grid")
 
 struct Grid_analyzer_struct Grid_params;
+struct Grid_analyzer_filter_struct Grid_filter_params;
 struct Energy_meter_params_struct Energy_meter_params;
 
 #pragma SET_DATA_SECTION()

@@ -302,6 +302,7 @@ interrupt void SD_AVG_INT()
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Grid_analyzer_calc();
+    Grid_analyzer_filter_calc();
     Energy_meter_calc();
     Energy_meter_CPUasm();
 
@@ -477,6 +478,11 @@ interrupt void SD_AVG_INT()
 
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
     Timer_PWM.CPU_END = TIMESTAMP_PWM;
+
+    static volatile Uint16 Timer_max;
+    Uint16 timestamp = TIMESTAMP_PWM;
+    if(timestamp < 2500) timestamp += 5000;
+    if(timestamp > Timer_max) Timer_max = timestamp;
 }
 
 #pragma CODE_SECTION(".TI.ramfunc");

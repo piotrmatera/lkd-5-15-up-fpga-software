@@ -109,6 +109,7 @@ extern union ALARM_ACDC alarm_ACDC_snapshot;
 extern struct CIC2_struct CIC2_calibration;
 extern CLA_FPTR CIC2_calibration_input;
 extern struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
+extern struct CIC1_adaptive2_global_struct CIC1_adaptive2_global__50Hz;
 
 extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 extern struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
@@ -121,6 +122,7 @@ extern void DINT_copy_CPUasm(Uint16 *dst, Uint16 *src, Uint16 size);
 extern void SINCOS_calc_CPUasm(struct trigonometric_struct *sincos_table, float angle);
 extern void SINCOS_kalman_calc_CPUasm(struct trigonometric_struct *sincos_table, float angle);
 extern void Kalman_THD_calc_CPUasm(struct Kalman_struct *Kalman, int32 *EMIF_Kalman);
+extern float CIC1_adaptive_filter_CPUasm(struct CIC1_adaptive_global_struct *CIC_global, struct CIC1_adaptive_struct *CIC, float input);
 
 //
 //Task 2 (C) Variables
