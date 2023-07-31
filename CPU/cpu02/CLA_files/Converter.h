@@ -9,7 +9,8 @@
 struct Converter_struct
 {
     struct abc_struct id_ref, iq_ref;
-    struct abc_struct I_ref, I_err;
+    struct abc_struct I_ref;
+    struct transformation_struct I_err;
     struct abc_struct U_coupl;
 
     float range_modifier_Resonant_coefficients;
@@ -30,7 +31,7 @@ struct Converter_struct
     float sag;
     struct abc_struct Kalman_U_grid;
     struct abc_struct Kalman_U_grid_diff;
-    struct abc_struct MR_ref;
+    struct transformation_struct MR_ref;
     struct abcn_struct U_ref;
     float cycle_period;
     float duty_float[4];

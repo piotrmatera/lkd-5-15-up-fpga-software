@@ -617,6 +617,7 @@ void Background_class::init()
         Conv.L_conv = SD_card.settings.L_conv;
         Conv.C_conv = SD_card.settings.C_conv;
         Conv.I_lim_nominal = SD_card.settings.I_lim;
+        Conv.no_neutral = SD_card.settings.no_neutral;
         status_ACDC.expected_number_of_slaves = SD_card.settings.number_of_slaves;
 
         memcpy(on_off_odd_a, SD_card.harmonics.on_off_odd_a, sizeof(on_off_odd_a));

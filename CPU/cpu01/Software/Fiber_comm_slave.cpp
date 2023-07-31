@@ -119,9 +119,9 @@ void Fiber_comm_slave_class::async_data_mosi()
     {
         msg.async_slave.code_version = SW_ID;
 
-        msg.async_slave.C_conv = Conv.C_conv;
         if(Conv.RDY2)
         {
+            msg.async_slave.C_conv = Conv.C_conv;
             msg.async_slave.P_conv_1h_filter.a = Grid_filter.P_conv_1h.a;
             msg.async_slave.P_conv_1h_filter.b = Grid_filter.P_conv_1h.b;
             msg.async_slave.P_conv_1h_filter.c = Grid_filter.P_conv_1h.c;
@@ -131,6 +131,7 @@ void Fiber_comm_slave_class::async_data_mosi()
         }
         else
         {
+            msg.async_slave.C_conv =
             msg.async_slave.P_conv_1h_filter.a =
             msg.async_slave.P_conv_1h_filter.b =
             msg.async_slave.P_conv_1h_filter.c =

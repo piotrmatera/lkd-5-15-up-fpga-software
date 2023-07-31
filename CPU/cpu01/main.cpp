@@ -76,15 +76,14 @@ void main()
         Machine_master.Main();
         Background.Main();
 
-        static volatile int32 SD_phase = -500;
-        static volatile int32 FPGA_phase = 0;
+        static volatile int32 SD_phase = -600;
         int32 max_period = (int32)EMIF_mem.read.cycle_period - 1L;
         int32 SD_phase_temp = SD_phase;
         if(SD_phase < 0) SD_phase_temp = max_period + SD_phase;
         if(SD_phase_temp < 0) SD_phase_temp = 0;
         if(SD_phase_temp > max_period) SD_phase_temp = max_period;
-        *(Uint32 *)&EMIF_mem.write.SD_sync_val = *(Uint32 *)&SD_phase_temp;
-        *(Uint32 *)&EMIF_mem.write.local_counter_phase_shift = *(Uint32 *)&FPGA_phase;
+        EMIF_mem.write.SD_sync_val = SD_phase_temp;
+        EMIF_mem.write.local_counter_phase_shift = Conv.PWM_phase_shift * (float)EMIF_mem.read.cycle_period;
 
         static Uint64 benchmark_timer;
         static volatile float benchmark;

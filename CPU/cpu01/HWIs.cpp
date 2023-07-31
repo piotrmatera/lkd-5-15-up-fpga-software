@@ -74,28 +74,28 @@ interrupt void SD_AVG_INT()
 //        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Kalman_values;
 //    }
 
-//    {
-//        static volatile struct
-//        {
-//            float harmonic[5][5];
-//            float sum;
-//            float error;
-//        }Resonant_mem;
-//        int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].states[0];
-//        float *pointer_dst = (float *)&Resonant_mem;
-//        for(int i=0; i<5; i++)
-//        {
-//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//        }
-//
-//        pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].SUM;
-//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
-//    }
+    {
+        static volatile struct
+        {
+            float harmonic[5][5];
+            float sum;
+            float error;
+        }Resonant_mem;
+        int32 *pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].states[0];
+        float *pointer_dst = (float *)&Resonant_mem;
+        for(int i=0; i<5; i++)
+        {
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+            *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+        }
+
+        pointer_src = (int32 *)&EMIF_mem.read.Resonant[0].series[0].SUM;
+        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+        *pointer_dst++ = (float)*pointer_src++ * Conv.div_range_modifier_Resonant_values;
+    }
 
     Conv.w_filter = CPU2toCPU1.w_filter;
     Conv.f_filter = CPU2toCPU1.f_filter;
@@ -103,6 +103,7 @@ interrupt void SD_AVG_INT()
     Conv.PLL_RDY = CPU2toCPU1.PLL_RDY;
     Conv.sag = CPU2toCPU1.sag;
 
+    CPU1toCPU2.CLA1toCLA2.no_neutral = Conv.no_neutral;
     CPU1toCPU2.CLA1toCLA2.enable = Conv.RDY;
     CPU1toCPU2.CLA1toCLA2.L_conv = Conv.L_conv;
     CPU1toCPU2.CLA1toCLA2.Kp_I = Conv.Kp_I;

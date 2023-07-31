@@ -8,7 +8,7 @@
 void CIC1_adaptive2_global_calc_CPU(struct CIC1_adaptive2_global_struct* CIC_global, float frequency)
 {
     CIC_global->read_enable =
-    CIC_global->write_enable = 1;
+    CIC_global->write_enable = 0;
 
     if (CIC_global->inc_delay)
     {
@@ -229,8 +229,7 @@ void Grid_analyzer_calc()
     Grid.Used_resources.n = Grid.I_conv.n * div_I_lim;
 }
 
-#pragma CODE_SECTION(Grid_analyzer_calc2, ".TI.ramfunc");
-#pragma CODE_SECTION(Grid_analyzer_calc, ".TI.ramfunc");
+#pragma CODE_SECTION(Energy_meter_calc, ".TI.ramfunc");
 void Energy_meter_calc()
 {
     register Uint32 float_one = 0x3f800000;

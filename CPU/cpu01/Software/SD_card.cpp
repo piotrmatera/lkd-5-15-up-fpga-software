@@ -743,6 +743,9 @@ Uint16 SD_card_class::read_settings()
 
         if(!strncmp(working_buffer, "NUMBER OF SLAVES", sizeof("NUMBER OF SLAVES")-1))
             settings.number_of_slaves = value;
+
+        if(!strncmp(working_buffer, "NO_NEUTRAL", sizeof("NO_NEUTRAL")-1))
+            settings.no_neutral = value;
     }
     if(fresult = f_close(&fil)) return fresult;
 
@@ -886,6 +889,11 @@ Uint16 SD_card_class::save_settings()
 
     f_puts("NUMBER OF SLAVES;", &fil);
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.number_of_slaves);
+    f_puts(working_buffer, &fil);
+    f_putc('\n', &fil);
+
+    f_puts("NO_NEUTRAL;", &fil);
+    snprintf(working_buffer, WBUF_SIZE, "%g", settings.no_neutral);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
 

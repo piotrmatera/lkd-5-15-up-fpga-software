@@ -438,9 +438,12 @@ void Modbus_ADU_slave_transparent::Fcn_after_processed()
         Uint16 time_offset = Uint16_offset(Modbus_Converter.holding_registers, RTC_new_time);
         Uint16 time_size = sizeof(Modbus_Converter.holding_registers.RTC_new_time);
         if(Mdb_slave_ADU.start_address <= time_offset && Mdb_slave_ADU.end_address >= time_offset + time_size - 1)
-        {
             control_ACDC.triggers.bit.save_to_RTC = 1;
-        }
+
+        Uint16 phase_offset = Uint16_offset(Modbus_Converter.holding_registers, PWM_phase_shift);
+        Uint16 phase_size = sizeof(Modbus_Converter.holding_registers.PWM_phase_shift);
+        if(Mdb_slave_ADU.start_address <= phase_offset && Mdb_slave_ADU.end_address >= phase_offset + phase_size - 1)
+            Conv.PWM_phase_shift = Modbus_Converter.holding_registers.PWM_phase_shift;
     }
 
     if(Mdb_slave_ADU.function == Read_Input_Registers)

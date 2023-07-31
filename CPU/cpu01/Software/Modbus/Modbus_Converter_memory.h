@@ -86,6 +86,7 @@ struct Modbus_Converter_memory_struct
         struct time_BCD_struct RTC_new_time;//48bit
         Uint16 even_address_padding;
         union CONTROL_EXT_MODBUS control_ext_modbus;
+        float PWM_phase_shift;
     }holding_registers;
 };
 

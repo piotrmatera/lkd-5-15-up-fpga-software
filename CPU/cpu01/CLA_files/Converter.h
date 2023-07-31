@@ -71,6 +71,9 @@ struct Converter_struct
     struct abc_struct id_conv, iq_conv;
     struct abc_struct id_load, iq_load;
     struct abc_struct id_grid, iq_grid;
+    float id_conv_total, iq_conv_total;
+    float id_load_total, iq_load_total;
+    float id_grid_total, iq_grid_total;
 
     struct abc_struct tangens_range_local[2];
     struct abc_Filter1_struct tangens_range_local_prefilter[2];
@@ -137,6 +140,8 @@ struct Converter_struct
     float C_dc;
     float L_conv;
     float C_conv;
+    float no_neutral;
+    float PWM_phase_shift;
 
     float RDY, RDY2;
 

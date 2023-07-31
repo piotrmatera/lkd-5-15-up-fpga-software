@@ -669,7 +669,10 @@ void Init_class::Variables()
     CIC1_adaptive2_global__50Hz.OSR_adaptive = full_OSR;
     CIC1_adaptive2_global__50Hz.div_OSR_adaptive = 1.0f / full_OSR;
     CIC1_adaptive2_global__50Hz.Ts = Conv.Ts;
-    CIC1_adaptive2_global__50Hz.WDIST = 15;
+
+    float window_dist = 1.0f;
+    while (full_OSR * 1.1f / window_dist > (float)CIC_upsample2) window_dist++;
+    CIC1_adaptive2_global__50Hz.WDIST = window_dist;
 
     CIC1_adaptive2_filter(&Grid_params.CIC1_P_conv_1h[0], additional_range * U_grid_max * I_conv_max, full_OSR);
     CIC1_adaptive2_filter(&Grid_params.CIC1_P_conv_1h[1], additional_range * U_grid_max * I_conv_max, full_OSR);

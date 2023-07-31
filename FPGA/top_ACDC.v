@@ -1216,7 +1216,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg [1] ^ sync_reg [0]), .CK(clk_5x), .CD(TZ_CLR), .Q(PWM_EN_r)); 
  
 	Symmetrical_PWM #(.DEADTIME(65)) 
-	Symmetrical_PWM[3:0](.clk_i(clk_5x), .enable_output_i(PWM_EN_r), .override_i(EMIF_RX_reg[10][7:0]), .duty_i({EMIF_RX_reg[7], EMIF_RX_reg[6]}), 
+	Symmetrical_PWM[3:0](.clk_i(clk_5x), .enable_output_i({PWM_EN_r & REL_i[7], {3{PWM_EN_r}}}), .override_i(EMIF_RX_reg[10][7:0]), .duty_i({EMIF_RX_reg[7], EMIF_RX_reg[6]}), 
 	.next_period_i(next_period), .current_period_i(current_period), .local_counter_i(local_counter), .sync_phase_i(local_counter_phase), .PWM_o(PWM_o));
 
 	//wire PWM_dp; 

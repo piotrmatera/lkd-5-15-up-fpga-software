@@ -93,7 +93,7 @@ void Machine_master_class::start()
 
     if((float)(IpcRegs.IPCCOUNTERL - delay_timer) * (1.0f/200000000.0f) > 0.1f)
     {
-        if(status_ACDC.CT_connection_a != 1 || status_ACDC.CT_connection_b != 2 || status_ACDC.CT_connection_c != 3)
+        if((status_ACDC.CT_connection_a != 1 || status_ACDC.CT_connection_b != 2 || status_ACDC.CT_connection_c != 3) && !Conv.no_neutral)
             Machine_master.state = state_CT_test;
         else if(status_ACDC.L_grid_measured)
             Machine_master.state = state_operational;
@@ -596,7 +596,7 @@ void Machine_master_class::operational()
         else if (CT_test_online.test_request_filtered[3] > 0.9f)
             CT_test_online.test_request_flags.bit.In_limit = 1;
 
-        if(CT_test_online.test_request_flags.all)
+        if(CT_test_online.test_request_flags.all && !Conv.no_neutral)
             CT_test_online.state = 1;
 
         ////////////////////////////////////////////////////////////////////
@@ -615,7 +615,7 @@ void Machine_master_class::operational()
 
         if(status_ACDC.no_CT_connected_a)
         {
-            Conv.Q_set_local.a = control_ACDC.Q_set.a + Grid.U_grid_1h.a * Grid.U_grid_1h.a * Conv.w_filter * Conv.C_conv;
+            Conv.Q_set_local.a = control_ACDC.Q_set.a + Grid.U_grid_1h.a * Grid.U_grid_1h.a * Conv.w_filter * Conv.master.total.C_conv;
             Conv.version_Q_comp_local.a = 1.0f;
         }
         else
@@ -626,7 +626,7 @@ void Machine_master_class::operational()
 
         if(status_ACDC.no_CT_connected_b)
         {
-            Conv.Q_set_local.b = control_ACDC.Q_set.b + Grid.U_grid_1h.b * Grid.U_grid_1h.b * Conv.w_filter * Conv.C_conv;
+            Conv.Q_set_local.b = control_ACDC.Q_set.b + Grid.U_grid_1h.b * Grid.U_grid_1h.b * Conv.w_filter * Conv.master.total.C_conv;
             Conv.version_Q_comp_local.b = 1.0f;
         }
         else
@@ -637,7 +637,7 @@ void Machine_master_class::operational()
 
         if(status_ACDC.no_CT_connected_c)
         {
-            Conv.Q_set_local.c = control_ACDC.Q_set.c + Grid.U_grid_1h.c * Grid.U_grid_1h.c * Conv.w_filter * Conv.C_conv;
+            Conv.Q_set_local.c = control_ACDC.Q_set.c + Grid.U_grid_1h.c * Grid.U_grid_1h.c * Conv.w_filter * Conv.master.total.C_conv;
             Conv.version_Q_comp_local.c = 1.0f;
         }
         else
@@ -678,7 +678,7 @@ void Machine_master_class::operational()
             CT_test_online.Q_grid_last.b = Conv.master.total.Q_conv_1h.b;
             CT_test_online.Q_grid_last.c = Conv.master.total.Q_conv_1h.c;
 
-            step = fminf(2.0f * CT_test_online.I_grid_val, Conv.I_lim);
+            step = fminf(2.0f * CT_test_online.I_grid_val, Conv.master.total.I_lim_prefilter);
             CT_test_online.Q_conv_step.a = Grid.U_grid_1h.a * step;
             CT_test_online.Q_conv_step.b = Grid.U_grid_1h.b * step;
             CT_test_online.Q_conv_step.c = Grid.U_grid_1h.c * step;
