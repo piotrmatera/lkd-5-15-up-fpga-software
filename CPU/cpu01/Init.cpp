@@ -76,7 +76,10 @@ void Init_class::clear_alarms()
     CPU1toCPU2.clear_alarms = 0.0f;
 
     DELAY_US(1000);
-    union ALARM_ACDC alarm_temp = alarm_ACDC;
+    union ALARM_ACDC alarm_temp;
+    alarm_temp.all[0] = alarm_ACDC.all[0];
+    alarm_temp.all[1] = alarm_ACDC.all[1];
+    alarm_temp.all[2] = alarm_ACDC.all[2];
     alarm_ACDC_snapshot.all[0] =
     alarm_ACDC_snapshot.all[1] =
     alarm_ACDC_snapshot.all[2] =
@@ -384,6 +387,14 @@ void Init_class::Variables()
     Conv.master.slave[3].I_lim_prefilter.Ts_Ti =
     Conv.master.slave[4].I_lim_prefilter.Ts_Ti = Conv.Ts / 0.02f;
 
+    Conv.enable_override_prefilter.Ts_Ti =
+    Conv.id_ref_override_prefilter.a.Ts_Ti =
+    Conv.id_ref_override_prefilter.b.Ts_Ti =
+    Conv.id_ref_override_prefilter.c.Ts_Ti =
+    Conv.iq_ref_override_prefilter.a.Ts_Ti =
+    Conv.iq_ref_override_prefilter.b.Ts_Ti =
+    Conv.iq_ref_override_prefilter.c.Ts_Ti = Conv.Ts / 0.02f;
+
     Conv.version_Q_comp_local_prefilter.a.Ts_Ti =
     Conv.version_Q_comp_local_prefilter.b.Ts_Ti =
     Conv.version_Q_comp_local_prefilter.c.Ts_Ti =
@@ -451,7 +462,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.compensation = 0.0f;
-    Conv.compensation2 = 2.0f;
+    Conv.compensation2 = 4000.0f * Saturation(L_grid_meas.L_grid_previous[0], 50e-6, 800e-6) + 1.8f;
     Conv.resonant_odd_number = 25-1;
     Conv.resonant_even_number = 0-1;
 
@@ -479,6 +490,7 @@ void Init_class::Variables()
     Conv.range_modifier_Resonant_values = (float)(1UL << 21) * CT_SD_max;
     Conv.div_range_modifier_Resonant_values = 1.0f / Conv.range_modifier_Resonant_values;
 
+    //dodac wieksze wzmocnienie dla 1h
     for(Uint16 i = 0; i < FPGA_RESONANT_GRID_STATES; i++)
     {
         register float modifier = Conv.range_modifier_Resonant_coefficients;

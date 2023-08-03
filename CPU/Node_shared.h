@@ -189,7 +189,7 @@ struct STATUS_ACDC
     Uint16 error_retry : 4;
     Uint16 expected_number_of_slaves : 4;
 
-    Uint16 rsvd3 : 1;
+    Uint16 control_override : 1;
     Uint16 master_slave_selector : 1;
     Uint16 incorrect_number_of_slaves : 1;
 

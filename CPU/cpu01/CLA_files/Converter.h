@@ -116,6 +116,12 @@ struct Converter_struct
     struct PI_struct PI_Iq[3];
     struct PI_struct PI_Id[3];
 
+    float enable_override;
+    struct Filter1_struct enable_override_prefilter;
+    struct abc_struct id_ref_override, iq_ref_override;
+    struct abc_Filter1_struct id_ref_override_prefilter;
+    struct abc_Filter1_struct iq_ref_override_prefilter;
+
     float sag;
     float enable_H_comp_local;
     struct abcn_struct I_conv_max;

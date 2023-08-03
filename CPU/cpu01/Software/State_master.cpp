@@ -52,6 +52,12 @@ void Machine_master_class::idle()
         Machine_master.state_last = Machine_master.state;
     }
 
+    Conv.id_ref_override.a =
+    Conv.id_ref_override.b =
+    Conv.id_ref_override.c =
+    Conv.iq_ref_override.a =
+    Conv.iq_ref_override.b =
+    Conv.iq_ref_override.c =
     Conv.tangens_range_local_prefilter[0].a.out =
     Conv.tangens_range_local_prefilter[0].b.out =
     Conv.tangens_range_local_prefilter[0].c.out =
@@ -78,6 +84,9 @@ void Machine_master_class::idle()
     Conv.enable_P_sym_local =
     Conv.enable_H_comp_local = 0.0f;
 
+    if (!status_ACDC.master_slave_selector && status_ACDC.master_rdy) status_ACDC.control_override = status_ACDC_master.control_override;
+    else status_ACDC.control_override = 0;
+
     if(Conv.master.total.I_lim && !status_ACDC.master_rdy) Machine_master.state = state_start;
 }
 
@@ -93,7 +102,7 @@ void Machine_master_class::start()
 
     if((float)(IpcRegs.IPCCOUNTERL - delay_timer) * (1.0f/200000000.0f) > 0.1f)
     {
-        if((status_ACDC.CT_connection_a != 1 || status_ACDC.CT_connection_b != 2 || status_ACDC.CT_connection_c != 3) && !Conv.no_neutral)
+        if(status_ACDC.CT_connection_a != 1 || status_ACDC.CT_connection_b != 2 || status_ACDC.CT_connection_c != 3)
             Machine_master.state = state_CT_test;
         else if(status_ACDC.L_grid_measured)
             Machine_master.state = state_operational;
@@ -110,6 +119,11 @@ void Machine_master_class::CT_test()
     {
         struct abc_struct Iq_pos[3], Iq_neg[3], Iq_diff[3];
         struct abc_struct Id_pos[3], Id_neg[3], Id_diff[3];
+        struct abc_struct I_pos[3], I_neg[3], I_diff[3];
+        struct abc_struct U_pos[3], U_neg[3], U_diff[3];
+        struct abc_struct Resistance_phase;
+        struct abc_struct Resistance_phase_neutral;
+        float Resistance_neutral;
         struct abc_struct CT_gain[3];
     }CT_test_startup;
     static float C_dc_meas[6];
@@ -118,6 +132,11 @@ void Machine_master_class::CT_test()
     static Uint16 CT_test_state;
     static Uint16 CT_test_state_last;
     static Uint16 repeat_counter;
+
+    static float I_scale;
+    static float Q_coeff;
+    static Uint16 neutral_done;
+
     if(Machine_master.state_last != Machine_master.state)
     {
         Machine_master.state_last = Machine_master.state;
@@ -127,6 +146,12 @@ void Machine_master_class::CT_test()
         CT_test_state = 0;
         repeat_counter = 0;
 
+        Conv.id_ref_override.a =
+        Conv.id_ref_override.b =
+        Conv.id_ref_override.c =
+        Conv.iq_ref_override.a =
+        Conv.iq_ref_override.b =
+        Conv.iq_ref_override.c =
         Conv.Q_set_local.a =
         Conv.Q_set_local.b =
         Conv.Q_set_local.c =
@@ -138,6 +163,11 @@ void Machine_master_class::CT_test()
         Conv.version_Q_comp_local.a =
         Conv.version_Q_comp_local.b =
         Conv.version_Q_comp_local.c = 1.0f;
+
+        status_ACDC.control_override = 1;
+        neutral_done = 0;
+        Q_coeff = 1.0f;
+        I_scale = 8.0f;
     }
     Uint64 elapsed_time = ReadIpcTimer() - timer_old;
 
@@ -148,9 +178,34 @@ void Machine_master_class::CT_test()
         if(CT_test_state_last != CT_test_state)
         {
             CT_test_state_last = CT_test_state;
-            if(repeat_counter == 0) Conv.Q_set_local.a = Grid.U_grid_1h.a * 8.0f;
-            else if(repeat_counter == 1) Conv.Q_set_local.b = Grid.U_grid_1h.b * 8.0f;
-            else Conv.Q_set_local.c = Grid.U_grid_1h.c * 8.0f;
+            I_scale = fabsf(I_scale);
+            if (repeat_counter == 0)
+            {
+                Conv.id_ref_override.a = 1.0f * I_scale;
+                Conv.id_ref_override.b = -0.5f * I_scale;
+                Conv.id_ref_override.c = -0.5f * I_scale;
+                Conv.iq_ref_override.a = 0.0f * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.b = MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.c = -MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+            }
+            else if (repeat_counter == 1)
+            {
+                Conv.id_ref_override.a = -0.5f * I_scale;
+                Conv.id_ref_override.b = 1.0f * I_scale;
+                Conv.id_ref_override.c = -0.5f * I_scale;
+                Conv.iq_ref_override.a = -MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.b = 0.0f * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.c = MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+            }
+            else
+            {
+                Conv.id_ref_override.a = -0.5f * I_scale;
+                Conv.id_ref_override.b = -0.5f * I_scale;
+                Conv.id_ref_override.c = 1.0f * I_scale;
+                Conv.iq_ref_override.a = MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.b = -MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.c = 0.0f * I_scale * Conv.sign * Q_coeff;
+            }
         }
 
         if(elapsed_time > 50000000ULL)
@@ -161,7 +216,13 @@ void Machine_master_class::CT_test()
             CT_test_startup.Id_pos[repeat_counter].a = Conv.id_grid.a;
             CT_test_startup.Id_pos[repeat_counter].b = Conv.id_grid.b;
             CT_test_startup.Id_pos[repeat_counter].c = Conv.id_grid.c;
-            C_dc_meas[repeat_counter] = Conv.C_dc_meas;
+            CT_test_startup.U_pos[repeat_counter].a = Grid.U_grid_1h.a;
+            CT_test_startup.U_pos[repeat_counter].b = Grid.U_grid_1h.b;
+            CT_test_startup.U_pos[repeat_counter].c = Grid.U_grid_1h.c;
+            CT_test_startup.I_pos[repeat_counter].a = Conv.id_conv.a;
+            CT_test_startup.I_pos[repeat_counter].b = Conv.id_conv.b;
+            CT_test_startup.I_pos[repeat_counter].c = Conv.id_conv.c;
+            C_dc_meas[repeat_counter] = Conv.C_dc_filter.out;
             CT_test_state++;
             timer_old = ReadIpcTimer();
         }
@@ -173,9 +234,34 @@ void Machine_master_class::CT_test()
         if(CT_test_state_last != CT_test_state)
         {
             CT_test_state_last = CT_test_state;
-            if(repeat_counter == 0) Conv.Q_set_local.a = Grid.U_grid_1h.a * -8.0f;
-            else if(repeat_counter == 1) Conv.Q_set_local.b = Grid.U_grid_1h.b * -8.0f;
-            else Conv.Q_set_local.c = Grid.U_grid_1h.c * -8.0f;
+            I_scale = -fabsf(I_scale);
+            if (repeat_counter == 0)
+            {
+                Conv.id_ref_override.a = 1.0f * I_scale;
+                Conv.id_ref_override.b = -0.5f * I_scale;
+                Conv.id_ref_override.c = -0.5f * I_scale;
+                Conv.iq_ref_override.a = 0.0f * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.b = MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.c = -MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+            }
+            else if (repeat_counter == 1)
+            {
+                Conv.id_ref_override.a = -0.5f * I_scale;
+                Conv.id_ref_override.b = 1.0f * I_scale;
+                Conv.id_ref_override.c = -0.5f * I_scale;
+                Conv.iq_ref_override.a = -MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.b = 0.0f * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.c = MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+            }
+            else
+            {
+                Conv.id_ref_override.a = -0.5f * I_scale;
+                Conv.id_ref_override.b = -0.5f * I_scale;
+                Conv.id_ref_override.c = 1.0f * I_scale;
+                Conv.iq_ref_override.a = MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.b = -MATH_SQRT3_2 * I_scale * Conv.sign * Q_coeff;
+                Conv.iq_ref_override.c = 0.0f * I_scale * Conv.sign * Q_coeff;
+            }
         }
 
         if(elapsed_time > 50000000ULL)
@@ -186,11 +272,14 @@ void Machine_master_class::CT_test()
             CT_test_startup.Id_neg[repeat_counter].a = Conv.id_grid.a;
             CT_test_startup.Id_neg[repeat_counter].b = Conv.id_grid.b;
             CT_test_startup.Id_neg[repeat_counter].c = Conv.id_grid.c;
-            C_dc_meas[repeat_counter+3] = Conv.C_dc_filter.out;
-            Conv.Q_set_local.a =
-            Conv.Q_set_local.b =
-            Conv.Q_set_local.c = 0.0f;
-            if(++repeat_counter < 3) CT_test_state = 0;
+            CT_test_startup.U_neg[repeat_counter].a = Grid.U_grid_1h.a;
+            CT_test_startup.U_neg[repeat_counter].b = Grid.U_grid_1h.b;
+            CT_test_startup.U_neg[repeat_counter].c = Grid.U_grid_1h.c;
+            CT_test_startup.I_neg[repeat_counter].a = Conv.id_conv.a;
+            CT_test_startup.I_neg[repeat_counter].b = Conv.id_conv.b;
+            CT_test_startup.I_neg[repeat_counter].c = Conv.id_conv.c;
+            C_dc_meas[repeat_counter + 3] = Conv.C_dc_filter.out;
+            if (++repeat_counter < 3) CT_test_state = 0;
             else CT_test_state++;
             timer_old = ReadIpcTimer();
         }
@@ -203,79 +292,145 @@ void Machine_master_class::CT_test()
         {
             CT_test_state_last = CT_test_state;
 
-            qsort(C_dc_meas, 6, sizeof(float), compare_float);
-            Conv.C_dc_measured = (C_dc_meas[2]+C_dc_meas[3]) * 0.5f;
+            Conv.id_ref_override.a =
+            Conv.id_ref_override.b =
+            Conv.id_ref_override.c =
+            Conv.iq_ref_override.a =
+            Conv.iq_ref_override.b =
+            Conv.iq_ref_override.c = 0.0f;
 
-            CT_test_startup.Iq_diff[0].a = fabsf(CT_test_startup.Iq_pos[0].a - CT_test_startup.Iq_neg[0].a);
-            CT_test_startup.Iq_diff[0].b = fabsf(CT_test_startup.Iq_pos[0].b - CT_test_startup.Iq_neg[0].b);
-            CT_test_startup.Iq_diff[0].c = fabsf(CT_test_startup.Iq_pos[0].c - CT_test_startup.Iq_neg[0].c);
-            CT_test_startup.Iq_diff[1].a = fabsf(CT_test_startup.Iq_pos[1].a - CT_test_startup.Iq_neg[1].a);
-            CT_test_startup.Iq_diff[1].b = fabsf(CT_test_startup.Iq_pos[1].b - CT_test_startup.Iq_neg[1].b);
-            CT_test_startup.Iq_diff[1].c = fabsf(CT_test_startup.Iq_pos[1].c - CT_test_startup.Iq_neg[1].c);
-            CT_test_startup.Iq_diff[2].a = fabsf(CT_test_startup.Iq_pos[2].a - CT_test_startup.Iq_neg[2].a);
-            CT_test_startup.Iq_diff[2].b = fabsf(CT_test_startup.Iq_pos[2].b - CT_test_startup.Iq_neg[2].b);
-            CT_test_startup.Iq_diff[2].c = fabsf(CT_test_startup.Iq_pos[2].c - CT_test_startup.Iq_neg[2].c);
+            if (!neutral_done)
+            {
+                neutral_done = 1;
 
-            CT_test_startup.Id_diff[0].a = fabsf(CT_test_startup.Id_pos[0].a - CT_test_startup.Id_neg[0].a);
-            CT_test_startup.Id_diff[0].b = fabsf(CT_test_startup.Id_pos[0].b - CT_test_startup.Id_neg[0].b);
-            CT_test_startup.Id_diff[0].c = fabsf(CT_test_startup.Id_pos[0].c - CT_test_startup.Id_neg[0].c);
-            CT_test_startup.Id_diff[1].a = fabsf(CT_test_startup.Id_pos[1].a - CT_test_startup.Id_neg[1].a);
-            CT_test_startup.Id_diff[1].b = fabsf(CT_test_startup.Id_pos[1].b - CT_test_startup.Id_neg[1].b);
-            CT_test_startup.Id_diff[1].c = fabsf(CT_test_startup.Id_pos[1].c - CT_test_startup.Id_neg[1].c);
-            CT_test_startup.Id_diff[2].a = fabsf(CT_test_startup.Id_pos[2].a - CT_test_startup.Id_neg[2].a);
-            CT_test_startup.Id_diff[2].b = fabsf(CT_test_startup.Id_pos[2].b - CT_test_startup.Id_neg[2].b);
-            CT_test_startup.Id_diff[2].c = fabsf(CT_test_startup.Id_pos[2].c - CT_test_startup.Id_neg[2].c);
+                qsort(C_dc_meas, 6, sizeof(float), compare_float);
+                Conv.C_dc_measured = (C_dc_meas[2]+C_dc_meas[3]) * 0.5f;
 
-            CT_test_startup.CT_gain[0].a = 16.0f / CT_test_startup.Iq_diff[0].a;
-            CT_test_startup.CT_gain[0].b = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Id_diff[0].b + 0.5f * CT_test_startup.Iq_diff[0].b);
-            CT_test_startup.CT_gain[0].c = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Id_diff[0].c + 0.5f * CT_test_startup.Iq_diff[0].c);
-            CT_test_startup.CT_gain[1].a = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Id_diff[1].a + 0.5f * CT_test_startup.Iq_diff[1].a);
-            CT_test_startup.CT_gain[1].b = 16.0f / CT_test_startup.Iq_diff[1].b;
-            CT_test_startup.CT_gain[1].c = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Id_diff[1].c + 0.5f * CT_test_startup.Iq_diff[1].c);
-            CT_test_startup.CT_gain[2].a = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Id_diff[2].a + 0.5f * CT_test_startup.Iq_diff[2].a);
-            CT_test_startup.CT_gain[2].b = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Id_diff[2].b + 0.5f * CT_test_startup.Iq_diff[2].b);
-            CT_test_startup.CT_gain[2].c = 16.0f / CT_test_startup.Iq_diff[2].c;
+                CT_test_startup.Iq_diff[0].a = fabsf(CT_test_startup.Iq_pos[0].a - CT_test_startup.Iq_neg[0].a);
+                CT_test_startup.Iq_diff[0].b = fabsf(CT_test_startup.Iq_pos[0].b - CT_test_startup.Iq_neg[0].b);
+                CT_test_startup.Iq_diff[0].c = fabsf(CT_test_startup.Iq_pos[0].c - CT_test_startup.Iq_neg[0].c);
+                CT_test_startup.Iq_diff[1].a = fabsf(CT_test_startup.Iq_pos[1].a - CT_test_startup.Iq_neg[1].a);
+                CT_test_startup.Iq_diff[1].b = fabsf(CT_test_startup.Iq_pos[1].b - CT_test_startup.Iq_neg[1].b);
+                CT_test_startup.Iq_diff[1].c = fabsf(CT_test_startup.Iq_pos[1].c - CT_test_startup.Iq_neg[1].c);
+                CT_test_startup.Iq_diff[2].a = fabsf(CT_test_startup.Iq_pos[2].a - CT_test_startup.Iq_neg[2].a);
+                CT_test_startup.Iq_diff[2].b = fabsf(CT_test_startup.Iq_pos[2].b - CT_test_startup.Iq_neg[2].b);
+                CT_test_startup.Iq_diff[2].c = fabsf(CT_test_startup.Iq_pos[2].c - CT_test_startup.Iq_neg[2].c);
 
-            if(fabsf(CT_test_startup.CT_gain[0].a-1.0f) < 0.5f)
-                status_ACDC.CT_connection_a = 1;
-            else if(fabsf(CT_test_startup.CT_gain[1].a-1.0f) < 0.5f)
-                status_ACDC.CT_connection_a = 2;
-            else if(fabsf(CT_test_startup.CT_gain[2].a-1.0f) < 0.5f)
-                status_ACDC.CT_connection_a = 3;
+                CT_test_startup.Id_diff[0].a = fabsf(CT_test_startup.Id_pos[0].a - CT_test_startup.Id_neg[0].a);
+                CT_test_startup.Id_diff[0].b = fabsf(CT_test_startup.Id_pos[0].b - CT_test_startup.Id_neg[0].b);
+                CT_test_startup.Id_diff[0].c = fabsf(CT_test_startup.Id_pos[0].c - CT_test_startup.Id_neg[0].c);
+                CT_test_startup.Id_diff[1].a = fabsf(CT_test_startup.Id_pos[1].a - CT_test_startup.Id_neg[1].a);
+                CT_test_startup.Id_diff[1].b = fabsf(CT_test_startup.Id_pos[1].b - CT_test_startup.Id_neg[1].b);
+                CT_test_startup.Id_diff[1].c = fabsf(CT_test_startup.Id_pos[1].c - CT_test_startup.Id_neg[1].c);
+                CT_test_startup.Id_diff[2].a = fabsf(CT_test_startup.Id_pos[2].a - CT_test_startup.Id_neg[2].a);
+                CT_test_startup.Id_diff[2].b = fabsf(CT_test_startup.Id_pos[2].b - CT_test_startup.Id_neg[2].b);
+                CT_test_startup.Id_diff[2].c = fabsf(CT_test_startup.Id_pos[2].c - CT_test_startup.Id_neg[2].c);
+
+                CT_test_startup.CT_gain[0].a = 16.0f / CT_test_startup.Id_diff[0].a;
+                CT_test_startup.CT_gain[0].b = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Iq_diff[0].b + 0.5f * CT_test_startup.Id_diff[0].b);
+                CT_test_startup.CT_gain[0].c = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Iq_diff[0].c + 0.5f * CT_test_startup.Id_diff[0].c);
+                CT_test_startup.CT_gain[1].a = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Iq_diff[1].a + 0.5f * CT_test_startup.Id_diff[1].a);
+                CT_test_startup.CT_gain[1].b = 16.0f / CT_test_startup.Id_diff[1].b;
+                CT_test_startup.CT_gain[1].c = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Iq_diff[1].c + 0.5f * CT_test_startup.Id_diff[1].c);
+                CT_test_startup.CT_gain[2].a = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Iq_diff[2].a + 0.5f * CT_test_startup.Id_diff[2].a);
+                CT_test_startup.CT_gain[2].b = 16.0f / (MATH_SQRT3_2 * CT_test_startup.Iq_diff[2].b + 0.5f * CT_test_startup.Id_diff[2].b);
+                CT_test_startup.CT_gain[2].c = 16.0f / CT_test_startup.Id_diff[2].c;
+
+                Uint16 correct_connection_a = (fabsf(CT_test_startup.CT_gain[0].a - 1.0f) < 0.5f && fabsf(CT_test_startup.CT_gain[1].a - 1.0f) < 0.5f && fabsf(CT_test_startup.CT_gain[2].a - 1.0f) < 0.5f);
+                Uint16 correct_connection_b = (fabsf(CT_test_startup.CT_gain[0].b - 1.0f) < 0.5f && fabsf(CT_test_startup.CT_gain[1].b - 1.0f) < 0.5f && fabsf(CT_test_startup.CT_gain[2].b - 1.0f) < 0.5f);
+                Uint16 correct_connection_c = (fabsf(CT_test_startup.CT_gain[0].c - 1.0f) < 0.5f && fabsf(CT_test_startup.CT_gain[1].c - 1.0f) < 0.5f && fabsf(CT_test_startup.CT_gain[2].c - 1.0f) < 0.5f);
+
+                if (correct_connection_a)
+                    status_ACDC.CT_connection_a = 1;
+                else if (fabsf(CT_test_startup.CT_gain[0].b - 1.0f) < 0.5f && !correct_connection_b)
+                    status_ACDC.CT_connection_a = 2;
+                else if (fabsf(CT_test_startup.CT_gain[0].c - 1.0f) < 0.5f && !correct_connection_c)
+                    status_ACDC.CT_connection_a = 3;
+                else
+                    status_ACDC.CT_connection_a = 0;
+
+                if (correct_connection_b)
+                    status_ACDC.CT_connection_b = 2;
+                else if (fabsf(CT_test_startup.CT_gain[1].a - 1.0f) < 0.5f && !correct_connection_a)
+                    status_ACDC.CT_connection_b = 1;
+                else if (fabsf(CT_test_startup.CT_gain[1].c - 1.0f) < 0.5f && !correct_connection_c)
+                    status_ACDC.CT_connection_b = 3;
+                else
+                    status_ACDC.CT_connection_b = 0;
+
+                if (correct_connection_c)
+                    status_ACDC.CT_connection_c = 3;
+                else if (fabsf(CT_test_startup.CT_gain[2].a - 1.0f) < 0.5f && !correct_connection_a)
+                    status_ACDC.CT_connection_c = 1;
+                else if (fabsf(CT_test_startup.CT_gain[2].b - 1.0f) < 0.5f && !correct_connection_b)
+                    status_ACDC.CT_connection_c = 2;
+                else
+                    status_ACDC.CT_connection_c = 0;
+
+
+                if (status_ACDC.CT_connection_a == 1) status_ACDC.no_CT_connected_a = 0;
+                else status_ACDC.no_CT_connected_a = 1;
+                if (status_ACDC.CT_connection_b == 2) status_ACDC.no_CT_connected_b = 0;
+                else status_ACDC.no_CT_connected_b = 1;
+                if (status_ACDC.CT_connection_c == 3) status_ACDC.no_CT_connected_c = 0;
+                else status_ACDC.no_CT_connected_c = 1;
+
+                CT_test_startup.U_diff[0].a = fabsf(CT_test_startup.U_pos[0].a - CT_test_startup.U_neg[0].a);
+                CT_test_startup.U_diff[1].b = fabsf(CT_test_startup.U_pos[1].b - CT_test_startup.U_neg[1].b);
+                CT_test_startup.U_diff[2].c = fabsf(CT_test_startup.U_pos[2].c - CT_test_startup.U_neg[2].c);
+
+                if(status_ACDC.no_CT_connected_a) CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.I_pos[0].a - CT_test_startup.I_neg[0].a);
+                else CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.Id_pos[0].a - CT_test_startup.Id_neg[0].a);
+
+                if (status_ACDC.no_CT_connected_b) CT_test_startup.I_diff[1].b = fabsf(CT_test_startup.I_pos[1].b - CT_test_startup.I_neg[1].b);
+                else CT_test_startup.I_diff[1].b = fabsf(CT_test_startup.Id_pos[1].b - CT_test_startup.Id_neg[1].b);
+
+                if (status_ACDC.no_CT_connected_c) CT_test_startup.I_diff[2].c = fabsf(CT_test_startup.I_pos[2].c - CT_test_startup.I_neg[2].c);
+                else CT_test_startup.I_diff[2].c = fabsf(CT_test_startup.Id_pos[2].c - CT_test_startup.Id_neg[2].c);
+
+                CT_test_startup.Resistance_phase.a = CT_test_startup.U_diff[0].a / fmaxf(CT_test_startup.I_diff[0].a, 1.0f);
+                CT_test_startup.Resistance_phase.b = CT_test_startup.U_diff[1].b / fmaxf(CT_test_startup.I_diff[1].b, 1.0f);
+                CT_test_startup.Resistance_phase.c = CT_test_startup.U_diff[2].c / fmaxf(CT_test_startup.I_diff[2].c, 1.0f);
+
+                if(!Conv.no_neutral)
+                {
+                    Q_coeff = MATH_1_3;
+                    repeat_counter =
+                    CT_test_state = 0;
+                }
+            }
             else
-                status_ACDC.CT_connection_a = 0;
+            {
+                CT_test_startup.U_diff[0].a = fabsf(CT_test_startup.U_pos[0].a - CT_test_startup.U_neg[0].a);
+                CT_test_startup.U_diff[1].b = fabsf(CT_test_startup.U_pos[1].b - CT_test_startup.U_neg[1].b);
+                CT_test_startup.U_diff[2].c = fabsf(CT_test_startup.U_pos[2].c - CT_test_startup.U_neg[2].c);
 
-            if(fabsf(CT_test_startup.CT_gain[0].b-1.0f) < 0.5f)
-                status_ACDC.CT_connection_b = 1;
-            else if(fabsf(CT_test_startup.CT_gain[1].b-1.0f) < 0.5f)
-                status_ACDC.CT_connection_b = 2;
-            else if(fabsf(CT_test_startup.CT_gain[2].b-1.0f) < 0.5f)
-                status_ACDC.CT_connection_b = 3;
-            else
-                status_ACDC.CT_connection_b = 0;
+                if(status_ACDC.no_CT_connected_a) CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.I_pos[0].a - CT_test_startup.I_neg[0].a);
+                else CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.Id_pos[0].a - CT_test_startup.Id_neg[0].a);
 
-            if(fabsf(CT_test_startup.CT_gain[0].c-1.0f) < 0.5f)
-                status_ACDC.CT_connection_c = 1;
-            else if(fabsf(CT_test_startup.CT_gain[1].c-1.0f) < 0.5f)
-                status_ACDC.CT_connection_c = 2;
-            else if(fabsf(CT_test_startup.CT_gain[2].c-1.0f) < 0.5f)
-                status_ACDC.CT_connection_c = 3;
-            else
-                status_ACDC.CT_connection_c = 0;
+                if (status_ACDC.no_CT_connected_b) CT_test_startup.I_diff[1].b = fabsf(CT_test_startup.I_pos[1].b - CT_test_startup.I_neg[1].b);
+                else CT_test_startup.I_diff[1].b = fabsf(CT_test_startup.Id_pos[1].b - CT_test_startup.Id_neg[1].b);
 
+                if (status_ACDC.no_CT_connected_c) CT_test_startup.I_diff[2].c = fabsf(CT_test_startup.I_pos[2].c - CT_test_startup.I_neg[2].c);
+                else CT_test_startup.I_diff[2].c = fabsf(CT_test_startup.Id_pos[2].c - CT_test_startup.Id_neg[2].c);
 
-            if(status_ACDC.CT_connection_a == 1) status_ACDC.no_CT_connected_a = 0;
-            else status_ACDC.no_CT_connected_a = 1;
-            if(status_ACDC.CT_connection_b == 2) status_ACDC.no_CT_connected_b = 0;
-            else status_ACDC.no_CT_connected_b = 1;
-            if(status_ACDC.CT_connection_c == 3) status_ACDC.no_CT_connected_c = 0;
-            else status_ACDC.no_CT_connected_c = 1;
+                CT_test_startup.Resistance_phase_neutral.a = CT_test_startup.U_diff[0].a / fmaxf(CT_test_startup.I_diff[0].a, 1.0f);
+                CT_test_startup.Resistance_phase_neutral.b = CT_test_startup.U_diff[1].b / fmaxf(CT_test_startup.I_diff[1].b, 1.0f);
+                CT_test_startup.Resistance_phase_neutral.c = CT_test_startup.U_diff[2].c / fmaxf(CT_test_startup.I_diff[2].c, 1.0f);
+
+                CT_test_startup.Resistance_neutral =
+                   (CT_test_startup.Resistance_phase_neutral.a - CT_test_startup.Resistance_phase.a +
+                    CT_test_startup.Resistance_phase_neutral.b - CT_test_startup.Resistance_phase.b +
+                    CT_test_startup.Resistance_phase_neutral.c - CT_test_startup.Resistance_phase.c) * MATH_1_3 -
+                    fminf(fminf(CT_test_startup.Resistance_phase.a, CT_test_startup.Resistance_phase.b), CT_test_startup.Resistance_phase.c);
+            }
         }
 
         if(elapsed_time > 50000000ULL)
         {
-            Conv.compensation2 = 4000.0f * Saturation(L_grid_meas.L_grid_previous[0], 50e-6, 800e-6) + 1.8f;
-            if(status_ACDC.L_grid_measured || status_ACDC.CT_connection_a != 1 || status_ACDC.CT_connection_b != 2 || status_ACDC.CT_connection_c != 3)
+            status_ACDC.control_override = 0;
+
+            if(status_ACDC.L_grid_measured || status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c)
                 Machine_master.state = state_operational;
             else
                 Machine_master.state = state_Lgrid_meas;
@@ -613,50 +768,65 @@ void Machine_master_class::operational()
         Conv.enable_Q_comp_local.b = control_ACDC.flags.bit.enable_Q_comp_b;
         Conv.enable_Q_comp_local.c = control_ACDC.flags.bit.enable_Q_comp_c;
 
-        if(status_ACDC.no_CT_connected_a)
+        if(Conv.no_neutral)
         {
-            Conv.Q_set_local.a = control_ACDC.Q_set.a + Grid.U_grid_1h.a * Grid.U_grid_1h.a * Conv.w_filter * Conv.master.total.C_conv;
-            Conv.version_Q_comp_local.a = 1.0f;
+            if(status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c)
+            {
+                Conv.Q_set_local.a = control_ACDC.Q_set.a + Grid.average.U_grid_1h * Grid.average.U_grid_1h * Conv.w_filter * Conv.master.total.C_conv;
+                Conv.version_Q_comp_local.a = 1.0f;
+            }
+            else
+            {
+                Conv.Q_set_local.a = control_ACDC.Q_set.a;
+                Conv.version_Q_comp_local.a = control_ACDC.flags.bit.version_Q_comp_a;
+            }
         }
         else
         {
-            Conv.Q_set_local.a = control_ACDC.Q_set.a;
-            Conv.version_Q_comp_local.a = control_ACDC.flags.bit.version_Q_comp_a;
-        }
+            if(status_ACDC.no_CT_connected_a)
+            {
+                Conv.Q_set_local.a = control_ACDC.Q_set.a + Grid.U_grid_1h.a * Grid.U_grid_1h.a * Conv.w_filter * Conv.master.total.C_conv;
+                Conv.version_Q_comp_local.a = 1.0f;
+            }
+            else
+            {
+                Conv.Q_set_local.a = control_ACDC.Q_set.a;
+                Conv.version_Q_comp_local.a = control_ACDC.flags.bit.version_Q_comp_a;
+            }
 
-        if(status_ACDC.no_CT_connected_b)
-        {
-            Conv.Q_set_local.b = control_ACDC.Q_set.b + Grid.U_grid_1h.b * Grid.U_grid_1h.b * Conv.w_filter * Conv.master.total.C_conv;
-            Conv.version_Q_comp_local.b = 1.0f;
-        }
-        else
-        {
-            Conv.Q_set_local.b = control_ACDC.Q_set.b;
-            Conv.version_Q_comp_local.b = control_ACDC.flags.bit.version_Q_comp_b;
-        }
+            if(status_ACDC.no_CT_connected_b)
+            {
+                Conv.Q_set_local.b = control_ACDC.Q_set.b + Grid.U_grid_1h.b * Grid.U_grid_1h.b * Conv.w_filter * Conv.master.total.C_conv;
+                Conv.version_Q_comp_local.b = 1.0f;
+            }
+            else
+            {
+                Conv.Q_set_local.b = control_ACDC.Q_set.b;
+                Conv.version_Q_comp_local.b = control_ACDC.flags.bit.version_Q_comp_b;
+            }
 
-        if(status_ACDC.no_CT_connected_c)
-        {
-            Conv.Q_set_local.c = control_ACDC.Q_set.c + Grid.U_grid_1h.c * Grid.U_grid_1h.c * Conv.w_filter * Conv.master.total.C_conv;
-            Conv.version_Q_comp_local.c = 1.0f;
-        }
-        else
-        {
-            Conv.Q_set_local.c = control_ACDC.Q_set.c;
-            Conv.version_Q_comp_local.c = control_ACDC.flags.bit.version_Q_comp_c;
-        }
+            if(status_ACDC.no_CT_connected_c)
+            {
+                Conv.Q_set_local.c = control_ACDC.Q_set.c + Grid.U_grid_1h.c * Grid.U_grid_1h.c * Conv.w_filter * Conv.master.total.C_conv;
+                Conv.version_Q_comp_local.c = 1.0f;
+            }
+            else
+            {
+                Conv.Q_set_local.c = control_ACDC.Q_set.c;
+                Conv.version_Q_comp_local.c = control_ACDC.flags.bit.version_Q_comp_c;
+            }
 
-        if (status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c)
-        {
-            Conv.enable_P_sym_local = 0.0f;
-            Conv.enable_H_comp_local = 0.0f;
+            if (status_ACDC.no_CT_connected_a || status_ACDC.no_CT_connected_b || status_ACDC.no_CT_connected_c)
+            {
+                Conv.enable_P_sym_local = 0.0f;
+                Conv.enable_H_comp_local = 0.0f;
+            }
+            else
+            {
+                Conv.enable_P_sym_local = control_ACDC.flags.bit.enable_P_sym;
+                Conv.enable_H_comp_local = control_ACDC.flags.bit.enable_H_comp;
+            }
         }
-        else
-        {
-            Conv.enable_P_sym_local = control_ACDC.flags.bit.enable_P_sym;
-            Conv.enable_H_comp_local = control_ACDC.flags.bit.enable_H_comp;
-        }
-
         break;
     }
     case 1:

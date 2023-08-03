@@ -30,6 +30,8 @@ interrupt void SD_NEW_INT()
 
     Cla1ForceTask1();
 
+    Conv.cycle_period = EMIF_mem.read.cycle_period;
+
     src = (Uint32 *)&CPU1toCPU2.CLA1toCLA2.id_ref;
     dest = (Uint32 *)&Conv.id_ref;
 
@@ -66,7 +68,6 @@ interrupt void SD_NEW_INT()
     Conv.Kalman_U_grid.b = (float)EMIF_mem.read.Kalman.series[1].estimate * modifier1;
     Conv.Kalman_U_grid.c = (float)EMIF_mem.read.Kalman.series[2].estimate * modifier1;
 
-    Conv.cycle_period = EMIF_mem.read.cycle_period;
     Conv.Kp_I = CPU1toCPU2.CLA1toCLA2.Kp_I;
     Conv.L_conv = CPU1toCPU2.CLA1toCLA2.L_conv;
     Conv.enable = CPU1toCPU2.CLA1toCLA2.enable;

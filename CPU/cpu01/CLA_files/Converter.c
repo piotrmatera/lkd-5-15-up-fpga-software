@@ -278,15 +278,24 @@ void Converter_calc_master()
         else status_ACDC.in_limit_P = 0;
     }
 
+    Filter1_calc_CLAasm(&Conv.id_ref_override_prefilter.a, Conv.id_ref_override.a);
+    Filter1_calc_CLAasm(&Conv.id_ref_override_prefilter.b, Conv.id_ref_override.b);
+    Filter1_calc_CLAasm(&Conv.id_ref_override_prefilter.c, Conv.id_ref_override.c);
+    Filter1_calc_CLAasm(&Conv.iq_ref_override_prefilter.a, Conv.iq_ref_override.a);
+    Filter1_calc_CLAasm(&Conv.iq_ref_override_prefilter.b, Conv.iq_ref_override.b);
+    Filter1_calc_CLAasm(&Conv.iq_ref_override_prefilter.c, Conv.iq_ref_override.c);
+
+    Filter1_calc_CLAasm(&Conv.enable_override_prefilter, Conv.enable_override = status_ACDC.control_override);
     Filter1_calc_CLAasm(&Conv.master_slave_prefilter, (float)(status_ACDC.master_slave_selector || !status_ACDC.master_rdy));
-    register float ratio_local1 = Conv.master.slave[4].ratio * Conv.master_slave_prefilter.out;
-    register float ratio_local2 = Conv.slave.ratio_local * (1.0f - Conv.master_slave_prefilter.out);
-    Conv.id_ref.a = Conv.master.total.id_lim.a * ratio_local1 + Conv.slave.from_master.id_lim.a * ratio_local2;
-    Conv.id_ref.b = Conv.master.total.id_lim.b * ratio_local1 + Conv.slave.from_master.id_lim.b * ratio_local2;
-    Conv.id_ref.c = Conv.master.total.id_lim.c * ratio_local1 + Conv.slave.from_master.id_lim.c * ratio_local2;
-    Conv.iq_ref.a = Conv.master.total.iq_lim.a * ratio_local1 + Conv.slave.from_master.iq_lim.a * ratio_local2;
-    Conv.iq_ref.b = Conv.master.total.iq_lim.b * ratio_local1 + Conv.slave.from_master.iq_lim.b * ratio_local2;
-    Conv.iq_ref.c = Conv.master.total.iq_lim.c * ratio_local1 + Conv.slave.from_master.iq_lim.c * ratio_local2;
+    register float ratio_local1 = Conv.master.slave[4].ratio * Conv.master_slave_prefilter.out * Conv.enable_override_prefilter.out;
+    register float ratio_local2 = Conv.master.slave[4].ratio * Conv.master_slave_prefilter.out * (1.0f - Conv.enable_override_prefilter.out);
+    register float ratio_local3 = Conv.slave.ratio_local * (1.0f - Conv.master_slave_prefilter.out);
+    Conv.id_ref.a = Conv.id_ref_override_prefilter.a.out * ratio_local1 + Conv.master.total.id_lim.a * ratio_local2 + Conv.slave.from_master.id_lim.a * ratio_local3;
+    Conv.id_ref.b = Conv.id_ref_override_prefilter.b.out * ratio_local1 + Conv.master.total.id_lim.b * ratio_local2 + Conv.slave.from_master.id_lim.b * ratio_local3;
+    Conv.id_ref.c = Conv.id_ref_override_prefilter.c.out * ratio_local1 + Conv.master.total.id_lim.c * ratio_local2 + Conv.slave.from_master.id_lim.c * ratio_local3;
+    Conv.iq_ref.a = Conv.iq_ref_override_prefilter.a.out * ratio_local1 + Conv.master.total.iq_lim.a * ratio_local2 + Conv.slave.from_master.iq_lim.a * ratio_local3;
+    Conv.iq_ref.b = Conv.iq_ref_override_prefilter.b.out * ratio_local1 + Conv.master.total.iq_lim.b * ratio_local2 + Conv.slave.from_master.iq_lim.b * ratio_local3;
+    Conv.iq_ref.c = Conv.iq_ref_override_prefilter.c.out * ratio_local1 + Conv.master.total.iq_lim.c * ratio_local2 + Conv.slave.from_master.iq_lim.c * ratio_local3;
 }
 
 void Converter_calc_slave()
@@ -477,33 +486,45 @@ void Converter_calc_slave()
 
             //////////////////////////////////////////////////////////////////////////////////
 
-            if(Conv.no_neutral)
+            if (Conv.enable_override_prefilter.out == 1.0f)
             {
-                PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[0], Conv.iq_ref.a - Conv.iq_conv_total);
-                Conv.PI_Iq[1].out =
-                Conv.PI_Iq[2].out = Conv.PI_Iq[0].out;
-
-                Conv.PI_Id[0].out =
-                Conv.PI_Id[1].out =
-                Conv.PI_Id[2].out = -Conv.PI_U_dc.out;
+                Conv.PI_Id[0].out = Conv.id_ref.a - Conv.PI_U_dc.out;
+                Conv.PI_Id[1].out = Conv.id_ref.b - Conv.PI_U_dc.out;
+                Conv.PI_Id[2].out = Conv.id_ref.c - Conv.PI_U_dc.out;
+                Conv.PI_Iq[0].out = Conv.iq_ref.a;
+                Conv.PI_Iq[1].out = Conv.iq_ref.b;
+                Conv.PI_Iq[2].out = Conv.iq_ref.c;
             }
             else
             {
-                PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[0], Conv.iq_ref.a - Conv.iq_conv.a);
-                PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[1], Conv.iq_ref.b - Conv.iq_conv.b);
-                PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[2], Conv.iq_ref.c - Conv.iq_conv.c);
+                if(Conv.no_neutral)
+                {
+                    PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[0], Conv.iq_ref.a - Conv.iq_conv_total);
+                    Conv.PI_Iq[1].out =
+                    Conv.PI_Iq[2].out = Conv.PI_Iq[0].out;
 
-                register float average1 = (Conv.id_ref.a + Conv.id_ref.b + Conv.id_ref.c - Conv.id_conv.a - Conv.id_conv.b - Conv.id_conv.c) * MATH_1_3;
-                PI_antiwindup_fast_CLAasm(&Conv.PI_Id[0], Conv.id_ref.a - Conv.id_conv.a - average1);
-                PI_antiwindup_fast_CLAasm(&Conv.PI_Id[1], Conv.id_ref.b - Conv.id_conv.b - average1);
-                PI_antiwindup_fast_CLAasm(&Conv.PI_Id[2], Conv.id_ref.c - Conv.id_conv.c - average1);
-                register float average2 = (Conv.PI_Id[0].integrator + Conv.PI_Id[1].integrator + Conv.PI_Id[2].integrator) * MATH_1_3;
-                Conv.PI_Id[0].integrator -= average2;
-                Conv.PI_Id[1].integrator -= average2;
-                Conv.PI_Id[2].integrator -= average2;
-                Conv.PI_Id[0].out += -Conv.PI_U_dc.out;
-                Conv.PI_Id[1].out += -Conv.PI_U_dc.out;
-                Conv.PI_Id[2].out += -Conv.PI_U_dc.out;
+                    Conv.PI_Id[0].out =
+                    Conv.PI_Id[1].out =
+                    Conv.PI_Id[2].out = -Conv.PI_U_dc.out;
+                }
+                else
+                {
+                    PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[0], Conv.iq_ref.a - Conv.iq_conv.a);
+                    PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[1], Conv.iq_ref.b - Conv.iq_conv.b);
+                    PI_antiwindup_fast_CLAasm(&Conv.PI_Iq[2], Conv.iq_ref.c - Conv.iq_conv.c);
+
+                    register float average1 = (Conv.id_ref.a + Conv.id_ref.b + Conv.id_ref.c - Conv.id_conv.a - Conv.id_conv.b - Conv.id_conv.c) * MATH_1_3;
+                    PI_antiwindup_fast_CLAasm(&Conv.PI_Id[0], Conv.id_ref.a - Conv.id_conv.a - average1);
+                    PI_antiwindup_fast_CLAasm(&Conv.PI_Id[1], Conv.id_ref.b - Conv.id_conv.b - average1);
+                    PI_antiwindup_fast_CLAasm(&Conv.PI_Id[2], Conv.id_ref.c - Conv.id_conv.c - average1);
+                    register float average2 = (Conv.PI_Id[0].integrator + Conv.PI_Id[1].integrator + Conv.PI_Id[2].integrator) * MATH_1_3;
+                    Conv.PI_Id[0].integrator -= average2;
+                    Conv.PI_Id[1].integrator -= average2;
+                    Conv.PI_Id[2].integrator -= average2;
+                    Conv.PI_Id[0].out += -Conv.PI_U_dc.out;
+                    Conv.PI_Id[1].out += -Conv.PI_U_dc.out;
+                    Conv.PI_Id[2].out += -Conv.PI_U_dc.out;
+                }
             }
 
             //////////////////////////////////////////////////////////////////////////////////
