@@ -8,9 +8,9 @@ void Converter_calc()
     Conv.I_ref.b = (Conv.id_ref.b * PLL.trig_table[1].cosine + Conv.iq_ref.b * PLL.trig_table[1].sine * PLL.sign) * MATH_SQRT2;
     Conv.I_ref.c = (Conv.id_ref.c * PLL.trig_table[2].cosine + Conv.iq_ref.c * PLL.trig_table[2].sine * PLL.sign) * MATH_SQRT2;
 
-    Conv.I_err.a = Conv.I_ref.a - Meas_master.I_conv.a;
-    Conv.I_err.b = Conv.I_ref.b - Meas_master.I_conv.b;
-    Conv.I_err.c = Conv.I_ref.c - Meas_master.I_conv.c;
+    Conv.I_err.a = Conv.I_ref.a - Meas_ACDC.I_conv.a;
+    Conv.I_err.b = Conv.I_ref.b - Meas_ACDC.I_conv.b;
+    Conv.I_err.c = Conv.I_ref.c - Meas_ACDC.I_conv.c;
 
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 1;
@@ -31,9 +31,9 @@ void Converter_calc()
     Conv.U_ref.n = -(Conv.U_ref.a + Conv.U_ref.b + Conv.U_ref.c);
 
     register float sum;
-    sum =  fabsf(Conv.Kalman_U_grid_diff.a = Meas_master.U_grid.a - Conv.Kalman_U_grid.a);
-    sum += fabsf(Conv.Kalman_U_grid_diff.b = Meas_master.U_grid.b - Conv.Kalman_U_grid.b);
-    sum += fabsf(Conv.Kalman_U_grid_diff.c = Meas_master.U_grid.c - Conv.Kalman_U_grid.c);
+    sum =  fabsf(Conv.Kalman_U_grid_diff.a = Meas_ACDC.U_grid.a - Conv.Kalman_U_grid.a);
+    sum += fabsf(Conv.Kalman_U_grid_diff.b = Meas_ACDC.U_grid.b - Conv.Kalman_U_grid.b);
+    sum += fabsf(Conv.Kalman_U_grid_diff.c = Meas_ACDC.U_grid.c - Conv.Kalman_U_grid.c);
 
     static float sag_timer;
     sag_timer += Conv.Ts;
@@ -48,7 +48,7 @@ void Converter_calc()
 //        Conv.U_ref.c += Conv.Kalman_U_grid_diff.c;
     }
 
-    register float ref_scaling = Conv.cycle_period * 2.0f / fmaxf(Meas_master.U_dc_avg, 1.0f);
+    register float ref_scaling = Conv.cycle_period * 2.0f / fmaxf(Meas_ACDC.U_dc_avg, 1.0f);
     Conv.duty_float[0] = Conv.U_ref.a * ref_scaling;
     Conv.duty_float[1] = Conv.U_ref.b * ref_scaling;
     Conv.duty_float[2] = Conv.U_ref.c * ref_scaling;

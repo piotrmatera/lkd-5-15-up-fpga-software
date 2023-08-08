@@ -7,76 +7,81 @@
 		.endif
 
 		.global _CIC1_adaptive_filter_CPUasm
-        .text
+        .sect ".TI.ramfunc"
 
 ; C prototype:
 ; float CIC1_adaptive_filter_CPUasm(struct CIC1_adaptive_global_struct *CIC_global, volatile struct CIC1_adaptive_struct *CIC, float input);
-; 47
+; 50
 
 _CIC1_adaptive_filter_CPUasm:
 ;		MDEBUGSTOP
-		MMOV32	  	@LFRAME + LFRAME_MR3, MR3 	; save MR3
-		MMOV16 		@LFRAME + LFRAME_CIC_addr, MAR1
-		MMOV16 		@LFRAME + LFRAME_CIC_global_addr, MAR0
-		MMOV32		MR1, *MAR1+[CIC1_adaptive_struct.range_modifier]
-		MMPYF32		MR0, MR0, MR1
-||		MMOV32	  	MR1, *MAR1+[CIC1_adaptive_struct.integrator]
-		MF32TOI32	MR0, MR0
-		MADD32		MR1, MR1, MR0
-		MMOV32	  	*MAR1+[CIC1_adaptive_struct.integrator], MR1
+		MOV32		R1H, *+XAR5[CIC1_adaptive_struct.range_modifier]
+		MPYF32		R0H, R0H, R1H
+        MOVL		XAR6, XAR4
+		F32TOI32	R0H, R0H
+        ADDB		XAR6, #CIC1_adaptive_global_struct.select_output
+		MOVL		XAR0, #CIC1_adaptive_struct.integrator
+		MOV32	  	P, R0H
+		ADDUL	  	P, *+XAR5[AR0]
+		MOVL	  	*+XAR5[AR0], P
 
-		MMOVZ16		MR0, @LFRAME + LFRAME_CIC_addr
+		MOVL	  	ACC, *+XAR4[CIC1_adaptive_global_struct.cycle_enable]
+		BF	 		_Skip, EQ
 
-		MMOV32	  	MR2, *MAR0+[CIC1_adaptive_global_struct.cycle_enable]
-		MMOV32	  	MR2, *MAR0+[CIC1_adaptive_global_struct.div_memory]
-		MADD32		MR0, MR0, MR2
-		MMOV16		MAR0, MR0, #0
-		MBCNDD 		_Skip, EQ
-		MMOV32	  	MR2, *MAR0+[CIC1_adaptive_global_struct.div_OSR_adaptive]
-		MMOV16 		MAR0, @LFRAME + LFRAME_CIC_global_addr
-		MMOV32	  	MR0, *MAR0+[CIC1_adaptive_struct.decimator_memory]
+		MOVL	  	XAR0, *+XAR4[CIC1_adaptive_global_struct.div_memory]
+		ADDB		XAR0, #CIC1_adaptive_struct.decimator_memory
+		MOVL	  	ACC, *+XAR5[AR0]
+		MOVL	  	*+XAR5[AR0], P
 
-		MMOV32	  	*MAR0+[CIC1_adaptive_struct.decimator_memory], MR1
-
-		MSUB32		MR0, MR1, MR0
-		MI32TOF32 	MR0, MR0
-		MMPYF32		MR0, MR0, MR2
-||		MMOV32		MR2, *MAR1+[CIC1_adaptive_struct.div_range_modifier]
-		MMPYF32		MR0, MR0, MR2
-		MMOV32	  	*MAR1+[CIC1_adaptive_struct.out_temp], MR0
+		SUBL		P, ACC
+		MOV32	  	R0H, P
+		MOVL		XAR0, #CIC1_adaptive_global_struct.div_OSR_adaptive
+		MOV32	  	R2H, *+XAR4[AR0]
+		MOVL		XAR0, #CIC1_adaptive_struct.div_range_modifier
+		MOV32		R3H, *+XAR5[AR0]
+		I32TOF32 	R0H, R0H
+		MPYF32		R2H, R2H, R3H
+		NOP
+		MPYF32		R0H, R0H, R2H
+		MOVL		XAR0, #CIC1_adaptive_struct.out_temp
+		MOV32	  	*+XAR5[AR0], R0H
 
 _Skip:
-		MNOP
-		MMOVZ16		MR0, @LFRAME + LFRAME_CIC_addr
-		MMOV32	  	MR2, *MAR0+[CIC1_adaptive_global_struct.cycle_enable + 2]
-		MMOV32	  	MR2, *MAR0+[CIC1_adaptive_global_struct.div_memory + 2]
-		MADD32		MR0, MR0, MR2
-		MMOV16		MAR0, MR0, #0
-		MBCNDD 		_Skip2, EQ
-		MMOV32	  	MR2, *MAR0+[CIC1_adaptive_global_struct.div_OSR_adaptive + 2]
-		MMOV16 		MAR0, @LFRAME + LFRAME_CIC_global_addr
-		MMOV32	  	MR0, *MAR0+[CIC1_adaptive_struct.decimator_memory+2*CIC_upsample2]
+		MOVL	  	ACC, *+XAR4[CIC1_adaptive_global_struct.cycle_enable + 2]
+		BF	 		_Skip2, EQ
 
-		MMOV32	  	*MAR0+[CIC1_adaptive_struct.decimator_memory+2*CIC_upsample2], MR1
-		MMOV32	  	MR1, *MAR1+[CIC1_adaptive_struct.integrator]
+		MOVL	  	XAR0, *+XAR4[CIC1_adaptive_global_struct.div_memory + 2]
+		MOV			ACC, #CIC1_adaptive_struct.decimator_memory+2*CIC_upsample2
+		ADDL		XAR0, ACC
+		MOVL	  	ACC, *+XAR5[AR0]
+		MOVL	  	*+XAR5[AR0], P
 
-		MSUB32		MR0, MR1, MR0
-		MI32TOF32 	MR0, MR0
-		MMPYF32		MR0, MR0, MR2
-||		MMOV32		MR2, *MAR1+[CIC1_adaptive_struct.div_range_modifier]
-		MMPYF32		MR0, MR0, MR2
-		MMOV32	  	*MAR1+[CIC1_adaptive_struct.out_temp+2], MR0
-
+		SUBL		P, ACC
+		MOV32	  	R0H, P
+		MOVL		XAR0, #CIC1_adaptive_global_struct.div_OSR_adaptive + 2
+		MOV32	  	R2H, *+XAR4[AR0]
+		MOVL		XAR0, #CIC1_adaptive_struct.div_range_modifier + 2
+		MOV32		R3H, *+XAR5[AR0]
+		I32TOF32 	R0H, R0H
+		MPYF32		R2H, R2H, R3H
+		NOP
+		MPYF32		R0H, R0H, R2H
+		MOVL		XAR0, #CIC1_adaptive_struct.out_temp + 2
+		MOV32	  	*+XAR5[AR0], R0H
 _Skip2:
-		MNOP
-		MMOV32		MR3, @LFRAME + LFRAME_MR3	; restore MR3
-		MMOV32		MR0, *MAR0+[CIC1_adaptive_global_struct.select_output]
-		MRCNDD		UNC							; return call
-		MMOV32	  	MR0, *MAR1+[CIC1_adaptive_struct.out_temp], EQ
-		MMOV32	  	MR0, *MAR1+[CIC1_adaptive_struct.out_temp+2], NEQ
-		MMOV32	  	*MAR1+[CIC1_adaptive_struct.out], MR0
+		MOVL		ACC, *XAR6
+		MOV32	  	R0H, *+XAR5[CIC1_adaptive_struct.out_temp], EQ
+		MOV32	  	R0H, *+XAR5[CIC1_adaptive_struct.out_temp+2], NEQ
+		MOV32	  	*+XAR5[CIC1_adaptive_struct.out], R0H
 
+;Finish up
+        LRETR                           ;Return
 
-		.unasg	LFRAME
+;end of function CIC1_adaptive_filter_CPUasm()
+;*********************************************************************
 
-; end of file
+       .end
+;;#############################################################################
+;;  End of File
+;;#############################################################################
+

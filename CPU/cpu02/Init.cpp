@@ -124,7 +124,7 @@ void Init_class::CIC1_adaptive_filter(struct CIC1_adaptive_struct *CIC, float ma
 
 void Init_class::Variables()
 {
-    memset(&Meas_master, 0, sizeof(Meas_master));
+    memset(&Meas_ACDC, 0, sizeof(Meas_ACDC));
     memset(&Conv, 0, sizeof(Conv));
     memset(&PLL, 0, sizeof(PLL));
     memset(&CPU2toCPU1, 0, sizeof(CPU2toCPU1));

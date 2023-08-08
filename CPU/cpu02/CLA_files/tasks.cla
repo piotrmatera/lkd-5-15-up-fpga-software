@@ -18,20 +18,20 @@ interrupt void Cla1Task1 ( void )
     register float SD_dat2;
 
     SD_dat2 = 0.5f;
-    offset = Meas_master_offset.U_grid.a;
-    Efficient_conditioning(EMIF_CLA.U_grid_a, Meas_master_gain.U_grid.a, Meas_master.U_grid.a, Meas_master.U_grid_avg.a, Meas_master_offset.U_grid.b);
-    Efficient_conditioning(EMIF_CLA.U_grid_b, Meas_master_gain.U_grid.b, Meas_master.U_grid.b, Meas_master.U_grid_avg.b, Meas_master_offset.U_grid.c);
-    Efficient_conditioning(EMIF_CLA.U_grid_c, Meas_master_gain.U_grid.c, Meas_master.U_grid.c, Meas_master.U_grid_avg.c, Meas_master_offset.I_grid.a);
-    Efficient_conditioning(EMIF_CLA.I_grid_a, Meas_master_gain.I_grid.a, Meas_master.I_grid.a, Meas_master.I_grid_avg.a, Meas_master_offset.I_grid.b);
-    Efficient_conditioning(EMIF_CLA.I_grid_b, Meas_master_gain.I_grid.b, Meas_master.I_grid.b, Meas_master.I_grid_avg.b, Meas_master_offset.I_grid.c);
-    Efficient_conditioning(EMIF_CLA.I_grid_c, Meas_master_gain.I_grid.c, Meas_master.I_grid.c, Meas_master.I_grid_avg.c, Meas_master_offset.U_dc);
-    Efficient_conditioning(EMIF_CLA.U_dc,     Meas_master_gain.U_dc,     Meas_master.U_dc,     Meas_master.U_dc_avg,     Meas_master_offset.U_dc_n);
-    Efficient_conditioning(EMIF_CLA.U_dc_n,   Meas_master_gain.U_dc_n,   Meas_master.U_dc_n,   Meas_master.U_dc_n_avg,   Meas_master_offset.I_conv.a);
-    Efficient_conditioning(EMIF_CLA.I_conv_a, Meas_master_gain.I_conv.a, Meas_master.I_conv.a, Meas_master.I_conv_avg.a, Meas_master_offset.I_conv.b);
-    Efficient_conditioning(EMIF_CLA.I_conv_b, Meas_master_gain.I_conv.b, Meas_master.I_conv.b, Meas_master.I_conv_avg.b, Meas_master_offset.I_conv.c);
-    Efficient_conditioning(EMIF_CLA.I_conv_c, Meas_master_gain.I_conv.c, Meas_master.I_conv.c, Meas_master.I_conv_avg.c, Meas_master_offset.I_conv.n);
-    Meas_master.I_conv.n = -(Meas_master.I_conv.a + Meas_master.I_conv.b + Meas_master.I_conv.c);
-    Meas_master.I_conv_avg.n = (Meas_master.I_conv_avg.a + Meas_master.I_conv_avg.b + Meas_master.I_conv_avg.c);
+    offset = Meas_ACDC_offset.U_grid.a;
+    Efficient_conditioning(EMIF_CLA.U_grid_a, Meas_ACDC_gain.U_grid.a, Meas_ACDC.U_grid.a, Meas_ACDC.U_grid_avg.a, Meas_ACDC_offset.U_grid.b);
+    Efficient_conditioning(EMIF_CLA.U_grid_b, Meas_ACDC_gain.U_grid.b, Meas_ACDC.U_grid.b, Meas_ACDC.U_grid_avg.b, Meas_ACDC_offset.U_grid.c);
+    Efficient_conditioning(EMIF_CLA.U_grid_c, Meas_ACDC_gain.U_grid.c, Meas_ACDC.U_grid.c, Meas_ACDC.U_grid_avg.c, Meas_ACDC_offset.I_grid.a);
+    Efficient_conditioning(EMIF_CLA.I_grid_a, Meas_ACDC_gain.I_grid.a, Meas_ACDC.I_grid.a, Meas_ACDC.I_grid_avg.a, Meas_ACDC_offset.I_grid.b);
+    Efficient_conditioning(EMIF_CLA.I_grid_b, Meas_ACDC_gain.I_grid.b, Meas_ACDC.I_grid.b, Meas_ACDC.I_grid_avg.b, Meas_ACDC_offset.I_grid.c);
+    Efficient_conditioning(EMIF_CLA.I_grid_c, Meas_ACDC_gain.I_grid.c, Meas_ACDC.I_grid.c, Meas_ACDC.I_grid_avg.c, Meas_ACDC_offset.U_dc);
+    Efficient_conditioning(EMIF_CLA.U_dc,     Meas_ACDC_gain.U_dc,     Meas_ACDC.U_dc,     Meas_ACDC.U_dc_avg,     Meas_ACDC_offset.U_dc_n);
+    Efficient_conditioning(EMIF_CLA.U_dc_n,   Meas_ACDC_gain.U_dc_n,   Meas_ACDC.U_dc_n,   Meas_ACDC.U_dc_n_avg,   Meas_ACDC_offset.I_conv.a);
+    Efficient_conditioning(EMIF_CLA.I_conv_a, Meas_ACDC_gain.I_conv.a, Meas_ACDC.I_conv.a, Meas_ACDC.I_conv_avg.a, Meas_ACDC_offset.I_conv.b);
+    Efficient_conditioning(EMIF_CLA.I_conv_b, Meas_ACDC_gain.I_conv.b, Meas_ACDC.I_conv.b, Meas_ACDC.I_conv_avg.b, Meas_ACDC_offset.I_conv.c);
+    Efficient_conditioning(EMIF_CLA.I_conv_c, Meas_ACDC_gain.I_conv.c, Meas_ACDC.I_conv.c, Meas_ACDC.I_conv_avg.c, Meas_ACDC_offset.I_conv.n);
+    Meas_ACDC.I_conv.n = -(Meas_ACDC.I_conv.a + Meas_ACDC.I_conv.b + Meas_ACDC.I_conv.c);
+    Meas_ACDC.I_conv_avg.n = (Meas_ACDC.I_conv_avg.a + Meas_ACDC.I_conv_avg.b + Meas_ACDC.I_conv_avg.c);
 
     Converter_calc();
 

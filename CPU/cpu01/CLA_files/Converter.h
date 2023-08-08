@@ -41,16 +41,39 @@ struct Converter_struct
 
     //////////////////////////////
 
-    float U_grid_phph_max;
-
-    float U_dc_ref;
-    struct CIC1_adaptive_struct CIC1_U_dc;
-    float U_dc_filter;
-    float U_dc_kalman;
-    struct PI_struct PI_U_dc;
+    struct
+    {
+        struct
+        {
+            struct abc_struct P_conv_1h;
+            struct abc_struct Q_conv_1h;
+            float I_lim;
+            struct abc_struct P_conv_1h_filter;
+            struct abc_struct Q_conv_1h_filter;
+            float C_conv;
+        }from_slave[4];
+        struct
+        {
+            float ratio;
+            struct Filter1_struct I_lim_prefilter;
+        }slave[5];
+        struct
+        {
+            struct abcn_struct id_lim, iq_lim;
+            struct abc_struct P_conv_1h, Q_conv_1h;
+            struct abc_struct P_conv_1h_filter, Q_conv_1h_filter;
+            float I_lim;
+            float I_lim_prefilter;
+            float C_conv;
+        }total;
+    }master;
 
     struct abc_struct id_conv, iq_conv;
     struct abc_struct id_load, iq_load;
+    struct abc_struct id_grid, iq_grid;
+    float id_conv_total, iq_conv_total;
+    float id_load_total, iq_load_total;
+    float id_grid_total, iq_grid_total;
 
     struct abc_struct tangens_range_local[2];
     struct abc_Filter1_struct tangens_range_local_prefilter[2];
@@ -59,16 +82,45 @@ struct Converter_struct
     struct abc_struct Q_set_local;
     struct abc_Filter1_struct Q_set_local_prefilter;
     struct abc_struct iq_load_ref;
-    struct abcn_struct iq_lim;
     float Iq_x, Iq_y;
 
     float version_P_sym_local, enable_P_sym_local;
     struct Filter1_struct version_P_sym_local_prefilter, enable_P_sym_local_prefilter;
-    struct abcn_struct id_lim;
     float Id_x, Id_y;
 
+    //////////////////////////////
+
+    struct
+    {
+        struct
+        {
+            struct abc_struct id_lim;
+            struct abc_struct iq_lim;
+            float ratio[4];
+        }from_master;
+        float ratio_local;
+    }slave;
+
+    //////////////////////////////
+
+    float U_grid_phph_max;
+
+    float U_dc_ref;
+    struct CIC1_adaptive_struct CIC1_U_dc;
+    float U_dc_filter;
+    float U_dc_kalman;
+    struct PI_struct PI_U_dc;
+
+    struct Filter1_struct master_slave_prefilter;
+    struct abc_struct id_ref, iq_ref;
     struct PI_struct PI_Iq[3];
     struct PI_struct PI_Id[3];
+
+    float enable_override;
+    struct Filter1_struct enable_override_prefilter;
+    struct abc_struct id_ref_override, iq_ref_override;
+    struct abc_Filter1_struct id_ref_override_prefilter;
+    struct abc_Filter1_struct iq_ref_override_prefilter;
 
     float sag;
     float enable_H_comp_local;
@@ -94,6 +146,8 @@ struct Converter_struct
     float C_dc;
     float L_conv;
     float C_conv;
+    float no_neutral;
+    float PWM_phase_shift;
 
     float RDY, RDY2;
 
@@ -122,6 +176,7 @@ extern float on_off_even_a[25];
 extern float on_off_even_b[25];
 extern float on_off_even_c[25];
 
-void Converter_calc();
+void Converter_calc_slave();
+void Converter_calc_master();
 
 #endif /* Converter_H_ */

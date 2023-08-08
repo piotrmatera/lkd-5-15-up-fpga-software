@@ -11,7 +11,7 @@
 #include "IO.h"
 #include "Node_shared.h"
 
-struct Measurements_alarm_struct
+struct Measurements_ACDC_alarm_struct
 {
     float U_grid_abs;
     float U_grid_rms;
@@ -38,7 +38,7 @@ struct EMIF_SD_struct
     int16 I_conv_n;
 };
 
-union FPGA_master_sync_flags_union
+union FPGA_ACDC_sync_flags_union
 {
     Uint32 all;
     struct
@@ -67,7 +67,12 @@ union FPGA_master_sync_flags_union
         Uint16 slave_rdy_5:1;
         Uint16 slave_rdy_6:1;
         Uint16 slave_rdy_7:1;
-        Uint16 rsvd:8;
+        Uint16 node_number:3;
+        Uint16 node_number_rdy:1;
+        Uint16 sync_rdy:1;
+        Uint16 master_rdy:1;
+        Uint16 rx1_port_rdy:1;
+        Uint16 rx2_port_rdy:1;
     }bit;
 };
 
@@ -233,18 +238,32 @@ struct FPGA_Kalman_DC_M1_struct
     Uint32 rsvd[512 - FPGA_KALMAN_DC_SERIES - FPGA_KALMAN_DC_STATES*sizeof(struct FPGA_Kalman_states_M1_struct)/sizeof(Uint32)];
 };
 
+struct Grid_analyzer_FPGA_struct
+{
+    int32 CIC1_U_grid[3];
+    int32 CIC1_I_grid[3];
+    int32 CIC1_I_conv[4];
+    int32 CIC1_U_grid_1h[3];
+    int32 CIC1_I_grid_1h[3];
+
+    int32 CIC1_P_grid_1h[3];
+    int32 CIC1_P_conv_1h[3];
+    int32 CIC1_Q_grid_1h[3];
+    int32 CIC1_Q_conv_1h[3];
+};
+
 union EMIF_union
 {
     struct
     {
         union COMM_flags_union tx_wip;
+        union COMM_flags_union rx_wip;
         union COMM_flags_union rx_rdy;
         struct EMIF_SD_struct SD_new;
         struct EMIF_SD_struct SD_avg;
         union FPGA_master_flags_union FPGA_flags;
-        union FPGA_master_sync_flags_union Sync_flags;
-        int16 clock_offsets[8];
-        int16 comm_delays[8];
+        union FPGA_ACDC_sync_flags_union Sync_flags;
+        //16 Uint32
         Uint32 SD_sync_val;
         Uint32 dsc;
         Uint32 Scope_data_out1;
@@ -259,14 +278,18 @@ union EMIF_union
         Uint16 sd_shift;
         struct
         {
-            Uint32 sync_phase:1;
             Uint32 Resonant1_WIP:1;
             Uint32 Resonant2_WIP:1;
             Uint32 Resonant3_WIP:1;
+            Uint32 Resonant4_WIP:1;
+            Uint32 Resonant5_WIP:1;
+            Uint32 Resonant6_WIP:1;
             Uint32 Kalman_DC_WIP:1;
-            Uint32 Kalman1_WIP:1;
+            Uint32 Kalman_WIP:1;
+            Uint32 sync_phase:1;
         }flags;
-        Uint32 mux_rsvd[512-35];
+        Uint32 next_period;
+        Uint32 mux_rsvd[512-29];
         Uint32 rx1_lopri_msg[8][32];
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];
@@ -274,6 +297,7 @@ union EMIF_union
         struct FPGA_Resonant_grid_M0_struct Resonant[6];
         struct FPGA_Kalman_DC_M0_struct Kalman_DC;
         struct FPGA_Kalman_M0_struct Kalman;
+        struct Grid_analyzer_FPGA_struct Grid;
     }read;
     struct
     {
@@ -294,7 +318,8 @@ union EMIF_union
         Uint32 U_grid_a_lim;
         Uint32 U_grid_b_lim;
         Uint32 U_grid_c_lim;
-        Uint32 mux_rsvd[512-18];
+        int32 local_counter_phase_shift;
+        Uint32 mux_rsvd[512-19];
         Uint32 tx1_lopri_msg[8][32];
         Uint32 tx1_hipri_msg[8][32];
         Uint32 tx2_lopri_msg[8][32];
@@ -302,6 +327,7 @@ union EMIF_union
         struct FPGA_Resonant_grid_M1_struct Resonant[6];
         struct FPGA_Kalman_DC_M1_struct Kalman_DC;
         struct FPGA_Kalman_M1_struct Kalman;
+        struct Grid_analyzer_FPGA_struct Grid;
     }write;
 };
 
@@ -313,6 +339,7 @@ struct CLA1toCLA2_struct
     float L_conv;
     float enable;
     float select_modulation;
+    float no_neutral;
     float range_modifier_Resonant_values;
     float range_modifier_Kalman_values;
     float range_modifier_Resonant_coefficients;
@@ -327,8 +354,8 @@ struct CLA2toCLA1_struct
 struct CPU1toCPU2_struct
 {
     struct CLA1toCLA2_struct CLA1toCLA2;
-    struct Measurements_master_gain_offset_struct Meas_master_gain;
-    struct Measurements_master_gain_offset_struct Meas_master_offset;
+    struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain;
+    struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset;
     float clear_alarms;
 };
 
@@ -340,7 +367,7 @@ struct CPU2toCPU1_struct
     float sign;
     float PLL_RDY;
     float sag;
-    union ALARM_master alarm_master;
+    union ALARM_ACDC alarm_master;
     int32 Resonant_error[6];
     Uint32 ZR;
     Uint32 Resonant_start;

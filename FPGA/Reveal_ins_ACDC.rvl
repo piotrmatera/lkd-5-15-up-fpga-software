@@ -1,63 +1,142 @@
-<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-02">
+<Project ModBy="Inserter" SigType="0" Name="C:/Users/MrTea/workspace_v10/SKJEE/FPGA/Reveal_ins_ACDC.rvl" Date="2023-07-18">
     <IP Version="1_6_042617"/>
     <Design DesignEntry="Schematic/Verilog HDL" Synthesis="lse" DeviceFamily="ECP5U" DesignName="SKJEE"/>
-    <Core InsertDataset="0" Insert="1" Reveal_sig="499449419" Name="SerDes_master_LA0" ID="0">
+    <Core InsertDataset="0" Insert="1" Reveal_sig="501549354" Name="top_ACDC_comm" ID="0">
         <Setting>
-            <Clock SampleClk="RX1_port/fifo_clk_o" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
-            <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="512"/>
-            <Capture Mode="0" MinSamplesPerTrig="8"/>
+            <Clock SampleClk="clk_1x" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
+            <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="1024"/>
+            <Capture Mode="0" MinSamplesPerTrig="16"/>
             <Event CntEnable="0" MaxEventCnt="8"/>
-            <TrigOut Polarity="0" MinPulseWidth="0" TrigOutNetType="1" EnableTrigOut="0" TrigOutNet="reveal_debug_SerDes_master_LA0_net"/>
+            <TrigOut Polarity="0" MinPulseWidth="0" TrigOutNetType="1" EnableTrigOut="0" TrigOutNet="reveal_debug_top_ACDC_LA2_net"/>
             <DistRAM Disable="1"/>
         </Setting>
         <Dataset Name="Base">
             <Trace>
-                <Bus Name="RX1_port/fifo_o">
-                    <Sig Type="SIG" Name="RX1_port/fifo_o:0"/>
-                    <Sig Type="SIG" Name="RX1_port/fifo_o:1"/>
-                    <Sig Type="SIG" Name="RX1_port/fifo_o:2"/>
-                    <Sig Type="SIG" Name="RX1_port/fifo_o:3"/>
-                    <Sig Type="SIG" Name="RX1_port/fifo_o:4"/>
-                    <Sig Type="SIG" Name="RX1_port/fifo_o:5"/>
-                    <Sig Type="SIG" Name="RX1_port/fifo_o:6"/>
-                    <Sig Type="SIG" Name="RX1_port/fifo_o:7"/>
-                    <Sig Type="SIG" Name="RX1_port/fifo_o:8"/>
+                <Sig Type="SIG" Name="local_counter_phase"/>
+                <Bus Name="Slave_sync/local_counter_timestamp_memory">
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:0"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:1"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:2"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:3"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:4"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:5"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:6"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:7"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:8"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:9"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:10"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:11"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:12"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:13"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:14"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_memory:15"/>
                 </Bus>
-                <Bus Name="RX1_port/fifo_we_o">
-                    <Sig Type="SIG" Name="RX1_port/fifo_we_o:0"/>
-                    <Sig Type="SIG" Name="RX1_port/fifo_we_o:1"/>
+                <Sig Type="SIG" Name="Slave_sync/flags_memory:9"/>
+                <Bus Name="Slave_sync/local_counter_timestamp_i">
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:0"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:1"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:2"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:3"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:4"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:5"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:6"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:7"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:8"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:9"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:10"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:11"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:12"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:13"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:14"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_i:15"/>
                 </Bus>
-                <Sig Type="SIG" Name="RX1_port/error"/>
-                <Sig Type="SIG" Name="RX1_port/rx_rdy_o"/>
-                <Sig Type="SIG" Name="RX1_port/dec_en_i"/>
-                <Bus Name="RX1_port/dec_i">
-                    <Sig Type="SIG" Name="RX1_port/dec_i:0"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:1"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:2"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:3"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:4"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:5"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:6"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:7"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:8"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_i:9"/>
+                <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_phase_i"/>
+                <Bus Name="Slave_sync/local_counter_error">
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:0"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:1"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:2"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:3"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:4"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:5"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:6"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:7"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:8"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:9"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:10"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:11"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:12"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:13"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:14"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error:15"/>
                 </Bus>
-                <Bus Name="RX1_port/dec_o">
-                    <Sig Type="SIG" Name="RX1_port/dec_o:0"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:1"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:2"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:3"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:4"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:5"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:6"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:7"/>
-                    <Sig Type="SIG" Name="RX1_port/dec_o:8"/>
+                <Bus Name="Slave_sync/local_counter_error2">
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:0"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:1"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:2"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:3"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:4"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:5"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:6"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:7"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:8"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:9"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:10"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:11"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:12"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:13"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:14"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error2:15"/>
                 </Bus>
-                <Sig Type="SIG" Name="RX1_port/comma_even"/>
-                <Sig Type="SIG" Name="RX1_port/comma_odd"/>
+                <Bus Name="Slave_sync/local_counter_error3">
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:0"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:1"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:2"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:3"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:4"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:5"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:6"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:7"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:8"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:9"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:10"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:11"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:12"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:13"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:14"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error3:15"/>
+                </Bus>
+                <Bus Name="Slave_sync/local_counter_error4">
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:0"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:1"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:2"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:3"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:4"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:5"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:6"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:7"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:8"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:9"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:10"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:11"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:12"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:13"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:14"/>
+                    <Sig Type="SIG" Name="Slave_sync/local_counter_error4:15"/>
+                </Bus>
+                <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_new_latch"/>
+                <Sig Type="SIG" Name="Slave_sync/local_counter_timestamp_new_latch_last"/>
+                <Sig Type="SIG" Name="Slave_sync/local_counter_update_condition"/>
+                <Bus Name="Slave_sync/state_reg">
+                    <Sig Type="SIG" Name="Slave_sync/state_reg:0"/>
+                    <Sig Type="SIG" Name="Slave_sync/state_reg:1"/>
+                    <Sig Type="SIG" Name="Slave_sync/state_reg:2"/>
+                </Bus>
             </Trace>
             <Trigger>
-                <TU Serialbits="0" Type="0" ID="1" Sig="RX1_port/error,"/>
+                <TU Serialbits="0" Type="0" ID="1" Sig="(BUS)Slave_sync/local_counter_error4[15:0],"/>
+                <TU Serialbits="0" Type="0" ID="2" Sig="(BUS)Slave_sync/local_counter_error4[15:0],"/>
+                <TU Serialbits="0" Type="0" ID="3" Sig="(BUS)Slave_sync/state_reg[2:0],"/>
+                <TU Serialbits="0" Type="0" ID="4" Sig="Slave_sync/local_counter_update_condition,"/>
                 <TE MaxSequence="2" MaxEvnCnt="1" ID="1" Resource="1"/>
             </Trigger>
         </Dataset>

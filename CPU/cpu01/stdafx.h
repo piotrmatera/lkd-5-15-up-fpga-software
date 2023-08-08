@@ -2,12 +2,10 @@
 #define _CLA_SHARED_H_
 
 #define PWM_CLOCK 125000000
+
 #define CONV_FREQUENCY 40000
 #define CONTROL_RATE 4.0
-
-#define CYCLE_PERIOD (PWM_CLOCK/CONV_FREQUENCY/2)
 #define SCOPE_BUFFER (Uint32)(0.02 * (float)CONV_FREQUENCY * 2.0 / CONTROL_RATE * 2)
-
 //#define SCOPE_BUFFER 1250
 #define SCOPE_CHANNEL 12
 typedef float scope_data_type;
@@ -19,11 +17,12 @@ typedef float scope_data_type;
 //
 // Included Files
 //
+#include <stdint.h>
+
 #include "F28x_Project.h"
 
 #include "F2837xD_Cla_defines.h"
 #include "CLAmath.h"
-#include <stdint.h>
 
 #include "Controllers.h"
 #include "Converter.h"
@@ -74,50 +73,6 @@ struct Thermistor_struct
     float DIV_Rinf;
 };
 
-struct Energy_meter_upper_struct
-{
-    Uint64 P_p[3];
-    Uint64 P_n[3];
-    Uint64 QI[3];
-    Uint64 QII[3];
-    Uint64 QIII[3];
-    Uint64 QIV[3];
-    struct
-    {
-        Uint64 P_p;
-        Uint64 P_n;
-        Uint64 QI;
-        Uint64 QII;
-        Uint64 QIII;
-        Uint64 QIV;
-    }sum;
-};
-
-struct Energy_meter_lower_struct
-{
-    Uint32 P_p[3];
-    Uint32 P_n[3];
-    Uint32 QI[3];
-    Uint32 QII[3];
-    Uint32 QIII[3];
-    Uint32 QIV[3];
-    struct
-    {
-        Uint32 P_p;
-        Uint32 P_n;
-        Uint32 QI;
-        Uint32 QII;
-        Uint32 QIII;
-        Uint32 QIV;
-    }sum;
-};
-
-struct Energy_meter_struct
-{
-    struct Energy_meter_upper_struct upper;
-    struct Energy_meter_lower_struct lower;
-};
-
 union CONTROL_EXT_MODBUS
 {
     Uint16 all[2];
@@ -130,29 +85,30 @@ union CONTROL_EXT_MODBUS
 //
 //Task 1 (C) Variables
 //
-extern struct Energy_meter_struct Energy_meter;
-
 extern struct Thermistor_struct Therm;
 
-extern struct Measurements_master_struct Meas_master;
-extern struct Measurements_master_gain_offset_struct Meas_master_gain_error;
-extern struct Measurements_master_gain_offset_struct Meas_master_offset_error;
-extern struct Measurements_master_gain_offset_struct Meas_master_gain;
-extern struct Measurements_master_gain_offset_struct Meas_master_offset;
-extern struct Measurements_alarm_struct Meas_alarm_H;
-extern struct Measurements_alarm_struct Meas_alarm_L;
+extern struct Measurements_ACDC_struct Meas_ACDC;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain_error;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset_error;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain;
+extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset;
+extern struct Measurements_ACDC_alarm_struct Meas_ACDC_alarm_H;
+extern struct Measurements_ACDC_alarm_struct Meas_ACDC_alarm_L;
 extern struct EMIF_SD_struct EMIF_CLA;
 
 extern union CONTROL_EXT_MODBUS control_ext_modbus;
 
-extern struct CONTROL_master control_master;
-extern struct STATUS_master status_master;
-extern union ALARM_master alarm_master;
-extern union ALARM_master alarm_master_snapshot;
+extern struct CONTROL_ACDC control_ACDC;
+extern struct STATUS_ACDC status_ACDC;
+extern struct STATUS_ACDC status_ACDC_master;
+extern union ALARM_ACDC alarm_ACDC;
+extern union ALARM_ACDC alarm_ACDC_snapshot;
 
 extern struct CIC2_struct CIC2_calibration;
 extern CLA_FPTR CIC2_calibration_input;
 extern struct CIC1_adaptive_global_struct CIC1_adaptive_global__50Hz;
+extern struct CIC1_adaptive2_global_struct CIC1_adaptive2_global__50Hz;
+extern struct CIC1_global_struct CIC1_global__50Hz;
 
 extern struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 extern struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
@@ -165,6 +121,7 @@ extern void DINT_copy_CPUasm(Uint16 *dst, Uint16 *src, Uint16 size);
 extern void SINCOS_calc_CPUasm(struct trigonometric_struct *sincos_table, float angle);
 extern void SINCOS_kalman_calc_CPUasm(struct trigonometric_struct *sincos_table, float angle);
 extern void Kalman_THD_calc_CPUasm(struct Kalman_struct *Kalman, int32 *EMIF_Kalman);
+extern float CIC1_adaptive_filter_CPUasm(struct CIC1_adaptive_global_struct *CIC_global, struct CIC1_adaptive_struct *CIC, float input);
 
 //
 //Task 2 (C) Variables

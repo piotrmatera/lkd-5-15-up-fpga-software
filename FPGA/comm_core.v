@@ -4,7 +4,7 @@ module TX_core(core_clk_i, hipri_msg_en_i, lopri_msg_en_i,
 fifo_clk_o, fifo_we_o, fifo_o,
 mem_addr_o, mem_data_i,
 tx_hipri_msg_start_i, tx_hipri_msg_wip_o, tx_lopri_msg_start_i, tx_lopri_msg_wip_o,
-tx_code_start_i); 
+tx_code_start_i, tx_code_i); 
 	input core_clk_i; 
  	input hipri_msg_en_i; 
  	input lopri_msg_en_i; 
@@ -23,9 +23,8 @@ tx_code_start_i);
 	output[`LOPRI_MAILBOXES_NUMBER-1:0] tx_lopri_msg_wip_o; 
 
 	input tx_code_start_i; 
-	 	
-	parameter TX_CODE = `K_Enum_nodes;
-		
+	input [8:0] tx_code_i; 
+	 			
 	assign fifo_clk_o = core_clk_i;
 	
 ///////////////////////////////////////////////////////////////////// 
@@ -93,12 +92,14 @@ tx_code_start_i);
 
 	reg[STATES_WIDTH-1:0] state_reg_lopri_last;
 	reg[`POINTER_WIDTH-1:0] mem_addr_o_lopri_last;
+	reg [8:0] tx_code_r; 
 	
 	integer i;	 
 	 
 	always @(posedge core_clk_i) begin 
 		hipri_msg_en_r <= {hipri_msg_en_i, hipri_msg_en_r[1]}; 
 		lopri_msg_en_r <= {lopri_msg_en_i, lopri_msg_en_r[1]}; 
+		tx_code_r <= tx_code_i;
 		
 		mem_addr_o <= mem_addr_o + 1'b1;
 		fifo_o <= {1'b0, mem_data_i}; 
@@ -213,7 +214,7 @@ tx_code_start_i);
 			S_TX_code : begin 
 				mem_addr_o <= mem_addr_o_lopri_last; 
 				fifo_we_o[0] <= 1'b1; 
-				fifo_o <= TX_CODE;
+				fifo_o <= tx_code_r;
 				state_reg <= S_TX_idle; 
 			end 
 		endcase 
@@ -233,6 +234,7 @@ tx_code_start_i);
 	end 
 	
 	initial begin
+		tx_code_r = 0; 
 		hipri_msg_en_r = 0; 
 		lopri_msg_en_r = 0; 
 		mem_addr_o = 0;

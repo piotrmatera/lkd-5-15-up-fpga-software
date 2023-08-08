@@ -27,6 +27,9 @@ public:
     void CIC1_filter(struct CIC1_struct *CIC, float max_value, Uint16 OSR, Uint16 decimation_ratio);
     void CIC2_filter(struct CIC2_struct *CIC, float max_value, Uint16 OSR, Uint16 decimation_ratio);
     void CIC1_adaptive_filter(struct CIC1_adaptive_struct *CIC, float max_value, Uint16 OSR);
+    void CIC1_adaptive2_filter(struct CIC1_adaptive2_struct *CIC, float max_value, Uint16 OSR);
+    void CIC1_global_init(struct CIC1_global_struct* CIC, float OSR, float decimation_ratio);
+    void CIC1_local_init(struct CIC1_local_struct* CIC, float max_value, float OSR, float decimation_ratio);
 };
 
 extern class Init_class Init;

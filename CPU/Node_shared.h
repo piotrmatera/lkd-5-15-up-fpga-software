@@ -80,19 +80,18 @@ union FPGA_master_flags_union
         Uint16 U_grid_abs_b_H:1;
         Uint16 U_grid_abs_c_H:1;
         Uint16 sed_err:1;
-        Uint16 rsvd:4;
-//        Uint16 rx1_crc_error:1;
-//        Uint16 rx1_overrun_error:1;
-//        Uint16 rx1_frame_error:1;
+        Uint16 rx1_crc_error:1;
+        Uint16 rx1_overrun_error:1;
+        Uint16 rx1_frame_error:1;
+        Uint16 rx1_port_nrdy:1;
 //        Uint16 rx2_crc_error:1;
 //        Uint16 rx2_overrun_error:1;
 //        Uint16 rx2_frame_error:1;
-//        Uint16 rx1_port_nrdy:1;
 //        Uint16 rx2_port_nrdy:1;
     }bit;
 };
 
-union ALARM_master
+union ALARM_ACDC
 {
     Uint32 all[3];
     struct
@@ -134,7 +133,9 @@ union ALARM_master
         Uint16 Not_enough_data_master : 1;
         Uint16 Driver_soft_error : 1;
         Uint16 FPGA_parameters : 1;
-        Uint16 rsvd1:5;
+        Uint16 lopri_timeout : 1;
+        Uint16 lopri_error : 1;
+        Uint16 rsvd1:3;
         //64bits
 
         Uint16 rsvd2:16;
@@ -142,11 +143,11 @@ union ALARM_master
     }bit;
 };
 
-struct STATUS_master
+struct STATUS_ACDC
 {
     Uint16 Init_done:1;
     Uint16 ONOFF:1;
-    Uint16 dummy1:8;
+    Uint16 rsvd1:8;
     Uint16 calibration_procedure_error:1;
     Uint16 L_grid_measured:1;
     Uint16 Scope_snapshot_pending:1;
@@ -157,7 +158,7 @@ struct STATUS_master
     Uint16 SD_no_calibration : 1;
     Uint16 SD_no_harmonic_settings : 1;
     Uint16 SD_no_settings : 1;
-    Uint16 dummy2:5;
+    Uint16 rsvd2:5;
     Uint16 in_limit_Q : 1;
     Uint16 in_limit_P : 1;
     Uint16 in_limit_H : 1;
@@ -175,14 +176,27 @@ struct STATUS_master
     Uint16 CT_connection_b : 2;
     Uint16 CT_connection_c : 2;
 
-    Uint16 dummy3 : 4;
-    Uint16 dummy4 : 3;
+    Uint16 slave_rdy_0 : 1;
+    Uint16 slave_rdy_1 : 1;
+    Uint16 slave_rdy_2 : 1;
+    Uint16 slave_rdy_3 : 1;
+
+    Uint16 master_rdy : 1;
+    Uint16 rx1_port_rdy : 1;
+    Uint16 rx2_port_rdy : 1;
+
     //48
     Uint16 error_retry : 4;
-    Uint16 rsvd : 12;
+    Uint16 expected_number_of_slaves : 4;
+
+    Uint16 control_override : 1;
+    Uint16 master_slave_selector : 1;
+    Uint16 incorrect_number_of_slaves : 1;
+
+    Uint16 rsvd4 : 5;
 };
 
-struct CONTROL_master
+struct CONTROL_ACDC
 {
     struct harmonic_odd_struct H_odd_a, H_odd_b, H_odd_c;
     struct harmonic_even_struct H_even_a, H_even_b, H_even_c;
@@ -211,7 +225,7 @@ struct CONTROL_master
         struct
         {
             Uint16 Scope_snapshot:1;
-            Uint16 dummy:1;
+            Uint16 save_to_RTC:1;
             Uint16 SD_save_H_settings:1;
             Uint16 SD_save_settings:1;
             Uint16 CPU_reset:1;
@@ -224,7 +238,7 @@ struct CONTROL_master
     struct abc_struct tangens_range[2];
 };
 
-struct Measurements_master_struct
+struct Measurements_ACDC_struct
 {
     struct abc_struct U_grid_avg;
     struct abc_struct I_grid_avg;
@@ -244,7 +258,7 @@ struct Measurements_master_struct
     float Supply_24V;
 };
 
-struct Measurements_master_gain_offset_struct
+struct Measurements_ACDC_gain_offset_struct
 {
     struct abc_struct U_grid;
     struct abc_struct I_grid;
@@ -318,23 +332,30 @@ struct COMM_slave_sync_msg_struct
     struct COMM_header_struct header;
     struct COMM_slave_flags_struct flags;
     struct timestamp_struct timestamp;
+    struct abc_struct P_conv_1h;
+    struct abc_struct Q_conv_1h;
+    float I_lim;
     Uint16 crc;
 };
 
-union COMM_master_sync_msg0_union
+struct COMM_master_sync_msg0_struct
 {
-    Uint32 all[32];
-    struct
-    {
-        struct COMM_header_struct header;
-        int16 U_grid_a;
-        int16 U_grid_b;
-        int16 U_grid_c;
-        int16 I_grid_a;
-        int16 I_grid_b;
-        int16 I_grid_c;
-        Uint16 crc;
-    }fields;
+    struct COMM_header_struct header;
+    Uint16 clock_offsets[4];
+    Uint16 cycle_period;
+    Uint16 local_counter_timestamp;
+    Uint16 crc;
+};
+
+struct COMM_master_sync_msg1_struct
+{
+    struct COMM_header_struct header;
+    Uint16 dummy;
+    struct abc_struct id_ref;
+    struct abc_struct iq_ref;
+    float ratio[4];
+    struct STATUS_ACDC status_ACDC;
+    Uint16 crc;
 };
 
 union COMM_async_msg_union
@@ -380,11 +401,6 @@ union COMM_async_msg_union
         struct COMM_header_struct comm_header;
         enum comm_func_enum comm_func;
         Uint32 code_version;
-        Uint32 FatFS_time;
-        float w_filter;
-        struct Measurements_master_gain_offset_struct Meas_master_gain;
-        struct Measurements_master_gain_offset_struct Meas_master_offset;
-        float compensation2;
         Uint16 crc;
     }async_master;
     struct
@@ -392,7 +408,9 @@ union COMM_async_msg_union
         struct COMM_header_struct comm_header;
         enum comm_func_enum comm_func;
         Uint32 code_version;
-        float I_lim;
+        struct abc_struct P_conv_1h_filter;
+        struct abc_struct Q_conv_1h_filter;
+        float C_conv;
         Uint16 crc;
     }async_slave;
 };

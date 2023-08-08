@@ -1,137 +1,5 @@
 #include "stdafx.h"
 
-void Grid_analyzer_filter_calc()
-{
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_U_grid[0], Grid.U_grid.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_U_grid[1], Grid.U_grid.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_U_grid[2], Grid.U_grid.c);
-    Grid_filter.U_grid.a = Grid_filter_params.CIC1_U_grid[0].out;
-    Grid_filter.U_grid.b = Grid_filter_params.CIC1_U_grid[1].out;
-    Grid_filter.U_grid.c = Grid_filter_params.CIC1_U_grid[2].out;
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_grid[0], Grid.I_grid.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_grid[1], Grid.I_grid.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_grid[2], Grid.I_grid.c);
-    Grid_filter.I_grid.a = Grid_filter_params.CIC1_I_grid[0].out;
-    Grid_filter.I_grid.b = Grid_filter_params.CIC1_I_grid[1].out;
-    Grid_filter.I_grid.c = Grid_filter_params.CIC1_I_grid[2].out;
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_conv[0], Grid.I_conv.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_conv[1], Grid.I_conv.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_conv[2], Grid.I_conv.c);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_conv[3], Grid.I_conv.n);
-    Grid_filter.I_conv.a = Grid_filter_params.CIC1_I_conv[0].out;
-    Grid_filter.I_conv.b = Grid_filter_params.CIC1_I_conv[1].out;
-    Grid_filter.I_conv.c = Grid_filter_params.CIC1_I_conv[2].out;
-    Grid_filter.I_conv.n = Grid_filter_params.CIC1_I_conv[3].out;
-
-    ///////////////////////////////////////////////////////////////////
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_U_grid_1h[0], Grid.U_grid_1h.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_U_grid_1h[1], Grid.U_grid_1h.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_U_grid_1h[2], Grid.U_grid_1h.c);
-    Grid_filter.U_grid_1h.a = Grid_filter_params.CIC1_U_grid_1h[0].out;
-    Grid_filter.U_grid_1h.b = Grid_filter_params.CIC1_U_grid_1h[1].out;
-    Grid_filter.U_grid_1h.c = Grid_filter_params.CIC1_U_grid_1h[2].out;
-    Grid_filter.average.U_grid_1h = (Grid_filter.U_grid_1h.a + Grid_filter.U_grid_1h.b + Grid_filter.U_grid_1h.c) * MATH_1_3;
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_grid_1h[0], Grid.I_grid_1h.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_grid_1h[1], Grid.I_grid_1h.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_I_grid_1h[2], Grid.I_grid_1h.c);
-    Grid_filter.I_grid_1h.a = Grid_filter_params.CIC1_I_grid_1h[0].out;
-    Grid_filter.I_grid_1h.b = Grid_filter_params.CIC1_I_grid_1h[1].out;
-    Grid_filter.I_grid_1h.c = Grid_filter_params.CIC1_I_grid_1h[2].out;
-
-    ///////////////////////////////////////////////////////////////////
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_Q_conv_1h[0], Grid.Q_conv_1h.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_Q_conv_1h[1], Grid.Q_conv_1h.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_Q_conv_1h[2], Grid.Q_conv_1h.c);
-    Grid_filter.Q_conv_1h.a = Grid_filter_params.CIC1_Q_conv_1h[0].out;
-    Grid_filter.Q_conv_1h.b = Grid_filter_params.CIC1_Q_conv_1h[1].out;
-    Grid_filter.Q_conv_1h.c = Grid_filter_params.CIC1_Q_conv_1h[2].out;
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_Q_grid_1h[0], Grid.Q_grid_1h.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_Q_grid_1h[1], Grid.Q_grid_1h.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_Q_grid_1h[2], Grid.Q_grid_1h.c);
-    Grid_filter.Q_grid_1h.a = Grid_filter_params.CIC1_Q_grid_1h[0].out;
-    Grid_filter.Q_grid_1h.b = Grid_filter_params.CIC1_Q_grid_1h[1].out;
-    Grid_filter.Q_grid_1h.c = Grid_filter_params.CIC1_Q_grid_1h[2].out;
-    Grid_filter.average.Q_grid_1h = Grid_filter.Q_grid_1h.a + Grid_filter.Q_grid_1h.b + Grid_filter.Q_grid_1h.c;
-
-    Grid_filter.Q_load_1h.a = Grid_filter.Q_grid_1h.a + Grid_filter.Q_conv_1h.a;
-    Grid_filter.Q_load_1h.b = Grid_filter.Q_grid_1h.b + Grid_filter.Q_conv_1h.b;
-    Grid_filter.Q_load_1h.c = Grid_filter.Q_grid_1h.c + Grid_filter.Q_conv_1h.c;
-    Grid_filter.average.Q_load_1h = Grid_filter.Q_load_1h.a + Grid_filter.Q_load_1h.b + Grid_filter.Q_load_1h.c;
-
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_P_conv_1h[0], Grid.P_conv_1h.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_P_conv_1h[1], Grid.P_conv_1h.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_P_conv_1h[2], Grid.P_conv_1h.c);
-    Grid_filter.P_conv_1h.a = Grid_filter_params.CIC1_P_conv_1h[0].out;
-    Grid_filter.P_conv_1h.b = Grid_filter_params.CIC1_P_conv_1h[1].out;
-    Grid_filter.P_conv_1h.c = Grid_filter_params.CIC1_P_conv_1h[2].out;
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_P_grid_1h[0], Grid.P_grid_1h.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_P_grid_1h[1], Grid.P_grid_1h.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_P_grid_1h[2], Grid.P_grid_1h.c);
-    Grid_filter.P_grid_1h.a = Grid_filter_params.CIC1_P_grid_1h[0].out;
-    Grid_filter.P_grid_1h.b = Grid_filter_params.CIC1_P_grid_1h[1].out;
-    Grid_filter.P_grid_1h.c = Grid_filter_params.CIC1_P_grid_1h[2].out;
-    Grid_filter.average.P_grid_1h = Grid_filter.P_grid_1h.a + Grid_filter.P_grid_1h.b + Grid_filter.P_grid_1h.c;
-
-    Grid_filter.P_load_1h.a = Grid_filter.P_grid_1h.a + Grid_filter.P_conv_1h.a;
-    Grid_filter.P_load_1h.b = Grid_filter.P_grid_1h.b + Grid_filter.P_conv_1h.b;
-    Grid_filter.P_load_1h.c = Grid_filter.P_grid_1h.c + Grid_filter.P_conv_1h.c;
-    Grid_filter.average.P_load_1h = Grid_filter.P_load_1h.a + Grid_filter.P_load_1h.b + Grid_filter.P_load_1h.c;
-
-    ///////////////////////////////////////////////////////////////////
-
-    Grid_filter.S_load_1h.a = sqrtf(Grid_filter.P_load_1h.a * Grid_filter.P_load_1h.a + Grid_filter.Q_load_1h.a * Grid_filter.Q_load_1h.a);
-    Grid_filter.S_load_1h.b = sqrtf(Grid_filter.P_load_1h.b * Grid_filter.P_load_1h.b + Grid_filter.Q_load_1h.b * Grid_filter.Q_load_1h.b);
-    Grid_filter.S_load_1h.c = sqrtf(Grid_filter.P_load_1h.c * Grid_filter.P_load_1h.c + Grid_filter.Q_load_1h.c * Grid_filter.Q_load_1h.c);
-    Grid_filter.average.S_load_1h = Grid_filter.S_load_1h.a + Grid_filter.S_load_1h.b + Grid_filter.S_load_1h.c;
-    Grid_filter.S_grid_1h.a = sqrtf(Grid_filter.P_grid_1h.a * Grid_filter.P_grid_1h.a + Grid_filter.Q_grid_1h.a * Grid_filter.Q_grid_1h.a);
-    Grid_filter.S_grid_1h.b = sqrtf(Grid_filter.P_grid_1h.b * Grid_filter.P_grid_1h.b + Grid_filter.Q_grid_1h.b * Grid_filter.Q_grid_1h.b);
-    Grid_filter.S_grid_1h.c = sqrtf(Grid_filter.P_grid_1h.c * Grid_filter.P_grid_1h.c + Grid_filter.Q_grid_1h.c * Grid_filter.Q_grid_1h.c);
-    Grid_filter.average.S_grid_1h = Grid_filter.S_grid_1h.a + Grid_filter.S_grid_1h.b + Grid_filter.S_grid_1h.c;
-    Grid_filter.S_conv_1h.a = sqrtf(Grid_filter.P_conv_1h.a * Grid_filter.P_conv_1h.a + Grid_filter.Q_conv_1h.a * Grid_filter.Q_conv_1h.a);
-    Grid_filter.S_conv_1h.b = sqrtf(Grid_filter.P_conv_1h.b * Grid_filter.P_conv_1h.b + Grid_filter.Q_conv_1h.b * Grid_filter.Q_conv_1h.b);
-    Grid_filter.S_conv_1h.c = sqrtf(Grid_filter.P_conv_1h.c * Grid_filter.P_conv_1h.c + Grid_filter.Q_conv_1h.c * Grid_filter.Q_conv_1h.c);
-
-    Grid_filter.S_grid.a = Grid_filter.U_grid.a * Grid_filter.I_grid.a;
-    Grid_filter.S_grid.b = Grid_filter.U_grid.b * Grid_filter.I_grid.b;
-    Grid_filter.S_grid.c = Grid_filter.U_grid.c * Grid_filter.I_grid.c;
-    Grid_filter.S_conv.a = Grid_filter.U_grid.a * Grid_filter.I_conv.a;
-    Grid_filter.S_conv.b = Grid_filter.U_grid.b * Grid_filter.I_conv.b;
-    Grid_filter.S_conv.c = Grid_filter.U_grid.c * Grid_filter.I_conv.c;
-
-    Grid_filter.PF_grid_1h.a = Grid_filter.P_grid_1h.a / fmaxf(Grid_filter.S_grid_1h.a, 1.0f);
-    Grid_filter.PF_grid_1h.b = Grid_filter.P_grid_1h.b / fmaxf(Grid_filter.S_grid_1h.b, 1.0f);
-    Grid_filter.PF_grid_1h.c = Grid_filter.P_grid_1h.c / fmaxf(Grid_filter.S_grid_1h.c, 1.0f);
-    Grid_filter.average.PF_grid_1h = (fabsf(Grid_filter.P_grid_1h.a) + fabsf(Grid_filter.P_grid_1h.b) + fabsf(Grid_filter.P_grid_1h.c)) / fmaxf(Grid_filter.average.S_grid_1h, 1.0f);
-
-    register float div_I_lim = 1.0f / fmaxf(Conv.I_lim_nominal, 1.0f);
-    Grid_filter.Used_resources.a = Grid_filter.I_conv.a * div_I_lim;
-    Grid_filter.Used_resources.b = Grid_filter.I_conv.b * div_I_lim;
-    Grid_filter.Used_resources.c = Grid_filter.I_conv.c * div_I_lim;
-    Grid_filter.Used_resources.n = Grid_filter.I_conv.n * div_I_lim;
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_THD_U_grid[0], Grid.THD_U_grid.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_THD_U_grid[1], Grid.THD_U_grid.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_THD_U_grid[2], Grid.THD_U_grid.c);
-    Grid_filter.THD_U_grid.a = Grid_filter_params.CIC1_THD_U_grid[0].out;
-    Grid_filter.THD_U_grid.b = Grid_filter_params.CIC1_THD_U_grid[1].out;
-    Grid_filter.THD_U_grid.c = Grid_filter_params.CIC1_THD_U_grid[2].out;
-
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_THD_I_grid[0], Grid.THD_I_grid.a);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_THD_I_grid[1], Grid.THD_I_grid.b);
-    CIC1_filter_CLAasm(&Grid_filter_params.CIC1_THD_I_grid[2], Grid.THD_I_grid.c);
-    Grid_filter.THD_I_grid.a = Grid_filter_params.CIC1_THD_I_grid[0].out;
-    Grid_filter.THD_I_grid.b = Grid_filter_params.CIC1_THD_I_grid[1].out;
-    Grid_filter.THD_I_grid.c = Grid_filter_params.CIC1_THD_I_grid[2].out;
-}
-
 #define Efficient_conditioning(input, input_gain, output, output_avg, next_offset)\
     SD_dat1 = (float)input;\
     SD_dat1 -= offset, gain = input_gain;\
@@ -156,20 +24,20 @@ interrupt void Cla1Task1 ( void )
     register float SD_dat2;
 
     SD_dat2 = 0.5f;
-    offset = Meas_master_offset.U_grid.a;
-    Efficient_conditioning_avg(EMIF_CLA.U_grid_a, Meas_master_gain.U_grid.a, Meas_master.U_grid.a, Meas_master.U_grid_avg.a, Meas_master_offset.U_grid.b);
-    Efficient_conditioning_avg(EMIF_CLA.U_grid_b, Meas_master_gain.U_grid.b, Meas_master.U_grid.b, Meas_master.U_grid_avg.b, Meas_master_offset.U_grid.c);
-    Efficient_conditioning_avg(EMIF_CLA.U_grid_c, Meas_master_gain.U_grid.c, Meas_master.U_grid.c, Meas_master.U_grid_avg.c, Meas_master_offset.I_grid.a);
-    Efficient_conditioning_avg(EMIF_CLA.I_grid_a, Meas_master_gain.I_grid.a, Meas_master.I_grid.a, Meas_master.I_grid_avg.a, Meas_master_offset.I_grid.b);
-    Efficient_conditioning_avg(EMIF_CLA.I_grid_b, Meas_master_gain.I_grid.b, Meas_master.I_grid.b, Meas_master.I_grid_avg.b, Meas_master_offset.I_grid.c);
-    Efficient_conditioning_avg(EMIF_CLA.I_grid_c, Meas_master_gain.I_grid.c, Meas_master.I_grid.c, Meas_master.I_grid_avg.c, Meas_master_offset.U_dc);
-    Efficient_conditioning_avg(EMIF_CLA.U_dc,     Meas_master_gain.U_dc,     Meas_master.U_dc,     Meas_master.U_dc_avg,     Meas_master_offset.U_dc_n);
-    Efficient_conditioning_avg(EMIF_CLA.U_dc_n,   Meas_master_gain.U_dc_n,   Meas_master.U_dc_n,   Meas_master.U_dc_n_avg,   Meas_master_offset.I_conv.a);
-    Efficient_conditioning_avg(EMIF_CLA.I_conv_a, Meas_master_gain.I_conv.a, Meas_master.I_conv.a, Meas_master.I_conv_avg.a, Meas_master_offset.I_conv.b);
-    Efficient_conditioning_avg(EMIF_CLA.I_conv_b, Meas_master_gain.I_conv.b, Meas_master.I_conv.b, Meas_master.I_conv_avg.b, Meas_master_offset.I_conv.c);
-    Efficient_conditioning_avg(EMIF_CLA.I_conv_c, Meas_master_gain.I_conv.c, Meas_master.I_conv.c, Meas_master.I_conv_avg.c, Meas_master_offset.I_conv.n);
-    Meas_master.I_conv.n = -(Meas_master.I_conv.a + Meas_master.I_conv.b + Meas_master.I_conv.c);
-    Meas_master.I_conv_avg.n = (Meas_master.I_conv_avg.a + Meas_master.I_conv_avg.b + Meas_master.I_conv_avg.c);
+    offset = Meas_ACDC_offset.U_grid.a;
+    Efficient_conditioning_avg(EMIF_CLA.U_grid_a, Meas_ACDC_gain.U_grid.a, Meas_ACDC.U_grid.a, Meas_ACDC.U_grid_avg.a, Meas_ACDC_offset.U_grid.b);
+    Efficient_conditioning_avg(EMIF_CLA.U_grid_b, Meas_ACDC_gain.U_grid.b, Meas_ACDC.U_grid.b, Meas_ACDC.U_grid_avg.b, Meas_ACDC_offset.U_grid.c);
+    Efficient_conditioning_avg(EMIF_CLA.U_grid_c, Meas_ACDC_gain.U_grid.c, Meas_ACDC.U_grid.c, Meas_ACDC.U_grid_avg.c, Meas_ACDC_offset.I_grid.a);
+    Efficient_conditioning_avg(EMIF_CLA.I_grid_a, Meas_ACDC_gain.I_grid.a, Meas_ACDC.I_grid.a, Meas_ACDC.I_grid_avg.a, Meas_ACDC_offset.I_grid.b);
+    Efficient_conditioning_avg(EMIF_CLA.I_grid_b, Meas_ACDC_gain.I_grid.b, Meas_ACDC.I_grid.b, Meas_ACDC.I_grid_avg.b, Meas_ACDC_offset.I_grid.c);
+    Efficient_conditioning_avg(EMIF_CLA.I_grid_c, Meas_ACDC_gain.I_grid.c, Meas_ACDC.I_grid.c, Meas_ACDC.I_grid_avg.c, Meas_ACDC_offset.U_dc);
+    Efficient_conditioning_avg(EMIF_CLA.U_dc,     Meas_ACDC_gain.U_dc,     Meas_ACDC.U_dc,     Meas_ACDC.U_dc_avg,     Meas_ACDC_offset.U_dc_n);
+    Efficient_conditioning_avg(EMIF_CLA.U_dc_n,   Meas_ACDC_gain.U_dc_n,   Meas_ACDC.U_dc_n,   Meas_ACDC.U_dc_n_avg,   Meas_ACDC_offset.I_conv.a);
+    Efficient_conditioning_avg(EMIF_CLA.I_conv_a, Meas_ACDC_gain.I_conv.a, Meas_ACDC.I_conv.a, Meas_ACDC.I_conv_avg.a, Meas_ACDC_offset.I_conv.b);
+    Efficient_conditioning_avg(EMIF_CLA.I_conv_b, Meas_ACDC_gain.I_conv.b, Meas_ACDC.I_conv.b, Meas_ACDC.I_conv_avg.b, Meas_ACDC_offset.I_conv.c);
+    Efficient_conditioning_avg(EMIF_CLA.I_conv_c, Meas_ACDC_gain.I_conv.c, Meas_ACDC.I_conv.c, Meas_ACDC.I_conv_avg.c, Meas_ACDC_offset.I_conv.n);
+    Meas_ACDC.I_conv.n = -(Meas_ACDC.I_conv.a + Meas_ACDC.I_conv.b + Meas_ACDC.I_conv.c);
+    Meas_ACDC.I_conv_avg.n = (Meas_ACDC.I_conv_avg.a + Meas_ACDC.I_conv_avg.b + Meas_ACDC.I_conv_avg.c);
 
     Cla1SoftIntRegs.SOFTINTFRC.all =
     Cla1SoftIntRegs.SOFTINTEN.all = 1;
@@ -180,27 +48,27 @@ interrupt void Cla1Task1 ( void )
 
     CIC1_adaptive_global_CLAasm(&CIC1_adaptive_global__50Hz, Conv.f_filter);
 
-    Resonant_filter_calc_CLAasm(&Conv.Resonant_U_grid[0], Meas_master.U_grid.a);
-    Resonant_filter_calc_CLAasm(&Conv.Resonant_U_grid[1], Meas_master.U_grid.b);
-    Resonant_filter_calc_CLAasm(&Conv.Resonant_U_grid[2], Meas_master.U_grid.c);
+    Resonant_filter_calc_CLAasm(&Conv.Resonant_U_grid[0], Meas_ACDC.U_grid.a);
+    Resonant_filter_calc_CLAasm(&Conv.Resonant_U_grid[1], Meas_ACDC.U_grid.b);
+    Resonant_filter_calc_CLAasm(&Conv.Resonant_U_grid[2], Meas_ACDC.U_grid.c);
 
-    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_grid[0], Meas_master.I_grid.a);
-    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_grid[1], Meas_master.I_grid.b);
-    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_grid[2], Meas_master.I_grid.c);
+    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_grid[0], Meas_ACDC.I_grid.a);
+    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_grid[1], Meas_ACDC.I_grid.b);
+    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_grid[2], Meas_ACDC.I_grid.c);
 
-    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_conv[0], Meas_master.I_conv.a);
-    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_conv[1], Meas_master.I_conv.b);
-    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_conv[2], Meas_master.I_conv.c);
+    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_conv[0], Meas_ACDC.I_conv.a);
+    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_conv[1], Meas_ACDC.I_conv.b);
+    Resonant_filter_calc_CLAasm(&Conv.Resonant_I_conv[2], Meas_ACDC.I_conv.c);
 
     Timer_PWM.CLA_GRID1_TASK1 = TIMESTAMP_PWM;
 
-    Grid_analyzer_filter_calc();
 
     Timer_PWM.CLA_GRID2_TASK1 = TIMESTAMP_PWM;
 
     ///////////////////////////////////////////////////////////////////
 
-    Converter_calc();
+    Converter_calc_master();
+    Converter_calc_slave();
 
     Timer_PWM.CLA_CONV_TASK1 = TIMESTAMP_PWM;
 
@@ -208,7 +76,7 @@ interrupt void Cla1Task1 ( void )
 
     {
         Therm.Divider_supply += 0.001*( ((float)AdcdResultRegs.ADCRESULT0 + (float)AdcdResultRegs.ADCRESULT1)*(2e3/1e3)*(3.3/4096.0/2.0) - Therm.Divider_supply);
-        Meas_master.Supply_24V = ((float)AdcdResultRegs.ADCRESULT8 + (float)AdcdResultRegs.ADCRESULT9)*(11e3/1e3)*(3.3/4096.0/2.0);
+        Meas_ACDC.Supply_24V = ((float)AdcdResultRegs.ADCRESULT8 + (float)AdcdResultRegs.ADCRESULT9)*(11e3/1e3)*(3.3/4096.0/2.0);
 
         static float index;
         register float Thermistor;
@@ -216,7 +84,7 @@ interrupt void Cla1Task1 ( void )
         Thermistor = ( (float)*adcresult + (float)*(adcresult + 1) )*(3.3/256.0/16.0/2.0);
         Thermistor = (Therm.R_divider * Thermistor) / (3.3 - Thermistor);
         Thermistor = Therm.B/logf(Thermistor * Therm.DIV_Rinf) - Therm.T_0;
-        register float *Temperature = &Meas_master.Temperature1 + (Uint16)index;
+        register float *Temperature = &Meas_ACDC.Temperature1 + (Uint16)index;
         *Temperature += 0.02*(Thermistor - *Temperature);
         if(++index >= 3.0f) index = 0;
     }

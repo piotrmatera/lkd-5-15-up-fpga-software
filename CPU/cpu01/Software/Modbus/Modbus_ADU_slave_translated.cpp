@@ -6,13 +6,13 @@
  */
 
 
+#include "State_master.h"
+#include "State_slave.h"
 #include "Modbus_ADU_slave_translated.h"
 #include "Modbus_Converter_memory.h"
 
 #include "Modbus_RTU.h"
 #include "SD_card.h"
-#include "State.h"
-
 #include "Modbus_ADU_api.h"
 
 Modbus_ADU_slave_translated::Modbus_ADU_slave_translated( Uint8 slave_address,
@@ -76,7 +76,7 @@ Modbus_error_enum_t Modbus_ADU_slave_translated::Fcn_before_processed(){
 
                 Modbus_Converter.input_registers.file_number_logs = SD_card.file_number_logs;
                 Modbus_Converter.input_registers.file_number_errors = SD_card.file_number_errors;
-                Modbus_Converter.input_registers.status_master = status_master;
+                Modbus_Converter.input_registers.status_ACDC = status_ACDC;
 //                Modbus_Converter.input_registers.alarm_master = alarm_master;
 //                Modbus_Converter.input_registers.alarm_master_snapshot = alarm_master_snapshot;
                 Modbus_Converter.input_registers.L_grid_previous[0] = L_grid_meas.L_grid_previous[0];

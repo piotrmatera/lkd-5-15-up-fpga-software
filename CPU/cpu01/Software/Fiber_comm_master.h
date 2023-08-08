@@ -8,8 +8,9 @@
 #ifndef FIBER_COMM_MASTER_H_
 #define FIBER_COMM_MASTER_H_
 
-#include "stdafx.h"
 #include <string.h>
+
+#include "stdafx.h"
 
 class Fiber_comm_master_class
 {
@@ -52,6 +53,7 @@ class Fiber_comm_master_class
         Uint16 timeout_error : 1;
         Uint16 msg_error : 1;
         Uint16 wait_for_async_data : 1;
+        Uint16 comm_active : 1;
     }status_flags;
     private:
 
@@ -105,6 +107,6 @@ class Fiber_comm_master_class
     static void (Fiber_comm_master_class::*state_pointers[state_max])();
 };
 
-extern class Fiber_comm_master_class Fiber_comm[4];
+extern class Fiber_comm_master_class Fiber_comm_master[4];
 
 #endif /* FIBER_COMM_MASTER_H_ */

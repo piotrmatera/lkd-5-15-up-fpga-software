@@ -47,8 +47,8 @@ void main()
         if(IpcRegs.IPCSTS.bit.IPC4)
         {
             IpcRegs.IPCACK.bit.IPC4 = 1;
-            Meas_master_gain = CPU1toCPU2.Meas_master_gain;
-            Meas_master_offset = CPU1toCPU2.Meas_master_offset;
+            Meas_ACDC_gain = CPU1toCPU2.Meas_ACDC_gain;
+            Meas_ACDC_offset = CPU1toCPU2.Meas_ACDC_offset;
         }
 
         static Uint32 timer_new = 0;

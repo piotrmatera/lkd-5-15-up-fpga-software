@@ -7,11 +7,16 @@
 
 #include <string.h>
 #include <math.h>
-#include "HWIs.h"
+
 #include "stdafx.h"
+
+#include "State_background.h"
+#include "State_master.h"
+#include "State_slave.h"
+
+#include "HWIs.h"
 #include "F2837xD_Ipc_drivers.h"
 #include "Init.h"
-#include "State.h"
 #include "SD_card.h"
 #include "version.h"
 
@@ -71,15 +76,18 @@ void Init_class::clear_alarms()
     CPU1toCPU2.clear_alarms = 0.0f;
 
     DELAY_US(1000);
-    union ALARM_master alarm_temp = alarm_master;
-    alarm_master_snapshot.all[0] =
-    alarm_master_snapshot.all[1] =
-    alarm_master_snapshot.all[2] =
-    alarm_master.all[0] =
-    alarm_master.all[1] =
-    alarm_master.all[2] = 0;
-    alarm_master.bit.Not_enough_data_master = alarm_temp.bit.Not_enough_data_master;
-    alarm_master.bit.FPGA_parameters = alarm_temp.bit.FPGA_parameters;
+    union ALARM_ACDC alarm_temp;
+    alarm_temp.all[0] = alarm_ACDC.all[0];
+    alarm_temp.all[1] = alarm_ACDC.all[1];
+    alarm_temp.all[2] = alarm_ACDC.all[2];
+    alarm_ACDC_snapshot.all[0] =
+    alarm_ACDC_snapshot.all[1] =
+    alarm_ACDC_snapshot.all[2] =
+    alarm_ACDC.all[0] =
+    alarm_ACDC.all[1] =
+    alarm_ACDC.all[2] = 0;
+    alarm_ACDC.bit.Not_enough_data_master = alarm_temp.bit.Not_enough_data_master;
+    alarm_ACDC.bit.FPGA_parameters = alarm_temp.bit.FPGA_parameters;
 }
 
 void Init_class::ADC()
@@ -293,7 +301,26 @@ void Init_class::CIC2_filter(struct CIC2_struct *CIC, float max_value, Uint16 OS
     CIC->div_range_modifier = 1.0f / CIC->range_modifier;
 }
 
+void Init_class::CIC1_global_init(struct CIC1_global_struct* CIC, float OSR, float decimation_ratio)
+{
+    CIC->decimation_ratio = decimation_ratio;
+    CIC->OSR = OSR;
+    CIC->div_OSR = 1.0f / OSR;
+}
+
+void Init_class::CIC1_local_init(struct CIC1_local_struct* CIC, float max_value, float OSR, float decimation_ratio)
+{
+    CIC->range_modifier = (float)(1UL << 31) / OSR / max_value;
+    CIC->div_range_modifier = 1.0f / CIC->range_modifier;
+}
+
 void Init_class::CIC1_adaptive_filter(struct CIC1_adaptive_struct *CIC, float max_value, Uint16 OSR)
+{
+    CIC->range_modifier = (float)(1UL<<31) / (float)OSR / max_value;
+    CIC->div_range_modifier = 1.0f / CIC->range_modifier;
+}
+
+void Init_class::CIC1_adaptive2_filter(struct CIC1_adaptive2_struct *CIC, float max_value, Uint16 OSR)
 {
     CIC->range_modifier = (float)(1UL<<31) / (float)OSR / max_value;
     CIC->div_range_modifier = 1.0f / CIC->range_modifier;
@@ -301,26 +328,26 @@ void Init_class::CIC1_adaptive_filter(struct CIC1_adaptive_struct *CIC, float ma
 
 void Init_class::Variables()
 {
-    Conv.Ts_rate = CONTROL_RATE;
-    Conv.Ts = Conv.Ts_rate * (float)CYCLE_PERIOD / (float)PWM_CLOCK;
+    Conv.Ts_rate = EMIF_mem.read.control_rate;
+    Conv.Ts = Conv.Ts_rate * (float)EMIF_mem.read.cycle_period / (float)PWM_CLOCK;
     Conv.w_filter = MATH_2PI * 50.0f;
     Conv.f_filter = 50.0f;
     float full_OSR = (Uint16)(1.0f / Conv.f_filter / Conv.Ts + 0.5f);
 
-    Meas_alarm_L.U_grid_rms = 5.0f;
-    Meas_alarm_H.U_grid_abs = 380.0f;
+    Meas_ACDC_alarm_L.U_grid_rms = 5.0f;
+    Meas_ACDC_alarm_H.U_grid_abs = 380.0f;
 
-    Meas_alarm_H.Temp = 95.0f;
-    Meas_alarm_L.Temp = -40.0f;
+    Meas_ACDC_alarm_H.Temp = 95.0f;
+    Meas_ACDC_alarm_L.Temp = -40.0f;
 
-    Meas_alarm_H.U_dc = 750.0f;
-    Meas_alarm_L.U_dc = -5.0f;
-    Meas_alarm_H.U_dc_balance = 30.0f;
+    Meas_ACDC_alarm_H.U_dc = 750.0f;
+    Meas_ACDC_alarm_L.U_dc = -5.0f;
+    Meas_ACDC_alarm_H.U_dc_balance = 30.0f;
 
-    Meas_alarm_H.I_conv_rms = Conv.I_lim_nominal * 1.1f;
-    float min_Current = fabsf(Meas_master_gain.def_osr * Meas_master_gain.def_osr / Meas_master_gain.sd_shift * fminf(Meas_master_gain.I_conv.a, fminf(Meas_master_gain.I_conv.b, fminf(Meas_master_gain.I_conv.c, Meas_master_gain.I_conv.n))));
-    Meas_alarm_H.I_conv = fminf(min_Current - 10.0f, Conv.I_lim_nominal * 2.0f);
-    Meas_alarm_L.I_conv = -Meas_alarm_H.I_conv;
+    Meas_ACDC_alarm_H.I_conv_rms = Conv.I_lim_nominal * 1.1f;
+    float min_Current = fabsf(Meas_ACDC_gain.def_osr * Meas_ACDC_gain.def_osr / Meas_ACDC_gain.sd_shift * fminf(Meas_ACDC_gain.I_conv.a, fminf(Meas_ACDC_gain.I_conv.b, fminf(Meas_ACDC_gain.I_conv.c, Meas_ACDC_gain.I_conv.n))));
+    Meas_ACDC_alarm_H.I_conv = fminf(min_Current - 10.0f, Conv.I_lim_nominal * 2.0f);
+    Meas_ACDC_alarm_L.I_conv = -Meas_ACDC_alarm_H.I_conv;
 
     ///////////////////////////////////////////////////////////////////
 
@@ -328,15 +355,15 @@ void Init_class::Variables()
     while (full_OSR / decimation > 100.0f) decimation++;
     Uint16 OSR_calib = full_OSR / decimation + 0.5f;
     CIC2_filter(&CIC2_calibration, 35.0f, OSR_calib, decimation);
-    CIC2_calibration_input.ptr = &Meas_master.I_grid.b;
+    CIC2_calibration_input.ptr = &Meas_ACDC.I_grid.b;
 
     CIC1_adaptive_global__50Hz.Ts = Conv.Ts;
 
     ///////////////////////////////////////////////////////////////////
 
     FAN.on_duty = 0.5f;
-    FAN.on_temp = Meas_alarm_H.Temp - 35.0f;
-    FAN.full_temp = Meas_alarm_H.Temp - 5.0f;
+    FAN.on_temp = Meas_ACDC_alarm_H.Temp - 35.0f;
+    FAN.full_temp = Meas_ACDC_alarm_H.Temp - 5.0f;
     FAN.slope = (1.0f - FAN.on_duty)/(FAN.full_temp - FAN.on_temp);
 
     ///////////////////////////////////////////////////////////////////
@@ -352,6 +379,21 @@ void Init_class::Variables()
 
     CIC1_filter(&Conv.P_conv_filter, 1000.0f, full_OSR, 1);
     CIC1_filter(&Conv.C_dc_filter, 0.1f, full_OSR, 1);
+
+    Conv.master_slave_prefilter.Ts_Ti =
+    Conv.master.slave[0].I_lim_prefilter.Ts_Ti =
+    Conv.master.slave[1].I_lim_prefilter.Ts_Ti =
+    Conv.master.slave[2].I_lim_prefilter.Ts_Ti =
+    Conv.master.slave[3].I_lim_prefilter.Ts_Ti =
+    Conv.master.slave[4].I_lim_prefilter.Ts_Ti = Conv.Ts / 0.02f;
+
+    Conv.enable_override_prefilter.Ts_Ti =
+    Conv.id_ref_override_prefilter.a.Ts_Ti =
+    Conv.id_ref_override_prefilter.b.Ts_Ti =
+    Conv.id_ref_override_prefilter.c.Ts_Ti =
+    Conv.iq_ref_override_prefilter.a.Ts_Ti =
+    Conv.iq_ref_override_prefilter.b.Ts_Ti =
+    Conv.iq_ref_override_prefilter.c.Ts_Ti = Conv.Ts / 0.02f;
 
     Conv.version_Q_comp_local_prefilter.a.Ts_Ti =
     Conv.version_Q_comp_local_prefilter.b.Ts_Ti =
@@ -420,7 +462,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Conv.compensation = 0.0f;
-    Conv.compensation2 = 2.0f;
+    Conv.compensation2 = 4000.0f * Saturation(L_grid_meas.L_grid_previous[0], 50e-6, 800e-6) + 1.8f;
     Conv.resonant_odd_number = 25-1;
     Conv.resonant_even_number = 0-1;
 
@@ -448,6 +490,7 @@ void Init_class::Variables()
     Conv.range_modifier_Resonant_values = (float)(1UL << 21) * CT_SD_max;
     Conv.div_range_modifier_Resonant_values = 1.0f / Conv.range_modifier_Resonant_values;
 
+    //dodac wieksze wzmocnienie dla 1h
     for(Uint16 i = 0; i < FPGA_RESONANT_GRID_STATES; i++)
     {
         register float modifier = Conv.range_modifier_Resonant_coefficients;
@@ -568,6 +611,7 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
 
     Grid_params.Ts = Conv.Ts;
+    CIC1_global_init(&CIC1_global__50Hz, 50.0f, full_OSR);
 
     float decimation_grid = full_OSR;
     float OSR = 50.0f;
@@ -577,52 +621,52 @@ void Init_class::Variables()
     static const float additional_range = 2.0f;
 
     ///////////////////////////////////////////////////////////////////
-    CIC1_filter(&Grid_filter_params.CIC1_P_conv_1h[0], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_P_conv_1h[1], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_P_conv_1h[2], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_conv_1h[0], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_conv_1h[1], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_conv_1h[2], additional_range * U_grid_max * I_conv_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_Q_conv_1h[0] = Grid_filter_params.CIC1_P_conv_1h[0];
     Grid_filter_params.CIC1_Q_conv_1h[1] = Grid_filter_params.CIC1_P_conv_1h[1];
     Grid_filter_params.CIC1_Q_conv_1h[2] = Grid_filter_params.CIC1_P_conv_1h[2];
 
-    CIC1_filter(&Grid_filter_params.CIC1_P_grid_1h[0], additional_range * U_grid_max * CT_SD_max_value[0], OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_P_grid_1h[1], additional_range * U_grid_max * CT_SD_max_value[1], OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_P_grid_1h[2], additional_range * U_grid_max * CT_SD_max_value[2], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_grid_1h[0], additional_range * U_grid_max * CT_SD_max_value[0], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_grid_1h[1], additional_range * U_grid_max * CT_SD_max_value[1], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_P_grid_1h[2], additional_range * U_grid_max * CT_SD_max_value[2], OSR, decimation_grid);
     Grid_filter_params.CIC1_Q_grid_1h[0] = Grid_filter_params.CIC1_P_grid_1h[0];
     Grid_filter_params.CIC1_Q_grid_1h[1] = Grid_filter_params.CIC1_P_grid_1h[1];
     Grid_filter_params.CIC1_Q_grid_1h[2] = Grid_filter_params.CIC1_P_grid_1h[2];
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_filter(&Grid_filter_params.CIC1_U_grid_1h[0], additional_range * U_grid_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_U_grid_1h[0], additional_range * U_grid_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_U_grid_1h[0] =
     Grid_filter_params.CIC1_U_grid_1h[1] =
     Grid_filter_params.CIC1_U_grid_1h[2] = Grid_filter_params.CIC1_U_grid_1h[0];
 
-    CIC1_filter(&Grid_filter_params.CIC1_I_grid_1h[0], additional_range * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_grid_1h[0], additional_range * I_conv_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_I_grid_1h[0] =
     Grid_filter_params.CIC1_I_grid_1h[1] =
     Grid_filter_params.CIC1_I_grid_1h[2] = Grid_filter_params.CIC1_I_grid_1h[0];
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_filter(&Grid_filter_params.CIC1_U_grid[0], additional_range * U_grid_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_U_grid[0], additional_range * U_grid_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_U_grid[0] =
     Grid_filter_params.CIC1_U_grid[1] =
     Grid_filter_params.CIC1_U_grid[2] = Grid_filter_params.CIC1_U_grid[0];
 
-    CIC1_filter(&Grid_filter_params.CIC1_I_conv[0], additional_range * I_conv_max, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_conv[0], additional_range * I_conv_max, OSR, decimation_grid);
     Grid_filter_params.CIC1_I_conv[0] =
     Grid_filter_params.CIC1_I_conv[1] =
     Grid_filter_params.CIC1_I_conv[2] =
     Grid_filter_params.CIC1_I_conv[3] = Grid_filter_params.CIC1_I_conv[0];
 
-    CIC1_filter(&Grid_filter_params.CIC1_I_grid[0], additional_range * CT_SD_max_value[0], OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_I_grid[1], additional_range * CT_SD_max_value[1], OSR, decimation_grid);
-    CIC1_filter(&Grid_filter_params.CIC1_I_grid[2], additional_range * CT_SD_max_value[2], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_grid[0], additional_range * CT_SD_max_value[0], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_grid[1], additional_range * CT_SD_max_value[1], OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_I_grid[2], additional_range * CT_SD_max_value[2], OSR, decimation_grid);
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_filter(&Grid_filter_params.CIC1_THD_U_grid[0], 1000.0f, OSR, decimation_grid);
+    CIC1_local_init(&Grid_filter_params.CIC1_THD_U_grid[0], 1000.0f, OSR, decimation_grid);
     Grid_filter_params.CIC1_THD_U_grid[0] =
     Grid_filter_params.CIC1_THD_U_grid[1] =
     Grid_filter_params.CIC1_THD_U_grid[2] =
@@ -633,48 +677,57 @@ void Init_class::Variables()
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_adaptive_filter(&Grid_params.CIC1_P_conv_1h[0], additional_range * U_grid_max * I_conv_max, full_OSR);
-    CIC1_adaptive_filter(&Grid_params.CIC1_P_conv_1h[1], additional_range * U_grid_max * I_conv_max, full_OSR);
-    CIC1_adaptive_filter(&Grid_params.CIC1_P_conv_1h[2], additional_range * U_grid_max * I_conv_max, full_OSR);
+    CIC1_adaptive2_global__50Hz.new_OSR = full_OSR;
+    CIC1_adaptive2_global__50Hz.OSR_adaptive = full_OSR;
+    CIC1_adaptive2_global__50Hz.div_OSR_adaptive = 1.0f / full_OSR;
+    CIC1_adaptive2_global__50Hz.Ts = Conv.Ts;
+
+    float window_dist = 1.0f;
+    while (full_OSR * 1.1f / window_dist > (float)CIC_upsample2) window_dist++;
+    CIC1_adaptive2_global__50Hz.WDIST = window_dist;
+
+    CIC1_adaptive2_filter(&Grid_params.CIC1_P_conv_1h[0], additional_range * U_grid_max * I_conv_max, full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_P_conv_1h[1], additional_range * U_grid_max * I_conv_max, full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_P_conv_1h[2], additional_range * U_grid_max * I_conv_max, full_OSR);
     Grid_params.CIC1_Q_conv_1h[0] = Grid_params.CIC1_P_conv_1h[0];
     Grid_params.CIC1_Q_conv_1h[1] = Grid_params.CIC1_P_conv_1h[1];
     Grid_params.CIC1_Q_conv_1h[2] = Grid_params.CIC1_P_conv_1h[2];
 
-    CIC1_adaptive_filter(&Grid_params.CIC1_P_grid_1h[0], additional_range * U_grid_max * CT_SD_max_value[0], full_OSR);
-    CIC1_adaptive_filter(&Grid_params.CIC1_P_grid_1h[1], additional_range * U_grid_max * CT_SD_max_value[1], full_OSR);
-    CIC1_adaptive_filter(&Grid_params.CIC1_P_grid_1h[2], additional_range * U_grid_max * CT_SD_max_value[2], full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_P_grid_1h[0], additional_range * U_grid_max * CT_SD_max_value[0], full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_P_grid_1h[1], additional_range * U_grid_max * CT_SD_max_value[1], full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_P_grid_1h[2], additional_range * U_grid_max * CT_SD_max_value[2], full_OSR);
     Grid_params.CIC1_Q_grid_1h[0] = Grid_params.CIC1_P_grid_1h[0];
     Grid_params.CIC1_Q_grid_1h[1] = Grid_params.CIC1_P_grid_1h[1];
     Grid_params.CIC1_Q_grid_1h[2] = Grid_params.CIC1_P_grid_1h[2];
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_adaptive_filter(&Grid_params.CIC1_U_grid_1h[0], additional_range * U_grid_max, full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_U_grid_1h[0], additional_range * U_grid_max, full_OSR);
     Grid_params.CIC1_U_grid_1h[0] =
     Grid_params.CIC1_U_grid_1h[1] =
     Grid_params.CIC1_U_grid_1h[2] = Grid_params.CIC1_U_grid_1h[0];
 
-    CIC1_adaptive_filter(&Grid_params.CIC1_I_grid_1h[0], additional_range * I_conv_max, full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_I_grid_1h[0], additional_range * I_conv_max, full_OSR);
     Grid_params.CIC1_I_grid_1h[0] =
     Grid_params.CIC1_I_grid_1h[1] =
     Grid_params.CIC1_I_grid_1h[2] = Grid_params.CIC1_I_grid_1h[0];
 
     ///////////////////////////////////////////////////////////////////
 
-    CIC1_adaptive_filter(&Grid_params.CIC1_U_grid[0], powf(additional_range * U_grid_max, 2.0f), full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_U_grid[0], powf(additional_range * U_grid_max, 2.0f), full_OSR);
     Grid_params.CIC1_U_grid[0] =
     Grid_params.CIC1_U_grid[1] =
     Grid_params.CIC1_U_grid[2] = Grid_params.CIC1_U_grid[0];
 
-    CIC1_adaptive_filter(&Grid_params.CIC1_I_conv[0], powf(additional_range * I_conv_max, 2.0f), full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_I_conv[0], powf(additional_range * I_conv_max, 2.0f), full_OSR);
     Grid_params.CIC1_I_conv[0] =
     Grid_params.CIC1_I_conv[1] =
     Grid_params.CIC1_I_conv[2] =
     Grid_params.CIC1_I_conv[3] = Grid_params.CIC1_I_conv[0];
 
-    CIC1_adaptive_filter(&Grid_params.CIC1_I_grid[0], powf(additional_range * CT_SD_max_value[0], 2.0f), full_OSR);
-    CIC1_adaptive_filter(&Grid_params.CIC1_I_grid[1], powf(additional_range * CT_SD_max_value[1], 2.0f), full_OSR);
-    CIC1_adaptive_filter(&Grid_params.CIC1_I_grid[2], powf(additional_range * CT_SD_max_value[2], 2.0f), full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_I_grid[0], powf(additional_range * CT_SD_max_value[0], 2.0f), full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_I_grid[1], powf(additional_range * CT_SD_max_value[1], 2.0f), full_OSR);
+    CIC1_adaptive2_filter(&Grid_params.CIC1_I_grid[2], powf(additional_range * CT_SD_max_value[2], 2.0f), full_OSR);
 
     ///////////////////////////////////////////////////////////////////
 
@@ -720,7 +773,7 @@ void Init_class::Variables()
     Conv.Resonant_I_conv[1].gain =
     Conv.Resonant_I_conv[2].gain = 2.0f / (MATH_2PI * 50.0f) / (MATH_1_E * 0.02f);
 
-    Grid_params.Accumulator_gain = ((float)0x80000000 * 2.0f / 3600.0f) * Grid_params.Ts;
+    Energy_meter_params.Accumulator_gain = ((float)0x80000000 * 2.0f / 3600.0f) * Grid_params.Ts;
 }
 
 void Init_class::PWM_TZ_timestamp(volatile struct EPWM_REGS *EPwmReg)
@@ -796,7 +849,7 @@ void Init_class::PWMs()
 void Init_class::Fan_speed()
 {
     static volatile float Temp_fan = 0;
-    Temp_fan = fmaxf(Meas_master.Temperature1,  fmaxf(Meas_master.Temperature2, Meas_master.Temperature3));
+    Temp_fan = fmaxf(Meas_ACDC.Temperature1,  fmaxf(Meas_ACDC.Temperature2, Meas_ACDC.Temperature3));
     static volatile float duty_f;
     duty_f = fminf(fmaxf((Temp_fan - FAN.on_temp) * FAN.slope + FAN.on_duty, 0.0f), 1.0f);
     static volatile float duty_f2;

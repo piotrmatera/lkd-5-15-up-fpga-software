@@ -5,14 +5,15 @@
  *      Author: MrTea
  */
 
+#include "State_master.h"
+#include "State_slave.h"
 #include "Fiber_comm_master.h"
 #include "Modbus_devices.h"
 #include "version.h"
 #include "diskio.h"
-#include "State.h"
 #include "Scope.h"
 
-class Fiber_comm_master_class Fiber_comm[4];
+class Fiber_comm_master_class Fiber_comm_master[4];
 void (Fiber_comm_master_class::*Fiber_comm_master_class::state_pointers[Fiber_comm_master_class::state_max])();
 
 void Fiber_comm_master_class::Main()
@@ -198,11 +199,6 @@ void Fiber_comm_master_class::async_data_mosi()
     if(input_flags.read_async_data) status_flags.wait_for_async_data = 1;
 
     msg.async_master.code_version = SW_ID;
-    msg.async_master.FatFS_time = *(Uint32 *)&FatFS_time;
-    msg.async_master.w_filter = Conv.w_filter;
-    msg.async_master.compensation2 = Conv.compensation2;
-    msg.async_master.Meas_master_gain = Meas_master_gain;
-    msg.async_master.Meas_master_offset = Meas_master_offset;
 
     Send(sizeof(msg.async_master), comm_func_async_data_mosi);
 
@@ -220,10 +216,27 @@ void Fiber_comm_master_class::async_data_miso()
     if(result == result_rdy)
     {
         if(status_flags.wait_for_async_data) input_flags.read_async_data = 0;
+
+        Conv.master.from_slave[node_number].C_conv = msg.async_slave.C_conv;
+        Conv.master.from_slave[node_number].P_conv_1h_filter.a = msg.async_slave.P_conv_1h_filter.a;
+        Conv.master.from_slave[node_number].P_conv_1h_filter.b = msg.async_slave.P_conv_1h_filter.b;
+        Conv.master.from_slave[node_number].P_conv_1h_filter.c = msg.async_slave.P_conv_1h_filter.c;
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.a = msg.async_slave.Q_conv_1h_filter.a;
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.b = msg.async_slave.Q_conv_1h_filter.b;
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.c = msg.async_slave.Q_conv_1h_filter.c;
+
         state = state_idle;
     }
     else if(result == result_error)
     {
+        Conv.master.from_slave[node_number].C_conv =
+        Conv.master.from_slave[node_number].P_conv_1h_filter.a =
+        Conv.master.from_slave[node_number].P_conv_1h_filter.b =
+        Conv.master.from_slave[node_number].P_conv_1h_filter.c =
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.a =
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.b =
+        Conv.master.from_slave[node_number].Q_conv_1h_filter.c = 0.0f;
+
         state = state_idle;
     }
     status_flags.wait_for_async_data = 0;
@@ -236,7 +249,7 @@ void Fiber_comm_master_class::Send(Uint16 length, enum comm_func_enum comm_func)
     msg.any_frame.comm_header.destination_mailbox = node_number;
     msg.any_frame.comm_func = comm_func;
 
-    register Uint32 *dest = (Uint32 *)&EMIF_mem.write.tx1_lopri_msg[node_number];
+    register Uint32 *dest = (Uint32 *)&EMIF_mem.write.tx2_lopri_msg[node_number];
     register Uint32 *src = (Uint32 *)&msg;
     register Uint16 loop_copy_EMIF = length >> 1;
     while(loop_copy_EMIF--)
@@ -244,7 +257,7 @@ void Fiber_comm_master_class::Send(Uint16 length, enum comm_func_enum comm_func)
 
     union COMM_flags_union COMM_flags;
     COMM_flags.all = 0;
-    COMM_flags.bit.port1_lopri_msg = 1 << node_number;
+    COMM_flags.bit.port2_lopri_msg = 1 << node_number;
     EMIF_mem.write.rx_ack.all = COMM_flags.all;
     timestamp_timeout();
     EMIF_mem.write.tx_start.all = COMM_flags.all;
@@ -255,10 +268,10 @@ Uint16 Fiber_comm_master_class::Receive()
 {
     union COMM_flags_union COMM_flags;
     COMM_flags.all = EMIF_mem.read.rx_rdy.all;
-    if(COMM_flags.bit.port1_lopri_msg & 1 << node_number)
+    if(COMM_flags.bit.port2_lopri_msg & 1 << node_number)
     {
         register Uint32 *dest = (Uint32 *)&msg;
-        register Uint32 *src = (Uint32 *)&EMIF_mem.read.rx1_lopri_msg[node_number];
+        register Uint32 *src = (Uint32 *)&EMIF_mem.read.rx2_lopri_msg[node_number];
         *dest++ = *src++;
 
         register Uint16 loop_copy_EMIF = (msg.any_frame.comm_header.length+1) >> 1;
@@ -268,7 +281,7 @@ Uint16 Fiber_comm_master_class::Receive()
             *dest++ = *src++;
 
         COMM_flags.all = 0;
-        COMM_flags.bit.port1_lopri_msg = 1 << node_number;
+        COMM_flags.bit.port2_lopri_msg = 1 << node_number;
         EMIF_mem.write.rx_ack.all = COMM_flags.all;
 
         return 1;
@@ -286,9 +299,13 @@ enum Fiber_comm_master_class::func_result_enum Fiber_comm_master_class::Receive_
     if(Receive())
     {
         if(msg.any_frame.comm_func == comm_func)
+        {
+            status_flags.comm_active = 1;
             return result_rdy;
+        }
         else
         {
+            status_flags.comm_active = 0;
             status_flags.msg_error = 1;
             return result_error;
         }
@@ -296,6 +313,7 @@ enum Fiber_comm_master_class::func_result_enum Fiber_comm_master_class::Receive_
     else if(IpcRegs.IPCCOUNTERL - timeout_stamp > timeout)
     {
         status_flags.timeout_error = 1;
+        status_flags.comm_active = 0;
         return result_error;
     }
     return result_idle;

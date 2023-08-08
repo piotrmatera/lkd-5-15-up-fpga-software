@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExportImportMemento.1>
+<VarMeta IMemento.internal.id="Meas_ACDC"/>
+<VarMeta IMemento.internal.id="Conv"/>
+<VarMeta IMemento.internal.id="Meas_ACDC_alarm_H"/>
+<VarMeta IMemento.internal.id="Timer_PWM"/>
+<VarMeta IMemento.internal.id="Scope.data_in"/>
+<VarMeta IMemento.internal.id="EMIF_mem"/>
+<VarMeta IMemento.internal.id="Kalman_U_grid"/>
+<VarMeta IMemento.internal.id="SD_card"/>
+<VarMeta IMemento.internal.id="Conv.U_dc_ref"/>
+<VarMeta IMemento.internal.id="Grid.U_grid_1h"/>
+<VarMeta IMemento.internal.id="control_ACDC.flags.bit"/>
+<VarMeta IMemento.internal.id="control_ACDC.triggers.bit"/>
+<VarMeta IMemento.internal.id="EMIF_mem.read.Scope_depth"/>
+<VarMeta IMemento.internal.id="alarm_ACDC"/>
+<VarMeta IMemento.internal.id="Scope.acquire_counter"/>
+<VarMeta IMemento.internal.id="FPGA_phase"/>
+<VarMeta IMemento.internal.id="Fiber_comm_master"/>
+<VarMeta IMemento.internal.id="Fiber_comm_slave"/>
+<VarMeta IMemento.internal.id="status_ACDC"/>
+<VarMeta IMemento.internal.id="status_ACDC_master"/>
+<VarMeta IMemento.internal.id="Machine_master"/>
+<VarMeta IMemento.internal.id="Machine_slave"/>
+<VarMeta IMemento.internal.id="decimation_ratio"/>
+<VarMeta IMemento.internal.id="SD_card.Scope_snapshot_state"/>
+<VarMeta IMemento.internal.id="control_ACDC"/>
+<VarMeta IMemento.internal.id="status_ACDC.master_rdy"/>
+<VarMeta IMemento.internal.id="EMIF_mem.read.rx1_hipri_msg[1]"/>
+<VarMeta IMemento.internal.id="status_ACDC.master_slave_selector"/>
+</ExportImportMemento.1>

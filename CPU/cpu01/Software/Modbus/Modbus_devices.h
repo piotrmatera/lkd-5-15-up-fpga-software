@@ -16,15 +16,20 @@
 extern Modbus_ADU_slave_transparent Modbus_slave_LCD;
 extern Modbus_ADU_slave_transparent Modbus_slave_EXT;
 extern Modbus_ADU_slave_translated Modbus_slave_EXT_translated;
+extern Modbus_ADU_slave_transparent Modbus_slave_FIBER;
 
 extern Modbus_RTU_class RTU_LCD;
 extern Modbus_RTU_class RTU_EXT;
+extern Modbus_RTU_class RTU_FIBER;
 
 #define MODBUS_SLAVE_LCD_ARGS \
     1, &RTU_LCD
 
 #define MODBUS_SLAVE_EXT_ARGS \
         MODBUS_EXT_ADDRESS, &RTU_EXT
+
+#define MODBUS_SLAVE_FIBER_ARGS \
+        2, &RTU_FIBER
 
 #define MODBUS_SLAVE_EXT_TRANSLATED_ARGS \
     1, &RTU_EXT, &Mdb_translator_map, Modbus_translator::translator_active

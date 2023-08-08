@@ -19,8 +19,6 @@
 #include "diskio.h"
 #include "Scope.h"
 #include "SD_card.h"
-#include "State.h"
-
 #include "Fiber_comm_master.h"
 
 #include "MosfetCtrlApp.h"
@@ -85,7 +83,7 @@ void SD_card_class::save_memory(FIL* fp, Uint16 *source_address, Uint32 size)
     while(size)
     {
         Uint32 wtw = size > buffer_size/2 ? buffer_size/2 : size;
-        if(alarm_master.bit.FLT_SUPPLY_MASTER) return;
+        if(alarm_ACDC.bit.FLT_SUPPLY_MASTER) return;
         source_address = byte2_to_word2(buffer, source_address, wtw);
         fresult = f_write(fp, buffer, wtw*2, &bw);
         size -= wtw;
@@ -188,18 +186,18 @@ void SD_card_class::Scope_snapshot_task()
             {
                 Scope_snapshot_state_last = Scope_snapshot_state;
             }
-            if(control_master.triggers.bit.Scope_snapshot && !control_master.triggers.bit.CPU_reset)
+            if(control_ACDC.triggers.bit.Scope_snapshot && !control_ACDC.triggers.bit.CPU_reset)
             {
-                control_master.triggers.bit.Scope_snapshot = 0;
+                control_ACDC.triggers.bit.Scope_snapshot = 0;
                 if(fresult = f_open(&fil, "scope.bin", FA_READ | FA_WRITE | FA_CREATE_ALWAYS))
                 {
                     f_close(&fil);
-                    status_master.Scope_snapshot_error = 1;
+                    status_ACDC.Scope_snapshot_error = 1;
                 }
                 else
                 {
-                    status_master.Scope_snapshot_error = 0;
-                    status_master.Scope_snapshot_pending = 1;
+                    status_ACDC.Scope_snapshot_error = 0;
+                    status_ACDC.Scope_snapshot_pending = 1;
                     Scope_start();
                     acquire_before_trigger = Scope.acquire_before_trigger;
                     static volatile Uint16 acquire_before = 3;
@@ -255,7 +253,7 @@ void SD_card_class::Scope_snapshot_task()
                 f_close(&fil);
                 Scope.acquire_before_trigger = acquire_before_trigger;
                 Scope_start();
-                status_master.Scope_snapshot_pending = 0;
+                status_ACDC.Scope_snapshot_pending = 0;
                 Scope_snapshot_state = 0;
             }
             break;
@@ -359,11 +357,12 @@ Uint16 SD_card_class::log_data()
         if(fresult = f_open(&log_file, filename_buffer, FA_WRITE | FA_CREATE_ALWAYS)) return fresult;
     }
 
-    float temp_array[21];
+    float temp_array[27];
     temp_array[0] = *(float *)&FatFS_time;
     temp_array[1] = Grid_filter.U_grid_1h.a;
     temp_array[2] = Grid_filter.U_grid_1h.b;
     temp_array[3] = Grid_filter.U_grid_1h.c;
+
     temp_array[4] = Grid_filter.Q_grid_1h.a;
     temp_array[5] = Grid_filter.Q_grid_1h.b;
     temp_array[6] = Grid_filter.Q_grid_1h.c;
@@ -371,17 +370,25 @@ Uint16 SD_card_class::log_data()
     temp_array[8] = Grid_filter.P_grid_1h.b;
     temp_array[9] = Grid_filter.P_grid_1h.c;
 
-    temp_array[10] = Grid_filter.Q_conv_1h.a;
-    temp_array[11] = Grid_filter.Q_conv_1h.b;
-    temp_array[12] = Grid_filter.Q_conv_1h.c;
-    temp_array[13] = Grid_filter.P_conv_1h.a;
-    temp_array[14] = Grid_filter.P_conv_1h.b;
-    temp_array[15] = Grid_filter.P_conv_1h.c;
-    temp_array[16] = Meas_master.Temperature1;
-    temp_array[17] = Meas_master.Temperature2;
-    temp_array[18] = Meas_master.Temperature3;
-    temp_array[19] = Conv.RDY2;
-    temp_array[20] = Conv.P_conv_filter.out;
+    temp_array[10] = Grid_filter.Q_load_1h.a;
+    temp_array[11] = Grid_filter.Q_load_1h.b;
+    temp_array[12] = Grid_filter.Q_load_1h.c;
+    temp_array[13] = Grid_filter.P_load_1h.a;
+    temp_array[14] = Grid_filter.P_load_1h.b;
+    temp_array[15] = Grid_filter.P_load_1h.c;
+
+    temp_array[16] = Grid_filter.Q_conv_1h.a;
+    temp_array[17] = Grid_filter.Q_conv_1h.b;
+    temp_array[18] = Grid_filter.Q_conv_1h.c;
+    temp_array[19] = Grid_filter.P_conv_1h.a;
+    temp_array[20] = Grid_filter.P_conv_1h.b;
+    temp_array[21] = Grid_filter.P_conv_1h.c;
+
+    temp_array[22] = Meas_ACDC.Temperature1;
+    temp_array[23] = Meas_ACDC.Temperature2;
+    temp_array[24] = Meas_ACDC.Temperature3;
+    temp_array[25] = Conv.RDY2;
+    temp_array[26] = Conv.P_conv_filter.out;
 
     save_memory(&log_file, (Uint16 *)temp_array, sizeof(temp_array));
     fresult = f_sync(&log_file);
@@ -389,90 +396,89 @@ Uint16 SD_card_class::log_data()
     return fresult;
 }
 
-void SD_card_class::save_single_state_master(FIL *fil, union ALARM_master alarm_master_temp)
+void SD_card_class::save_single_state_ACDC(FIL *fil, union ALARM_ACDC alarm_ACDC_temp)
 {
-//    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_crc_error    ) f_puts("\t\trx1_crc_error \n", fil);
-//    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_overrun_error) f_puts("\t\trx1_overrun_error \n", fil);
-//    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_frame_error  ) f_puts("\t\trx1_frame_error \n", fil);
-//    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_crc_error    ) f_puts("\t\trx2_crc_error \n", fil);
-//    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_overrun_error) f_puts("\t\trx2_overrun_error \n", fil);
-//    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_frame_error  ) f_puts("\t\trx2_frame_error \n", fil);
-//    if(alarm_master_temp.bit.FPGA_errors.bit.rx1_port_nrdy    ) f_puts("\t\trx1_port_nrdy \n", fil);
-//    if(alarm_master_temp.bit.FPGA_errors.bit.rx2_port_nrdy    ) f_puts("\t\trx2_port_nrdy \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.sed_err          ) f_puts("\t\tsed_err \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_crc_error    ) f_puts("\t\trx1_crc_error \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_overrun_error) f_puts("\t\trx1_overrun_error \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_frame_error  ) f_puts("\t\trx1_frame_error \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.rx1_port_nrdy    ) f_puts("\t\trx1_port_nrdy \n", fil);
 
-    if(alarm_master_temp.bit.Not_enough_data_master) f_puts("\t\tNot_enough_data_master \n", fil);
-    if(alarm_master_temp.bit.CT_char_error         ) f_puts("\t\tCT_char_error \n", fil);
-    if(alarm_master_temp.bit.PLL_UNSYNC            ) f_puts("\t\tPLL_UNSYNC \n", fil);
-    if(alarm_master_temp.bit.FLT_SUPPLY_MASTER     ) f_puts("\t\tFLT_SUPPLY_MASTER \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.sed_err          ) f_puts("\t\tsed_err \n", fil);
 
-    if(alarm_master_temp.bit.U_grid_rms_a_L) f_puts("\t\tU_grid_rms_a_L \n", fil);
-    if(alarm_master_temp.bit.U_grid_rms_b_L) f_puts("\t\tU_grid_rms_b_L \n", fil);
-    if(alarm_master_temp.bit.U_grid_rms_c_L) f_puts("\t\tU_grid_rms_c_L \n", fil);
+    if(alarm_ACDC_temp.bit.Not_enough_data_master) f_puts("\t\tNot_enough_data_master \n", fil);
+    if(alarm_ACDC_temp.bit.CT_char_error         ) f_puts("\t\tCT_char_error \n", fil);
+    if(alarm_ACDC_temp.bit.PLL_UNSYNC            ) f_puts("\t\tPLL_UNSYNC \n", fil);
+    if(alarm_ACDC_temp.bit.FLT_SUPPLY_MASTER     ) f_puts("\t\tFLT_SUPPLY_MASTER \n", fil);
 
-    if(alarm_master_temp.bit.FPGA_errors.bit.U_grid_abs_a_H) f_puts("\t\tU_grid_abs_a_H \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.U_grid_abs_b_H) f_puts("\t\tU_grid_abs_b_H \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.U_grid_abs_c_H) f_puts("\t\tU_grid_abs_c_H \n", fil);
+    if(alarm_ACDC_temp.bit.U_grid_rms_a_L) f_puts("\t\tU_grid_rms_a_L \n", fil);
+    if(alarm_ACDC_temp.bit.U_grid_rms_b_L) f_puts("\t\tU_grid_rms_b_L \n", fil);
+    if(alarm_ACDC_temp.bit.U_grid_rms_c_L) f_puts("\t\tU_grid_rms_c_L \n", fil);
+
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.U_grid_abs_a_H) f_puts("\t\tU_grid_abs_a_H \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.U_grid_abs_b_H) f_puts("\t\tU_grid_abs_b_H \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.U_grid_abs_c_H) f_puts("\t\tU_grid_abs_c_H \n", fil);
 
     ///////////////////////////////////////////
 
-    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_a_H) f_puts("\t\tI_conv_a_H \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_a_L) f_puts("\t\tI_conv_a_L \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_b_H) f_puts("\t\tI_conv_b_H \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_b_L) f_puts("\t\tI_conv_b_L \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_c_H) f_puts("\t\tI_conv_c_H \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_c_L) f_puts("\t\tI_conv_c_L \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_n_H) f_puts("\t\tI_conv_n_H \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.I_conv_n_L) f_puts("\t\tI_conv_n_L \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.I_conv_a_H) f_puts("\t\tI_conv_a_H \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.I_conv_a_L) f_puts("\t\tI_conv_a_L \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.I_conv_b_H) f_puts("\t\tI_conv_b_H \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.I_conv_b_L) f_puts("\t\tI_conv_b_L \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.I_conv_c_H) f_puts("\t\tI_conv_c_H \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.I_conv_c_L) f_puts("\t\tI_conv_c_L \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.I_conv_n_H) f_puts("\t\tI_conv_n_H \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.I_conv_n_L) f_puts("\t\tI_conv_n_L \n", fil);
     //
-    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_H_L1) f_puts("\t\tFLT_H_L1 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_L_L1) f_puts("\t\tFLT_L_L1 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_H_L2) f_puts("\t\tFLT_H_L2 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_L_L2) f_puts("\t\tFLT_L_L2 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_H_L3) f_puts("\t\tFLT_H_L3 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_L_L3) f_puts("\t\tFLT_L_L3 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_H_N ) f_puts("\t\tFLT_H_N  \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.FLT_L_N ) f_puts("\t\tFLT_L_N  \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_H_L1) f_puts("\t\tRDY_H_L1 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_L_L1) f_puts("\t\tRDY_L_L1 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_H_L2) f_puts("\t\tRDY_H_L2 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_L_L2) f_puts("\t\tRDY_L_L2 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_H_L3) f_puts("\t\tRDY_H_L3 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_L_L3) f_puts("\t\tRDY_L_L3 \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_H_N ) f_puts("\t\tRDY_H_N  \n", fil);
-    if(alarm_master_temp.bit.FPGA_errors.bit.RDY_L_N ) f_puts("\t\tRDY_L_N  \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.FLT_H_L1) f_puts("\t\tFLT_H_L1 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.FLT_L_L1) f_puts("\t\tFLT_L_L1 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.FLT_H_L2) f_puts("\t\tFLT_H_L2 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.FLT_L_L2) f_puts("\t\tFLT_L_L2 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.FLT_H_L3) f_puts("\t\tFLT_H_L3 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.FLT_L_L3) f_puts("\t\tFLT_L_L3 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.FLT_H_N ) f_puts("\t\tFLT_H_N  \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.FLT_L_N ) f_puts("\t\tFLT_L_N  \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.RDY_H_L1) f_puts("\t\tRDY_H_L1 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.RDY_L_L1) f_puts("\t\tRDY_L_L1 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.RDY_H_L2) f_puts("\t\tRDY_H_L2 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.RDY_L_L2) f_puts("\t\tRDY_L_L2 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.RDY_H_L3) f_puts("\t\tRDY_H_L3 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.RDY_L_L3) f_puts("\t\tRDY_L_L3 \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.RDY_H_N ) f_puts("\t\tRDY_H_N  \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_errors.bit.RDY_L_N ) f_puts("\t\tRDY_L_N  \n", fil);
     //
-    if(alarm_master_temp.bit.I_conv_rms_a) f_puts("\t\tI_conv_rms_a  \n", fil);
-    if(alarm_master_temp.bit.I_conv_rms_b) f_puts("\t\tI_conv_rms_b  \n", fil);
-    if(alarm_master_temp.bit.I_conv_rms_c) f_puts("\t\tI_conv_rms_c  \n", fil);
-    if(alarm_master_temp.bit.I_conv_rms_n) f_puts("\t\tI_conv_rms_n  \n", fil);
+    if(alarm_ACDC_temp.bit.I_conv_rms_a) f_puts("\t\tI_conv_rms_a  \n", fil);
+    if(alarm_ACDC_temp.bit.I_conv_rms_b) f_puts("\t\tI_conv_rms_b  \n", fil);
+    if(alarm_ACDC_temp.bit.I_conv_rms_c) f_puts("\t\tI_conv_rms_c  \n", fil);
+    if(alarm_ACDC_temp.bit.I_conv_rms_n) f_puts("\t\tI_conv_rms_n  \n", fil);
     //
-    if(alarm_master_temp.bit.Temperature_H) f_puts("\t\tTemperature_H \n", fil);
-    if(alarm_master_temp.bit.Temperature_L) f_puts("\t\tTemperature_L \n", fil);
-    if(alarm_master_temp.bit.U_dc_H       ) f_puts("\t\tU_dc_H        \n", fil);
-    if(alarm_master_temp.bit.U_dc_L       ) f_puts("\t\tU_dc_L        \n", fil);
-    if(alarm_master_temp.bit.U_dc_n_H     ) f_puts("\t\tU_dc_n_H      \n", fil);
-    if(alarm_master_temp.bit.U_dc_n_L     ) f_puts("\t\tU_dc_n_L      \n", fil);
+    if(alarm_ACDC_temp.bit.Temperature_H) f_puts("\t\tTemperature_H \n", fil);
+    if(alarm_ACDC_temp.bit.Temperature_L) f_puts("\t\tTemperature_L \n", fil);
+    if(alarm_ACDC_temp.bit.U_dc_H       ) f_puts("\t\tU_dc_H        \n", fil);
+    if(alarm_ACDC_temp.bit.U_dc_L       ) f_puts("\t\tU_dc_L        \n", fil);
+    if(alarm_ACDC_temp.bit.U_dc_n_H     ) f_puts("\t\tU_dc_n_H      \n", fil);
+    if(alarm_ACDC_temp.bit.U_dc_n_L     ) f_puts("\t\tU_dc_n_L      \n", fil);
 
-    if(alarm_master_temp.bit.CONV_SOFTSTART       ) f_puts("\t\tCONV_SOFTSTART \n", fil);
+    if(alarm_ACDC_temp.bit.CONV_SOFTSTART       ) f_puts("\t\tCONV_SOFTSTART \n", fil);
     //
-    if(alarm_master_temp.bit.TZ_CLOCKFAIL_CPU1) f_puts("\t\tTZ_CLOCKFAIL_CPU1 \n", fil);
-    if(alarm_master_temp.bit.TZ_EMUSTOP_CPU1  ) f_puts("\t\tTZ_EMUSTOP_CPU1 \n", fil);
-    if(alarm_master_temp.bit.TZ_CPU1          ) f_puts("\t\tTZ_CPU1 \n", fil);
+    if(alarm_ACDC_temp.bit.TZ_CLOCKFAIL_CPU1) f_puts("\t\tTZ_CLOCKFAIL_CPU1 \n", fil);
+    if(alarm_ACDC_temp.bit.TZ_EMUSTOP_CPU1  ) f_puts("\t\tTZ_EMUSTOP_CPU1 \n", fil);
+    if(alarm_ACDC_temp.bit.TZ_CPU1          ) f_puts("\t\tTZ_CPU1 \n", fil);
 
-    if(alarm_master_temp.bit.TZ_CLOCKFAIL_CPU2) f_puts("\t\tTZ_CLOCKFAIL_CPU2 \n", fil);
-    if(alarm_master_temp.bit.TZ_EMUSTOP_CPU2  ) f_puts("\t\tTZ_EMUSTOP_CPU2 \n", fil);
-    if(alarm_master_temp.bit.TZ_CPU2          ) f_puts("\t\tTZ_CPU2 \n", fil);
+    if(alarm_ACDC_temp.bit.TZ_CLOCKFAIL_CPU2) f_puts("\t\tTZ_CLOCKFAIL_CPU2 \n", fil);
+    if(alarm_ACDC_temp.bit.TZ_EMUSTOP_CPU2  ) f_puts("\t\tTZ_EMUSTOP_CPU2 \n", fil);
+    if(alarm_ACDC_temp.bit.TZ_CPU2          ) f_puts("\t\tTZ_CPU2 \n", fil);
     //
-    if(alarm_master_temp.bit.U_dc_balance          ) f_puts("\t\tU_dc_balance \n", fil);
-    if(alarm_master_temp.bit.Driver_soft_error     ) f_puts("\t\tDriver_soft_error \n", fil);
-    if(alarm_master_temp.bit.FPGA_parameters       ) f_puts("\t\tFPGA_parameters \n", fil);
+    if(alarm_ACDC_temp.bit.U_dc_balance          ) f_puts("\t\tU_dc_balance \n", fil);
+    if(alarm_ACDC_temp.bit.Driver_soft_error     ) f_puts("\t\tDriver_soft_error \n", fil);
+    if(alarm_ACDC_temp.bit.FPGA_parameters       ) f_puts("\t\tFPGA_parameters \n", fil);
+    if(alarm_ACDC_temp.bit.lopri_timeout         ) f_puts("\t\tlopri_timeout \n", fil);
+    if(alarm_ACDC_temp.bit.lopri_error           ) f_puts("\t\tlopri_error \n", fil);
 
-    snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX}\n", alarm_master_temp.all[0]);
+    snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX}\n", alarm_ACDC_temp.all[0]);
     f_puts(working_buffer, fil);
-    snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX}\n", alarm_master_temp.all[1]);
+    snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX}\n", alarm_ACDC_temp.all[1]);
     f_puts(working_buffer, fil);
-    snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX}\n", alarm_master_temp.all[2]);
+    snprintf(working_buffer, WBUF_SIZE, "\t\t{%08lX}\n", alarm_ACDC_temp.all[2]);
     f_puts(working_buffer, fil);
 }
 
@@ -480,7 +486,7 @@ void SD_card_class::save_drivers_state(FIL *fil){
     extern MosfetCtrlApp mosfet_ctrl_app;
 
     f_puts("\n err_retry: ", fil);
-    f_puts(ltoa( Machine.error_retry, working_buffer, 16), fil);
+    f_puts(ltoa( Machine_slave.error_retry, working_buffer, 16), fil);
 
     f_puts("\nRESC: ", fil);
     f_puts(ltoa( CpuSysRegs.RESC.all, working_buffer, 16), fil);
@@ -594,16 +600,16 @@ Uint16 SD_card_class::save_state()
     f_puts(" days/hours/minutes/seconds\n", &fil);
 
     f_puts("\nList of snapshot errors:\n", &fil);
-    save_single_state_master(&fil, alarm_master_snapshot);
+    save_single_state_ACDC(&fil, alarm_ACDC_snapshot);
 
     f_puts("\nList of all errors:\n", &fil);
-    save_single_state_master(&fil, alarm_master);
+    save_single_state_ACDC(&fil, alarm_ACDC);
 
     save_drivers_state(&fil);
 
     fresult = f_truncate(&fil);
     fresult = f_close(&fil);
-    if(alarm_master.bit.FLT_SUPPLY_MASTER) return fresult;
+    if(alarm_ACDC.bit.FLT_SUPPLY_MASTER) return fresult;
 
     ///////////////////////////////////////////////////////////////////
 
@@ -723,20 +729,29 @@ Uint16 SD_card_class::read_settings()
         if(!strncmp(working_buffer, "WIFI_ONOFF", sizeof("WIFI_ONOFF")-1))
             settings.wifi_on = value==0? 0 : 1;
 
-        if(!strncmp(working_buffer, "C", sizeof("C")-1))
+        if(!strncmp(working_buffer, "C_DC", sizeof("C_DC")-1))
             settings.C_dc = value;
 
-        if(!strncmp(working_buffer, "L", sizeof("L")-1))
+        if(!strncmp(working_buffer, "L_CONV", sizeof("L_CONV")-1))
             settings.L_conv = value;
 
-        if(!strncmp(working_buffer, "I", sizeof("I")-1))
+        if(!strncmp(working_buffer, "C_CONV", sizeof("C_CONV")-1))
+            settings.C_conv = value;
+
+        if(!strncmp(working_buffer, "I_LIM", sizeof("I_LIM")-1))
             settings.I_lim = value;
 
+        if(!strncmp(working_buffer, "NUMBER OF SLAVES", sizeof("NUMBER OF SLAVES")-1))
+            settings.number_of_slaves = value;
+
+        if(!strncmp(working_buffer, "NO_NEUTRAL", sizeof("NO_NEUTRAL")-1))
+            settings.no_neutral = value;
     }
     if(fresult = f_close(&fil)) return fresult;
 
     if(settings.modbus_ext_server_id <1 || settings.modbus_ext_server_id>230 )
         settings.modbus_ext_server_id = 1;
+    if(settings.number_of_slaves < 0.0f || settings.number_of_slaves > 4.0f) return fresult;
     if(settings.control.tangens_range[0].a < -1.0f || settings.control.tangens_range[0].a > 1.0f) return fresult;
     if(settings.control.tangens_range[0].b < -1.0f || settings.control.tangens_range[0].b > 1.0f) return fresult;
     if(settings.control.tangens_range[0].c < -1.0f || settings.control.tangens_range[0].c > 1.0f) return fresult;
@@ -745,6 +760,7 @@ Uint16 SD_card_class::read_settings()
     if(settings.control.tangens_range[1].c < -1.0f || settings.control.tangens_range[1].c > 1.0f) return fresult;
     if(settings.C_dc < 0.25e-3 || settings.C_dc > 5e-3) return fresult;
     if(settings.L_conv < 100e-6 || settings.L_conv > 2.5e-3) return fresult;
+    if(settings.C_conv < 5e-6 || settings.C_conv > 200e-6) return fresult;
     if(settings.I_lim < 8.0f || settings.I_lim > 40.0f) return fresult;
 
     settings.available = 1;
@@ -851,20 +867,36 @@ Uint16 SD_card_class::save_settings()
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
 
-    f_puts("C;", &fil);
+    f_puts("C_DC;", &fil);
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.C_dc);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
 
-    f_puts("L;", &fil);
+    f_puts("L_CONV;", &fil);
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.L_conv);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
 
-    f_puts("I;", &fil);
+    f_puts("C_CONV;", &fil);
+    snprintf(working_buffer, WBUF_SIZE, "%g", settings.C_conv);
+    f_puts(working_buffer, &fil);
+    f_putc('\n', &fil);
+
+    f_puts("I_LIM;", &fil);
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.I_lim);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
+
+    f_puts("NUMBER OF SLAVES;", &fil);
+    snprintf(working_buffer, WBUF_SIZE, "%g", settings.number_of_slaves);
+    f_puts(working_buffer, &fil);
+    f_putc('\n', &fil);
+
+    f_puts("NO_NEUTRAL;", &fil);
+    snprintf(working_buffer, WBUF_SIZE, "%g", settings.no_neutral);
+    f_puts(working_buffer, &fil);
+    f_putc('\n', &fil);
+
     fresult = f_close(&fil);
     return fresult;
 }
@@ -1060,7 +1092,7 @@ Uint16 SD_card_class::read_calibration_data()
 
     const Uint16 no_columns = 1;
 
-    read_table(&fil, "%g", no_columns, sizeof(struct Measurements_master_gain_offset_struct)/sizeof(float), &calibration.Meas_master_gain);
+    read_table(&fil, "%g", no_columns, sizeof(struct Measurements_ACDC_gain_offset_struct)/sizeof(float), &calibration.Meas_ACDC_gain);
 
     {
         Uint16 br;
@@ -1074,7 +1106,7 @@ Uint16 SD_card_class::read_calibration_data()
             }
         }
     }
-    read_table(&fil, "%g", no_columns, sizeof(struct Measurements_master_gain_offset_struct)/sizeof(float), &calibration.Meas_master_offset);
+    read_table(&fil, "%g", no_columns, sizeof(struct Measurements_ACDC_gain_offset_struct)/sizeof(float), &calibration.Meas_ACDC_offset);
 
     if(fresult = f_close(&fil)) return fresult;
 
@@ -1095,9 +1127,9 @@ Uint16 SD_card_class::save_calibration_data()
     f_puts("struct Measurements Meas_gain\n", &fil);
 
     const Uint16 no_columns = 1;
-    save_table(&fil, "%g", no_columns, sizeof(struct Measurements_master_gain_offset_struct)/sizeof(float), &calibration.Meas_master_gain);
+    save_table(&fil, "%g", no_columns, sizeof(struct Measurements_ACDC_gain_offset_struct)/sizeof(float), &calibration.Meas_ACDC_gain);
     f_puts("struct Measurements Meas_offset\n", &fil);
-    save_table(&fil, "%g", no_columns, sizeof(struct Measurements_master_gain_offset_struct)/sizeof(float), &calibration.Meas_master_offset);
+    save_table(&fil, "%g", no_columns, sizeof(struct Measurements_ACDC_gain_offset_struct)/sizeof(float), &calibration.Meas_ACDC_offset);
 
     fresult = f_close(&fil);
     return fresult;

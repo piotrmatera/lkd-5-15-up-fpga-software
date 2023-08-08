@@ -1,6 +1,6 @@
 <!DOCTYPE ispTLA>
 <ispTLA>
- <CreationDate>sob. 13. maj 21:07:56 2023</CreationDate>
+ <CreationDate>?r. 12. lip 18:27:04 2023</CreationDate>
  <XCFFileName/>
  <CableSetting>
   <IsTRSTConnected val="false"/>
@@ -26,57 +26,139 @@
   <LACoreCount>1</LACoreCount>
   <WinUI CoreIndex="0">
    <TraceSigTreeData>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o" NodeType="1" PortIndex="0">
+    <TraceSignal IsHidden="false" Name="local_counter_phase" NodeType="0" PortIndex="0"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory" NodeType="1" PortIndex="1">
+     <BusRadix Radix="2"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:0" NodeType="2" PortIndex="1"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:1" NodeType="2" PortIndex="2"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:2" NodeType="2" PortIndex="3"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:3" NodeType="2" PortIndex="4"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:4" NodeType="2" PortIndex="5"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:5" NodeType="2" PortIndex="6"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:6" NodeType="2" PortIndex="7"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:7" NodeType="2" PortIndex="8"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:8" NodeType="2" PortIndex="9"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:9" NodeType="2" PortIndex="10"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:10" NodeType="2" PortIndex="11"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:11" NodeType="2" PortIndex="12"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:12" NodeType="2" PortIndex="13"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:13" NodeType="2" PortIndex="14"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:14" NodeType="2" PortIndex="15"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_memory:15" NodeType="2" PortIndex="16"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/flags_memory:9" NodeType="0" PortIndex="17"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i" NodeType="1" PortIndex="18">
+     <BusRadix Radix="2"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:0" NodeType="2" PortIndex="18"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:1" NodeType="2" PortIndex="19"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:2" NodeType="2" PortIndex="20"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:3" NodeType="2" PortIndex="21"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:4" NodeType="2" PortIndex="22"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:5" NodeType="2" PortIndex="23"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:6" NodeType="2" PortIndex="24"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:7" NodeType="2" PortIndex="25"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:8" NodeType="2" PortIndex="26"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:9" NodeType="2" PortIndex="27"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:10" NodeType="2" PortIndex="28"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:11" NodeType="2" PortIndex="29"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:12" NodeType="2" PortIndex="30"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:13" NodeType="2" PortIndex="31"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:14" NodeType="2" PortIndex="32"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_i:15" NodeType="2" PortIndex="33"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_phase_i" NodeType="0" PortIndex="34"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error" NodeType="1" PortIndex="35">
+     <BusRadix Radix="2"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:0" NodeType="2" PortIndex="35"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:1" NodeType="2" PortIndex="36"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:2" NodeType="2" PortIndex="37"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:3" NodeType="2" PortIndex="38"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:4" NodeType="2" PortIndex="39"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:5" NodeType="2" PortIndex="40"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:6" NodeType="2" PortIndex="41"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:7" NodeType="2" PortIndex="42"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:8" NodeType="2" PortIndex="43"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:9" NodeType="2" PortIndex="44"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:10" NodeType="2" PortIndex="45"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:11" NodeType="2" PortIndex="46"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:12" NodeType="2" PortIndex="47"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:13" NodeType="2" PortIndex="48"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:14" NodeType="2" PortIndex="49"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error:15" NodeType="2" PortIndex="50"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2" NodeType="1" PortIndex="51">
+     <BusRadix Radix="2"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:0" NodeType="2" PortIndex="51"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:1" NodeType="2" PortIndex="52"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:2" NodeType="2" PortIndex="53"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:3" NodeType="2" PortIndex="54"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:4" NodeType="2" PortIndex="55"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:5" NodeType="2" PortIndex="56"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:6" NodeType="2" PortIndex="57"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:7" NodeType="2" PortIndex="58"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:8" NodeType="2" PortIndex="59"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:9" NodeType="2" PortIndex="60"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:10" NodeType="2" PortIndex="61"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:11" NodeType="2" PortIndex="62"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:12" NodeType="2" PortIndex="63"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:13" NodeType="2" PortIndex="64"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:14" NodeType="2" PortIndex="65"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error2:15" NodeType="2" PortIndex="66"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3" NodeType="1" PortIndex="67">
+     <BusRadix Radix="2"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:0" NodeType="2" PortIndex="67"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:1" NodeType="2" PortIndex="68"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:2" NodeType="2" PortIndex="69"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:3" NodeType="2" PortIndex="70"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:4" NodeType="2" PortIndex="71"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:5" NodeType="2" PortIndex="72"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:6" NodeType="2" PortIndex="73"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:7" NodeType="2" PortIndex="74"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:8" NodeType="2" PortIndex="75"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:9" NodeType="2" PortIndex="76"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:10" NodeType="2" PortIndex="77"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:11" NodeType="2" PortIndex="78"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:12" NodeType="2" PortIndex="79"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:13" NodeType="2" PortIndex="80"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:14" NodeType="2" PortIndex="81"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error3:15" NodeType="2" PortIndex="82"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4" NodeType="1" PortIndex="83">
+     <BusRadix Radix="2"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:0" NodeType="2" PortIndex="83"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:1" NodeType="2" PortIndex="84"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:2" NodeType="2" PortIndex="85"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:3" NodeType="2" PortIndex="86"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:4" NodeType="2" PortIndex="87"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:5" NodeType="2" PortIndex="88"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:6" NodeType="2" PortIndex="89"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:7" NodeType="2" PortIndex="90"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:8" NodeType="2" PortIndex="91"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:9" NodeType="2" PortIndex="92"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:10" NodeType="2" PortIndex="93"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:11" NodeType="2" PortIndex="94"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:12" NodeType="2" PortIndex="95"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:13" NodeType="2" PortIndex="96"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:14" NodeType="2" PortIndex="97"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_error4:15" NodeType="2" PortIndex="98"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_new_latch" NodeType="0" PortIndex="99"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_timestamp_new_latch_last" NodeType="0" PortIndex="100"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/local_counter_update_condition" NodeType="0" PortIndex="101"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/state_reg" NodeType="1" PortIndex="102">
      <BusRadix Radix="3"/>
      <IsExpanded Expand="false"/>
     </TraceSignal>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o:0" NodeType="2" PortIndex="0"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o:1" NodeType="2" PortIndex="1"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o:2" NodeType="2" PortIndex="2"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o:3" NodeType="2" PortIndex="3"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o:4" NodeType="2" PortIndex="4"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o:5" NodeType="2" PortIndex="5"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o:6" NodeType="2" PortIndex="6"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o:7" NodeType="2" PortIndex="7"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_o:8" NodeType="2" PortIndex="8"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_we_o" NodeType="1" PortIndex="9">
-     <BusRadix Radix="0"/>
-     <IsExpanded Expand="false"/>
-    </TraceSignal>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_we_o:0" NodeType="2" PortIndex="9"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/fifo_we_o:1" NodeType="2" PortIndex="10"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/error" NodeType="0" PortIndex="11"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/rx_rdy_o" NodeType="0" PortIndex="12"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_en_i" NodeType="0" PortIndex="13"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i" NodeType="1" PortIndex="14">
-     <BusRadix Radix="0"/>
-     <IsExpanded Expand="false"/>
-    </TraceSignal>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:0" NodeType="2" PortIndex="14"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:1" NodeType="2" PortIndex="15"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:2" NodeType="2" PortIndex="16"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:3" NodeType="2" PortIndex="17"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:4" NodeType="2" PortIndex="18"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:5" NodeType="2" PortIndex="19"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:6" NodeType="2" PortIndex="20"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:7" NodeType="2" PortIndex="21"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:8" NodeType="2" PortIndex="22"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_i:9" NodeType="2" PortIndex="23"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o" NodeType="1" PortIndex="24">
-     <BusRadix Radix="0"/>
-     <IsExpanded Expand="false"/>
-    </TraceSignal>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:0" NodeType="2" PortIndex="24"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:1" NodeType="2" PortIndex="25"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:2" NodeType="2" PortIndex="26"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:3" NodeType="2" PortIndex="27"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:4" NodeType="2" PortIndex="28"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:5" NodeType="2" PortIndex="29"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:6" NodeType="2" PortIndex="30"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:7" NodeType="2" PortIndex="31"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/dec_o:8" NodeType="2" PortIndex="32"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/comma_even" NodeType="0" PortIndex="33"/>
-    <TraceSignal IsHidden="false" Name="RX1_port/comma_odd" NodeType="0" PortIndex="34"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/state_reg:0" NodeType="2" PortIndex="102"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/state_reg:1" NodeType="2" PortIndex="103"/>
+    <TraceSignal IsHidden="false" Name="Slave_sync/state_reg:2" NodeType="2" PortIndex="104"/>
    </TraceSigTreeData>
    <TriggerUI UserSelect="0" PreSelectType="0" PreSelect="1" UserSelectPos="0"/>
    <CoreRun Run="true"/>

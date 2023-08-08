@@ -4,10 +4,10 @@
 #define SOFTWARE_MODBUS_CONVERTER_MEMORY_H_
 
 #include <limits.h>
-#include "Modbus_ADU_slave.h"
+
 #include "stdafx.h"
-#include "State.h"
-#include "ff.h"
+#include "State_background.h"
+#include "Modbus_ADU_slave.h"
 
 struct Modbus_Converter_memory_struct
 {
@@ -29,8 +29,8 @@ struct Modbus_Converter_memory_struct
         Uint32 dummy[2];
 //        union ALARM_master alarm_master;
 //        union ALARM_master alarm_master_snapshot;
-        struct STATUS_master status_master;
-        Uint32 Machine_state;//32bit
+        struct STATUS_ACDC status_ACDC;
+        Uint32 Machine_slave_state;//32bit
         Uint32 Converter_state;//32bit
         int16 Temp1;
         int16 Temp2;
@@ -41,7 +41,7 @@ struct Modbus_Converter_memory_struct
         struct time_BCD_struct RTC_current_time;//48bit
         Uint16 file_number_logs;
         Uint16 reserved_02; //kompilator wyrownuje nastepna unie do parzystego adresu (chyba dlatego, ze jest w niej Uint32 all[2])
-        Uint16 padding1[128-32-2*2-sizeof(struct STATUS_master)-2];
+        Uint16 padding1[128-32-2*2-sizeof(struct STATUS_ACDC)-2];
         struct Grid_parameters_struct Grid_filter;
         float frequency;
         Uint16 rtu_port_id;
@@ -82,10 +82,11 @@ struct Modbus_Converter_memory_struct
     struct
     {
         Uint16 FatFS_request[128];
-        struct CONTROL_master control_master;
+        struct CONTROL_ACDC control_ACDC;
         struct time_BCD_struct RTC_new_time;//48bit
         Uint16 even_address_padding;
         union CONTROL_EXT_MODBUS control_ext_modbus;
+        float PWM_phase_shift;
     }holding_registers;
 };
 
