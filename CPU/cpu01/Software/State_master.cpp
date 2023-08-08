@@ -178,6 +178,21 @@ void Machine_master_class::CT_test()
         if(CT_test_state_last != CT_test_state)
         {
             CT_test_state_last = CT_test_state;
+        }
+
+        if(elapsed_time > 50000000ULL)
+        {
+            CT_test_state++;
+            timer_old = ReadIpcTimer();
+        }
+        break;
+    }
+
+    case 1:
+    {
+        if(CT_test_state_last != CT_test_state)
+        {
+            CT_test_state_last = CT_test_state;
             I_scale = fabsf(I_scale);
             if (repeat_counter == 0)
             {
@@ -229,7 +244,7 @@ void Machine_master_class::CT_test()
         break;
     }
 
-    case 1:
+    case 2:
     {
         if(CT_test_state_last != CT_test_state)
         {
@@ -279,14 +294,14 @@ void Machine_master_class::CT_test()
             CT_test_startup.I_neg[repeat_counter].b = Conv.id_conv.b;
             CT_test_startup.I_neg[repeat_counter].c = Conv.id_conv.c;
             C_dc_meas[repeat_counter + 3] = Conv.C_dc_filter.out;
-            if (++repeat_counter < 3) CT_test_state = 0;
+            if (++repeat_counter < 3) CT_test_state = 1;
             else CT_test_state++;
             timer_old = ReadIpcTimer();
         }
         break;
     }
 
-    case 2:
+    case 3:
     {
         if(CT_test_state_last != CT_test_state)
         {
@@ -379,6 +394,10 @@ void Machine_master_class::CT_test()
                 CT_test_startup.U_diff[1].b = fabsf(CT_test_startup.U_pos[1].b - CT_test_startup.U_neg[1].b);
                 CT_test_startup.U_diff[2].c = fabsf(CT_test_startup.U_pos[2].c - CT_test_startup.U_neg[2].c);
 
+//                CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.I_pos[0].a - CT_test_startup.I_neg[0].a);
+//                CT_test_startup.I_diff[1].b = fabsf(CT_test_startup.I_pos[1].b - CT_test_startup.I_neg[1].b);
+//                CT_test_startup.I_diff[2].c = fabsf(CT_test_startup.I_pos[2].c - CT_test_startup.I_neg[2].c);
+
                 if(status_ACDC.no_CT_connected_a) CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.I_pos[0].a - CT_test_startup.I_neg[0].a);
                 else CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.Id_pos[0].a - CT_test_startup.Id_neg[0].a);
 
@@ -395,8 +414,8 @@ void Machine_master_class::CT_test()
                 if(!Conv.no_neutral)
                 {
                     Q_coeff = MATH_1_3;
-                    repeat_counter =
-                    CT_test_state = 0;
+                    repeat_counter = 0;
+                    CT_test_state = 1;
                 }
             }
             else
@@ -404,6 +423,10 @@ void Machine_master_class::CT_test()
                 CT_test_startup.U_diff[0].a = fabsf(CT_test_startup.U_pos[0].a - CT_test_startup.U_neg[0].a);
                 CT_test_startup.U_diff[1].b = fabsf(CT_test_startup.U_pos[1].b - CT_test_startup.U_neg[1].b);
                 CT_test_startup.U_diff[2].c = fabsf(CT_test_startup.U_pos[2].c - CT_test_startup.U_neg[2].c);
+
+//                CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.I_pos[0].a - CT_test_startup.I_neg[0].a);
+//                CT_test_startup.I_diff[1].b = fabsf(CT_test_startup.I_pos[1].b - CT_test_startup.I_neg[1].b);
+//                CT_test_startup.I_diff[2].c = fabsf(CT_test_startup.I_pos[2].c - CT_test_startup.I_neg[2].c);
 
                 if(status_ACDC.no_CT_connected_a) CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.I_pos[0].a - CT_test_startup.I_neg[0].a);
                 else CT_test_startup.I_diff[0].a = fabsf(CT_test_startup.Id_pos[0].a - CT_test_startup.Id_neg[0].a);

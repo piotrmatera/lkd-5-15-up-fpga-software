@@ -328,8 +328,8 @@ void Init_class::CIC1_adaptive2_filter(struct CIC1_adaptive2_struct *CIC, float 
 
 void Init_class::Variables()
 {
-    Conv.Ts_rate = CONTROL_RATE;
-    Conv.Ts = Conv.Ts_rate * (float)CYCLE_PERIOD / (float)PWM_CLOCK;
+    Conv.Ts_rate = EMIF_mem.read.control_rate;
+    Conv.Ts = Conv.Ts_rate * (float)EMIF_mem.read.cycle_period / (float)PWM_CLOCK;
     Conv.w_filter = MATH_2PI * 50.0f;
     Conv.f_filter = 50.0f;
     float full_OSR = (Uint16)(1.0f / Conv.f_filter / Conv.Ts + 0.5f);

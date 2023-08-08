@@ -493,9 +493,6 @@ void Background_class::init()
 
     mosfet_ctrl_app.init();
 
-    if(EMIF_mem.read.cycle_period != CYCLE_PERIOD) alarm_ACDC.bit.FPGA_parameters = 1;
-    if(EMIF_mem.read.control_rate != CONTROL_RATE) alarm_ACDC.bit.FPGA_parameters = 1;
-
     memset(&Modbus_Converter.coils, 0, sizeof(Modbus_Converter.coils));
     memset(&Modbus_Converter.discrete_inputs, 0, sizeof(Modbus_Converter.discrete_inputs));
     memset(&Modbus_Converter.holding_registers, 0, sizeof(Modbus_Converter.holding_registers));
