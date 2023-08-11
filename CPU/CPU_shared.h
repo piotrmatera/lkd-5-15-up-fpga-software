@@ -289,7 +289,8 @@ union EMIF_union
             Uint32 sync_phase:1;
         }flags;
         Uint32 next_period;
-        Uint32 mux_rsvd[512-29];
+        Uint16 Temperature_module[4];
+        Uint32 mux_rsvd[512-31];
         Uint32 rx1_lopri_msg[8][32];
         Uint32 rx1_hipri_msg[8][32];
         Uint32 rx2_lopri_msg[8][32];

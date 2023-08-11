@@ -1,138 +1,6 @@
 `include "global.v"  
- 
- //CPU IO MASTER 
-`define TRIGGER_CM  0 
-`define RST_CM  1 
-`define SD_NEW_CM  2
-`define SD_AVG_CM  3 
-`define SYNC_PWM_CM  4
-`define FAN_CM  5 
-`define TZ_EN_CPU1_CM  6
-`define PWM_EN_CM  7
-`define TZ_EN_CPU2_CM  8 
- 
-`define LED1_CM  9 
-`define LED2_CM  10 
-`define LED3_CM  11 
-`define LED4_CM  12 
-`define LED5_CM  13 
-
-`define C_SS_RLY_L1_CM  14
-`define GR_RLY_L1_CM  15 
-
-`define FPGA_FLASH_SPI_IO0 16
-`define FPGA_FLASH_SPI_IO1 17
-`define FPGA_FLASH_SPI_SCK 18
-`define FPGA_FLASH_SPI_CS  19
-
-`define C_SS_RLY_L2_CM  20
-`define GR_RLY_L2_CM  21
-`define C_SS_RLY_L3_CM  22
-`define GR_RLY_L3_CM  23 
-`define C_SS_RLY_N_CM  32
-`define GR_RLY_N_CM  33 
-
-`define SS_DClink_CM  36
-`define DClink_DSCH_CM  x 
-
-`define ON_OFF_CM  84 
-
-`define FPGA_SED  133
- 
-//FPGA IO MASTER 
-`define LED1_FM  `E+18 
-`define LED2_FM  `F+17 
-`define LED3_FM  `E+17 
-`define LED4_FM  `D+18 
-`define LED5_FM  `E+16 
-`define ON_OFF_FM  `F+18 
- 
-`define EN_Mod_FM  `C+1 
-`define TX_Mod_FM  `C+2 
-`define RX_Mod_FM  `D+2 
- 
-`define TX1_FM  `C+20 
-`define TX2_FM  `B+19
-
-`define RX1_FM  `D+17 
-`define RX2_FM  `C+18
-
-`define PWM_L_N_FM  `B+2
-`define PWM_H_N_FM  `B+3
-`define FLT_L_N_FM  `B+1
-`define FLT_H_N_FM  `A+2
-`define RDY_L_N_FM  `D+8
-`define RDY_H_N_FM  `E+7
- 
-`define PWM_L_L1_FM  `B+4
-`define PWM_H_L1_FM  `B+5
-`define FLT_L_L1_FM  `A+3
-`define FLT_H_L1_FM  `A+4
-`define RDY_L_L1_FM  `E+8
-`define RDY_H_L1_FM  `C+10 
- 
-`define PWM_L_L2_FM  `B+6
-`define PWM_H_L2_FM  `A+7
-`define FLT_L_L2_FM  `A+5
-`define FLT_H_L2_FM  `A+6
-`define RDY_L_L2_FM  `E+9
-`define RDY_H_L2_FM  `E+11 
- 
-`define PWM_L_L3_FM  `A+8
-`define PWM_H_L3_FM  `A+9
-`define FLT_L_L3_FM  `B+8
-`define FLT_H_L3_FM  `B+9
-`define RDY_L_L3_FM  `E+12
-`define RDY_H_L3_FM  `D+11 
- 
-`define PWM_DCDC_UDC_FM  `F+2 
-`define PWM_DCDC_TRDS_FM  `A+17 
-`define PWM_DCDC_ISO_FM  `E+14 
-`define PWM_DCDC_DRV_FM  `C+8 
-
-`define SD_CLK_UDC_FM  `D+1
-`define SD_UDC_1_FM  `E+2
-`define SD_UDC_05_FM  `E+1
-
-`define SD_CLK_I_FM  `A+19
-`define SD_ITR_L1_FM  `B+18
-`define SD_ITR_L2_FM  `A+18
-`define SD_ITR_L3_FM  `B+17 
- 
-`define SD_U_L1_FM  `B+12
-`define SD_U_L2_FM  `A+11
-`define SD_U_L3_FM  `B+10
-`define SD_I_L1_FM  `A+13
-`define SD_I_L2_FM  `B+11
-`define SD_I_L3_FM  `A+10
-`define SD_CLK_L1_FM  `B+13
-`define SD_CLK_L2_FM  `A+12
-`define SD_CLK_L3_FM  `D+9 
- 
-`define C_SS_RLY_L1_FM  `A+14
-`define C_SS_RLY_L2_FM  `B+15
-`define C_SS_RLY_L3_FM  `A+16
-`define GR_RLY_N_FM  `E+13
-`define GR_RLY_L1_FM  `C+12
-`define GR_RLY_L2_FM  `D+13
-`define GR_RLY_L3_FM  `C+13
-
-`define SS_DClink_FM  `C+11
-//`define DClink_DSCH_FM  `D+12
-
-`define FAN_FM  `B+16
-
-`define IN1_ISO_FM  `C+14
-`define IN2_ISO_FM  `D+14
-`define IN3_ISO_FM  `C+15
-`define OUT1_ISO_FM  `C+16
-`define OUT2_ISO_FM  `D+16
-`define OUT3_ISO_FM  `B+20 
-
-//F16 -> F3 
-//H18 -> D12 
-//C17 -> D17 
- 
+`include "IO.v"  
+  
 module top_ACDC(CPU_io, FPGA_io, CPU_clk_o); 
 	inout[168:0] CPU_io;  
 	inout[400:1] FPGA_io; 
@@ -156,7 +24,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	reg [31:0] EMIF_data_o;  
 	wire [EMIF_MEMORY_WIDTH-1:0] EMIF_address_i;  
   
-	localparam EMIF_MUX_NUMBER = 29; 
+	localparam EMIF_MUX_NUMBER = 31; 
 	localparam EMIF_REG_NUMBER = 19; 
 	localparam EMIF_MUX_WIDTH = $clog2(EMIF_MUX_NUMBER); 
 	localparam EMIF_REG_WIDTH = $clog2(EMIF_REG_NUMBER); 
@@ -645,8 +513,12 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 /////////////////////////////////////////////////////////////////////  
   
 	localparam OSR = `DEF_OSR;  
-	localparam SD_WIDTH = 16;  
-	localparam SD_NUMBER = 11;  
+	localparam SD_WIDTH = 16; 
+	`ifdef TYPE_25_50
+	localparam SD_NUMBER = 12;
+	`else
+	localparam SD_NUMBER = 11;
+	`endif
 	wire [1:0] decimator_pulse;  
 	wire new_value;  
 	reg avg_value;  
@@ -658,13 +530,18 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
   
 	wire [SD_NUMBER-1:0] SD_DAT;  
 	wire [SD_NUMBER-1:0] SD_DAT_IDDR;  
-	wire [5-1:0] SD_CLK;  
- 	ODDRX1F SD_CLK_gen[5-1:0] (.D0(1'b0), .D1(1'b1), .SCLK(clk_20MHz), .RST(1'b0), .Q(SD_CLK));  
+	`ifdef TYPE_25_50
+	localparam SD_CLK_NUMBER = 7;
+	`else
+	localparam SD_CLK_NUMBER = 5;
+	`endif
+	wire [SD_CLK_NUMBER-1:0] SD_CLK;  
+ 	ODDRX1F SD_CLK_gen[SD_CLK_NUMBER-1:0] (.D0(1'b0), .D1(1'b1), .SCLK(clk_20MHz), .RST(1'b0), .Q(SD_CLK));  
 	 
     IDDRX1F SD_IDDR[SD_NUMBER-1:0](.D(SD_DAT), .RST(1'b0), .SCLK(clk_20MHz), .Q0(SD_DAT_IDDR), .Q1()); 
   
 	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat;  
-	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i({~SD_DAT_IDDR[10:8], SD_DAT_IDDR[7:3], ~SD_DAT_IDDR[2:0]}),  
+	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i({~SD_DAT_IDDR[SD_NUMBER-1:8], SD_DAT_IDDR[7:3], ~SD_DAT_IDDR[2:0]}),  
 	.clk_i(clk_20MHz), .decimator_pulse_i(decimator_pulse), .select_i(select_SD), .data_o(SD_dat));  
 	 
 	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat_avg; 
@@ -685,7 +562,11 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	wire [COMPARE_NUMBER*2-1:0] compare_o; 
 	wire [COMPARE_NUMBER*SD_WIDTH-1:0] compare_dat; 
 	assign compare_dat[0*SD_WIDTH +: 3*SD_WIDTH] = SD_dat[8*SD_WIDTH +: 3*SD_WIDTH]; 
+	`ifdef TYPE_25_50
+	assign compare_dat[3*SD_WIDTH +: SD_WIDTH] = SD_dat[11*SD_WIDTH +: 1*SD_WIDTH]; 
+	`else
 	assign compare_dat[3*SD_WIDTH +: SD_WIDTH] = SD_dat_In[SD_WIDTH-1+2:2]; 
+	`endif
 	assign compare_dat[4*SD_WIDTH +: 3*SD_WIDTH] = SD_dat[0*SD_WIDTH +: 3*SD_WIDTH]; 
 	compare_LH compare_LH[COMPARE_NUMBER-1:0](.clk_i(clk_20MHz), .value_i(compare_dat), 
 	.compare_value_i({EMIF_RX_reg[17], EMIF_RX_reg[16], EMIF_RX_reg[15], EMIF_RX_reg[14], EMIF_RX_reg[13], EMIF_RX_reg[12], EMIF_RX_reg[11]}), 
@@ -698,6 +579,46 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	always @(posedge clk_20MHz) 
 		avg_value <= new_value & local_counter_pulse_rate_latch; 
 	 
+/////////////////////////////////////////////////////////////////////  
+	`ifdef TYPE_25_50
+	localparam SD_DRV_NUMBER = 4;
+	
+	wire[SD_DRV_NUMBER-1:0] DRV_temp; 
+	wire[SD_DRV_NUMBER-1:0] DRV_temp_IDDR; 
+    IDDRX1F SD_temp_IDDR[SD_DRV_NUMBER-1:0](.D(DRV_temp), .RST(1'b0), .SCLK(clk_20MHz), .Q0(DRV_temp_IDDR), .Q1());
+ 
+	wire[SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_temp; 
+	reg decimator_pulse_DRV; 
+	SD_filter #(.ORDER(1), .OSR(62500), .OUTPUT_WIDTH(SD_WIDTH), .OUTPUT_NUMBER(1)) SD_filter[SD_DRV_NUMBER-1:0](.data_i(DRV_temp_IDDR), 
+	.clk_i(clk_20MHz), .decimator_pulse_i(decimator_pulse_DRV), .data_o(SD_DRV_temp)); 
+ 
+	reg[SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_temp_reg; 
+	reg[15:0] OSR_counter; 
+	always @(posedge clk_20MHz) begin 
+		if(avg_value) 
+			SD_DRV_temp_reg <= SD_DRV_temp; 
+ 
+		if(OSR_counter >= 16'd62499) begin 
+			OSR_counter <= 0; 
+			decimator_pulse_DRV <= 1'b1; 
+		end 
+		else begin 
+			OSR_counter <= OSR_counter + 1'b1; 
+			decimator_pulse_DRV <= 1'b0; 
+		end 
+	end 
+ 
+	initial begin 
+		decimator_pulse_DRV = 0; 
+		SD_DRV_temp_reg = 0; 
+		OSR_counter = 0; 
+	end 
+	`else
+	localparam SD_DRV_NUMBER = 4;
+	wire [SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_temp_reg; 
+	assign SD_DRV_temp_reg = 0;
+	`endif
+	
 /////////////////////////////////////////////////////////////////////  
 	 
 	wire SED_enable; 
@@ -1033,13 +954,13 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	assign EMIF_TX_mux[5] = SD_dat[2*32 +: 32]; 
 	assign EMIF_TX_mux[6] = SD_dat[3*32 +: 32]; 
 	assign EMIF_TX_mux[7] = SD_dat[4*32 +: 32]; 
-	assign EMIF_TX_mux[8] = SD_dat[5*32 +: 16]; 
+	assign EMIF_TX_mux[8] = SD_dat[5*32 +: 32]; 
 	assign EMIF_TX_mux[9] = SD_dat_avg[0*32 +: 32]; 
 	assign EMIF_TX_mux[10] = SD_dat_avg[1*32 +: 32]; 
 	assign EMIF_TX_mux[11] = SD_dat_avg[2*32 +: 32]; 
 	assign EMIF_TX_mux[12] = SD_dat_avg[3*32 +: 32]; 
 	assign EMIF_TX_mux[13] = SD_dat_avg[4*32 +: 32]; 
-	assign EMIF_TX_mux[14] = SD_dat_avg[5*32 +: 16]; 
+	assign EMIF_TX_mux[14] = SD_dat_avg[5*32 +: 32]; 
 	assign EMIF_TX_mux[15] = {{32-FAULT_NUMBER{1'b0}}, FLT_REG_O};  
 	assign EMIF_TX_mux[16] = {rx2_port_rdy, rx1_port_rdy, master_rdy, sync_rdy, node_number_rdy, node_number, slave_rdy, sync_ok, rx_ok};
 	assign EMIF_TX_mux[17] = EMIF_RX_reg[2]; 
@@ -1054,6 +975,8 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	assign EMIF_TX_mux[26] = {OUTPUT_SHIFT, DEF_OSR}; 
 	assign EMIF_TX_mux[27] = {local_counter_phase, Kalman1_WIP, Kalman_DC_WIP, Resonant6_WIP, Resonant5_WIP, Resonant4_WIP, Resonant3_WIP, Resonant2_WIP, Resonant1_WIP};  
 	assign EMIF_TX_mux[28] = next_period;
+	assign EMIF_TX_mux[29] = SD_DRV_temp_reg[0*32 +: 32]; 
+	assign EMIF_TX_mux[30] = SD_DRV_temp_reg[1*32 +: 32]; 	
 	
  	FD1P3DX EMIF_RX_reg_0[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 4] == 4'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 0), .CK(EMIF_we_i), .CD({tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}), .Q(EMIF_RX_reg[0])); 
  	FD1P3DX EMIF_RX_reg_1[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 4] == 4'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 1), .CK(EMIF_we_i), .CD(~{rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}), .Q(EMIF_RX_reg[1])); 
@@ -1141,7 +1064,11 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	BB BB_SD_CLK2(.I(SD_CLK[2]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
 	BB BB_SD_CLK3(.I(SD_CLK[3]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
 	BB BB_SD_CLK4(.I(SD_CLK[4]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-  
+	`ifdef TYPE_25_50 
+	BB BB_SD_CLK5(.I(SD_CLK[5]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_SD_CLK6(.I(SD_CLK[6]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_UAC_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	`endif
+	
 	BB BB_SD_DAT0(.I(1'b0), .T(1'b1), .O(SD_DAT[0]), .B(FPGA_io[`SD_U_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;  
 	BB BB_SD_DAT1(.I(1'b0), .T(1'b1), .O(SD_DAT[1]), .B(FPGA_io[`SD_U_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;  
 	BB BB_SD_DAT2(.I(1'b0), .T(1'b1), .O(SD_DAT[2]), .B(FPGA_io[`SD_U_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;  
@@ -1153,17 +1080,37 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	BB BB_SD_DAT8(.I(1'b0), .T(1'b1), .O(SD_DAT[8]), .B(FPGA_io[`SD_I_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_SD_DAT9(.I(1'b0), .T(1'b1), .O(SD_DAT[9]), .B(FPGA_io[`SD_I_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_SD_DAT10(.I(1'b0), .T(1'b1), .O(SD_DAT[10]), .B(FPGA_io[`SD_I_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;
-   
+   	`ifdef TYPE_25_50
+	BB BB_SD_DAT11(.I(1'b0), .T(1'b1), .O(SD_DAT[11]), .B(FPGA_io[`SD_I_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;
+	`endif
+	
+	`ifdef TYPE_25_50
+	BB BB_SD_DRV_temp0(.I(1'b0), .T(1'b1), .O(DRV_temp[0]), .B(FPGA_io[`TEMP_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
+	BB BB_SD_DRV_temp1(.I(1'b0), .T(1'b1), .O(DRV_temp[1]), .B(FPGA_io[`TEMP_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
+	BB BB_SD_DRV_temp2(.I(1'b0), .T(1'b1), .O(DRV_temp[2]), .B(FPGA_io[`TEMP_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
+	BB BB_SD_DRV_temp3(.I(1'b0), .T(1'b1), .O(DRV_temp[3]), .B(FPGA_io[`TEMP_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
+	`endif
+	
 	wire CLK_supply_meas; 
 	wire CLK_supply_drv; 
 	CLK_supply #(.SUPPLY_PERIOD(20e6/50e3), .SUPPLY_RATE(4)) CLK_supply_3_3mH(.clk_i(XTAL_20MHz_i), .clk_o(CLK_supply_meas));  
 	CLK_supply #(.SUPPLY_PERIOD(20e6/100e3), .SUPPLY_RATE(7)) CLK_supply_470uH(.clk_i(XTAL_20MHz_i), .clk_o(CLK_supply_drv));  
 	 
+   	`ifdef TYPE_25_50 
+	BB BB_PWM_DCDC_UDC(.I(CLK_supply_drv), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_UDC_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
+	BB BB_PWM_DCDC_TRDS(.I(CLK_supply_drv), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_TRDS_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
+	BB BB_PWM_DCDC_ISO(.I(CLK_supply_drv), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_ISO_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
+	BB BB_PWM_DCDC_DRV(.I(CLK_supply_drv), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_DRV_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
+	BB BB_PWM_DCDC_DRV_L1(.I(CLK_supply_drv), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_DRV_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
+	BB BB_PWM_DCDC_DRV_L2(.I(CLK_supply_drv), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_DRV_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
+	BB BB_PWM_DCDC_DRV_L3(.I(CLK_supply_drv), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_DRV_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	`else
 	BB BB_PWM_DCDC_UDC(.I(CLK_supply_meas), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_UDC_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
 	BB BB_PWM_DCDC_TRDS(.I(CLK_supply_meas), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_TRDS_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
 	BB BB_PWM_DCDC_ISO(.I(CLK_supply_meas), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_ISO_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
-	BB BB_PWM_DCDC_DRV(.I(CLK_supply_drv), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_DRV_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
-
+	BB BB_PWM_DCDC_DRV(.I(CLK_supply_drv), .T(1'b0), .O(), .B(FPGA_io[`PWM_DCDC_DRV_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  	
+	`endif
+	
 	BB BB_FLT_FPGA0(.I(1'b0), .T(1'b1), .O(FLT_bus[0]), .B(FPGA_io[`FLT_H_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
 	BB BB_FLT_FPGA1(.I(1'b0), .T(1'b1), .O(FLT_bus[1]), .B(FPGA_io[`FLT_L_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
 	BB BB_FLT_FPGA2(.I(1'b0), .T(1'b1), .O(FLT_bus[2]), .B(FPGA_io[`FLT_H_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */; 
@@ -1195,12 +1142,6 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	BB BB_PWM_FPGA5(.I(PWM_o[5]), .T(1'b0), .O(PWM_i[5]), .B(FPGA_io[`PWM_L_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_PWM_FPGA6(.I(PWM_o[6]), .T(1'b0), .O(PWM_i[6]), .B(FPGA_io[`PWM_H_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	BB BB_PWM_FPGA7(.I(PWM_o[7]), .T(1'b0), .O(PWM_i[7]), .B(FPGA_io[`PWM_L_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
- 
-	wire TRIGGER; 
-	reg TRIGGER_r; 
-	BB BB_TRIGGER(.I(1'b0), .T(1'b1), .O(TRIGGER), .B(CPU_io[`TRIGGER_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
-	always @(posedge clk_1x) 
-		TRIGGER_r <= TRIGGER; 
  
 	wire PWM_EN; 
 	wire TZ_EN_CPU1;  
@@ -1274,10 +1215,16 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	BB BB_ON_OFF_FPGA(.I(1'b0), .T(1'b1), .O(on_off), .B(FPGA_io[`ON_OFF_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */;  
 	BB BB_ON_OFF_CPU(.I(on_off), .T(1'b0), .O(), .B(CPU_io[`ON_OFF_CM]))/*synthesis IO_TYPE="LVCMOS33" */;  
 	 
+
 	wire FAN; 
 	BB BB_FAN_CPU(.I(1'b0), .T(1'b1), .O(FAN), .B(CPU_io[`FAN_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
-	BB BB_FAN_FPGA(.I(FAN), .T(1'b0), .O(), .B(FPGA_io[`FAN_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
- 
+	BB BB_FAN_FPGA(.I(1'b0), .T(1'b0), .O(), .B(FPGA_io[`FAN_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	`ifdef TYPE_25_50
+	wire FAN2; 
+	BB BB_FAN2_CPU(.I(1'b0), .T(1'b1), .O(FAN2), .B(CPU_io[`FAN2_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 
+	BB BB_FAN2_FPGA(.I(1'b0), .T(1'b0), .O(), .B(FPGA_io[`FAN2_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	`endif
+
 	wire Modbus_EN;  
 	wire Modbus_TX;  
 	wire Modbus_RX;  

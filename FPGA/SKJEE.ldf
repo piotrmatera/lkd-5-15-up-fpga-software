@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381I" default_implementation="ACDC">
+<BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381I" default_implementation="ACDC_25_50_HLQFP">
     <Options/>
-    <Implementation title="ACDC" dir="ACDC" description="ACDC" synthesis="lse" default_strategy="Strategy1">
-        <Options top="top_ACDC"/>
+    <Implementation title="ACDC_25_50_BGA" dir="ACDC_25_50_BGA" description="ACDC_25_50_BGA" synthesis="lse" default_strategy="Strategy1">
+        <Options VERILOG_DIRECTIVES="POWER_25" top="top_ACDC"/>
         <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
             <Options top_module="top_ACDC"/>
         </Source>
@@ -16,6 +16,9 @@
             <Options/>
         </Source>
         <Source name="global.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">
@@ -60,7 +63,97 @@
         <Source name="Resonant_grid.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="ACDC/ACDC.xcf" type="Programming Project File" type_short="Programming">
+        <Source name="constraint_ACDC.ldc" type="LSE Design Constraints File" type_short="LDC">
+            <Options/>
+        </Source>
+        <Source name="Mem0.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_K.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_R.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_RG.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Power.pcf" type="Power Calculator" type_short="PCF" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="Reveal_ins_ACDC.rvl" type="Reveal" type_short="Reveal" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">
+            <Options/>
+        </Source>
+        <Source name="SKJEE_BGA.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Implementation title="ACDC_25_50_HLQFP" dir="ACDC_25_50_HLQFP" description="ACDC_25_50_HLQFP" synthesis="lse" default_strategy="Strategy1">
+        <Options VERILOG_DIRECTIVES="POWER_25" top="top_ACDC"/>
+        <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
+            <Options top_module="top_ACDC"/>
+        </Source>
+        <Source name="testbench.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="testbench_parallel.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="Clarity/Clarity.sbx" type="sbx" type_short="SBX">
+            <Options/>
+        </Source>
+        <Source name="global.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="version.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="PWM.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="SD_filter.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="sed.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="miscellanous.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="crc_generator.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="SerDes.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="comm_core.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="synchronization.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Slice2.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="DSP.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Kalman.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Resonant.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Resonant_grid.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="ACDC_25_50_HLQFP/ACDC_25_50_HLQFP.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
         <Source name="constraint_ACDC.ldc" type="LSE Design Constraints File" type_short="LDC">
@@ -81,7 +174,97 @@
         <Source name="Power.pcf" type="Power Calculator" type_short="PCF" excluded="TRUE">
             <Options/>
         </Source>
-        <Source name="Reveal_ana_ACDC.rva" type="Reveal Analyzer Project File" type_short="RVA">
+        <Source name="Reveal_ins_ACDC.rvl" type="Reveal" type_short="Reveal" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">
+            <Options/>
+        </Source>
+        <Source name="SKJEE_HLQFP.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Implementation title="ACDC_5_20_BGA" dir="ACDC_5_20_BGA" description="ACDC_5_20_BGA" synthesis="lse" default_strategy="Strategy1">
+        <Options VERILOG_DIRECTIVES="POWER_15" top="top_ACDC"/>
+        <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
+            <Options top_module="top_ACDC"/>
+        </Source>
+        <Source name="testbench.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="testbench_parallel.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="Clarity/Clarity.sbx" type="sbx" type_short="SBX">
+            <Options/>
+        </Source>
+        <Source name="global.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="version.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="PWM.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="SD_filter.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="sed.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="miscellanous.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="crc_generator.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="SerDes.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="comm_core.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="synchronization.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Slice2.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="DSP.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Kalman.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Resonant.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Resonant_grid.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="ACDC_5_20_BGA/ACDC_5_20_BGA.xcf" type="Programming Project File" type_short="Programming">
+            <Options/>
+        </Source>
+        <Source name="constraint_ACDC.ldc" type="LSE Design Constraints File" type_short="LDC">
+            <Options/>
+        </Source>
+        <Source name="Mem0.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_K.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_R.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_RG.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Power.pcf" type="Power Calculator" type_short="PCF" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="Reveal_ins_ACDC.rvl" type="Reveal" type_short="Reveal" excluded="TRUE">
@@ -90,7 +273,97 @@
         <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">
             <Options/>
         </Source>
-        <Source name="SKJEE_BGA.lpf" type="Logic Preference" type_short="LPF" excluded="TRUE">
+        <Source name="SKJEE_BGA.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Implementation title="ACDC_5_20_HLQFP" dir="ACDC_5_20_HLQFP" description="ACDC_5_20_HLQFP" synthesis="lse" default_strategy="Strategy1">
+        <Options VERILOG_DIRECTIVES="POWER_15" top="top_ACDC"/>
+        <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
+            <Options top_module="top_ACDC"/>
+        </Source>
+        <Source name="testbench.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="testbench_parallel.v" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="Clarity/Clarity.sbx" type="sbx" type_short="SBX">
+            <Options/>
+        </Source>
+        <Source name="global.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="version.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="PWM.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="SD_filter.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="sed.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="miscellanous.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="crc_generator.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="SerDes.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="comm_core.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="synchronization.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Slice2.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="DSP.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Kalman.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Resonant.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="Resonant_grid.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="ACDC_5_20_HLQFP/ACDC_5_20_HLQFP.xcf" type="Programming Project File" type_short="Programming">
+            <Options/>
+        </Source>
+        <Source name="constraint_ACDC.ldc" type="LSE Design Constraints File" type_short="LDC">
+            <Options/>
+        </Source>
+        <Source name="Mem0.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_K.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_R.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Mem1_RG.mem" type="Unknown Type" type_short="Unknown">
+            <Options/>
+        </Source>
+        <Source name="Power.pcf" type="Power Calculator" type_short="PCF" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="Reveal_ins_ACDC.rvl" type="Reveal" type_short="Reveal" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">
             <Options/>
         </Source>
         <Source name="SKJEE_HLQFP.lpf" type="Logic Preference" type_short="LPF">

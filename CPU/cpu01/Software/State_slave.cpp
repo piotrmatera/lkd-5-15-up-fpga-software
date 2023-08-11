@@ -282,13 +282,13 @@ void Machine_slave_class::calibrate_curent_gain()
             Meas_ACDC_gain.I_conv.c = fabsf(Meas_ACDC_gain.I_conv.c * 5.0f / CIC2_calibration.out);
             calib_rdy |= 1<<5;
         }
-//        if(fabsf(Meas_master.I_conv.n) > I_cal)
-//        {
-//            CIC2_calibration_input.ptr = &Meas_master.I_conv.n;
-//            DELAY_US(100000);
-//            Meas_master_gain.I_conv.n = -fabsf(Meas_master_gain.I_conv.n * 5.0f / CIC2_calibration.out);
-//            calib_rdy |= 1<<6;
-//        }
+        if(fabsf(Meas_ACDC.I_conv.n) > I_cal)
+        {
+            CIC2_calibration_input.ptr = &Meas_ACDC.I_conv.n;
+            DELAY_US(100000);
+            Meas_ACDC_gain.I_conv.n = fabsf(Meas_ACDC_gain.I_conv.n * 5.0f / CIC2_calibration.out);
+            calib_rdy |= 1<<6;
+        }
 
         if(calib_rdy == calib_rdy_last)
         {
@@ -306,7 +306,7 @@ void Machine_slave_class::calibrate_curent_gain()
             Meas_ACDC_gain_error.I_conv.a = fabsf((Meas_ACDC_gain.I_conv.a/mean_gain_meas) - 1.0f);
             Meas_ACDC_gain_error.I_conv.b = fabsf((Meas_ACDC_gain.I_conv.b/mean_gain_meas) - 1.0f);
             Meas_ACDC_gain_error.I_conv.c = fabsf((Meas_ACDC_gain.I_conv.c/mean_gain_meas) - 1.0f);
-//            Meas_master_gain_error.I_conv.n = fabsf((Meas_master_gain.I_conv.n/mean_gain_meas) - 1.0f);
+            Meas_ACDC_gain_error.I_conv.n = fabsf((Meas_ACDC_gain.I_conv.n/mean_gain_meas) - 1.0f);
 
             if (Meas_ACDC_gain_error.I_grid.a > 0.03f ||
                 Meas_ACDC_gain_error.I_grid.b > 0.03f ||

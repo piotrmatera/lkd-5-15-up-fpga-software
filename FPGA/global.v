@@ -108,13 +108,27 @@
 
 /////////////////////////////////////////////////////////////////////
 
+`ifdef POWER_5
+	`define CONV_FREQUENCY 62500
+	`define CONTROL_RATE 8
+`elsif POWER_10
+	`define CONV_FREQUENCY 62500
+	`define CONTROL_RATE 8
+`elsif POWER_15
+	`define CONV_FREQUENCY 40000
+	`define CONTROL_RATE 4
+`elsif POWER_25
+	`define CONV_FREQUENCY 31250
+	`define CONTROL_RATE 4
+`elsif POWER_50
+	`define CONV_FREQUENCY 31250
+	`define CONTROL_RATE 4
+`endif
+
 `define PWM_CLOCK 125000000
 `define SD_CLOCK 20000000
-`define CONV_FREQUENCY 40000
-
 `define CYCLE_PERIOD (`PWM_CLOCK/`CONV_FREQUENCY/2)
 `define DEF_OSR (`SD_CLOCK/`CONV_FREQUENCY/2)
-`define CONTROL_RATE 4
 `define CONTROL_RATE_WIDTH $clog2(`CONTROL_RATE)
 
 /////////////////////////////////////////////////////////////////////
