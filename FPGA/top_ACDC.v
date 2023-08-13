@@ -24,7 +24,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	reg [31:0] EMIF_data_o;  
 	wire [EMIF_MEMORY_WIDTH-1:0] EMIF_address_i;  
   
-	localparam EMIF_MUX_NUMBER = 31; 
+	localparam EMIF_MUX_NUMBER = 34; 
 	localparam EMIF_REG_NUMBER = 19; 
 	localparam EMIF_MUX_WIDTH = $clog2(EMIF_MUX_NUMBER); 
 	localparam EMIF_REG_WIDTH = $clog2(EMIF_REG_NUMBER); 
@@ -579,7 +579,13 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	always @(posedge clk_20MHz) 
 		avg_value <= new_value & local_counter_pulse_rate_latch; 
 	 
-/////////////////////////////////////////////////////////////////////  
+///////////////////////////////////////////////////////////////////// 
+
+	wire[15:0] temperature_FPGA;
+	reg[15:0] temperature_FPGA_reg;
+	Temperature_FPGA Temperature_FPGA(.clk_i(clk_20MHz), .temperature_FPGA_o(temperature_FPGA));
+	always @(posedge clk_20MHz) if(avg_value) temperature_FPGA_reg <= temperature_FPGA;
+
 	`ifdef TYPE_25_50
 	localparam SD_DRV_NUMBER = 4;
 	
@@ -587,36 +593,29 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	wire[SD_DRV_NUMBER-1:0] DRV_temp_IDDR; 
     IDDRX1F SD_temp_IDDR[SD_DRV_NUMBER-1:0](.D(DRV_temp), .RST(1'b0), .SCLK(clk_20MHz), .Q0(DRV_temp_IDDR), .Q1());
  
-	wire[SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_temp; 
-	reg decimator_pulse_DRV; 
-	SD_filter #(.ORDER(1), .OSR(62500), .OUTPUT_WIDTH(SD_WIDTH), .OUTPUT_NUMBER(1)) SD_filter[SD_DRV_NUMBER-1:0](.data_i(DRV_temp_IDDR), 
-	.clk_i(clk_20MHz), .decimator_pulse_i(decimator_pulse_DRV), .data_o(SD_DRV_temp)); 
- 
-	reg[SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_temp_reg; 
-	reg[15:0] OSR_counter; 
+	wire[SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_pos_temp; 
+	wire[SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_neg_temp; 
+	PulseLengthCounter PulseLengthCounter[SD_DRV_NUMBER-1:0](.clk_i(clk_20MHz), .signal_i(DRV_temp_IDDR), .length_pos(SD_DRV_pos_temp), .length_neg(SD_DRV_neg_temp));
+
+	reg[SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_pos_temp_reg; 
+	reg[SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_neg_temp_reg;
 	always @(posedge clk_20MHz) begin 
-		if(avg_value) 
-			SD_DRV_temp_reg <= SD_DRV_temp; 
- 
-		if(OSR_counter >= 16'd62499) begin 
-			OSR_counter <= 0; 
-			decimator_pulse_DRV <= 1'b1; 
-		end 
-		else begin 
-			OSR_counter <= OSR_counter + 1'b1; 
-			decimator_pulse_DRV <= 1'b0; 
-		end 
+		if(avg_value) begin
+			SD_DRV_pos_temp_reg <= SD_DRV_pos_temp; 
+			SD_DRV_neg_temp_reg <= SD_DRV_neg_temp; 
+		end
 	end 
  
 	initial begin 
-		decimator_pulse_DRV = 0; 
-		SD_DRV_temp_reg = 0; 
-		OSR_counter = 0; 
+		SD_DRV_pos_temp_reg = 0; 
+		SD_DRV_neg_temp_reg = 0;
 	end 
 	`else
 	localparam SD_DRV_NUMBER = 4;
-	wire [SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_temp_reg; 
-	assign SD_DRV_temp_reg = 0;
+	wire [SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_pos_temp_reg; 
+	wire [SD_WIDTH*SD_DRV_NUMBER-1:0] SD_DRV_neg_temp_reg; 
+	assign SD_DRV_pos_temp_reg = 0;
+	assign SD_DRV_neg_temp_reg = 0;
 	`endif
 	
 /////////////////////////////////////////////////////////////////////  
@@ -975,8 +974,11 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	assign EMIF_TX_mux[26] = {OUTPUT_SHIFT, DEF_OSR}; 
 	assign EMIF_TX_mux[27] = {local_counter_phase, Kalman1_WIP, Kalman_DC_WIP, Resonant6_WIP, Resonant5_WIP, Resonant4_WIP, Resonant3_WIP, Resonant2_WIP, Resonant1_WIP};  
 	assign EMIF_TX_mux[28] = next_period;
-	assign EMIF_TX_mux[29] = SD_DRV_temp_reg[0*32 +: 32]; 
-	assign EMIF_TX_mux[30] = SD_DRV_temp_reg[1*32 +: 32]; 	
+	assign EMIF_TX_mux[29] = SD_DRV_pos_temp_reg[0*32 +: 32]; 
+	assign EMIF_TX_mux[30] = SD_DRV_pos_temp_reg[1*32 +: 32]; 	
+	assign EMIF_TX_mux[31] = SD_DRV_neg_temp_reg[0*32 +: 32]; 
+	assign EMIF_TX_mux[32] = SD_DRV_neg_temp_reg[1*32 +: 32]; 	
+	assign EMIF_TX_mux[33] = temperature_FPGA_reg; 	
 	
  	FD1P3DX EMIF_RX_reg_0[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 4] == 4'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 0), .CK(EMIF_we_i), .CD({tx2_hipri_msg_wip, tx2_lopri_msg_wip, tx1_hipri_msg_wip, tx1_lopri_msg_wip}), .Q(EMIF_RX_reg[0])); 
  	FD1P3DX EMIF_RX_reg_1[31:0](.D(EMIF_data_i), .SP(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 4] == 4'b0 && EMIF_address_i[EMIF_REG_WIDTH-1:0] == 1), .CK(EMIF_we_i), .CD(~{rx2_hipri_msg_rdy, rx2_lopri_msg_rdy, rx1_hipri_msg_rdy, rx1_lopri_msg_rdy}), .Q(EMIF_RX_reg[1])); 

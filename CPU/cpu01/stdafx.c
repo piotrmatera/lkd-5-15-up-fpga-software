@@ -13,6 +13,7 @@ struct Converter_struct Conv;
 struct Grid_parameters_struct Grid;
 struct Grid_parameters_struct Grid_filter;
 struct Thermistor_struct Therm;
+struct Thermistor_struct Therm_module;
 
 union CONTROL_EXT_MODBUS control_ext_modbus;
 
@@ -42,6 +43,8 @@ struct trigonometric_struct sincos_table[SINCOS_HARMONICS];
 struct trigonometric_struct sincos_table_comp[SINCOS_HARMONICS];
 struct trigonometric_struct sincos_table_comp2[SINCOS_HARMONICS];
 struct trigonometric_struct sincos_table_Kalman[SINCOS_HARMONICS];
+
+struct EMIF_CPU_struct EMIF_CPU;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma SET_DATA_SECTION("CPUTOCLA")

@@ -170,6 +170,12 @@ void Init_class::ADC()
     AdcdRegs.ADCSOC8CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
     AdcdRegs.ADCSOC9CTL.all = AdcdRegs.ADCSOC8CTL.all;
 
+    //Temp_CPU
+    AdcaRegs.ADCSOC10CTL.bit.CHSEL  = 13;
+    AdcaRegs.ADCSOC10CTL.bit.ACQPS  = 139;
+    AdcaRegs.ADCSOC10CTL.bit.TRIGSEL  = 11;   //ePWM1 SOCA
+    AdcaRegs.ADCSOC11CTL.all = AdcaRegs.ADCSOC10CTL.all;
+
     EDIS;
 }
 
@@ -374,6 +380,13 @@ void Init_class::Variables()
     Therm.T_0 = 273.15f;
     Therm.R25 = 4700.0f;
     Therm.DIV_Rinf = expf(Therm.B/(Therm.T_0+25.0f))/Therm.R25;
+
+    Therm_module.Divider_supply = 0.0f;
+    Therm_module.R_divider = 4700.0f;
+    Therm_module.B = 3550.0f;
+    Therm_module.T_0 = 273.15f;
+    Therm_module.R25 = 493.0f;
+    Therm_module.DIV_Rinf = expf(Therm.B/(Therm.T_0+100.0f))/Therm.R25;
 
     ///////////////////////////////////////////////////////////////////
 

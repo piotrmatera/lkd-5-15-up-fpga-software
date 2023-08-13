@@ -37,6 +37,13 @@ interrupt void SD_AVG_INT()
         *dest++ = *src++;
         *dest++ = *src++;
         *dest++ = *src++;
+        src = (Uint32 *)&EMIF_mem.read.Temperature_module_pos;
+        dest = (Uint32 *)&EMIF_CPU;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
+        *dest++ = *src++;
     }
 
     Cla1ForceTask1();
