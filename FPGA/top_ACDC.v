@@ -250,7 +250,9 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	.WrClockEn(EMIF_address_i[EMIF_MEMORY_WIDTH-2 +: 2] == COMM_TX_MEM2_key[2 +: 2]), .WE(EMIF_address_i[EMIF_MEMORY_WIDTH-4 +: 2] == COMM_TX_MEM2_key[0 +: 2]), .Data(EMIF_data_i), 
     .RdAddress(Comm_tx2_addrr), .RdClock(clk_1x), .RdClockEn(1'b1), .Reset(1'b0), .Q(Comm_tx2_mem_datar)); 
  
- 
+ 	reg master_slave_selector;
+	always @(posedge clk_5x) master_slave_selector <= !rx1_port_rdy;
+		
 //////////////////////////////////////////////////////////////// 
 
 	wire clk_DSP; 
@@ -514,11 +516,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
   
 	localparam OSR = `DEF_OSR;  
 	localparam SD_WIDTH = 16; 
-	`ifdef TYPE_25_50
-	localparam SD_NUMBER = 12;
-	`else
 	localparam SD_NUMBER = 11;
-	`endif
 	wire [1:0] decimator_pulse;  
 	wire new_value;  
 	reg avg_value;  
@@ -531,7 +529,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	wire [SD_NUMBER-1:0] SD_DAT;  
 	wire [SD_NUMBER-1:0] SD_DAT_IDDR;  
 	`ifdef TYPE_25_50
-	localparam SD_CLK_NUMBER = 7;
+	localparam SD_CLK_NUMBER = 6;
 	`else
 	localparam SD_CLK_NUMBER = 5;
 	`endif
@@ -562,11 +560,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	wire [COMPARE_NUMBER*2-1:0] compare_o; 
 	wire [COMPARE_NUMBER*SD_WIDTH-1:0] compare_dat; 
 	assign compare_dat[0*SD_WIDTH +: 3*SD_WIDTH] = SD_dat[8*SD_WIDTH +: 3*SD_WIDTH]; 
-	`ifdef TYPE_25_50
-	assign compare_dat[3*SD_WIDTH +: SD_WIDTH] = SD_dat[11*SD_WIDTH +: 1*SD_WIDTH]; 
-	`else
 	assign compare_dat[3*SD_WIDTH +: SD_WIDTH] = SD_dat_In[SD_WIDTH-1+2:2]; 
-	`endif
 	assign compare_dat[4*SD_WIDTH +: 3*SD_WIDTH] = SD_dat[0*SD_WIDTH +: 3*SD_WIDTH]; 
 	compare_LH compare_LH[COMPARE_NUMBER-1:0](.clk_i(clk_20MHz), .value_i(compare_dat), 
 	.compare_value_i({EMIF_RX_reg[17], EMIF_RX_reg[16], EMIF_RX_reg[15], EMIF_RX_reg[14], EMIF_RX_reg[13], EMIF_RX_reg[12], EMIF_RX_reg[11]}), 
@@ -725,24 +719,21 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 
 /////////////////////////////////////////////////////////////////////   
 	
-	reg master_slave_selector;
 	reg tx2_code_start_last = 0;
 	reg[8:0] tx2_code_start_delay_counter = 0;
-	always @(posedge clk_5x) begin
-		master_slave_selector <= !rx1_port_rdy;
-		
+	always @(posedge clk_5x) begin		
 		tx2_code_start_last <= tx2_code_start;
 		if((tx2_code_start && !tx2_code_start_last) | (|tx2_code_start_delay_counter)) tx2_code_start_delay_counter <= tx2_code_start_delay_counter + 1'b1;
 	end
 	
-	assign rx1_hipri_msg_ack = {EMIF_RX_reg[1][1*8+2 +: `HIPRI_MAILBOXES_NUMBER-1], rx1_hipri_msg_rdy[1:0]}; 
+	assign rx1_hipri_msg_ack = {EMIF_RX_reg[1][1*8+2 +: `HIPRI_MAILBOXES_NUMBER-2], rx1_hipri_msg_rdy[1:0]}; 
 	assign rx2_hipri_msg_ack = rx2_hipri_msg_rdy;//EMIF_RX_reg[1][3*8 +: `HIPRI_MAILBOXES_NUMBER];  
  
 	assign rx1_lopri_msg_ack = EMIF_RX_reg[1][0*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	assign rx2_lopri_msg_ack = EMIF_RX_reg[1][2*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	 
 	assign tx1_hipri_msg_start = {EMIF_RX_reg[0][1*8+1 +: `HIPRI_MAILBOXES_NUMBER-1], rx1_hipri_msg_wip[0]}; 
-	assign tx2_hipri_msg_start = {EMIF_RX_reg[0][3*8+2 +: `HIPRI_MAILBOXES_NUMBER-1], EMIF_RX_reg[0][3*8+1] & tx2_hipri_msg_wip[0], tx2_code_start_delay_counter[8] && master_slave_selector};  
+	assign tx2_hipri_msg_start = {EMIF_RX_reg[0][3*8+2 +: `HIPRI_MAILBOXES_NUMBER-2], EMIF_RX_reg[0][3*8+1] & tx2_hipri_msg_wip[0], tx2_code_start_delay_counter[8] && master_slave_selector};  
 	 
 	assign tx1_lopri_msg_start = EMIF_RX_reg[0][0*8 +: `LOPRI_MAILBOXES_NUMBER];  
 	assign tx2_lopri_msg_start = EMIF_RX_reg[0][2*8 +: `LOPRI_MAILBOXES_NUMBER];  
@@ -795,8 +786,8 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 			11'h409 : Comm_tx2_mux_datar_r <= clock_offsets[5*8 +: 8];  
 			11'h40A : Comm_tx2_mux_datar_r <= clock_offsets[6*8 +: 8];  
 			11'h40B : Comm_tx2_mux_datar_r <= clock_offsets[7*8 +: 8]; 
-			11'h40C : Comm_tx2_mux_datar_r <= `CYCLE_PERIOD;
-			11'h40D : Comm_tx2_mux_datar_r <= `CYCLE_PERIOD>>8;
+			11'h40C : Comm_tx2_mux_datar_r <= (`CYCLE_PERIOD) & 8'hFF;
+			11'h40D : Comm_tx2_mux_datar_r <= (`CYCLE_PERIOD>>8) & 8'hFF;
 			11'h40E : Comm_tx2_mux_datar_r <= local_counter_timestamp[0*8 +: 8];
 			11'h40F : Comm_tx2_mux_datar_r <= local_counter_timestamp[1*8 +: 8];
 			default : begin 
@@ -953,13 +944,13 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	assign EMIF_TX_mux[5] = SD_dat[2*32 +: 32]; 
 	assign EMIF_TX_mux[6] = SD_dat[3*32 +: 32]; 
 	assign EMIF_TX_mux[7] = SD_dat[4*32 +: 32]; 
-	assign EMIF_TX_mux[8] = SD_dat[5*32 +: 32]; 
+	assign EMIF_TX_mux[8] = SD_dat[5*32 +: 16]; 
 	assign EMIF_TX_mux[9] = SD_dat_avg[0*32 +: 32]; 
 	assign EMIF_TX_mux[10] = SD_dat_avg[1*32 +: 32]; 
 	assign EMIF_TX_mux[11] = SD_dat_avg[2*32 +: 32]; 
 	assign EMIF_TX_mux[12] = SD_dat_avg[3*32 +: 32]; 
 	assign EMIF_TX_mux[13] = SD_dat_avg[4*32 +: 32]; 
-	assign EMIF_TX_mux[14] = SD_dat_avg[5*32 +: 32]; 
+	assign EMIF_TX_mux[14] = SD_dat_avg[5*32 +: 16]; 
 	assign EMIF_TX_mux[15] = {{32-FAULT_NUMBER{1'b0}}, FLT_REG_O};  
 	assign EMIF_TX_mux[16] = {rx2_port_rdy, rx1_port_rdy, master_rdy, sync_rdy, node_number_rdy, node_number, slave_rdy, sync_ok, rx_ok};
 	assign EMIF_TX_mux[17] = EMIF_RX_reg[2]; 
@@ -1067,8 +1058,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	BB BB_SD_CLK3(.I(SD_CLK[3]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" */;  
 	BB BB_SD_CLK4(.I(SD_CLK[4]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	`ifdef TYPE_25_50 
-	BB BB_SD_CLK5(.I(SD_CLK[5]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
-	BB BB_SD_CLK6(.I(SD_CLK[6]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_UAC_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
+	BB BB_SD_CLK5(.I(SD_CLK[5]), .T(1'b0), .O(), .B(FPGA_io[`SD_CLK_UAC_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	`endif
 	
 	BB BB_SD_DAT0(.I(1'b0), .T(1'b1), .O(SD_DAT[0]), .B(FPGA_io[`SD_U_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;  
@@ -1082,9 +1072,6 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	BB BB_SD_DAT8(.I(1'b0), .T(1'b1), .O(SD_DAT[8]), .B(FPGA_io[`SD_I_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_SD_DAT9(.I(1'b0), .T(1'b1), .O(SD_DAT[9]), .B(FPGA_io[`SD_I_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_SD_DAT10(.I(1'b0), .T(1'b1), .O(SD_DAT[10]), .B(FPGA_io[`SD_I_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;
-   	`ifdef TYPE_25_50
-	BB BB_SD_DAT11(.I(1'b0), .T(1'b1), .O(SD_DAT[11]), .B(FPGA_io[`SD_I_N_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;
-	`endif
 	
 	`ifdef TYPE_25_50
 	BB BB_SD_DRV_temp0(.I(1'b0), .T(1'b1), .O(DRV_temp[0]), .B(FPGA_io[`TEMP_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="UP" */; 

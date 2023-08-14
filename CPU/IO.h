@@ -160,7 +160,7 @@ GPIO_SetupPinOptions(i, GPIOreg[i].dir, GPIOreg[i].options)
 #define FPGA_DONE 91
 
 //CPU IO MASTER
-#define TRIGGER_CM  0
+#define FAN2_CM  0
 #define RST_CM  1
 
 #define SD_NEW_CM  2

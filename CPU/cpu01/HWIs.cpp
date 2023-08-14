@@ -22,8 +22,6 @@ interrupt void SD_AVG_INT()
 {
     Timer_PWM.CPU_SD = TIMESTAMP_PWM;
 
-    GPIO_SET(TRIGGER_CM);
-
     {
         register Uint32 *src;
         register Uint32 *dest;
@@ -481,8 +479,6 @@ interrupt void SD_AVG_INT()
     //    {
     //       GPIO_CLEAR(PWM_EN_CM);
     //    }
-
-    GPIO_CLEAR(TRIGGER_CM);
 
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
     Timer_PWM.CPU_END = TIMESTAMP_PWM;

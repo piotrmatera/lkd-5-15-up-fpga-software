@@ -386,7 +386,7 @@ void Init_class::Variables()
     Therm_module.B = 3550.0f;
     Therm_module.T_0 = 273.15f;
     Therm_module.R25 = 493.0f;
-    Therm_module.DIV_Rinf = expf(Therm.B/(Therm.T_0+100.0f))/Therm.R25;
+    Therm_module.DIV_Rinf = expf(Therm_module.B/(Therm_module.T_0+100.0f))/Therm_module.R25;
 
     ///////////////////////////////////////////////////////////////////
 
@@ -1076,7 +1076,7 @@ void Init_class::EMIF()
 
 const struct GPIO_struct GPIOreg[169] =
 {
-[TRIGGER_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
+[FAN2_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [RST_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 
 [SD_AVG_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
@@ -1181,7 +1181,7 @@ const struct GPIO_struct GPIOreg[169] =
 
 void Init_class::GPIO()
 {
-    GPIO_Setup(TRIGGER_CM);
+    GPIO_Setup(FAN2_CM);
 
     GPIO_Setup(RST_CM);
     GPIO_Setup(SD_AVG_CM);

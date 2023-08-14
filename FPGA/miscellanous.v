@@ -113,7 +113,7 @@ module PulseLengthCounter(clk_i, signal_i, length_pos, length_neg);
 
 	always @(posedge clk_i) begin
 		signal_i_last <= signal_i;
-		count <= count + 1;
+		count <= count + 1'b1;
 		
 		if (signal_i ^ signal_i_last) begin
 			count <= 0;

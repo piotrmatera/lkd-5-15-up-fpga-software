@@ -36,7 +36,8 @@ interrupt void Cla1Task1 ( void )
     Efficient_conditioning_avg(EMIF_CLA.I_conv_a, Meas_ACDC_gain.I_conv.a, Meas_ACDC.I_conv.a, Meas_ACDC.I_conv_avg.a, Meas_ACDC_offset.I_conv.b);
     Efficient_conditioning_avg(EMIF_CLA.I_conv_b, Meas_ACDC_gain.I_conv.b, Meas_ACDC.I_conv.b, Meas_ACDC.I_conv_avg.b, Meas_ACDC_offset.I_conv.c);
     Efficient_conditioning_avg(EMIF_CLA.I_conv_c, Meas_ACDC_gain.I_conv.c, Meas_ACDC.I_conv.c, Meas_ACDC.I_conv_avg.c, Meas_ACDC_offset.I_conv.n);
-    Efficient_conditioning_avg(EMIF_CLA.I_conv_n, Meas_ACDC_gain.I_conv.n, Meas_ACDC.I_conv.n, Meas_ACDC.I_conv_avg.n, Meas_ACDC_offset.I_conv.n);
+    Meas_ACDC.I_conv.n = -(Meas_ACDC.I_conv.a + Meas_ACDC.I_conv.b + Meas_ACDC.I_conv.c);
+    Meas_ACDC.I_conv_avg.n = (Meas_ACDC.I_conv_avg.a + Meas_ACDC.I_conv_avg.b + Meas_ACDC.I_conv_avg.c);
 
     Converter_calc();
 
