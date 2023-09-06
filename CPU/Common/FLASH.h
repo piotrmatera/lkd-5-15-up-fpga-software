@@ -36,15 +36,15 @@ public:
     Uint16 size16_each[10];
     enum Sector_enum sector;
 
-    void save(void);
-    Uint16 retrieve(Uint16 offset_from_last = 0);
+    void save(void) const;
+    Uint16 retrieve(Uint16 offset_from_last = 0) const;
 
 private:
-    void erase(void);
-    Uint16 *find(Uint16 offset_from_last = 0);
+    void erase(void) const;
+    Uint16 *find(Uint16 offset_from_last = 0) const;
 
-    void erase_and_check(Uint32 sector_start_address);
-    void save_and_check( void * bufor_FLASH, Uint16 * bufor);
+    void erase_and_check(Uint32 sector_start_address) const;
+    void save_and_check( void * bufor_FLASH, Uint16 * bufor) const;
 };
 
 

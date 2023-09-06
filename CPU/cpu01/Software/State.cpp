@@ -38,21 +38,21 @@ struct CT_calc_struct CT_char_vars;
 struct L_grid_meas_struct L_grid_meas;
 struct timer_struct Timer_total;
 
-class FLASH_class switch_FLASH =
+const class FLASH_class switch_FLASH =
 {
  .address = {(Uint16 *)&Machine.ONOFF_FLASH, 0},
  .sector = SectorM,
  .size16_each = {sizeof(Machine.ONOFF_FLASH), 0},
 };
 
-class FLASH_class L_grid_FLASH =
+const class FLASH_class L_grid_FLASH =
 {
  .address = {(Uint16 *)&L_grid_meas.L_grid_previous, 0},
  .sector = SectorL,
  .size16_each = {sizeof(L_grid_meas.L_grid_previous), 0},
 };
 
-class FLASH_class error_retry_FLASH =
+const class FLASH_class error_retry_FLASH =
 {
  .address = {(Uint16 *)&Machine.error_retry, 0},
  .sector = SectorK,
