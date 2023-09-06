@@ -27,6 +27,8 @@
 #include "Software/driver_mosfet/MosfetDriver.h"
 #include "MosfetCtrlApp.h"
 
+#include "device_check.h"
+
 extern Rtc rtc;
 
 struct time_BCD_struct RTC_current_time;
@@ -295,10 +297,12 @@ void Blink()
     if(Machine.recent_error && Conv.enable) Blink_LED4.update_pattern(true);
     else Blink_LED4.update_pattern(false);
 
+#if !DBG_AT_GPIO
     GPIO_WRITE(LED1_CM, Blink_LED1.task());
     GPIO_WRITE(LED2_CM, Blink_LED2.task());
     GPIO_WRITE(LED3_CM, Blink_LED3.task());
     GPIO_WRITE(LED4_CM, Blink_LED4.task());
+#endif
 }
 
 void convert_harmonics_to_bits()
@@ -773,6 +777,11 @@ void Machine_class::Background()
 
 void Machine_class::Main()
 {
+    if( !is_correct() )
+        GPIO_WRITE( LED3_CM, 1 );
+    else
+        GPIO_WRITE( LED3_CM, 0 );
+
     register void (*pointer_temp)() = Machine.state_pointers[Machine.state];
 
     if(pointer_temp != NULL && Machine.state < sizeof(Machine_class::state_pointers)/sizeof(Machine_class::state_pointers[0]))
