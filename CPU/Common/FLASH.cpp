@@ -137,7 +137,7 @@ union Bufor {
 const Uint32 magic_value32 = 0xAAAA5555;
 
 #pragma CODE_SECTION(".TI.ramfunc");
-void FLASH_class::erase()
+void FLASH_class::erase(void)
 {
     SeizeFlashPump();
 
@@ -166,7 +166,7 @@ void FLASH_class::erase()
 }
 
 #pragma CODE_SECTION(".TI.ramfunc");
-void FLASH_class::save()
+void FLASH_class::save(void)
 {
     union Bufor bufor_RAM;
     union Bufor *bufor_FLASH;
@@ -255,7 +255,6 @@ Uint16 FLASH_class::retrieve(Uint16 offset_from_last)
 Uint16 *FLASH_class::find(Uint16 offset_from_last)
 {
     union Bufor *bufor_FLASH = (union Bufor *)(Sector_start_address[sector]);
-    sector_address = (Uint16 *)bufor_FLASH;
 
     if(bufor_FLASH->list.magic != magic_value32) return NULL;
 
@@ -277,7 +276,6 @@ Uint16 *FLASH_class::find(Uint16 offset_from_last)
         bufor_FLASH = bufor_FLASH_temp;
     }
 
-    next_address = (Uint16 *)bufor_FLASH->list.next;
 
     while(offset_from_last--)
     {
