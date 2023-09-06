@@ -41,11 +41,13 @@ void main()
 
     DINT;
 
-    EALLOW;
-    //DCSM_COMMON_REGS.FLSEM (offset=0)
-    // operacje kasowania i programowania dozwolone ze strefy 1 (Security Zone 1)
-    //*(uint32_t*)0x0005F070 = 0xa501;
-    EDIS;
+    // ponizsze wlaczane w FLASH.cpp (save fn), dopiero jak bedzie potrzebne
+    // aby nie zezwolic wywolania fn prorgamowania z niezabezp. czesci
+//    EALLOW;
+//    //DCSM_COMMON_REGS.FLSEM (offset=0)
+//    // operacje kasowania i programowania dozwolone ze strefy 1 (Security Zone 1)
+//    //*(uint32_t*)0x0005F070 = 0xa501;
+//    EDIS;
 
     // block_in_ram();
 

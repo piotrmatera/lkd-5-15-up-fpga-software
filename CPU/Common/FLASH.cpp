@@ -198,6 +198,12 @@ void FLASH_class::save(void) const
         bufor_RAM.list.next = bufor_FLASH + size128 + 1;
     }
 
+    EALLOW;
+    //DCSM_COMMON_REGS.FLSEM (offset=0)
+    // operacje kasowania i programowania dozwolone ze strefy 1 (Security Zone 1)
+    *(uint32_t*)0x0005F070 = 0xa501;
+    EDIS;
+
     if(bufor_FLASH == NULL ||  bufor_RAM.list.next > (union Bufor *)Sector_end_address[sector])
     {
         erase();
@@ -242,6 +248,13 @@ void FLASH_class::save(void) const
     }
     EDIS;
     ReleaseFlashPump();
+
+    EALLOW;
+    //DCSM_COMMON_REGS.FLSEM (offset=0)
+    // operacje kasowania i programowania dozwolone z dowolnego miejsca
+    // ale aby zmienaic strefe Z1 trzeba byc w strefie Z1
+    *(uint32_t*)0x0005F070 = 0xa500;
+    EDIS;
 }
 
 Uint16 FLASH_class::retrieve(Uint16 offset_from_last) const
