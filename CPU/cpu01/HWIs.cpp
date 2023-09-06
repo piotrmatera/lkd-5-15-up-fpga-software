@@ -15,7 +15,7 @@
 #include "Modbus_Converter_memory.h"
 #include "version.h"
 
-#pragma CODE_SECTION(".TI.ramfunc");
+#pragma CODE_SECTION(".TI.ramfunc_unsecure");
 interrupt void SD_AVG_NT()
 {
     Timer_PWM.CPU_SD = TIMESTAMP_PWM;

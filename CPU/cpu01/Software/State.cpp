@@ -437,7 +437,7 @@ void update_harmonics()
     }
 }
 
-#pragma CODE_SECTION(".TI.ramfunc");
+#pragma CODE_SECTION(".TI.ramfunc_unsecure");
 void ONOFF_switch_interrupt()
 {
     float switch_timer_temp = Machine.switch_timer;

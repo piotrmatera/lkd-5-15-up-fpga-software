@@ -90,7 +90,11 @@ SECTIONS
    .pinit:   	>  FLASHD,   PAGE = 0
    .text:    	>  FLASHE
    .TI.ramfunc: {-l F021_API_F2837xD_FPU32.lib} LOAD = FLASHE
-                     RUN = RAMGS0_3,
+                     RUN = RAMD0_1,
+                     table(BINIT)
+
+   .TI.ramfunc_unsecure: LOAD = FLASHD,   PAGE = 0
+                     RUN  = RAMGS8_15,   PAGE = 0,
                      table(BINIT)
 
    /* Initalized sections go in Flash */
@@ -101,7 +105,7 @@ SECTIONS
 
    /* Allocate uninitalized data sections: */
 
-   .stack: 		>  RAMD0_1,   PAGE = 0
+   .stack: 		>  RAMGS0_3,   PAGE = 0
 
    .ebss:		>>  RAMM0_1 | RAMGS0_3 | RAMGS4_7,   PAGE = 0
    .esysmem: 	>  RAMM0_1 | RAMGS0_3 | RAMGS4_7,   PAGE = 0
