@@ -33,6 +33,12 @@ void main()
 
     DINT;
 
+    EALLOW;
+    //DCSM_COMMON_REGS.FLSEM (offset=0)
+    // operacje kasowania i programowania dozwolone ze strefy 1 (Security Zone 1)
+    //*(uint32_t*)0x0005F070 = 0xa501;
+    EDIS;
+
     while(!GPIO_READ(FPGA_DONE));
 
     InitFlash();
