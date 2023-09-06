@@ -777,10 +777,10 @@ void Machine_class::Background()
 
 void Machine_class::Main()
 {
-    if( !is_correct() )
-        GPIO_WRITE( LED3_CM, 1 );
+/*    if( !is_correct() )
+        GPIO_WRITE( LED3_CM, 1 ); TODO zrobic jakis efekt gdy nie pasuje spersonalizowanie FW
     else
-        GPIO_WRITE( LED3_CM, 0 );
+        GPIO_WRITE( LED3_CM, 0 );*/
 
     register void (*pointer_temp)() = Machine.state_pointers[Machine.state];
 
