@@ -19,6 +19,14 @@ FATFS fs;           /* Filesystem object */
 MosfetCtrlApp mosfet_ctrl_app;
 int32 SD_phase = -500;
 
+#pragma CODE_SECTION(".TI.ramfunc_unsecure");
+//#pragma CODE_SECTION(".TI.ramfunc");
+void block_in_ram(){
+    while(1){
+    asm (" nop ");
+    }
+}
+
 #pragma CODE_SECTION(".TI.ramfunc");
 interrupt void NMI_INT()
 {
@@ -38,6 +46,8 @@ void main()
     // operacje kasowania i programowania dozwolone ze strefy 1 (Security Zone 1)
     //*(uint32_t*)0x0005F070 = 0xa501;
     EDIS;
+
+    // block_in_ram();
 
     while(!GPIO_READ(FPGA_DONE));
 
@@ -133,5 +143,6 @@ void main()
         static volatile float benchmark;
         benchmark = (float)(ReadIpcTimer() - benchmark_timer)*(1.0f/200000000.0f);
         benchmark_timer = ReadIpcTimer();
+        // block_in_ram();
     }
 }
