@@ -42,6 +42,9 @@ public:
 private:
     void erase(void);
     Uint16 *find(Uint16 offset_from_last = 0);
+
+    void erase_and_check(Uint32 sector_start_address);
+    void save_and_check( void * bufor_FLASH, Uint16 * bufor);
 };
 
 

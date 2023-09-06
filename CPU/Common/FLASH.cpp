@@ -137,6 +137,13 @@ union Bufor {
 const Uint32 magic_value32 = 0xAAAA5555;
 
 #pragma CODE_SECTION(".TI.ramfunc");
+void FLASH_class::erase_and_check(Uint32 sector_start_address){
+    EALLOW;
+    Fapi_issueAsyncCommandWithAddress(Fapi_EraseSector,(Uint32 *)sector_start_address);
+    while(Fapi_checkFsmForReady() != Fapi_Status_FsmReady){}
+    EDIS;
+}
+
 void FLASH_class::erase(void)
 {
     SeizeFlashPump();
@@ -158,14 +165,16 @@ void FLASH_class::erase(void)
             return;
         }
 
-        EALLOW;
-        Fapi_issueAsyncCommandWithAddress(Fapi_EraseSector,(Uint32 *)Sector_start_address[sector]);
-        while(Fapi_checkFsmForReady() != Fapi_Status_FsmReady){}
-        EDIS;
+        erase_and_check( Sector_start_address[sector] );
     }
 }
 
 #pragma CODE_SECTION(".TI.ramfunc");
+void FLASH_class::save_and_check( void * bufor_FLASH, Uint16 * bufor){
+   Fapi_issueProgrammingCommand((Uint32 *)bufor_FLASH, bufor,8,0,0,Fapi_AutoEccGeneration);
+   while(Fapi_checkFsmForReady() == Fapi_Status_FsmBusy);
+}
+
 void FLASH_class::save(void)
 {
     union Bufor bufor_RAM;
@@ -202,8 +211,7 @@ void FLASH_class::save(void)
     Fapi_initializeAPI(F021_CPU0_W0_BASE_ADDRESS, 200);
     Fapi_setActiveFlashBank(Fapi_FlashBank0);
 
-    Fapi_issueProgrammingCommand((Uint32 *)bufor_FLASH,bufor_RAM.bit16,8,0,0,Fapi_AutoEccGeneration);
-    while(Fapi_checkFsmForReady() == Fapi_Status_FsmBusy);
+    save_and_check( bufor_FLASH, bufor_RAM.bit16 );
     bufor_FLASH++;
 
     Uint32 size16_counter = 0;
