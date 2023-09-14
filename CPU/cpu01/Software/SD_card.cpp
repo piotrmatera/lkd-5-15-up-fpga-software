@@ -746,6 +746,12 @@ Uint16 SD_card_class::read_settings()
 
         if(!strncmp(working_buffer, "NO_NEUTRAL", sizeof("NO_NEUTRAL")-1))
             settings.no_neutral = value;
+
+        if(!strncmp(working_buffer, "DP1", sizeof("DP1")-1))
+            settings.dp1 = value;
+
+        if(!strncmp(working_buffer, "DP2", sizeof("DP2")-1))
+            settings.dp2 = value;
     }
     if(fresult = f_close(&fil)) return fresult;
 

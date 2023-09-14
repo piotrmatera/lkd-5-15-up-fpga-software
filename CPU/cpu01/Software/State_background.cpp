@@ -672,7 +672,7 @@ void Background_class::init()
     if(!switch_FLASH.retrieve())
     {
         ONOFF.ONOFF = ONOFF.ONOFF_FLASH;
-        ONOFF.ONOFF_last = !ONOFF.ONOFF_FLASH;
+        ONOFF.ONOFF_last = ONOFF.ONOFF_FLASH;
     }
     else
     {
@@ -914,18 +914,6 @@ void Background_class::Main()
         CT_char_calc();
 
         Meas_ACDC.Temperature_CPU = GetTemperatureC((AdcaResultRegs.ADCRESULT10+AdcaResultRegs.ADCRESULT11)>>1);
-        Meas_ACDC.Temperature_FPGA = EMIF_CPU.Temperature_FPGA;
-
-        for(Uint16 i = 0; i < 4; i++)
-        {
-            register float length_pos = EMIF_CPU.Temperature_module_pos[i];
-            register float length_neg = EMIF_CPU.Temperature_module_neg[i];
-            register float Thermistor;
-            Thermistor = length_pos / (length_pos + length_neg);// * (7.45/9.5) + 0.5;
-//            Thermistor = (Therm_module.R_divider * Thermistor) / (1.0 - Thermistor) - 430.0f;
-//            Thermistor = Therm_module.B/logf(Thermistor * Therm_module.DIV_Rinf) - Therm_module.T_0;
-            (&Meas_ACDC.Temperature_module.a)[i] = Thermistor;
-        }
 
         for(Uint16 i = 0; i < 8; i++)
         {

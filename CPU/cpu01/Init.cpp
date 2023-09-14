@@ -352,7 +352,7 @@ void Init_class::Variables()
 
     Meas_ACDC_alarm_H.I_conv_rms = Conv.I_lim_nominal * 1.1f;
     float min_Current = fabsf(Meas_ACDC_gain.def_osr * Meas_ACDC_gain.def_osr / Meas_ACDC_gain.sd_shift * fminf(Meas_ACDC_gain.I_conv.a, fminf(Meas_ACDC_gain.I_conv.b, fminf(Meas_ACDC_gain.I_conv.c, Meas_ACDC_gain.I_conv.n))));
-    Meas_ACDC_alarm_H.I_conv = fminf(min_Current - 10.0f, Conv.I_lim_nominal * 2.0f);
+    Meas_ACDC_alarm_H.I_conv = fminf(min_Current - 10.0f, Conv.I_lim_nominal * 4.0f);
     Meas_ACDC_alarm_L.I_conv = -Meas_ACDC_alarm_H.I_conv;
 
     ///////////////////////////////////////////////////////////////////
@@ -1084,7 +1084,7 @@ const struct GPIO_struct GPIOreg[169] =
 [SYNC_PWM_CM] = {LOW, MUX0, CPU1_IO, INPUT, ASYNC | PULLUP},
 [FAN_CM]  = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [TZ_EN_CPU1_CM] = {LOW, MUX1, CPU1_IO, OUTPUT, PUSHPULL},
-[PWM_EN_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[PWM_EN_CM] = {LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL},
 [TZ_EN_CPU2_CM] = {LOW, MUX1, CPU2_IO, OUTPUT, PUSHPULL},
 
 [LED1_CM] = {HIGH, MUX0, CPU1_IO, OUTPUT, PUSHPULL},

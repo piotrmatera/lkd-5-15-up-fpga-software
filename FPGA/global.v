@@ -108,6 +108,9 @@
 
 /////////////////////////////////////////////////////////////////////
 
+`define D_BAUD_FREQ  12'd1
+`define D_BAUD_LIMIT 16'd127
+
 `ifdef POWER_5
 	`define CONV_FREQUENCY 62500
 	`define CONTROL_RATE 8

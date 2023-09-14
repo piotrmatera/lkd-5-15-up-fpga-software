@@ -76,6 +76,8 @@ struct settings_struct
     float I_lim;
     float number_of_slaves;
     float no_neutral;
+    float dp1;
+    float dp2;
 };
 
 struct Settings_struct

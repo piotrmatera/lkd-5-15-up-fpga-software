@@ -38,14 +38,6 @@ struct EMIF_SD_struct
     int16 I_conv_n;
 };
 
-struct EMIF_CPU_struct
-{
-    Uint16 Temperature_module_pos[4];
-    Uint16 Temperature_module_neg[4];
-    int16 Temperature_FPGA;
-    Uint16 dummy;
-};
-
 union FPGA_ACDC_sync_flags_union
 {
     Uint32 all;
@@ -297,8 +289,7 @@ union EMIF_union
             Uint32 sync_phase:1;
         }flags;
         Uint32 next_period;
-        Uint16 Temperature_module_pos[4];
-        Uint16 Temperature_module_neg[4];
+        float Temperature_module[4];
         int16 Temperature_FPGA;
         Uint16 dummy;
         Uint32 mux_rsvd[512-34];

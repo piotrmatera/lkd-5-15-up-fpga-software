@@ -96,7 +96,6 @@ extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_offset;
 extern struct Measurements_ACDC_alarm_struct Meas_ACDC_alarm_H;
 extern struct Measurements_ACDC_alarm_struct Meas_ACDC_alarm_L;
 extern struct EMIF_SD_struct EMIF_CLA;
-extern struct EMIF_CPU_struct EMIF_CPU;
 
 extern union CONTROL_EXT_MODBUS control_ext_modbus;
 
