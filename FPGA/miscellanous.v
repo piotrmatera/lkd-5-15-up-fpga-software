@@ -19,6 +19,25 @@ module compare_LH(clk_i, value_i, compare_value_i, compare_o);
 	end
 endmodule
 
+module Debounce(clk, in, out);
+	parameter N = 2;
+	parameter POLARITY = 0;
+	
+	input wire clk;
+	input wire in;
+	output reg out;
+	
+	reg [N-1:0] buffer;
+	initial buffer = {N{!POLARITY}};
+	initial out = !POLARITY;
+	
+	always @(posedge clk) begin
+		buffer <= {buffer[N-2:0], in};
+		if(POLARITY) out <= &buffer;
+		else out <= |buffer;
+	end
+endmodule
+
 module MovingAverage(clk, enable, in, out);
 	parameter N = 4;
 	parameter WIDTH = 16;

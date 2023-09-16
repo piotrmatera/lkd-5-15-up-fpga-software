@@ -359,7 +359,7 @@ void Converter_calc_slave()
         GPIO_CLEAR(C_SS_RLY_L1_CM);
         GPIO_CLEAR(C_SS_RLY_L2_CM);
         GPIO_CLEAR(C_SS_RLY_L3_CM);
-        GPIO_CLEAR(C_SS_RLY_N_CM);
+        GPIO_CLEAR(C_SSR_CM);
 
         Meas_ACDC_alarm_L.U_dc = -5.0f;
 
@@ -429,11 +429,21 @@ void Converter_calc_slave()
             }
 
             counter_ss += Conv.Ts;
+            if (counter_ss > 0.5f - 0.016f)
+            {
+                GPIO_SET(C_SSR_CM);
+            }
+
             if (counter_ss > 0.5f)
             {
                 GPIO_SET(C_SS_RLY_L1_CM);
                 GPIO_SET(C_SS_RLY_L2_CM);
                 GPIO_SET(C_SS_RLY_L3_CM);
+            }
+
+            if (counter_ss > 0.6f - 0.016f)
+            {
+                GPIO_CLEAR(C_SSR_CM);
             }
 
             if (counter_ss > 1.0f)
@@ -445,13 +455,6 @@ void Converter_calc_slave()
             }
 
             if (counter_ss > 1.5f)
-            {
-                GPIO_CLEAR(C_SS_RLY_L1_CM);
-                GPIO_CLEAR(C_SS_RLY_L2_CM);
-                GPIO_CLEAR(C_SS_RLY_L3_CM);
-            }
-
-            if (counter_ss > 2.0f)
             {
                 Conv.state++;
             }

@@ -189,7 +189,7 @@ GPIO_SetupPinOptions(i, GPIOreg[i].dir, GPIOreg[i].options)
 #define GR_RLY_L2_CM  21
 #define C_SS_RLY_L3_CM  22
 #define GR_RLY_L3_CM  23
-#define C_SS_RLY_N_CM  32
+#define C_SSR_CM  32
 #define GR_RLY_N_CM  33
 
 #define SS_DClink_CM  36

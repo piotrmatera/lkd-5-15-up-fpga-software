@@ -170,6 +170,11 @@ void Init_class::ADC()
     AdcdRegs.ADCSOC8CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
     AdcdRegs.ADCSOC9CTL.all = AdcdRegs.ADCSOC8CTL.all;
 
+    AdcdRegs.ADCSOC10CTL.bit.CHSEL  = 15;
+    AdcdRegs.ADCSOC10CTL.bit.ACQPS  = acqps;
+    AdcdRegs.ADCSOC10CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
+    AdcdRegs.ADCSOC11CTL.all = AdcdRegs.ADCSOC10CTL.all;
+
     EDIS;
 }
 
@@ -1088,7 +1093,7 @@ const struct GPIO_struct GPIOreg[169] =
 [GR_RLY_L2_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [C_SS_RLY_L3_CM] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [GR_RLY_L3_CM  ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
-[C_SS_RLY_N_CM ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
+[C_SSR_CM ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 [GR_RLY_N_CM   ] = {LOW, MUX0, CPU1CLA_IO, OUTPUT, PUSHPULL},
 
 [SD_SPISIMO_PIN] = {HIGH, MUX6, CPU1_IO, INPUT, ASYNC | PULLUP},
@@ -1191,7 +1196,7 @@ void Init_class::GPIO()
     GPIO_Setup(GR_RLY_L2_CM  );
     GPIO_Setup(C_SS_RLY_L3_CM);
     GPIO_Setup(GR_RLY_L3_CM  );
-    GPIO_Setup(C_SS_RLY_N_CM );
+    GPIO_Setup(C_SSR_CM );
     GPIO_Setup(GR_RLY_N_CM   );
     GPIO_Setup(SS_DClink_CM  );
 

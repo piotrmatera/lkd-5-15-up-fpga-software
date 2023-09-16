@@ -255,6 +255,7 @@ struct Measurements_ACDC_struct
     float Temperature1;
     float Temperature2;
     float Temperature3;
+    float Temperature4;
     float Supply_24V;
 };
 

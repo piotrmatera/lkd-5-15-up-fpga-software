@@ -76,7 +76,7 @@ interrupt void Cla1Task1 ( void )
 
     {
         Therm.Divider_supply += 0.001*( ((float)AdcdResultRegs.ADCRESULT0 + (float)AdcdResultRegs.ADCRESULT1)*(2e3/1e3)*(3.3/4096.0/2.0) - Therm.Divider_supply);
-        Meas_ACDC.Supply_24V = ((float)AdcdResultRegs.ADCRESULT8 + (float)AdcdResultRegs.ADCRESULT9)*(11e3/1e3)*(3.3/4096.0/2.0);
+        Meas_ACDC.Supply_24V = ((float)AdcdResultRegs.ADCRESULT10 + (float)AdcdResultRegs.ADCRESULT11)*(11e3/1e3)*(3.3/4096.0/2.0);
 
         static float index;
         register float Thermistor;
@@ -86,7 +86,7 @@ interrupt void Cla1Task1 ( void )
         Thermistor = Therm.B/logf(Thermistor * Therm.DIV_Rinf) - Therm.T_0;
         register float *Temperature = &Meas_ACDC.Temperature1 + (Uint16)index;
         *Temperature += 0.02*(Thermistor - *Temperature);
-        if(++index >= 3.0f) index = 0;
+        if(++index >= 4.0f) index = 0;
     }
 
     Timer_PWM.CLA_THERM_TASK1 = TIMESTAMP_PWM;
