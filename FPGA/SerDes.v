@@ -353,7 +353,7 @@ module RX_port(rx_clk_i, rx_i, rx_clk_phasestep_lag_o, timestamp_code_o, rx_rdy_
 		else
 			DIV5_bits <= DIV5_bits + 1'b1;
 
-		barrel <= {!DDR1_o[3], !DDR1_o[1], barrel[9:2]};
+		barrel <= {DDR1_o[3], DDR1_o[1], barrel[9:2]};
 
 		rst2_r <= {rst_i, rst2_r[2:1]};
 		if(rst2_r[0]) begin
@@ -392,7 +392,7 @@ module RX_port(rx_clk_i, rx_i, rx_clk_phasestep_lag_o, timestamp_code_o, rx_rdy_
 	wire[9:0] dec_i;
 	wire[8:0] dec_o;
 	
-	assign dec_i = {!DDR1_o[3], !DDR1_o[1], barrel[9:2]};
+	assign dec_i = {DDR1_o[3], DDR1_o[1], barrel[9:2]};
 	assign dec_en_i = DIV5_bits == 3'b011 || DIV5_bits == 3'b100;
 	
 	pmi_rom

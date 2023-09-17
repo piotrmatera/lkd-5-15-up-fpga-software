@@ -1319,9 +1319,9 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
    
    	OB BB_COMM_TX0(.I(tx_o[0]), .O(FPGA_io[`TX1_FM]))/*synthesis IO_TYPE="LVPECL33E" SLEWRATE="FAST" */; 
 	OB BB_COMM_TX1(.I(tx_o[1]), .O(FPGA_io[`TX2_FM]))/*synthesis IO_TYPE="LVPECL33E" SLEWRATE="FAST" */;  
-	assign rx_i[0] = FPGA_io[`RX1_FM]; 
-	assign rx_i[1] = FPGA_io[`RX2_FM];
+   	IB BB_COMM_RX0(.O(rx_i[0]), .I(FPGA_io[`RX1_FM]))/*synthesis IO_TYPE="LVPECL33" DIFFRESISTOR="100" */; 
+	IB BB_COMM_RX1(.O(rx_i[1]), .I(FPGA_io[`RX2_FM]))/*synthesis IO_TYPE="LVPECL33" DIFFRESISTOR="100" */;  
 
-	BB BB_TEST(.I(local_free_counter[10]), .T(1'b0), .O(), .B(FPGA_io[`K+4]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
-	BB BB_TEST2(.I(local_counter_pulse), .T(1'b0), .O(), .B(FPGA_io[`L+5]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
+	BB BB_TEST(.I(local_free_counter[10]), .T(1'b0), .O(), .B(FPGA_io[`F+2]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
+	BB BB_TEST2(.I(local_counter_pulse), .T(1'b0), .O(), .B(FPGA_io[`E+2]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 endmodule  
