@@ -9,6 +9,7 @@
 #include <math.h>
 #include <stdlib.h>     /* qsort */
 #include <string.h>
+#include <stdio.h>
 
 #include "State.h"
 #include "Scope.h"
@@ -775,6 +776,27 @@ void Machine_class::Background()
 
 }
 
+
+//===========================================================
+//wypisywanie komunikatow na Modbus_ext
+//tylko w wersji kodu do kalibracji
+void dbg_log( char * txt){
+  while( Modbus_slave_EXT.RTU->state != Modbus_RTU_class::Modbus_RTU_idle ){
+      Modbus_slave_EXT.RTU->interrupt_task();
+    }
+    strcpy(Modbus_slave_EXT.RTU->data_out, txt);//"UUUABCDEFGHIJKLMN");
+    Modbus_slave_EXT.RTU->data_out_length = strlen(txt);
+    Modbus_slave_EXT.RTU->send_data();
+}
+
+static char _dbg_buffer[256];
+#define dbg_printf( frm, ...) \
+        do{\
+            snprintf( _dbg_buffer, 256, frm ,## __VA_ARGS__ );\
+            dbg_log( _dbg_buffer );\
+            }while(0)
+//--------------------------------------------------------------
+
 void Machine_class::Main()
 {
 /*    if( !is_correct() )
@@ -1021,8 +1043,9 @@ void Machine_class::init()
     RTU_EXT_parameters.TX_pin = TX_Mod_2_CM;
     RTU_EXT_parameters.SciRegs = &ScidRegs;
     RTU_EXT_parameters.ECapRegs = &ECap2Regs;
-    if(SD_card.settings.Baudrate >= 9600) RTU_EXT_parameters.baudrate = SD_card.settings.Baudrate;
-    else RTU_EXT_parameters.baudrate = 9600;
+//    if(SD_card.settings.Baudrate >= 9600) RTU_EXT_parameters.baudrate = SD_card.settings.Baudrate;
+//    else RTU_EXT_parameters.baudrate = 9600;
+    RTU_EXT_parameters.baudrate = 9600;
     Modbus_slave_EXT.RTU->init(&RTU_EXT_parameters);
 
     Uint32 delay_timer = IpcRegs.IPCCOUNTERL;
@@ -1075,6 +1098,8 @@ void Machine_class::init()
     DELAY_US(1000);
 
     GPIO_CLEAR(RST_CM);
+
+    dbg_printf("\r\nKalibracja V.1.0\r\n");
 
     EALLOW;
     Cla1Regs.MIER.bit.INT2 =
@@ -1255,6 +1280,11 @@ void Machine_class::calibrate_offsets()
         Meas_master_offset_error.U_grid.a = fabsf(Meas_master_offset.U_grid.a * Meas_master_gain.U_grid.a);
         Meas_master_offset_error.U_grid.b = fabsf(Meas_master_offset.U_grid.b * Meas_master_gain.U_grid.b);
         Meas_master_offset_error.U_grid.c = fabsf(Meas_master_offset.U_grid.c * Meas_master_gain.U_grid.c);
+
+        dbg_printf("\r\nKalibracja ofsetu zera \r\n");
+        dbg_printf("\r\nOffset I_grid a - %f (0,05) \r\nOffset I_grid  b - %f (0,05) \r\nOffset I_grid c - %f (0,05) \r\nOffset U_grid a - %f (0,05) \r\nOffset U_grid b - %f (0,05) \r\nOffset U_grid c - %f (0,05) ",
+                   Meas_master_offset_error.I_grid.a, Meas_master_offset_error.I_grid.b, Meas_master_offset_error.I_grid.c,
+                   Meas_master_offset_error.U_grid.a, Meas_master_offset_error.U_grid.b, Meas_master_offset_error.U_grid.c);
 
         if (Meas_master_offset_error.I_grid.a > 0.05f ||
             Meas_master_offset_error.I_grid.b > 0.05f ||
