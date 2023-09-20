@@ -6,7 +6,7 @@
  */
 #include "F28x_Project.h"
 #include "device_check.h"
-#include "FLASH_API/F021_F2837xD_C28x.h"
+#include "F021_F2837xD_C28x.h"
 
 //cala sekwencja musi byc w RAM, po wyjsciu z AsyncCommand jeszcze nie skonczylo uzywac flash
 #pragma CODE_SECTION(".TI.ramfunc")
