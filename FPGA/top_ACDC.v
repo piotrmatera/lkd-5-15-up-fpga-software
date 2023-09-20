@@ -726,19 +726,11 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 
 	reg [15:0] glitch_counter_r;
 	reg [15:0] glitch_counter;
-	reg [21:0] reset_counter;
-	reg reset_counter_21_last;
 	reg flt_sig;
 	reg [15:0] FLT_drv_r;  
  	always @(posedge clk_5x) begin
 		FLT_drv_r <= FLT_drv;
 		flt_sig <= !(&FLT_drv_r);
-		reset_counter <= reset_counter + 1'b1;
-		reset_counter_21_last <= reset_counter[21];
-		//if(reset_counter[21] && !reset_counter_21_last) begin
-			//glitch_counter <= 0;
-			//glitch_counter_r <= glitch_counter;
-		//end
 		if(flt_sig) glitch_counter <= glitch_counter + 1'b1;
 		glitch_counter_r <= glitch_counter;
 	end
@@ -1062,7 +1054,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	assign EMIF_TX_mux[15] = {{32-FAULT_NUMBER{1'b0}}, FLT_REG_O};  
 	assign EMIF_TX_mux[16] = {rx2_port_rdy, rx1_port_rdy, master_rdy, sync_rdy, node_number_rdy, node_number, slave_rdy, sync_ok, rx_ok};
 	assign EMIF_TX_mux[17] = EMIF_RX_reg[2]; 
-	assign EMIF_TX_mux[18] = glitch_counter_r; 
+	assign EMIF_TX_mux[18] = glitch_counter; 
 	assign EMIF_TX_mux[19] = Scope_data_out[31:0]; 
 	assign EMIF_TX_mux[20] = {28'b0, Scope_data_out[DEB_READ_WIDTH-1:32]}; 
 	assign EMIF_TX_mux[21] = DEB_RADDR_DEPTH; 
@@ -1285,14 +1277,19 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	//BB BB_REL_FPGA7(.I(SED_enable), .T(1'b0), .O(), .B(FPGA_io[`GR_RLY_N_FM]))/*synthesis IO_TYPE="LVCMOS33" */; 
 	//BB BB_REL_FPGA6(.I(REL_o[8]), .T(1'b0), .O(), .B(FPGA_io[`DClink_DSCH_CM]))/*synthesis IO_TYPE="LVCMOS33" */; 
   
-   	wire SSR_i; 
-	wire SSR_o;
-	assign SSR_o = (TZ_EN_CPU1 & TZ_EN_CPU2 & TZ_FPGA) ? ~SSR_i : 1'b1; 
-	BB BB_SSR_CPU0(.I(1'b0), .T(1'b1), .O(SSR_i), .B(CPU_io[`C_SSR_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
+   	//wire SSR_i; 
+	//assign SSR_o = (TZ_EN_CPU1 & TZ_EN_CPU2 & TZ_FPGA) ? ~SSR_i : 1'b1; 
+	//BB BB_SSR_CPU0(.I(1'b0), .T(1'b1), .O(SSR_i), .B(CPU_io[`C_SSR_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	
- 	BB BB_SSR_FPGA0(.I(SSR_o), .T(1'b0), .O(), .B(FPGA_io[`C_SSR_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" DRIVE="16" OPENDRAIN="ON" */; 
-	BB BB_SSR_FPGA1(.I(SSR_o), .T(1'b0), .O(), .B(FPGA_io[`C_SSR_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" DRIVE="16" OPENDRAIN="ON" */; 
-	BB BB_SSR_FPGA2(.I(SSR_o), .T(1'b0), .O(), .B(FPGA_io[`C_SSR_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" DRIVE="16" OPENDRAIN="ON" */; 
+   	wire [2:0] SSR_i; 
+	wire [2:0] SSR_o;
+	assign SSR_i = {REL_o[4], REL_o[2], REL_o[0]};
+	Pulse_generator #(.LENGTH(10000000)) Pulse_generator_SSR[2:0](.clk(clk_20MHz), .in(SSR_i), .out(SSR_o));
+	
+ 	BB BB_SSR_FPGA0(.I(!SSR_o[0]), .T(1'b0), .O(), .B(FPGA_io[`C_SSR_L1_FM]))/*synthesis IO_TYPE="LVCMOS33" DRIVE="16" OPENDRAIN="ON" */; 
+	BB BB_SSR_FPGA1(.I(!SSR_o[1]), .T(1'b0), .O(), .B(FPGA_io[`C_SSR_L2_FM]))/*synthesis IO_TYPE="LVCMOS33" DRIVE="16" OPENDRAIN="ON" */; 
+	BB BB_SSR_FPGA2(.I(!SSR_o[2]), .T(1'b0), .O(), .B(FPGA_io[`C_SSR_L3_FM]))/*synthesis IO_TYPE="LVCMOS33" DRIVE="16" OPENDRAIN="ON" */; 
+	BB BB_TEST3(.I(SSR_o[2]), .T(1'b0), .O(), .B(FPGA_io[`E+1]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="NONE" */;  
 	
 	wire [5:1] LED_BUS;  
 	BB BB_LED_CPU1(.I(1'b0), .T(1'b1), .O(LED_BUS[1]), .B(CPU_io[`LED1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */;  

@@ -391,7 +391,7 @@ void Converter_calc_slave()
                 integrated_voltage =
                 counter_ss =
                 counter_ss_last = 0.0f;
-                GPIO_SET(SS_DClink_CM);
+//                GPIO_SET(SS_DClink_CM);
 
                 Conv.state_last = Conv.state;
             }
@@ -402,7 +402,7 @@ void Converter_calc_slave()
 
             current_running_max = fmaxf(current_running_max, integrated_current);
             if(integrated_current < 1.0f) integrated_voltage = 0.0f;
-            if(Conv.U_dc_filter > 620.0f)
+            if(Conv.U_dc_filter > 0.0f)
             {
                 Conv.state++;
             }
@@ -420,44 +420,57 @@ void Converter_calc_slave()
         case CONV_grid_relay:
         {
             static float counter_ss;
+            static float counter_ss2;
+            static float SSR_A_done;
+            static float SSR_B_done;
+            static float SSR_C_done;
+            static struct abc_struct U_grid_last;
             if (Conv.state_last != Conv.state)
             {
-                counter_ss = 0;
+                SSR_A_done =
+                SSR_B_done =
+                SSR_C_done =
+                counter_ss =
+                counter_ss2 = 0;
+
+                U_grid_last.a =
+                U_grid_last.b =
+                U_grid_last.c = 1e6;
+
                 GPIO_CLEAR(SS_DClink_CM);
 
                 Conv.state_last = Conv.state;
             }
 
             counter_ss += Conv.Ts;
-            if (counter_ss > 0.5f - 0.016f)
-            {
-                GPIO_SET(C_SSR_CM);
-            }
-
             if (counter_ss > 0.5f)
             {
-                GPIO_SET(C_SS_RLY_L1_CM);
-                GPIO_SET(C_SS_RLY_L2_CM);
-                GPIO_SET(C_SS_RLY_L3_CM);
+                if(fabsf(2.0f * Meas_ACDC.U_grid.a - U_grid_last.a) < 1.0f) GPIO_SET(C_SS_RLY_L1_CM), SSR_A_done = 1.0f;
+                if(fabsf(2.0f * Meas_ACDC.U_grid.b - U_grid_last.b) < 1.0f) GPIO_SET(C_SS_RLY_L2_CM), SSR_B_done = 1.0f;
+                if(fabsf(2.0f * Meas_ACDC.U_grid.c - U_grid_last.c) < 1.0f) GPIO_SET(C_SS_RLY_L3_CM), SSR_C_done = 1.0f;
             }
 
-            if (counter_ss > 0.6f - 0.016f)
+            U_grid_last.a = Meas_ACDC.U_grid.a;
+            U_grid_last.b = Meas_ACDC.U_grid.b;
+            U_grid_last.c = Meas_ACDC.U_grid.c;
+
+            if(SSR_A_done * SSR_B_done * SSR_C_done)
             {
-                GPIO_CLEAR(C_SSR_CM);
+                counter_ss2 += Conv.Ts;
+//                if (counter_ss2 > 0.5f)
+//                {
+//                    GPIO_SET(GR_RLY_L1_CM);
+//                    GPIO_SET(GR_RLY_L2_CM);
+//                    GPIO_SET(GR_RLY_L3_CM);
+//                    if(!Conv.no_neutral) GPIO_SET(GR_RLY_N_CM);
+//                }
+
+//                if (counter_ss2 > 1.0f)
+//                {
+//                    Conv.state++;
+//                }
             }
 
-            if (counter_ss > 1.0f)
-            {
-                GPIO_SET(GR_RLY_L1_CM);
-                GPIO_SET(GR_RLY_L2_CM);
-                GPIO_SET(GR_RLY_L3_CM);
-                if(!Conv.no_neutral) GPIO_SET(GR_RLY_N_CM);
-            }
-
-            if (counter_ss > 1.5f)
-            {
-                Conv.state++;
-            }
             break;
         }
         case CONV_active:
