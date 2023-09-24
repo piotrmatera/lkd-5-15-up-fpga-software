@@ -348,6 +348,10 @@ void Converter_calc_slave()
 
 //    Conv.U_dc_ref += Conv.Ts * (1.0f / 0.1f) *(fminf(Conv.U_grid_phph_max + 85.0f, 650.0f) - Conv.U_dc_ref);
 
+    static float operating_last;
+    static float counter_C_ss;
+    counter_C_ss += Conv.Ts;
+
     if (!Conv.enable || (alarm_ACDC.all[0] | alarm_ACDC.all[1] | alarm_ACDC.all[2]))
     {
         GPIO_CLEAR(PWM_EN_CM);
@@ -372,9 +376,16 @@ void Converter_calc_slave()
         Conv.RDY2 = 0.0f;
         Conv.state = CONV_softstart;
         Conv.state_last = CONV_active;
+
+        if(operating_last)
+        {
+            counter_C_ss =
+            operating_last = 0.0f;
+        }
     }
     else
     {
+        operating_last = 1.0f;
         switch (Conv.state)
         {
         case CONV_softstart:
@@ -391,7 +402,7 @@ void Converter_calc_slave()
                 integrated_voltage =
                 counter_ss =
                 counter_ss_last = 0.0f;
-//                GPIO_SET(SS_DClink_CM);
+                GPIO_SET(SS_DClink_CM);
 
                 Conv.state_last = Conv.state;
             }
@@ -402,13 +413,13 @@ void Converter_calc_slave()
 
             current_running_max = fmaxf(current_running_max, integrated_current);
             if(integrated_current < 1.0f) integrated_voltage = 0.0f;
-            if(Conv.U_dc_filter > 0.0f)
+            if(Conv.U_dc_filter > 620.0f && counter_C_ss >= 5.0f)
             {
                 Conv.state++;
             }
             if (counter_ss - counter_ss_last > 1.0f)
             {
-                if ((Meas_ACDC.U_dc > 0.8f*Conv.U_grid_phph_max) && (current_running_max < 20.0f * MATH_SQRT2) && (Grid.average.U_grid_1h > 10.0f)) Conv.state++;
+                if ((Meas_ACDC.U_dc > 0.8f*Conv.U_grid_phph_max) && (current_running_max < 20.0f * MATH_SQRT2) && (Grid.average.U_grid_1h > 10.0f) && (counter_C_ss >= 5.0f)) Conv.state++;
                 current_running_max = 0;
                 counter_ss_last = counter_ss;
             }
@@ -457,18 +468,18 @@ void Converter_calc_slave()
             if(SSR_A_done * SSR_B_done * SSR_C_done)
             {
                 counter_ss2 += Conv.Ts;
-//                if (counter_ss2 > 0.5f)
-//                {
-//                    GPIO_SET(GR_RLY_L1_CM);
-//                    GPIO_SET(GR_RLY_L2_CM);
-//                    GPIO_SET(GR_RLY_L3_CM);
-//                    if(!Conv.no_neutral) GPIO_SET(GR_RLY_N_CM);
-//                }
+                if (counter_ss2 > 0.5f)
+                {
+                    GPIO_SET(GR_RLY_L1_CM);
+                    GPIO_SET(GR_RLY_L2_CM);
+                    GPIO_SET(GR_RLY_L3_CM);
+                    if(!Conv.no_neutral) GPIO_SET(GR_RLY_N_CM);
+                }
 
-//                if (counter_ss2 > 1.0f)
-//                {
-//                    Conv.state++;
-//                }
+                if (counter_ss2 > 1.0f)
+                {
+                    Conv.state++;
+                }
             }
 
             break;

@@ -145,8 +145,8 @@ void Init_class::Variables()
     PLL.Ts = Conv.Ts;
     PLL.PI.Kp = 92.0f;
     PLL.PI.Ts_Ti = PLL.Ts / 0.087f;
-    PLL.PI.lim_H = 400.0f;
-    PLL.PI.lim_L = -400.0f;
+    PLL.PI.lim_H = 440.0f;
+    PLL.PI.lim_L = -440.0f;
 
     float full_OSR_PLL = (Uint16)(0.02f / Conv.Ts + 0.5f);
     float decimation_PLL = 1.0f;
