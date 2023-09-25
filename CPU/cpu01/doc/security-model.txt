@@ -1,0 +1,52 @@
+Model zabezpieczenia FW
+2023-09-25 PR
+
+@CPU01
+- bootloader zajmuje sektory FLASHA, B, C
+- FW jest ³adowany od (wlaczneie) sektora FLASHD
+
+Security Zone 1 obejmuje:
+- wszystkie sektory FLASH, RAMD0 i RAMD1
+- sektory FLASHA,B oraz E,F,G sa EXEONLY - nawet ze strefy Z1 nie mozna czytac z tych sektorów
+
+Poniewaz schronionego RAMu jest niewiele (tylko 4KB), to funkcje wykonywane z RAM sa podzielone na dwie czesci
+1) TI.ramfunc - funkcje chronione i prorgamujace FLASH
+2) T1.ramfunc_unsecure - pozostale
+
+
+
+@CPU02
+- bootloader zajmuje sektory FLASHA, B, C
+- FW jest ³adowany od (wlaczneie) sektora FLASHD
+
+Security Zone 1 obejmuje:
+- wszystkie sektory FLASH, RAMD0 i RAMD1, RAMLS0-5, CLA
+- EXEONLY jest tu nieuzywane
+
+
+PROBLEM
+podczas mergowania pojawilo sie problem z upchnieciem w TI.ramfunc - pojawily sie nowe funkcje, 
+ktore nie mieszcza sie.
+
+pojemnosc RAMD0_1  4096
+wymagane:          5117
+ w tym: funkcje FLASH-API     1635
+        oraz
+            InitFlash 
+            FLASH_class::save_and_check
+            FLASH_class::erase_and_check
+            Fapi_setupBankSectorEnable
+            Fapi_serviceWatchdogTimer
+            Fapi_setupEepromSectorEnable
+            
+Dokladne wymogi sa w oknie MemoryAllocation po kompilacji - Failed Allocation.
+
+ZADANIE
+Nalezy przeniesc taka najmniejsza (i taka ktora moze byc niechroniona przed odczytem) czesc kodu, 
+ktora nie odwoluje sie tresci FLASH do TI.ramfunc_unsecure tak aby pozostale funkcje w RAM zmiescily sie w 4KB.          
+Do TI.ramfunc musza trafic funkcje programowania FLASH oraz funckje, które musz¹ coœ czytac z FLASHa (w tym stale z .econst).            
+        
+
+ 
+
+
