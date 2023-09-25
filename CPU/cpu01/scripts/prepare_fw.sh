@@ -14,7 +14,7 @@ set -e
 include_fpga_bin="yes"
 
 #file_fpga="../../../../fw-lkd-5-15-up-fpga-software/2023-07-22/fpga/FPGA.BIN"
-file_fpga="../../fpga-bitstream/SKJEE_ACDC_override/FPGA.BIN"
+file_fpga="../../fpga-bitstreams/SKJEE_ACDC_override/FPGA.BIN"
 
 build_configuration="Calibration-for-encrypted-fw"
 #build_configuration="Debug-for-encrypted-fw"
