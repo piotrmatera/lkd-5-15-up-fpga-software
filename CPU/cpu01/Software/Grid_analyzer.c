@@ -97,7 +97,7 @@ void CIC1_filter_global_CPU(struct CIC1_global_struct* CIC_global)
     }
 }
 
-#pragma CODE_SECTION(Grid_analyzer_calc, ".TI.ramfunc");
+#pragma CODE_SECTION(Grid_analyzer_calc, ".TI.ramfunc_unsecure");
 void Grid_analyzer_calc()
 {
     CIC1_adaptive2_global_calc_CPU(&CIC1_adaptive2_global__50Hz, Conv.f_filter);
