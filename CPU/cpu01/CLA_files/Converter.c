@@ -497,8 +497,8 @@ void Converter_calc_slave()
 
             if(Conv.RDY2)
             {
-                Meas_ACDC_alarm_L.U_dc = Conv.U_grid_phph_max + 20.0f;//#TODO do zmianyw w finalnej wersji
-//                Meas_alarm_L.U_dc = 670.0f;
+//                Meas_ACDC_alarm_L.U_dc = Conv.U_grid_phph_max + 20.0f;//#TODO do zmianyw w finalnej wersji
+                Meas_ACDC_alarm_L.U_dc = 670.0f;
                 register float Temp_power = 0;
                 Temp_power = fmaxf(Meas_ACDC.Temperature1,  fmaxf(Meas_ACDC.Temperature2, Meas_ACDC.Temperature3));
                 float duty_power = fmaxf(1.0f - fmaxf((Temp_power - (Meas_ACDC_alarm_H.Temp - 5.0f)) * 0.2, 0.0f), 0.0f);

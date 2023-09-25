@@ -91,7 +91,7 @@ void Machine_slave_class::idle()
             static const float delay_table[] =
             {
                  [0] = 0.0f,
-                 [1] = 1e6,
+                 [1] = 0.0f,
                  [2] = 10.0f,
                  [3] = 0.0f,
                  [4] = 60.0f,

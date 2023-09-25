@@ -999,7 +999,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	end 
 	
 	assign Scope_acquire_before_trigger = EMIF_RX_reg[4][DEB_WADDR_WIDTH-1:0];
-	assign Scope_trigger = |FLT_REG_O[15:0]; 
+	assign Scope_trigger = (|FLT_REG_O[15:0]) | EMIF_RX_reg[5][0]; 
 		
 	wire [7:0] PWM_i; 
 	assign Scope_enable = 1'b1; 
