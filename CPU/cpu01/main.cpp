@@ -11,6 +11,9 @@
 
 #include "Init.h"
 #include "HWIs.h"
+
+#include "device_check.h"
+
 #if MERGE_PART
 <<<<<<< HEAD
 =======
@@ -91,6 +94,18 @@ void main()
     EALLOW;
     CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 1;
     EDIS;
+
+    if( is_unprogrammed_device_id() ){
+            programm_device_id();
+
+            if( !is_correct() ){
+
+                GPIO_Setup(LED1_CM);
+                GPIO_WRITE( LED1_CM, 1 );
+                while(1){};
+            }
+
+     }
 
 //    static volatile Uint16 go_on1 = 0;
 //    while(!go_on1);

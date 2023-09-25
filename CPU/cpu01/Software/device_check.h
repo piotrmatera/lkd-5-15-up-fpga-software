@@ -32,6 +32,14 @@ static inline int is_correct( void ){
     return 1;
 }
 
+static inline int is_unprogrammed_device_id(void){
+    if( ((Uint32*)HASHED_DEVICE_ID_LOCATION)[0] != 0xFFFFFFFFUL )
+        return 0;
+    if( ((Uint32*)HASHED_DEVICE_ID_LOCATION)[1] != 0xFFFFFFFFUL )
+        return 0;
+    return 1;
+}
 
+void programm_device_id(void);
 
 #endif /* SOFTWARE_DEVICE_CHECK_H_ */
