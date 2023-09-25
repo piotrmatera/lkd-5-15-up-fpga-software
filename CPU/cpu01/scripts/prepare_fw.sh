@@ -13,6 +13,12 @@ set -e
 #include_fpga_bin="no"
 include_fpga_bin="yes"
 
+#file_fpga="../../../../fw-lkd-5-15-up-fpga-software/2023-07-22/fpga/FPGA.BIN"
+file_fpga="../../fpga-bitstream/SKJEE_ACDC_override/FPGA.BIN"
+
+build_configuration="Calibration-for-encrypted-fw"
+#build_configuration="Debug-for-encrypted-fw"
+
 if [ "$include_fpga_bin" = "yes" ];then
         echo_txt="z bitstreamem dla FPGA"
 else
@@ -42,12 +48,10 @@ if [ ! -f ./scripts/prepare_fw.sh ]; then
 fi
 
 fw_file="lkd.fw"
-files_to_copy="./Debug-for-encrypted-fw/$fw_file"
-file_cpu01="Debug-for-encrypted-fw/cpu01.hex "
-file_cpu02="../cpu02/Debug-for-encrypted-fw/cpu02.hex"
-if [ "$include_fpga_bin" = "yes" ];then
-        file_fpga="../../../../fw-lkd-5-15-up-fpga-software/2023-07-22/fpga/FPGA.BIN"
-else
+files_to_copy="./$build_configuration/$fw_file"
+file_cpu01="$build_configuration/cpu01.hex"
+file_cpu02="../cpu02/$build_configuration/cpu02.hex"
+if [ ! "$include_fpga_bin" = "yes" ];then       
         file_fpga="./scripts/empty-fpga.bin"
 fi
 
