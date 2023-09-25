@@ -137,7 +137,14 @@ union Bufor {
 const Uint32 magic_value32 = 0xAAAA5555;
 
 #pragma CODE_SECTION(".TI.ramfunc");
-void FLASH_class::erase()
+void FLASH_class::erase_and_check(Uint32 sector_start_address) const{
+    EALLOW;
+    Fapi_issueAsyncCommandWithAddress(Fapi_EraseSector,(Uint32 *)sector_start_address);
+    while(Fapi_checkFsmForReady() != Fapi_Status_FsmReady){}
+    EDIS;
+}
+
+void FLASH_class::erase(void) const
 {
     SeizeFlashPump();
 
@@ -158,15 +165,17 @@ void FLASH_class::erase()
             return;
         }
 
-        EALLOW;
-        Fapi_issueAsyncCommandWithAddress(Fapi_EraseSector,(Uint32 *)Sector_start_address[sector]);
-        while(Fapi_checkFsmForReady() != Fapi_Status_FsmReady){}
-        EDIS;
+        erase_and_check( Sector_start_address[sector] );
     }
 }
 
 #pragma CODE_SECTION(".TI.ramfunc");
-void FLASH_class::save()
+void FLASH_class::save_and_check( void * bufor_FLASH, Uint16 * bufor) const{
+   Fapi_issueProgrammingCommand((Uint32 *)bufor_FLASH, bufor,8,0,0,Fapi_AutoEccGeneration);
+   while(Fapi_checkFsmForReady() == Fapi_Status_FsmBusy);
+}
+
+void FLASH_class::save(void) const
 {
     union Bufor bufor_RAM;
     union Bufor *bufor_FLASH;
@@ -189,6 +198,12 @@ void FLASH_class::save()
         bufor_RAM.list.next = bufor_FLASH + size128 + 1;
     }
 
+    EALLOW;
+    //DCSM_COMMON_REGS.FLSEM (offset=0)
+    // operacje kasowania i programowania dozwolone ze strefy 1 (Security Zone 1)
+    *(uint32_t*)0x0005F070 = 0xa501;
+    EDIS;
+
     if(bufor_FLASH == NULL ||  bufor_RAM.list.next > (union Bufor *)Sector_end_address[sector])
     {
         erase();
@@ -202,8 +217,7 @@ void FLASH_class::save()
     Fapi_initializeAPI(F021_CPU0_W0_BASE_ADDRESS, 200);
     Fapi_setActiveFlashBank(Fapi_FlashBank0);
 
-    Fapi_issueProgrammingCommand((Uint32 *)bufor_FLASH,bufor_RAM.bit16,8,0,0,Fapi_AutoEccGeneration);
-    while(Fapi_checkFsmForReady() == Fapi_Status_FsmBusy);
+    save_and_check( bufor_FLASH, bufor_RAM.bit16 );
     bufor_FLASH++;
 
     Uint32 size16_counter = 0;
@@ -234,9 +248,16 @@ void FLASH_class::save()
     }
     EDIS;
     ReleaseFlashPump();
+
+    EALLOW;
+    //DCSM_COMMON_REGS.FLSEM (offset=0)
+    // operacje kasowania i programowania dozwolone z dowolnego miejsca
+    // ale aby zmienaic strefe Z1 trzeba byc w strefie Z1
+    *(uint32_t*)0x0005F070 = 0xa500;
+    EDIS;
 }
 
-Uint16 FLASH_class::retrieve(Uint16 offset_from_last)
+Uint16 FLASH_class::retrieve(Uint16 offset_from_last) const
 {
     Uint16 *bufor_FLASH = find(offset_from_last);
 
@@ -252,10 +273,9 @@ Uint16 FLASH_class::retrieve(Uint16 offset_from_last)
     return 0;
 }
 
-Uint16 *FLASH_class::find(Uint16 offset_from_last)
+Uint16 *FLASH_class::find(Uint16 offset_from_last) const
 {
     union Bufor *bufor_FLASH = (union Bufor *)(Sector_start_address[sector]);
-    sector_address = (Uint16 *)bufor_FLASH;
 
     if(bufor_FLASH->list.magic != magic_value32) return NULL;
 
@@ -277,7 +297,6 @@ Uint16 *FLASH_class::find(Uint16 offset_from_last)
         bufor_FLASH = bufor_FLASH_temp;
     }
 
-    next_address = (Uint16 *)bufor_FLASH->list.next;
 
     while(offset_from_last--)
     {

@@ -11,6 +11,37 @@
 
 #include "Init.h"
 #include "HWIs.h"
+#if MERGE_PART
+<<<<<<< HEAD
+=======
+#include "State.h"
+#include "ff.h"
+#include "Rtc.h"
+#include "diskio.h"
+#include "Software/driver_mosfet/MosfetDriver.h"
+#include "MosfetCtrlApp.h"
+#include "math.h"
+
+Rtc rtc;
+FATFS fs;           /* Filesystem object */
+MosfetCtrlApp mosfet_ctrl_app;
+int32 SD_phase = -500;
+
+#pragma CODE_SECTION(".TI.ramfunc_unsecure");
+//#pragma CODE_SECTION(".TI.ramfunc");
+void block_in_ram(){
+    while(1){
+    asm (" nop ");
+    }
+}
+
+#pragma CODE_SECTION(".TI.ramfunc");
+interrupt void NMI_INT()
+{
+    ESTOP0;
+}
+>>>>>>> dev-pr-fw-protected
+#endif
 
 void main()
 {
@@ -19,6 +50,16 @@ void main()
     EDIS;
 
     DINT;
+
+    // ponizsze wlaczane w FLASH.cpp (save fn), dopiero jak bedzie potrzebne
+    // aby nie zezwolic wywolania fn prorgamowania z niezabezp. czesci
+//    EALLOW;
+//    //DCSM_COMMON_REGS.FLSEM (offset=0)
+//    // operacje kasowania i programowania dozwolone ze strefy 1 (Security Zone 1)
+//    //*(uint32_t*)0x0005F070 = 0xa501;
+//    EDIS;
+
+    // block_in_ram();
 
     while(!GPIO_READ(FPGA_DONE));
 
@@ -89,5 +130,6 @@ void main()
         static volatile float benchmark;
         benchmark = (float)(ReadIpcTimer() - benchmark_timer)*(1.0f/200000000.0f);
         benchmark_timer = ReadIpcTimer();
+        // block_in_ram();
     }
 }

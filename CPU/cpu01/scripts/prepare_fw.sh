@@ -7,16 +7,31 @@
 # wynik w podkatalogu wzgl. powyzszego
 #  ../../../fw/<data>/<sha>
 #
-echo Uzyj skryptu z katalogu kompensator-25kvar/CPU/scripts/prepare_fw.sh
-exit 0
 
 set -e 
 
+#include_fpga_bin="no"
+include_fpga_bin="yes"
+
+if [ "$include_fpga_bin" = "yes" ];then
+        echo_txt="z bitstreamem dla FPGA"
+else
+        echo_txt=" >>> BEZ BITSTREAMu dla FPGA <<<"
+fi
+        
+        
 if [ $# -ne 1 ]; then
-        echo "prepare_fw.sh - skrypt do przygotowania firmwaru kompensatora"
+        echo "prepare_fw.sh - skrypt do przygotowania zaszyfowanego pakietu firmwaru kompensatora"
 	echo ' uzycie:'
         echo '  ./scripts/prepare_fw.sh confirm'
-        echo	
+        echo "obecna konfiguracja: $echo_txt"
+        echo 'aby dodac bitsteram dla fpga wskaz w tym skrypcie lokalizacje fpga.bin'
+        echo ' '
+        echo "Kolejnosc operacji:"
+        echo "1. zatwierdzenie do repozytorium zmian w zrodlach"
+        echo "2. zbudowanie plikow FW (hexy)"
+        echo "3. uruchomienie tego skryptu do przygotowania pakietu z FW"
+        echo "UWAGA! Ten skrypt ni ewykryje jesli bedzie wykonane [1] ale nie [2]!"
 	exit 1
 fi
 
@@ -26,21 +41,26 @@ if [ ! -f ./scripts/prepare_fw.sh ]; then
 	exit 3
 fi
 
-files_to_copyTI="./DebugTI/cpu01.hex ../cpu02/DebugTI/cpu02.hex "
-files_to_copyINFI="./DebugINFI/cpu01.hex ../cpu02/DebugINFI/cpu02.hex "
+fw_file="lkd.fw"
+files_to_copy="./Debug-for-encrypted-fw/$fw_file"
+file_cpu01="Debug-for-encrypted-fw/cpu01.hex "
+file_cpu02="../cpu02/Debug-for-encrypted-fw/cpu02.hex"
+if [ "$include_fpga_bin" = "yes" ];then
+        file_fpga="../../../../fw-lkd-5-15-up-fpga-software/2023-07-22/fpga/FPGA.BIN"
+else
+        file_fpga="./scripts/empty-fpga.bin"
+fi
+
 
 dt=$( date +%Y-%m-%d )
 tm=$( date +%H:%M:%S )
 
-publish_prefix=../../../fw
+publish_prefix=../../../../fw-lkd-5-15-up-fpga-software
 publish_dir_day=$publish_prefix/$dt
 
 if [ ! -d "$publish_dir_day" ]; then 
 	mkdir $publish_dir_day
 fi
-
-
-
 
 
 
@@ -81,10 +101,21 @@ fi
 
 echo $publish_dir
 
-mkdir -p $publish_dir/TI/
-mkdir -p $publish_dir/INFI
-cp $files_to_copyTI   $publish_dir/TI/
-cp $files_to_copyINFI $publish_dir/INFI/
+echo "Budowanie pakietu LKD.FW $echo_txt"
+echo "===================================================================="
+../../../bootloader/cpu01/scripts/create-encrypted-fw.sh $file_cpu01 $file_cpu02 $file_fpga |tee $publish_dir/pkg-build.log
+
+if [ $? -ne 0 ]; then 
+        echo "BLAD !!!"
+        exit 0; 
+fi
+echo "===================================================================="
+
+mkdir -p $publish_dir/
+cp $files_to_copy   $publish_dir/
+ls -sla $publish_dir/$fw_file
+echo 
+
 readme_file=$publish_dir/gitlog.txt 
 
 echo "-----------------------------" >> $readme_file

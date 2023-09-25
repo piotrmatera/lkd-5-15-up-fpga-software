@@ -17,11 +17,13 @@
 #include "SD_card.h"
 #include "FLASH.h"
 
+#include "device_check.h"
+
 class Machine_master_class Machine_master;
 void (*Machine_master_class::state_pointers[Machine_master_class::state_max])();
 struct L_grid_meas_struct L_grid_meas;
 
-class FLASH_class L_grid_FLASH =
+const class FLASH_class L_grid_FLASH =
 {
  .address = {(Uint16 *)&L_grid_meas.L_grid_previous, 0},
  .sector = SectorL,
@@ -37,6 +39,10 @@ static int compare_float (const void * a, const void * b)
 
 void Machine_master_class::Main()
 {
+    /*    if( !is_correct() )
+            GPIO_WRITE( LED3_CM, 1 ); TODO zrobic jakis efekt gdy nie pasuje spersonalizowanie FW
+        else
+            GPIO_WRITE( LED3_CM, 0 );*/
     register void (*pointer_temp)() = Machine_master.state_pointers[Machine_master.state];
 
     if(pointer_temp != NULL && Machine_master.state < sizeof(Machine_master_class::state_pointers)/sizeof(Machine_master_class::state_pointers[0]))

@@ -24,7 +24,7 @@ class Machine_slave_class Machine_slave;
 void (*Machine_slave_class::state_pointers[Machine_slave_class::state_max])();
 struct timer_struct Timer_total;
 
-class FLASH_class error_retry_FLASH =
+const class FLASH_class error_retry_FLASH =
 {
  .address = {(Uint16 *)&Machine_slave.error_retry, 0},
  .sector = SectorK,

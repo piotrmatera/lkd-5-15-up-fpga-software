@@ -125,7 +125,7 @@ struct ONOFF_struct
 };
 
 extern struct ONOFF_struct ONOFF;
-extern class FLASH_class switch_FLASH;
+extern const class FLASH_class switch_FLASH;
 
 void ONOFF_switch_interrupt();
 

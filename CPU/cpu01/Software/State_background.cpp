@@ -41,7 +41,7 @@ class Background_class Background;
 struct CT_calc_struct CT_char_vars;
 struct ONOFF_struct ONOFF;
 
-class FLASH_class switch_FLASH =
+const class FLASH_class switch_FLASH =
 {
  .address = {(Uint16 *)&ONOFF.ONOFF_FLASH, 0},
  .sector = SectorM,
@@ -411,14 +411,16 @@ void Blink()
     if(status_ACDC.wifi_on) Blink_LED5.update_pattern(true);
     else Blink_LED5.update_pattern(false);
 
+#if !DBG_AT_GPIO
     GPIO_WRITE(LED1_CM, Blink_LED1.task());
     GPIO_WRITE(LED2_CM, Blink_LED2.task());
     GPIO_WRITE(LED3_CM, Blink_LED3.task());
     GPIO_WRITE(LED4_CM, Blink_LED4.task());
     GPIO_WRITE(LED5_CM, Blink_LED5.task());
+#endif
 }
 
-#pragma CODE_SECTION(".TI.ramfunc");
+#pragma CODE_SECTION(".TI.ramfunc_unsecure");
 void ONOFF_switch_interrupt()
 {
     float switch_timer_temp = ONOFF.switch_timer;

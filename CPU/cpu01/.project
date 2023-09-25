@@ -3,6 +3,7 @@
 	<name>SKJEE_cpu01</name>
 	<comment></comment>
 	<projects>
+		<project>SKJEE_cpu02</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

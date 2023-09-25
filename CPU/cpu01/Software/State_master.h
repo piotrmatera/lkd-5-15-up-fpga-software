@@ -68,7 +68,7 @@ struct L_grid_meas_struct
     struct abc_struct CT_gain_rounded;
 };
 
-extern class FLASH_class L_grid_FLASH;
+extern const class FLASH_class L_grid_FLASH;
 extern struct L_grid_meas_struct L_grid_meas;
 
 #endif /* SOFTWARE_STATE_MASTER_H_ */

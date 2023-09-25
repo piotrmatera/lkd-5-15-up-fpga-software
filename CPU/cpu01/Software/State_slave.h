@@ -82,6 +82,6 @@ void timer_update(struct timer_struct *Timer, Uint16 enable_counting);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern class FLASH_class error_retry_FLASH;
+extern const class FLASH_class error_retry_FLASH;
 
 #endif /* SOFTWARE_STATE_SLAVE_H_ */

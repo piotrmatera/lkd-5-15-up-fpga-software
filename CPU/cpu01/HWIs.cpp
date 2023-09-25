@@ -17,7 +17,7 @@
 #include "SD_card.h"
 #include "Modbus_devices.h"
 
-#pragma CODE_SECTION(".TI.ramfunc");
+#pragma CODE_SECTION(".TI.ramfunc_unsecure");
 interrupt void SD_AVG_INT()
 {
     Timer_PWM.CPU_SD = TIMESTAMP_PWM;
