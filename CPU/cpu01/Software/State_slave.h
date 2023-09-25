@@ -24,6 +24,7 @@ class Machine_slave_class
         state_start,
         state_operational,
         state_cleanup,
+        state_relays_test,
         state_max,
         __dummybig_state = 300000
     };
@@ -43,6 +44,7 @@ class Machine_slave_class
         state_pointers[state_start] = &Machine_slave_class::start;
         state_pointers[state_operational] = &Machine_slave_class::operational;
         state_pointers[state_cleanup] = &Machine_slave_class::cleanup;
+        state_pointers[state_relays_test] = &Machine_slave_class::relays_test;
 
         for(Uint16 i = 0; i < state_max; i++)
             if(Machine_slave_class::state_pointers[i] == NULL) ESTOP0;
@@ -57,6 +59,7 @@ class Machine_slave_class
     static void start();
     static void operational();
     static void cleanup();
+    static void relays_test();
 
     static void (*state_pointers[state_max])();
 };

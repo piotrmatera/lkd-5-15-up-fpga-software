@@ -844,7 +844,24 @@ void Background_class::init()
 
     status_ACDC.Init_done = 1;
     Machine_slave.recent_error = 1;
+
+#if FW_FOR_CALIBRATION
+    if( !SD_card.calibration.available ){
+        Machine_slave.state = Machine_slave_class::state_relays_test;
+        //rekonfiguracja GPIO aby mozna z CPU1 sterowac przekaznikami ++++++++++++++++
+        //
+        // normalnie:
+        // 1. liniami do przekaznikow steruje CLA1
+
+        Cpu01_relays_control();
+
+    }else{
+        Machine_slave.state = Machine_slave_class::state_idle;
+    }
+#else
     Machine_slave.state = Machine_slave_class::state_idle;
+#endif
+
 }
 
 void Background_class::Main()

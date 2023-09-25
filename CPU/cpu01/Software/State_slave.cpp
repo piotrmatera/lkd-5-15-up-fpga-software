@@ -73,6 +73,38 @@ void Machine_slave_class::Main()
     }
 }
 
+void Machine_slave_class::relays_test()
+{
+    //wlacza i wylacza po kolei przekazniki (beda slyszalne N podwojnych klikniec)
+    //
+
+//        GPIO_CLEAR( RELAY_EN );
+
+        if(ONOFF.ONOFF){
+            Setup_again_normal_relays_control();
+            Machine_slave.state = state_idle;
+            return;
+        }
+
+        static Uint16 relay = 0;
+
+        Uint16 p = relays_pin[relay/2];
+        if( relay&1 )
+            GPIO_CLEAR( p );
+        else
+            GPIO_SET( p );
+
+        relay++;
+        if( relay >= (relays_nb*2) ) {
+            relay = 0;
+            DELAY_US(500000);
+        }
+
+        DELAY_US(100000);
+
+
+}
+
 void Machine_slave_class::idle()
 {
     static Uint64 delay_timer;
@@ -131,6 +163,7 @@ void Machine_slave_class::calibrate_offsets()
 {
     if(Machine_slave.state_last != Machine_slave.state)
     {
+        dbg_printf("\r\nKalibracja ofsetu zera \r\n");
         Machine_slave.state_last = Machine_slave.state;
     }
 
