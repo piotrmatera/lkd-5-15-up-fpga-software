@@ -46,6 +46,11 @@ Nalezy przeniesc taka najmniejsza (i taka ktora moze byc niechroniona przed odcz
 ktora nie odwoluje sie tresci FLASH do TI.ramfunc_unsecure tak aby pozostale funkcje w RAM zmiescily sie w 4KB.          
 Do TI.ramfunc musza trafic funkcje programowania FLASH oraz funckje, które musz¹ coœ czytac z FLASHa (w tym stale z .econst).            
         
+UWAGI
+-----
+1. po przeniesieniu parametrow nieulotnych z pamieci FLASH do zewn. EEPROMu bedzie mozna usunac funkcje prorgamwoania do FLASH,
+dzieki czemu zwolni sie duzo chronionej pamieci RAM. Klasy sa gotowe, maja interfejs API jak obecna klasa Flash_class. 
+Niezbedne jest zmergowanie z obecnym kodem oraz dopasowanie do nowego, wiekszego eepromu (512; trzeba dodac dodatkowy bajt adresu)
 
  
 
