@@ -28,6 +28,8 @@
 #include "Fiber_comm_slave.h"
 
 #include "MosfetCtrlApp.h"
+#include "dbg_calibration.h"
+
 
 FATFS fs;           /* Filesystem object */
 MosfetCtrlApp mosfet_ctrl_app;
@@ -739,8 +741,12 @@ void Background_class::init()
     RTU_EXT_parameters.TX_pin = TX_Mod_2_CM;
     RTU_EXT_parameters.SciRegs = &ScidRegs;
     RTU_EXT_parameters.ECapRegs = &ECap2Regs;
+#if FW_FOR_CALIBRATION
+    RTU_EXT_parameters.baudrate = 9600;
+#else
     if(SD_card.settings.Baudrate >= 9600) RTU_EXT_parameters.baudrate = SD_card.settings.Baudrate;
     else RTU_EXT_parameters.baudrate = 9600;
+#endif
     Modbus_slave_EXT.RTU->init(&RTU_EXT_parameters);
 
     Modbus_RTU_class::Modbus_RTU_parameters_struct RTU_FIBER_parameters;
@@ -797,6 +803,8 @@ void Background_class::init()
     DELAY_US(1000);
 
     GPIO_CLEAR(RST_CM);
+
+    dbg_printf("\r\nKalibracja V.1.0\r\n");
 
     EALLOW;
     Cla1Regs.MIER.bit.INT2 =

@@ -20,6 +20,8 @@
 
 #include "MosfetCtrlApp.h"
 
+#include "dbg_calibration.h"
+
 class Machine_slave_class Machine_slave;
 void (*Machine_slave_class::state_pointers[Machine_slave_class::state_max])();
 struct timer_struct Timer_total;
@@ -201,18 +203,40 @@ void Machine_slave_class::calibrate_offsets()
         Meas_ACDC_offset_error.U_grid.b = fabsf(Meas_ACDC_offset.U_grid.b * Meas_ACDC_gain.U_grid.b);
         Meas_ACDC_offset_error.U_grid.c = fabsf(Meas_ACDC_offset.U_grid.c * Meas_ACDC_gain.U_grid.c);
 
-        if (Meas_ACDC_offset_error.I_grid.a > 0.05f ||
-            Meas_ACDC_offset_error.I_grid.b > 0.05f ||
-            Meas_ACDC_offset_error.I_grid.c > 0.05f ||
-            Meas_ACDC_offset_error.U_grid.a > 2.0f ||
-            Meas_ACDC_offset_error.U_grid.b > 2.0f ||
-            Meas_ACDC_offset_error.U_grid.c > 2.0f ||
-            Meas_ACDC_offset_error.I_conv.a > 0.1f ||
-            Meas_ACDC_offset_error.I_conv.b > 0.1f ||
-            Meas_ACDC_offset_error.I_conv.c > 0.1f ||
-            Meas_ACDC_offset_error.I_conv.n > 0.1f ||
-            Meas_ACDC_offset_error.U_dc_n > 1.0f ||
-            Meas_ACDC_offset_error.U_dc > 1.0f)
+#define IGRID_THR 0.05f
+#define UGRID_THR 2.0f
+#define ICONV_THR 0.1f
+#define UDC_THR 1.0f
+
+        dbg_printf("\r\nKalibracja ofsetu zera \r\n");
+        dbg_printf("\r\nOffset I_grid a - %f (%.2f)", Meas_ACDC_offset_error.I_grid.a, IGRID_THR);
+        dbg_printf("\r\nOffset I_grid b - %f (%.2f)", Meas_ACDC_offset_error.I_grid.b, IGRID_THR);
+        dbg_printf("\r\nOffset I_grid c - %f (%.2f)", Meas_ACDC_offset_error.I_grid.c, IGRID_THR);
+
+        dbg_printf("\r\nOffset U_grid a - %f (%.2f)", Meas_ACDC_offset_error.U_grid.a, UGRID_THR);
+        dbg_printf("\r\nOffset U_grid b - %f (%.2f)", Meas_ACDC_offset_error.U_grid.b, UGRID_THR);
+        dbg_printf("\r\nOffset U_grid c - %f (%.2f)", Meas_ACDC_offset_error.U_grid.c, UGRID_THR);
+
+        dbg_printf("\r\nOffset I_conv a - %f (%.2f)", Meas_ACDC_offset_error.I_conv.a, ICONV_THR);
+        dbg_printf("\r\nOffset I_conv b - %f (%.2f)", Meas_ACDC_offset_error.I_conv.b, ICONV_THR);
+        dbg_printf("\r\nOffset I_conv c - %f (%.2f)", Meas_ACDC_offset_error.I_conv.c, ICONV_THR);
+        dbg_printf("\r\nOffset I_conv n - %f (%.2f)", Meas_ACDC_offset_error.I_conv.n, ICONV_THR);
+
+        dbg_printf("\r\nOffset U_dc_n - %f (%.1f)", Meas_ACDC_offset_error.U_dc_n,  UDC_THR);
+        dbg_printf("\r\nOffset U dc   - %f (%.1f)", Meas_ACDC_offset_error.U_dc, UDC_THR);
+
+        if (Meas_ACDC_offset_error.I_grid.a > IGRID_THR ||
+            Meas_ACDC_offset_error.I_grid.b > IGRID_THR ||
+            Meas_ACDC_offset_error.I_grid.c > IGRID_THR ||
+            Meas_ACDC_offset_error.U_grid.a > UGRID_THR ||
+            Meas_ACDC_offset_error.U_grid.b > UGRID_THR ||
+            Meas_ACDC_offset_error.U_grid.c > UGRID_THR ||
+            Meas_ACDC_offset_error.I_conv.a > ICONV_THR ||
+            Meas_ACDC_offset_error.I_conv.b > ICONV_THR ||
+            Meas_ACDC_offset_error.I_conv.c > ICONV_THR ||
+            Meas_ACDC_offset_error.I_conv.n > ICONV_THR ||
+            Meas_ACDC_offset_error.U_dc_n > UDC_THR ||
+            Meas_ACDC_offset_error.U_dc > UDC_THR)
         {
             status_ACDC.calibration_procedure_error = 1;
         }
@@ -308,13 +332,27 @@ void Machine_slave_class::calibrate_curent_gain()
             Meas_ACDC_gain_error.I_conv.c = fabsf((Meas_ACDC_gain.I_conv.c/mean_gain_meas) - 1.0f);
 //            Meas_master_gain_error.I_conv.n = fabsf((Meas_master_gain.I_conv.n/mean_gain_meas) - 1.0f);
 
-            if (Meas_ACDC_gain_error.I_grid.a > 0.03f ||
-                Meas_ACDC_gain_error.I_grid.b > 0.03f ||
-                Meas_ACDC_gain_error.I_grid.c > 0.03f ||
-                Meas_ACDC_gain_error.I_conv.a > 0.03f ||
-                Meas_ACDC_gain_error.I_conv.b > 0.03f ||
-                Meas_ACDC_gain_error.I_conv.c > 0.03f ||
-                Meas_ACDC_gain_error.I_conv.n > 0.03f)
+#define G_IGRID_THR 0.03f
+#define G_ICONV_THR 0.03f
+
+            dbg_printf("\r\nKalibracja wzmocnienia \r\n");
+            dbg_printf("\r\nGain I_grid a - %f (%.2f)", Meas_ACDC_gain_error.I_grid.a, G_IGRID_THR);
+            dbg_printf("\r\nGain I_grid b - %f (%.2f)", Meas_ACDC_gain_error.I_grid.b, G_IGRID_THR);
+            dbg_printf("\r\nGain I_grid c - %f (%.2f)", Meas_ACDC_gain_error.I_grid.c, G_IGRID_THR);
+
+            dbg_printf("\r\nGain I_conv a - %f (%.2f)", Meas_ACDC_gain_error.I_conv.a, G_ICONV_THR);
+            dbg_printf("\r\nGain I_conv b - %f (%.2f)", Meas_ACDC_gain_error.I_conv.b, G_ICONV_THR);
+            dbg_printf("\r\nGain I_conv c - %f (%.2f)", Meas_ACDC_gain_error.I_conv.c, G_ICONV_THR);
+            dbg_printf("\r\nGain I_conv n - %f (%.2f)", Meas_ACDC_gain_error.I_conv.n, G_ICONV_THR);
+
+
+            if (Meas_ACDC_gain_error.I_grid.a > G_IGRID_THR ||
+                Meas_ACDC_gain_error.I_grid.b > G_IGRID_THR ||
+                Meas_ACDC_gain_error.I_grid.c > G_IGRID_THR ||
+                Meas_ACDC_gain_error.I_conv.a > G_ICONV_THR ||
+                Meas_ACDC_gain_error.I_conv.b > G_ICONV_THR ||
+                Meas_ACDC_gain_error.I_conv.c > G_ICONV_THR ||
+                Meas_ACDC_gain_error.I_conv.n > G_ICONV_THR)
             {
                 status_ACDC.calibration_procedure_error = 1;
             }
@@ -377,9 +415,16 @@ void Machine_slave_class::calibrate_AC_voltage_gain()
             Meas_ACDC_gain_error.U_grid.b = fabsf((Meas_ACDC_gain.U_grid.b/SD_card.calibration.Meas_ACDC_gain.U_grid.b) - 1.0f);
             Meas_ACDC_gain_error.U_grid.c = fabsf((Meas_ACDC_gain.U_grid.c/SD_card.calibration.Meas_ACDC_gain.U_grid.c) - 1.0f);
 
-            if (Meas_ACDC_gain_error.U_grid.a > 0.03f ||
-                Meas_ACDC_gain_error.U_grid.b > 0.03f ||
-                Meas_ACDC_gain_error.U_grid.c > 0.03f)
+#define G_UGRID_THR 0.03f
+            dbg_printf("\r\nKalibracja wzmocnienia AC\r\n");
+            dbg_printf("\r\nGain U_grid a - %f (%.2f)", Meas_ACDC_gain_error.U_grid.a, G_UGRID_THR);
+            dbg_printf("\r\nGain U_grid b - %f (%.2f)", Meas_ACDC_gain_error.U_grid.b, G_UGRID_THR);
+            dbg_printf("\r\nGain U_grid c - %f (%.2f)", Meas_ACDC_gain_error.U_grid.c, G_UGRID_THR);
+
+
+            if (Meas_ACDC_gain_error.U_grid.a > G_UGRID_THR ||
+                Meas_ACDC_gain_error.U_grid.b > G_UGRID_THR ||
+                Meas_ACDC_gain_error.U_grid.c > G_UGRID_THR)
             {
                 status_ACDC.calibration_procedure_error = 1;
             }
@@ -435,8 +480,13 @@ void Machine_slave_class::calibrate_DC_voltage_gain()
             Meas_ACDC_gain_error.U_dc = fabsf((Meas_ACDC_gain.U_dc/SD_card.calibration.Meas_ACDC_gain.U_dc) - 1.0f);
             Meas_ACDC_gain_error.U_dc_n = fabsf((Meas_ACDC_gain.U_dc_n/SD_card.calibration.Meas_ACDC_gain.U_dc_n) - 1.0f);
 
-            if (Meas_ACDC_gain_error.U_dc_n > 0.03f ||
-                Meas_ACDC_gain_error.U_dc > 0.03f)
+#define G_UDC_THR 0.03f
+            dbg_printf("\r\nKalibracja wzmocnienia DC\r\n");
+            dbg_printf("\r\nGain U_dc - %f (%.2f)", Meas_ACDC_gain_error.U_dc, G_UDC_THR);
+            dbg_printf("\r\nGain U_dc_n - %f (%.2f)", Meas_ACDC_gain_error.U_dc_n, G_UDC_THR);
+
+            if (Meas_ACDC_gain_error.U_dc_n > G_UDC_THR ||
+                Meas_ACDC_gain_error.U_dc > G_UDC_THR)
             {
                 status_ACDC.calibration_procedure_error = 1;
             }
