@@ -11,6 +11,7 @@ extern unsigned start_code;//ze skryptu linkera
 
 /*__attribute__ ((section(".code_id"))) TODO dobrze byloby to umiescic pod stalym ofsetem od poczatku FW
  * na razie jest wzor ktory mozna rozpoznac*/
+__attribute__ (( aligned(64) ))
 const struct fw_id_descriptor_s fw_descriptor={
     { 0xcafe, 0xdead },
 	(uint32_t)&start_code,
