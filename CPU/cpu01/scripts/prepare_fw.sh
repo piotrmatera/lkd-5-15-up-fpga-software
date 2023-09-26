@@ -64,6 +64,7 @@ fi
 
 if [ "$build_type" = "calib" ]; then 
         build_configuration="Calibration-for-encrypted-fw"
+        mode_suffix="-calib"
 elif [ "$build_type" = "normal" ]; then 
         build_configuration="Debug-for-encrypted-fw"
 fi
@@ -121,7 +122,7 @@ fi
 
 
 
-publish_dir=$publish_dir_day/$rt_sha_short
+publish_dir=$publish_dir_day/${rt_sha_short}$mode_suffix
 
 if [ ! -d "$publish_dir" ]; then 
 	mkdir $publish_dir
