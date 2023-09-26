@@ -14,10 +14,12 @@ set -e
 include_fpga_bin="yes"
 
 #file_fpga="../../../../fw-lkd-5-15-up-fpga-software/2023-07-22/fpga/FPGA.BIN"
-file_fpga="../../fpga-bitstreams/SKJEE_ACDC_override/FPGA.BIN"
+# dla calib
+#file_fpga="../../fpga-bitstreams/SKJEE_ACDC_override/FPGA.BIN"
+# dla normal
+#file_fpga="../../fpga-bitstreams/SKJEE_ACDC/FPGA.BIN"
 
-build_configuration="Calibration-for-encrypted-fw"
-#build_configuration="Debug-for-encrypted-fw"
+
 
 if [ "$include_fpga_bin" = "yes" ];then
         echo_txt="z bitstreamem dla FPGA"
@@ -26,18 +28,19 @@ else
 fi
         
         
-if [ $# -ne 1 ]; then
+if [ $# -ne 3 ]; then
         echo "prepare_fw.sh - skrypt do przygotowania zaszyfowanego pakietu firmwaru kompensatora"
 	echo ' uzycie:'
-        echo '  ./scripts/prepare_fw.sh confirm'
+        echo '  ./scripts/prepare_fw.sh confirm build-type fpga-bin'
         echo "obecna konfiguracja: $echo_txt"
-        echo 'aby dodac bitsteram dla fpga wskaz w tym skrypcie lokalizacje fpga.bin'
+        echo 'build-type = calib|normal'
+        echo 'fpga-bin plik dla FPGA (mozna podac pusty plik aby nie byl wlaczony)'
         echo ' '
         echo "Kolejnosc operacji:"
         echo "1. zatwierdzenie do repozytorium zmian w zrodlach"
         echo "2. zbudowanie plikow FW (hexy)"
         echo "3. uruchomienie tego skryptu do przygotowania pakietu z FW"
-        echo "UWAGA! Ten skrypt ni ewykryje jesli bedzie wykonane [1] ale nie [2]!"
+        echo "UWAGA! Ten skrypt nie ewykryje jesli bedzie wykonane [1] ale nie [2]!"
 	exit 1
 fi
 
@@ -47,6 +50,27 @@ if [ ! -f ./scripts/prepare_fw.sh ]; then
 	exit 3
 fi
 
+build_type=$2
+if [ ! "$build_type" = "calib" ] && [ ! "$build_type" = "normal" ]; then
+        echo "Niewlasciwy rodzaj budowania $build_type, podaj calib albo normal"
+        exit 4;
+fi
+
+file_fpga=$3
+if [ ! -f "$file_fpga" ]; then
+        echo "Brak pliku $fpga_file"
+        exit 5;
+fi
+
+if [ "$build_type" = "calib" ]; then 
+        build_configuration="Calibration-for-encrypted-fw"
+elif [ "$build_type" = "normal" ]; then 
+        build_configuration="Debug-for-encrypted-fw"
+fi
+
+echo "build_type = $build_type"
+echo "plik FPGA = $file_fpga"
+        
 fw_file="lkd.fw"
 files_to_copy="./$build_configuration/$fw_file"
 file_cpu01="$build_configuration/cpu01.hex"
