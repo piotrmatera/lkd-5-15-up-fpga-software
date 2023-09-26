@@ -8,7 +8,7 @@
 #ifndef SOFTWARE_DEBUG_DBGGPIO_H_
 #define SOFTWARE_DEBUG_DBGGPIO_H_
 
-
+#include "preproc_utils.h"
 //sygnalizacja koncowkami GPIO zaleznosci czasowych
 // uzywane LEDy LED1, LED2, LED4, LED5
 
@@ -16,7 +16,6 @@
 
 #define DBG_AT_GPIO_INIT_TEST_PATTERN 1
 
-#define __NOTHING() do{ }while(0)
 
 #if DBG_AT_GPIO
 # define __HOOK_ENTRY_SMachine_Background     GPIO_WRITE(LED1,1)

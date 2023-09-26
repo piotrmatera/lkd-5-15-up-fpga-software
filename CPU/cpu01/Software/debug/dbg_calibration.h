@@ -9,6 +9,7 @@
 #define SOFTWARE_DEBUG_DBG_CALIBRATION_H_
 
 #include <stdio.h>
+#include "preproc_utils.h"
 
 #if FW_FOR_CALIBRATION
 //tylko w wersji kodu do kalibracji - konfiguracja budowania projektu Calibration-for-encrypted-fw
@@ -44,11 +45,13 @@ void Setup_again_normal_relays_control(void);
 
 #else
 //dla normalnej kompilacji ponizsze funkcje sa puste
-# define dbg_printf( frm, ...) __NOTHING
-# define  dbg_log( _txt )      __NOTHING
-# define __GPIO_Setup(i, _cfg) __NOTHING
-# define Cpu01_relays_control() __NOTHING
-# define Setup_again_normal_relays_control() __NOTHING
+
+
+# define dbg_printf( frm, ...) __NOTHING()
+# define  dbg_log( _txt )      __NOTHING()
+# define __GPIO_Setup(i, _cfg) __NOTHING()
+# define Cpu01_relays_control() __NOTHING()
+# define Setup_again_normal_relays_control() __NOTHING()
 
 #endif
 
