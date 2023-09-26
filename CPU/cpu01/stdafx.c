@@ -13,6 +13,7 @@ struct Converter_struct Conv;
 struct Grid_parameters_struct Grid;
 struct Grid_parameters_struct Grid_filter;
 struct Thermistor_struct Therm;
+struct Thermistor_struct Therm_module;
 
 union CONTROL_EXT_MODBUS control_ext_modbus;
 

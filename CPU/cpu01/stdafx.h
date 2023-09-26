@@ -86,6 +86,7 @@ union CONTROL_EXT_MODBUS
 //Task 1 (C) Variables
 //
 extern struct Thermistor_struct Therm;
+extern struct Thermistor_struct Therm_module;
 
 extern struct Measurements_ACDC_struct Meas_ACDC;
 extern struct Measurements_ACDC_gain_offset_struct Meas_ACDC_gain_error;

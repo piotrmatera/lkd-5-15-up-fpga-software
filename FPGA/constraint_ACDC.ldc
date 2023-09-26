@@ -10,7 +10,7 @@
 create_clock -period 100.000000 [ get_nets { SED_machine/sed_clkout } ]
 create_clock -period 8.000000 [ get_nets { clk_5x } ]
 create_clock -period 40.000000 [ get_nets { clk_1x } ]
-create_clock -period 50.000000 [ get_nets { XTAL_20MHz_i } ]
+create_clock -period 50.000000 [ get_ports { CPU_clk_o } ]
 create_clock -period 7.700000 [ get_nets { tx_clk_5x } ]
 create_clock -period 8.000000 [ get_nets { fifo_rx2_clk_5x } ]
 create_clock -period 8.000000 [ get_nets { fifo_rx1_clk_5x } ]

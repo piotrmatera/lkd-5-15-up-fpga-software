@@ -373,7 +373,8 @@ fifo_rx_o, fifo_rx_dv, state_reg);
 	reg[3:0] empty_counter;
 	reg[STATES_WIDTH-1:0] state_reg_lopri_last;
 	reg[`POINTER_WIDTH-1:0] mem_addr_o_lopri_last;
-
+	reg[31:0] dummy;
+	
 	always @(posedge core_clk_i) begin
 		hipri_msg_en_r <= {hipri_msg_en_i, hipri_msg_en_r[1]}; 
 		lopri_msg_en_r <= {lopri_msg_en_i, lopri_msg_en_r[1]}; 
@@ -419,7 +420,7 @@ fifo_rx_o, fifo_rx_dv, state_reg);
 						if((1'b1 << fifo_rx_o[`HIPRI_MAILBOXES_WIDTH-1:0]) & rx_hipri_msg_rdy_o) 
 							rx_overrun_error_o <= 1'b1; 
 						mem_we_o <= 1'b1; 
-						mem_addr_o <= fifo_rx_o[`HIPRI_MAILBOXES_WIDTH-1:0]*`HIPRI_MSG_LENGTH + `LOPRI_MAILBOXES_NUMBER*`LOPRI_MSG_LENGTH;
+						{dummy[32-`POINTER_WIDTH-1:0], mem_addr_o} <= fifo_rx_o[`HIPRI_MAILBOXES_WIDTH-1:0]*`HIPRI_MSG_LENGTH + `LOPRI_MAILBOXES_NUMBER*`LOPRI_MSG_LENGTH;
 						current_hipri_msg <= fifo_rx_o[`HIPRI_MAILBOXES_WIDTH-1:0]; 
 						state_reg <= S_RX_hipri_length; 
 					end			

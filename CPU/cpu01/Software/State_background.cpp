@@ -910,7 +910,24 @@ void Background_class::Main()
 
     static class Blink_class Blink_CT_char(0.1f);
     if(Blink_CT_char.task_simple())
+    {
         CT_char_calc();
+
+        Meas_ACDC.Temperature_CPU = GetTemperatureC((AdcaResultRegs.ADCRESULT10+AdcaResultRegs.ADCRESULT11)>>1);
+
+        for(Uint16 i = 0; i < 8; i++)
+        {
+            Meas_ACDC.Temperature_driver[i] = -40.0f + (190.0f / 59.0f) * (-73.0f + (float)mosfet_ctrl_app.buffer_item(i, CHIP1ED389_ADCMTEMP-CHIP1ED389_RDYSTAT));
+            Meas_ACDC.Supply_driver_pos[i] = (38.67f / 255.0f) * (float)mosfet_ctrl_app.buffer_item(i, CHIP1ED389_ADCMVDIF-CHIP1ED389_RDYSTAT);
+            Meas_ACDC.Supply_driver_neg[i] = (38.67f / 255.0f) * (float)mosfet_ctrl_app.buffer_item(i, CHIP1ED389_ADCMGND2-CHIP1ED389_RDYSTAT);
+        }
+
+        if(mosfet_ctrl_app.getState() == MosfetCtrlApp::state_error){
+            //gdy wystapil jakis blad to proba zrestartowania maszyn stanowych
+            mosfet_ctrl_app.process_event(MosfetCtrlApp::event_restart, NULL);
+        }
+        mosfet_ctrl_app.process_event( MosfetCtrlApp::event_get_status );
+    }
 
     Blink();
 

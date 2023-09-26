@@ -66,6 +66,8 @@ void main()
 
     Init.PWMs();
 
+    InitTempSensor(3.3f);
+
     Init.ADC();
 
     Background.init();

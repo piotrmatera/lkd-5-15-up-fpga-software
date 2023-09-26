@@ -67,7 +67,7 @@ const uint16_t driver_mosfet_cfg[CHIP1ED389_CONFIG_REGS_COUNT] = {
     0x4E,   //17: TLTOC1: TLTOff level and ramp A (0x4e)
     0x48,   //18: TLTOC2: TLTOff duration and ramp B (0x48)
     9,      //19: CSSOFCFG: Soft turn-off current (0x09)
-    0x20,   //1a: CLCFG: CLAMP and pin monitoring filter time and type, CLAMP output types and disable (0x20)
+    0x22,   //1a: CLCFG: CLAMP and pin monitoring filter time and type, CLAMP output types and disable (0x20)
     0x0C,   //1b: SOTOUT: Switch-off timeout time and fault signaling
  /*0x1C CHIP1ED389_CFGOK*/    1 //1c: CFGOK: Register configruation lock (0) - zapisanie tu 1 powoduje ze ustawienia zostana przeslane na strone izolowana
 

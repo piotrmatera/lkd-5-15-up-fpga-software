@@ -223,7 +223,7 @@ endmodule
 module deadtime(clk_i, PWM_i, override_i, enable_i, PWM_o);
 	parameter DEADTIME = 5; 
 	parameter [0:0] NEGATE_OUTPUT = 0;
-	parameter [0:0] SWAP = 1;
+	parameter [0:0] SWAP = 0;
 	localparam DT_WIDTH = $clog2(DEADTIME+1);
 	input clk_i;
 	input PWM_i; 

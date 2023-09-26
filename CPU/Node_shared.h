@@ -257,6 +257,12 @@ struct Measurements_ACDC_struct
     float Temperature3;
     float Temperature4;
     float Supply_24V;
+    struct abcn_struct Temperature_module;
+    float Temperature_driver[8];
+    float Temperature_FPGA;
+    float Temperature_CPU;
+    float Supply_driver_pos[8];
+    float Supply_driver_neg[8];
 };
 
 struct Measurements_ACDC_gain_offset_struct
