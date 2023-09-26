@@ -51,12 +51,13 @@ void Setup_again_normal_relays_control(void){
 
 const Uint16 relays_pin[]={
                                    C_SS_RLY_L1_CM,
-                                   GR_RLY_L1_CM,
                                    C_SS_RLY_L2_CM,
-                                   GR_RLY_L2_CM,
                                    C_SS_RLY_L3_CM,
+                                   C_SSR_CM,
+
+                                   GR_RLY_L1_CM,
+                                   GR_RLY_L2_CM,
                                    GR_RLY_L3_CM,
-                                   C_SS_RLY_N_CM,
                                    GR_RLY_N_CM
 };
 
