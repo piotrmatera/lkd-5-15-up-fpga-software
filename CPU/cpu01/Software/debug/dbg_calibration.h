@@ -44,7 +44,6 @@ void Setup_again_normal_relays_control(void);
 
 #else
 //dla normalnej kompilacji ponizsze funkcje sa puste
-# define __NOTHING do{}while(0)
 # define dbg_printf( frm, ...) __NOTHING
 # define  dbg_log( _txt )      __NOTHING
 # define __GPIO_Setup(i, _cfg) __NOTHING

@@ -47,6 +47,7 @@ void Setup_again_normal_relays_control(void){
 //        GPIO_Setup( RELAY_EN );
 
 }
+#endif
 
 const Uint16 relays_pin[]={
                                    C_SS_RLY_L1_CM,
@@ -61,5 +62,5 @@ const Uint16 relays_pin[]={
 
 const Uint16 relays_nb = sizeof(relays_pin)/sizeof(relays_pin[0]);
 
-#endif
+
 
