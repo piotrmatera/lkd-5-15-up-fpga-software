@@ -19,6 +19,55 @@ module compare_LH(clk_i, value_i, compare_value_i, compare_o);
 	end
 endmodule
 
+module Debounce(clk, in, out);
+	parameter N = 2;
+	parameter POLARITY = 0;
+	
+	input wire clk;
+	input wire in;
+	output reg out;
+	
+	reg [N-1:0] buffer;
+	initial buffer = {N{!POLARITY}};
+	initial out = !POLARITY;
+	
+	always @(posedge clk) begin
+		buffer <= {buffer[N-2:0], in};
+		if(POLARITY) out <= &buffer;
+		else out <= |buffer;
+	end
+endmodule
+
+module Pulse_generator(clk, in, out);
+	parameter LENGTH = 10000000;
+	localparam WIDTH = $clog2(LENGTH+1);
+	
+	input wire clk;
+	input wire in;
+	output reg out;
+	
+	initial out = 0;
+	
+	reg in_r;
+	reg in_r2;
+	reg [WIDTH-1:0] counter;
+	initial in_r = 0;
+	initial in_r2 = 0;
+	initial counter = 0;
+	
+	always @(posedge clk) begin
+		in_r <= in;
+		in_r2 <= in_r;
+		
+		if(out)
+			counter <= counter + 1'b1;
+		else
+			counter <= 0;
+		if(counter == LENGTH) out <= 1'b0;
+		else if(in_r && !in_r2) out <= 1'b1;
+	end
+endmodule
+
 module MovingAverage(clk, enable, in, out);
 	parameter N = 4;
 	parameter WIDTH = 16;

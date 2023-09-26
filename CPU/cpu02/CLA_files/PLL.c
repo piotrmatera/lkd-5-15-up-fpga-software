@@ -109,7 +109,7 @@ void PLL_calc()
         PLL.RDY = 1;
         PLL.w_filter = PLL.w_filter_internal;
     error_check:
-        if ((PLL.f_filter < 48.0f || PLL.f_filter > 52.0f) && (PLL.f_filter < 58.0f || PLL.f_filter > 62.0f))
+        if (PLL.f_filter < 45.0f || PLL.f_filter > 65.0f)
         {
             PLL.state = PLL_omega_init;
         }
@@ -129,7 +129,7 @@ void PLL_calc()
 
         //Odfiltrowana omega
         CIC2_filter_CLAasm(&PLL.CIC_w, PLL.w);
-        PLL.w_filter_internal = fmaxf(PLL.CIC_w.out, 300.0f);
+        PLL.w_filter_internal = fmaxf(PLL.CIC_w.out, 280.0f);
 
         PLL.trig_table[0].cosine = cosf(PLL.theta[0]);
         PLL.trig_table[0].sine = sinf(PLL.theta[0]);
