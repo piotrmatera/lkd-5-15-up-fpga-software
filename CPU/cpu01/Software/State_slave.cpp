@@ -80,7 +80,7 @@ void Machine_slave_class::relays_test()
 
 //        GPIO_CLEAR( RELAY_EN );
 
-        if(ONOFF.ONOFF){
+        if(ONOFF.ONOFF_last != ONOFF.ONOFF){
             Setup_again_normal_relays_control();
             Machine_slave.state = state_idle;
             return;
