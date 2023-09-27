@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381I" default_implementation="ACDC_25_50_BGA">
+<BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381I" default_implementation="ACDC_5_20_HLQFP">
     <Options/>
     <Implementation title="ACDC_25_50_BGA" dir="ACDC_25_50_BGA" description="ACDC_25_50_BGA" synthesis="lse" default_strategy="Strategy1">
         <Options VERILOG_DIRECTIVES="POWER_25" top="top_ACDC"/>
@@ -19,6 +19,9 @@
             <Options/>
         </Source>
         <Source name="IO.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO_25_50_v4_0.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">
@@ -99,7 +102,7 @@
         <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">
             <Options/>
         </Source>
-        <Source name="SKJEE_25_50_BGA.lpf" type="Logic Preference" type_short="LPF">
+        <Source name="SKJEE_25_50_BGA_v4_0.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
     </Implementation>
@@ -121,6 +124,9 @@
             <Options/>
         </Source>
         <Source name="IO.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO_25_50_v4_0.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">
@@ -204,12 +210,12 @@
         <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">
             <Options/>
         </Source>
-        <Source name="SKJEE_25_50_HLQFP.lpf" type="Logic Preference" type_short="LPF">
+        <Source name="SKJEE_25_50_HLQFP_v4_0.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
     </Implementation>
     <Implementation title="ACDC_5_20_BGA" dir="ACDC_5_20_BGA" description="ACDC_5_20_BGA" synthesis="lse" default_strategy="Strategy1">
-        <Options VERILOG_DIRECTIVES="POWER_15" top="top_ACDC"/>
+        <Options VERILOG_DIRECTIVES="TYPE_5_20" top="top_ACDC"/>
         <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
             <Options top_module="top_ACDC"/>
         </Source>
@@ -226,6 +232,12 @@
             <Options/>
         </Source>
         <Source name="IO.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO_5_20_v3_1.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO_5_20_v3_2.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">
@@ -297,12 +309,15 @@
         <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">
             <Options/>
         </Source>
-        <Source name="SKJEE_5_20_BGA.lpf" type="Logic Preference" type_short="LPF">
+        <Source name="SKJEE_5_20_BGA_v3_1.lpf" type="Logic Preference" type_short="LPF" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="SKJEE_5_20_BGA_v3_2.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
     </Implementation>
     <Implementation title="ACDC_5_20_HLQFP" dir="ACDC_5_20_HLQFP" description="ACDC_5_20_HLQFP" synthesis="lse" default_strategy="Strategy1">
-        <Options VERILOG_DIRECTIVES="POWER_15" top="top_ACDC"/>
+        <Options VERILOG_DIRECTIVES="TYPE_5_20" top="top_ACDC"/>
         <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
             <Options top_module="top_ACDC"/>
         </Source>
@@ -319,6 +334,12 @@
             <Options/>
         </Source>
         <Source name="IO.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO_5_20_v3_1.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="IO_5_20_v3_2.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">
@@ -390,7 +411,10 @@
         <Source name="sim/sim.spf" type="Simulation Project File" type_short="SPF">
             <Options/>
         </Source>
-        <Source name="SKJEE_5_20_HLQFP.lpf" type="Logic Preference" type_short="LPF">
+        <Source name="SKJEE_5_20_HLQFP_v3_1.lpf" type="Logic Preference" type_short="LPF" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="SKJEE_5_20_HLQFP_v3_2.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
     </Implementation>

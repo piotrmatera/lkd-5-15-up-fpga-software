@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
 
 `include "version.v" 
+`include "IO.v"  
  
 `define A  0
 `define B  20

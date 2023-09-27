@@ -1,5 +1,4 @@
 `include "global.v"  
-`include "IO.v"  
   
 module top_ACDC(CPU_io, FPGA_io, CPU_clk_o); 
 	inout[168:0] CPU_io;  
