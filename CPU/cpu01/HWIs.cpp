@@ -37,8 +37,8 @@ interrupt void SD_AVG_INT()
         *dest++ = *src++;
         *dest++ = *src++;
         *dest++ = *src++;
-        src = (Uint32 *)&EMIF_mem.read.Temperature_module;
-        dest = (Uint32 *)&Meas_ACDC.Temperature_module.a;
+        src = (Uint32 *)&EMIF_mem.read.Thermistor_module;
+        dest = (Uint32 *)&Background.Thermistor_module.a;
         *dest++ = *src++;
         *dest++ = *src++;
         *dest++ = *src++;
@@ -463,26 +463,29 @@ interrupt void SD_AVG_INT()
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//    static volatile union double_pulse_union
-//    {
-//       Uint32 u32;
-//       Uint16 u16[2];
-//    }double_pulse = {.u16 = {700, 15}};
-//    double_pulse.u16[0] = SD_card.settings.dp1;
-//    double_pulse.u16[1] = SD_card.settings.dp2;
-//    EMIF_mem.write.double_pulse = double_pulse.u32;
-//
-//    static volatile float counter = 0;
-//    if(ONOFF.ONOFF != ONOFF.ONOFF_last && status_ACDC.Init_done)
-//    {
-//        counter = 0;
-//        GPIO_SET(PWM_EN_CM);
-//    }
-//    counter += Conv.Ts;
-//    if(counter >= 1.0f)
-//    {
-//       GPIO_CLEAR(PWM_EN_CM);
-//    }
+    if(Background.double_pulse)
+    {
+        static volatile union double_pulse_union
+        {
+           Uint32 u32;
+           Uint16 u16[2];
+        }double_pulse = {.u16 = {700, 15}};
+        double_pulse.u16[0] = SD_card.settings.dp1;
+        double_pulse.u16[1] = SD_card.settings.dp2;
+        EMIF_mem.write.double_pulse = double_pulse.u32;
+
+        static volatile float counter = 0;
+        if(ONOFF.ONOFF != ONOFF.ONOFF_last && status_ACDC.Init_done)
+        {
+            counter = 0;
+            GPIO_SET(PWM_EN_CM);
+        }
+        counter += Conv.Ts;
+        if(counter >= 1.0f)
+        {
+           GPIO_CLEAR(PWM_EN_CM);
+        }
+    }
 
     GPIO_CLEAR(TRIGGER_CM);
 

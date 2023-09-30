@@ -77,6 +77,11 @@ GPIO_WritePin(i, GPIOreg[i].defval);                      \
 GPIO_SetupPinMux(i, GPIOreg[i].cpucla, GPIOreg[i].mux);      \
 GPIO_SetupPinOptions(i, GPIOreg[i].dir, GPIOreg[i].options)
 
+#define GPIO_Setup2(i, val, mux, cpucla, dir, opts)\
+        GPIO_SetupPinOptions(i, dir, opts);        \
+        GPIO_SetupPinMux(i, cpucla, mux);          \
+        GPIO_WritePin(i, val);
+
 #define GPIO_SET(pin) *(&GpioDataRegs.GPASET.all + (pin / 32)*GPY_DATA_OFFSET) = 1UL << (pin % 32)
 #define GPIO_CLEAR(pin) *(&GpioDataRegs.GPACLEAR.all + (pin / 32)*GPY_DATA_OFFSET) = 1UL << (pin % 32)
 #define GPIO_TOGGLE(pin) *(&GpioDataRegs.GPATOGGLE.all + (pin / 32)*GPY_DATA_OFFSET) = 1UL << (pin % 32)

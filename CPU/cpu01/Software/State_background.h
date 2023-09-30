@@ -12,7 +12,12 @@ class Background_class
 
     Uint16 harmonics_odd, harmonics_odd_last;
     Uint16 harmonics_even, harmonics_even_last;
-
+    Uint16 double_pulse;
+    Uint16 calibration;
+    Uint16 version;
+    Uint16 power;
+    Uint16 type;
+    struct abcn_struct Thermistor_module;
     static void init();
     static void Main();
 

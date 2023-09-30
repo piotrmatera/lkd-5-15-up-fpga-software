@@ -90,3 +90,11 @@
 `define OUT1_ISO_FM  `E+13
 `define OUT2_ISO_FM  `D+13
 `define OUT3_ISO_FM  `C+13 
+
+`define IO1_FM  `K+4 
+`define IO2_FM  `F+2 
+`define IO3_FM  `E+1 
+`define IO4_FM  `E+2 
+
+`define XTAL_20MHz_FM  `G+3
+`define XTAL_25MHz_FM  `G+2

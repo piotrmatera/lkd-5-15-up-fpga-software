@@ -56,11 +56,17 @@ void main()
 
     Init.CPUS();
 
+    Init.EMIF();
+
+    Background.double_pulse = EMIF_mem.read.flags.double_pulse;
+    Background.calibration = EMIF_mem.read.flags.calibration;
+    Background.version = EMIF_mem.read.id_number.version;
+    Background.type = EMIF_mem.read.id_number.type;
+    Background.power = EMIF_mem.read.id_number.power;
+
     Init.GPIO();
 
     Init.DMA();
-
-    Init.EMIF();
 
     Init.CLA();
 

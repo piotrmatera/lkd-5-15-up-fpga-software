@@ -43,5 +43,5 @@ void Temp_meas(void)
 	
 	static volatile float Resistance;
 	Resistance = Therm.R_divider * (float)adcVal / (float)(65536 - 64 - adcVal);
-	Temps = Therm.B/logf(Resistance * Therm.DIV_Rinf) - Therm.T_0;
+	Temps = Resistance;//Therm.B/logf(Resistance * Therm.DIV_Rinf) - Therm.T_0;
 }

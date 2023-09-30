@@ -2,7 +2,7 @@
 <BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381I" default_implementation="ACDC_5_20_HLQFP">
     <Options/>
     <Implementation title="ACDC_25_50_BGA" dir="ACDC_25_50_BGA" description="ACDC_25_50_BGA" synthesis="lse" default_strategy="Strategy1">
-        <Options VERILOG_DIRECTIVES="POWER_25" top="top_ACDC"/>
+        <Options VERILOG_DIRECTIVES="TYPE_25_50" top="top_ACDC"/>
         <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
             <Options top_module="top_ACDC"/>
         </Source>
@@ -21,7 +21,7 @@
         <Source name="IO.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="IO_25_50_v4_0.v" type="Verilog" type_short="Verilog">
+        <Source name="IO_25_50_v4_0.v" type="Verilog" type_short="Verilog" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">
@@ -107,7 +107,7 @@
         </Source>
     </Implementation>
     <Implementation title="ACDC_25_50_HLQFP" dir="ACDC_25_50_HLQFP" description="ACDC_25_50_HLQFP" synthesis="lse" default_strategy="Strategy1">
-        <Options VERILOG_DIRECTIVES="POWER_25" top="top_ACDC"/>
+        <Options VERILOG_DIRECTIVES="TYPE_25_50" top="top_ACDC"/>
         <Source name="top_ACDC.v" type="Verilog" type_short="Verilog">
             <Options top_module="top_ACDC"/>
         </Source>
@@ -126,7 +126,7 @@
         <Source name="IO.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="IO_25_50_v4_0.v" type="Verilog" type_short="Verilog">
+        <Source name="IO_25_50_v4_0.v" type="Verilog" type_short="Verilog" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">
@@ -234,10 +234,10 @@
         <Source name="IO.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="IO_5_20_v3_1.v" type="Verilog" type_short="Verilog">
+        <Source name="IO_5_20_v3_1.v" type="Verilog" type_short="Verilog" excluded="TRUE">
             <Options/>
         </Source>
-        <Source name="IO_5_20_v3_2.v" type="Verilog" type_short="Verilog">
+        <Source name="IO_5_20_v3_2.v" type="Verilog" type_short="Verilog" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">
@@ -336,10 +336,10 @@
         <Source name="IO.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="IO_5_20_v3_1.v" type="Verilog" type_short="Verilog">
+        <Source name="IO_5_20_v3_1.v" type="Verilog" type_short="Verilog" excluded="TRUE">
             <Options/>
         </Source>
-        <Source name="IO_5_20_v3_2.v" type="Verilog" type_short="Verilog">
+        <Source name="IO_5_20_v3_2.v" type="Verilog" type_short="Verilog" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="version.v" type="Verilog" type_short="Verilog">

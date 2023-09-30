@@ -265,7 +265,12 @@ union EMIF_union
         union FPGA_ACDC_sync_flags_union Sync_flags;
         //16 Uint32
         Uint32 SD_sync_val;
-        Uint32 dsc;
+        struct
+        {
+            Uint32 version:16;
+            Uint32 power:12;
+            Uint32 type:4;
+        }id_number;
         Uint32 Scope_data_out1;
         Uint32 Scope_data_out2;
         Uint32 Scope_depth;
@@ -287,9 +292,13 @@ union EMIF_union
             Uint32 Kalman_DC_WIP:1;
             Uint32 Kalman_WIP:1;
             Uint32 sync_phase:1;
+            Uint32 rsvd:20;
+            Uint32 ext_miller:1;
+            Uint32 double_pulse:1;
+            Uint32 calibration:1;
         }flags;
         Uint32 next_period;
-        float Temperature_module[4];
+        float Thermistor_module[4];
         int16 Temperature_FPGA;
         Uint16 dummy;
         Uint32 mux_rsvd[512-34];

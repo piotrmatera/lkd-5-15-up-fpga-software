@@ -669,7 +669,7 @@ void Background_class::init()
     update_harmonics();
     convert_harmonics_to_bits();
 
-    if(!switch_FLASH.retrieve())
+    if(!switch_FLASH.retrieve() && !Background.double_pulse)
     {
         ONOFF.ONOFF = ONOFF.ONOFF_FLASH;
         ONOFF.ONOFF_last = !ONOFF.ONOFF_FLASH;
@@ -914,6 +914,9 @@ void Background_class::Main()
         CT_char_calc();
 
         Meas_ACDC.Temperature_CPU = GetTemperatureC((AdcaResultRegs.ADCRESULT10+AdcaResultRegs.ADCRESULT11)>>1);
+
+        for(Uint16 i = 0; i < 4; i++)
+            (&Meas_ACDC.Temperature_module.a)[i] = Therm_module.B/logf((&Background.Thermistor_module.a)[i] * Therm_module.DIV_Rinf) - Therm_module.T_0;
 
         for(Uint16 i = 0; i < 8; i++)
         {

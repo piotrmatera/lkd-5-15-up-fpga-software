@@ -92,3 +92,13 @@
 //F16 -> F3 
 //H18 -> D12 
 //C17 -> D17 
+
+`define IO1_FM  `C+3 
+`define IO2_FM  `E+5 
+`define IO3_FM  `F+5 
+`define IO4_FM  `D+3 
+`define IO5_FM  `K+4 
+`define IO6_FM  `L+5 
+
+`define XTAL_20MHz_FM  `G+3
+`define XTAL_25MHz_FM  `G+2

@@ -82,7 +82,7 @@ void Machine_slave_class::idle()
         Conv.enable = 0;
     }
 
-    if(ONOFF.ONOFF)
+    if(ONOFF.ONOFF && !Background.double_pulse)
     {
         float Temp = fmaxf(Meas_ACDC.Temperature1, fmaxf(Meas_ACDC.Temperature2, Meas_ACDC.Temperature3));
         if(status_ACDC.SD_no_calibration) Machine_slave.state = state_calibrate_offsets;

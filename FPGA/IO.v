@@ -37,19 +37,3 @@
 
 `define FPGA_SED  133
  
-
-`ifdef TYPE_5_20
-	//`include "IO_5_20_v3_1.v"
-	`include "IO_5_20_v3_2.v"
-	
-	//`define POWER_5
-	//`define POWER_10
-	`define POWER_15
-`endif
-
-`ifdef TYPE_25_50
-	`include "IO_25_50_v4_0.v"
-	
-	`define POWER_25
-	//`define POWER_50
-`endif

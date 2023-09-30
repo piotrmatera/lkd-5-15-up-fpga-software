@@ -165,12 +165,29 @@ void Init_class::ADC()
     AdcdRegs.ADCSOC6CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
     AdcdRegs.ADCSOC7CTL.all = AdcdRegs.ADCSOC6CTL.all;
 
-    AdcdRegs.ADCSOC8CTL.bit.CHSEL  = 4;
+    if(Background.type == 0)
+    {
+        if(Background.version == 0)
+        {
+            AdcdRegs.ADCSOC8CTL.bit.CHSEL  = 3;
+            AdcdRegs.ADCSOC10CTL.bit.CHSEL  = 4;
+        }
+        else
+        {
+            AdcdRegs.ADCSOC8CTL.bit.CHSEL  = 4;
+            AdcdRegs.ADCSOC10CTL.bit.CHSEL  = 15;
+        }
+    }
+    else
+    {
+        AdcdRegs.ADCSOC8CTL.bit.CHSEL  = 3;
+        AdcdRegs.ADCSOC10CTL.bit.CHSEL  = 4;
+    }
+
     AdcdRegs.ADCSOC8CTL.bit.ACQPS  = acqps;
     AdcdRegs.ADCSOC8CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
     AdcdRegs.ADCSOC9CTL.all = AdcdRegs.ADCSOC8CTL.all;
 
-    AdcdRegs.ADCSOC10CTL.bit.CHSEL  = 15;
     AdcdRegs.ADCSOC10CTL.bit.ACQPS  = acqps;
     AdcdRegs.ADCSOC10CTL.bit.TRIGSEL  = 11;   //ePWM4 SOCA
     AdcdRegs.ADCSOC11CTL.all = AdcdRegs.ADCSOC10CTL.all;
@@ -1194,7 +1211,14 @@ void Init_class::GPIO()
     GPIO_Setup(SYNC_PWM_CM);
     GPIO_Setup(FAN_CM);
 
-    GPIO_Setup(PWM_EN_CM);
+    if(Background.double_pulse)
+    {
+        GPIO_Setup2(PWM_EN_CM, LOW, MUX0, CPU1_IO, OUTPUT, PUSHPULL);
+    }
+    else
+    {
+        GPIO_Setup(PWM_EN_CM);
+    }
 
     GPIO_Setup(LED1_CM);
     GPIO_Setup(LED2_CM);
