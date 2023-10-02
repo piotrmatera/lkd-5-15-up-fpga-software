@@ -1246,7 +1246,7 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	//double_pulse double_pulse(.clk_i(XTAL_20MHz_i), .start_i(PWM_EN_r), .length0_i(EMIF_RX_reg[8][15:0]), .length1_i(EMIF_RX_reg[8][31:16]), .PWM_o(PWM_dp)); 
 	//deadtime deadtime[3:0](.clk_i(XTAL_20MHz_i), .PWM_i({4{PWM_dp}}), .enable_i({PWM_EN_r, 3'b0}), .override_i(EMIF_RX_reg[10][7:0]), .PWM_o(PWM_o)); 
 
-	assign REL_o = (TZ_EN_CPU1 & TZ_EN_CPU2 & TZ_FPGA) ? REL_i : 8'b0; 
+	assign REL_o = REL_i; 
 	BB BB_REL_CPU0(.I(1'b0), .T(1'b1), .O(REL_i[0]), .B(CPU_io[`C_SS_RLY_L1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU1(.I(1'b0), .T(1'b1), .O(REL_i[1]), .B(CPU_io[`GR_RLY_L1_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
 	BB BB_REL_CPU2(.I(1'b0), .T(1'b1), .O(REL_i[2]), .B(CPU_io[`C_SS_RLY_L2_CM]))/*synthesis IO_TYPE="LVCMOS33" PULLMODE="DOWN" */; 
