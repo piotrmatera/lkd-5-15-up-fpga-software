@@ -192,7 +192,7 @@ interrupt void SD_AVG_INT()
 
         alarm_ACDC.bit.FPGA_errors.all = EMIF_mem.read.FPGA_flags.all;
 
-        if(Conv.enable)
+        if(Conv.state != CONV_grid_relay && Conv.enable)
         {
             if(!Conv.PLL_RDY) alarm_ACDC.bit.PLL_UNSYNC = 1;
 

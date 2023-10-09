@@ -454,11 +454,11 @@ void Converter_calc_slave()
             }
 
             counter_ss += Conv.Ts;
-            if (counter_ss > 0.5f)
+            if (counter_ss > 0.05f)
             {
-                if(fabsf(2.0f * Meas_ACDC.U_grid.a - U_grid_last.a) < 1.0f) GPIO_SET(C_SS_RLY_L1_CM), SSR_A_done = 1.0f;
-                if(fabsf(2.0f * Meas_ACDC.U_grid.b - U_grid_last.b) < 1.0f) GPIO_SET(C_SS_RLY_L2_CM), SSR_B_done = 1.0f;
-                if(fabsf(2.0f * Meas_ACDC.U_grid.c - U_grid_last.c) < 1.0f) GPIO_SET(C_SS_RLY_L3_CM), SSR_C_done = 1.0f;
+                if(fabsf(2.0f * Meas_ACDC.U_grid.c - U_grid_last.c) < SSR_B_done - SSR_C_done) GPIO_SET(C_SS_RLY_L3_CM), SSR_C_done = 1.0f, counter_ss = 0.0f;
+                if(fabsf(2.0f * Meas_ACDC.U_grid.b - U_grid_last.b) < SSR_A_done - SSR_B_done) GPIO_SET(C_SS_RLY_L2_CM), SSR_B_done = 1.0f, counter_ss = 0.0f;
+                if(fabsf(2.0f * Meas_ACDC.U_grid.a - U_grid_last.a) < 1.0f - SSR_A_done) GPIO_SET(C_SS_RLY_L1_CM), SSR_A_done = 1.0f, counter_ss = 0.0f;
             }
 
             U_grid_last.a = Meas_ACDC.U_grid.a;
@@ -468,17 +468,18 @@ void Converter_calc_slave()
             if(SSR_A_done * SSR_B_done * SSR_C_done)
             {
                 counter_ss2 += Conv.Ts;
-                if (counter_ss2 > 0.5f)
+                if (counter_ss2 > 0.05f)
                 {
                     GPIO_SET(GR_RLY_L1_CM);
                     GPIO_SET(GR_RLY_L2_CM);
                     GPIO_SET(GR_RLY_L3_CM);
-                    if(!Conv.no_neutral) GPIO_SET(GR_RLY_N_CM);
+                    if (!Conv.no_neutral) GPIO_SET(GR_RLY_N_CM);
+                    if (Conv.PLL_RDY && counter_ss2 > 0.1f) Conv.state++;
                 }
 
-                if (counter_ss2 > 1.0f)
+                if (counter_ss2 > 5.0f)
                 {
-                    Conv.state++;
+                    alarm_ACDC.bit.PLL_UNSYNC = 1;
                 }
             }
 

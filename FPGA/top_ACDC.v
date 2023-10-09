@@ -614,10 +614,11 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
 	wire [15:0] FLT_drv;  
 	Debounce Debounce_flt[15:0](.clk(clk_5x), .in(FLT_drv), .out(FLT_bus[15:0]));
 	
+	wire compare_disable;
 	assign FLT_bus[23:16] = ~compare_o[7:0];  
-	assign FLT_bus[24] = ~|compare_o[9:8];  
-	assign FLT_bus[25] = ~|compare_o[11:10];  
-	assign FLT_bus[26] = ~|compare_o[13:12];   
+	assign FLT_bus[24] = (~|compare_o[9:8]) | compare_disable;  
+	assign FLT_bus[25] = (~|compare_o[11:10]) | compare_disable;  
+	assign FLT_bus[26] = (~|compare_o[13:12]) | compare_disable;   
 	assign FLT_bus[27] = !sed_err; 
 	assign FLT_bus[28] = !rx1_crc_error || master_slave_selector;  
 	assign FLT_bus[29] = !rx1_overrun_error || master_slave_selector;  
@@ -1170,6 +1171,8 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
  	assign TZ_CLR = !(TZ_EN_CPU1 & TZ_EN_CPU2 & PWM_EN & TZ_FPGA);
 	FD1P3DX PWM_EN_ff(.D(PWM_EN), .SP(sync_reg [1] ^ sync_reg [0]), .CK(clk_5x), .CD(TZ_CLR), .Q(PWM_EN_r)); 
  
+	assign compare_disable = !PWM_EN_r;
+	
 	`ifndef DOUBLE_PULSE
 	Symmetrical_PWM #(.DEADTIME(65)) 
 	Symmetrical_PWM[3:0](.clk_i(clk_5x), .enable_output_i({PWM_EN_r & REL_i[7], {3{PWM_EN_r}}}), .override_i(EMIF_RX_reg[10][7:0]), .duty_i({EMIF_RX_reg[7], EMIF_RX_reg[6]}), 

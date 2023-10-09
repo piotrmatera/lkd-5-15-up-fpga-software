@@ -1038,7 +1038,7 @@ void Init_class::EMIF()
     Emif1Regs.ASYNC_CS2_CR.bit.W_STROBE = 0;
     Emif1Regs.ASYNC_CS2_CR.bit.W_HOLD   = 0;
     Emif1Regs.ASYNC_CS2_CR.bit.R_SETUP  = 0;
-    Emif1Regs.ASYNC_CS2_CR.bit.R_STROBE = 4;
+    Emif1Regs.ASYNC_CS2_CR.bit.R_STROBE = 7;
     Emif1Regs.ASYNC_CS2_CR.bit.R_HOLD   = 0;
     Emif1Regs.ASYNC_CS2_CR.bit.TA       = 0;
     Emif1Regs.ASYNC_CS2_CR.bit.ASIZE    = 2;

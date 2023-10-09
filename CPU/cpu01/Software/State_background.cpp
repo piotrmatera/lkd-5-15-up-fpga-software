@@ -580,10 +580,20 @@ void Background_class::init()
 
         Meas_ACDC_gain.U_dc_n = 0.064/(Meas_ACDC_gain.def_osr*Meas_ACDC_gain.def_osr)*Meas_ACDC_gain.sd_shift*(680.0*3.0 + 0.24)/(0.24)*(1.0 + (0.48/4.9));
 
-        Meas_ACDC_gain.I_conv.a =
-        Meas_ACDC_gain.I_conv.b =
-        Meas_ACDC_gain.I_conv.c =
-        Meas_ACDC_gain.I_conv.n = 0.064/(Meas_ACDC_gain.def_osr*Meas_ACDC_gain.def_osr)*Meas_ACDC_gain.sd_shift/0.001;
+        if(Background.type == 1)
+        {
+            Meas_ACDC_gain.I_conv.a =
+            Meas_ACDC_gain.I_conv.b =
+            Meas_ACDC_gain.I_conv.c =
+            Meas_ACDC_gain.I_conv.n = 0.064/(Meas_ACDC_gain.def_osr*Meas_ACDC_gain.def_osr)*Meas_ACDC_gain.sd_shift/0.002*6.0;
+        }
+        else if(Background.type == 0)
+        {
+            Meas_ACDC_gain.I_conv.a =
+            Meas_ACDC_gain.I_conv.b =
+            Meas_ACDC_gain.I_conv.c =
+            Meas_ACDC_gain.I_conv.n = 0.064/(Meas_ACDC_gain.def_osr*Meas_ACDC_gain.def_osr)*Meas_ACDC_gain.sd_shift/0.001;
+        }
 
         control_ext_modbus.fields.baudrate = 1152;
         control_ext_modbus.fields.ext_server_id = 1;
