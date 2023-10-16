@@ -20,6 +20,7 @@
 #include "FLASH.h"
 #include "Blink.h"
 #include "Rtc.h"
+#include "i2c_transactions.h"
 #include "diskio.h"
 #include "Modbus_Converter_memory.h"
 #include "Modbus_devices.h"
@@ -34,6 +35,7 @@
 FATFS fs;           /* Filesystem object */
 MosfetCtrlApp mosfet_ctrl_app;
 
+i2c_transactions_t i2c_bus;
 Rtc rtc;
 struct time_BCD_struct RTC_current_time;
 struct time_BCD_struct RTC_new_time;
@@ -471,7 +473,7 @@ void ONOFF_switch_func()
 
 void Background_class::init()
 {
-    rtc.init();
+    rtc.init(&i2c_bus);
     rtc.process_event(Rtc::event_init);
     RTC_new_time.second = 0;
     RTC_new_time.second10 = 0;
@@ -945,7 +947,7 @@ void Background_class::Main()
 
     ONOFF_switch_func();
 
-    rtc.process(); // wywolywanie cykliczne konieczne do dzialania Rtc
+    i2c_bus.process(); // wywolywanie cykliczne konieczne do dzialania i2c
 
     mosfet_ctrl_app.process(); //jw
 
@@ -956,8 +958,6 @@ void Background_class::Main()
     {
         if(control_ACDC.triggers.bit.save_to_RTC && !control_ACDC.triggers.bit.CPU_reset)
         {
-            control_ACDC.triggers.bit.save_to_RTC = 0;
-
             Rtc::datetime_bcd_s new_time;
             new_time.sec = RTC_new_time.second10<<4 | RTC_new_time.second;
             new_time.min = RTC_new_time.minute10<<4 | RTC_new_time.minute;
@@ -966,8 +966,10 @@ void Background_class::Main()
             new_time.dayofweek = 1;
             new_time.month = RTC_new_time.month10<<4 | RTC_new_time.month;
             new_time.year = RTC_new_time.year10<<4 | RTC_new_time.year;
-            rtc.process_event(Rtc::event_setup_time_bcd, &new_time);
-            RTC_current_time = RTC_new_time;
+            if( rtc.process_event(Rtc::event_setup_time_bcd, &new_time) == status_ok ){
+                control_ACDC.triggers.bit.save_to_RTC = 0;
+                 RTC_current_time = RTC_new_time;
+            }
         }
         else
         {

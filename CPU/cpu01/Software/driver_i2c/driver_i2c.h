@@ -35,6 +35,14 @@ struct msg_buffer{
     //musi byc wiecej bo w tym buforze jest zapisywany tez adres rejestru
 };
 
+
+#define MSG_NOTREADY 0  //wiadomosc przygotowywana do przeslania/odebrania
+//uwaga w kodzie sa testy oczekujace na .ready!=0
+#define MSG_READY 1     //wiadomosc odebrana/wyslana
+#define MSG_READY_W_ERROR 2 //wiadomosci nie udalo sie wyslac, najprawdopodobniej z powodu NACK
+//gdy przekazuje sie wiadomosc do wyslania/odebrania, pole .ready mozna interpretowac jedynie gdy
+// fn rozpoczynajaca zwroci status_ok (moze zwrocic busy=zajete i2c, invalid=niewlasciwe dane)
+
 //klasa do komunikacji po i2c w trybie master
 class i2c_t{
     uint16_t slave_address;
@@ -64,7 +72,7 @@ public:
         I2C_INTSRC_RX_DATA_RDY,         //!< Receive-data-ready interrupt
         I2C_INTSRC_TX_DATA_RDY,         //!< Transmit-data-ready interrupt
         I2C_INTSRC_STOP_CONDITION,      //!< Stop condition detected
-        I2C_INTSRC_ADDR_SLAVE           //!< Addressed as slave interrupt
+        I2C_INTSRC_ADDR_SLAVE,          //!< Addressed as slave interrupt
     } I2C_InterruptSource;
 
     struct i2c_clock_config_s{

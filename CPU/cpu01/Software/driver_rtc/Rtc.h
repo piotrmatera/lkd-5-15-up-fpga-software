@@ -9,9 +9,9 @@
 #define SOFTWARE_DRIVER_RTC_RTC_H_
 
 #include "driver_i2c/driver_i2c.h"
+#include "i2c_transactions.h"
 #include "mcp7940n.h"
 
-class RtcReadSubmachine; //forward declaration
 
 /** @brief klasa do obslugi RTC, wspolpracuje z MCP7940N
  *
@@ -20,21 +20,19 @@ class RtcReadSubmachine; //forward declaration
  * @note nie uzywa przerwan tylko metode przegladania
  * */
 class Rtc{
-friend class RtcReadSubmachine; //klasa SubmachineRead musi miec dostep do skladowych prywatnych, manipuluje stanem Rtc
+//TODO
 
-// wiadomosci uzywane do realizacji polecen
-    /**@brief wiadomosc do uruchomienia zegara w RTC, wlaczenia baterii i ustawienia czasu domyslnego 0:00:00 pn {20}00-01-01
-     * @note uzywane przy pierwszym uruchomieniu, gdy RTC nie pracowalo, albo po wymianie baterii
-     */
-    msg_buffer msg_start_rtc0 = { 8, 0, {MCP7940N_SEC_REG, MCP7940N_ST_MASK|0x00 /*sec*/, 0x00/*min*/, 0x00/*hr*/,
-                                         MCP7940N_WEEKDAY_VBATEN_MASK|0x01, 0x01/*day*/, 0x01/*month*/, 0x00 /*year*/}};
+    struct i2c_transaction_buffer x_msg_settime;
 
-    /**@brief wiadomosc do zatrzymania oscylatora w RTC */
-    msg_buffer msg_stop_rtc  = { 2, 0, {MCP7940N_SEC_REG, 0 }};
+    struct i2c_transaction_buffer x_msg_getstatus;
 
-    /**@brief wiadomosc do ustawiania nowego czasu*/
-    msg_buffer msg_new_time = { 8, 0, {MCP7940N_SEC_REG, 0x00, 0x00, 0x00,
-                                            MCP7940N_WEEKDAY_VBATEN_MASK|0x00, 0x00, 0x00, 0x00 }};
+    struct i2c_transaction_buffer x_msg_setosc;
+
+    struct i2c_transaction_buffer x_msg_getosc;
+
+    struct i2c_transaction_buffer x_msg_gettime;
+
+    struct i2c_transaction_buffer x_msg_rtc;
 
 public:
 
@@ -88,7 +86,7 @@ public:
     Rtc();
 
     /**@brief Inicjalizacja interfejsu i2c, ustawienie adresu i2c dla RTC*/
-    status_code_t init();
+    status_code_t init( i2c_transactions_t * i2c_bus );
 
     /**@brief ogolna funkcja do wyslania polecen w postaci zdarzenia
      * @param[in] event wysylane zdarzenie - odpowiada roznym poleceniom
@@ -138,44 +136,34 @@ private:
      * @note aby odczytac nalezy uzyc: get_last_time() */
     struct datetime_s last_time;
 
-    /**@brief interfejs I2C do komunikacji z ukladem RTC
-     * @note ukrywa specyfike dla tego procesora; dostarcza transakcje read oraz write na i2c  */
-    i2c_t i2c;
+    /**@brief interfejs I2C do komunikacji ukladem RTC po magistrali i2c */
+    i2c_transactions_t * i2c_bus;
 
     /**@brief stany glownej maszyny stanowej klasy Rtc*/
     typedef enum{
         state_reset = 0,    //0 stan - zanim zostanie wywolane init
-
         state_idle,         //1 przyjmowanie polecen
 
         //w trakcie dalszych stanow nie przyjmuje polecen, sa ciagiem sekwencji realizujacych polecenia
 
-
-//stany submaszyny (odczyt czasu)
-        state_read_time1,   //base=2 wyslanie adresu rejestru
-        state_read_time2,   //3 oczekiwnie na zakonczenie wyslania, rozpoczecie odczytu
-        state_read_time3,   //4 oczekiwnaie na zakonczenie odczytu
-        state_read_time4,   //5 zakonczono
-//stany submaszyny (odczyt rejestru0 na potrzeby sprawdzenia czy RTC wlaczony)
-        state_read_reg0_1,  //6 wyslanie adresu
-        state_read_reg0_2,  //7 oczek. na zak. wysl., rozpoczecie odbioru
-        state_read_reg0_3,  //8 oczek. na zak. odczytu
-        state_read_reg0_4,  //9 zakonczono
-
-        state_setup_default, //:10  wlaczenie zegara w RTC i ustawienie domyslnego czasu
+        state_read_time,   //2 oczekwianie na odczyt czasu
+        state_read_reg0,   //3 oczekiwanie na zakonczenie odczytu rejestru stanu
+        state_setup_default, //4   wlaczenie zegara w RTC i ustawienie domyslnego czasu
 
 //sekwencja ustawienia nowego czasu
-        state_new_time,  //;11 wylaczenie zegara w RTC
- //submaszyna odczytu reg3
-        state_new_time1, //<12 wyslanie adresu reg3 (tam jest OSCRUN)
-        state_new_time2, //=13 oczekiwanie na zak. wysylania adresu do odczytu reg3
-        state_new_time3, //>14 oczekiwanie na zakonczenie odczytu reg3
-        state_new_time4, //?15 zakonczono
+        state_new_time,  //5 oczekiwanie na wylaczenie zegara w RTC
+        state_new_time1, //6 rozpcozecie transakcji odczytu reg3 (tam jest OSCRUN)
+        state_new_time4, //7 oczekiwanie na zakonczenie odczytu reg3
+                         //    gdy reg3.OSCRUN = 0  => state_new_time5
+                         //    gdy     =1  => state_new_time1
 
-        state_new_time5, //@16 wyslanie nowego czasu
-        state_new_time6, //A17 oczekiwanie na zakonczenie, wyslanie wiadomosci wlaczajcej zegar w RTC
-        state_new_time7, //B18 oczekiwnaie na zakonczenie
+        state_new_time5, //8 wyslanie nowego czasu
+        state_new_time6, //9 oczekiwanie na zakonczenie, wyslanie wiadomosci wlaczajacej zegar w RTC
+        state_new_time7, //10 oczekiwnaie na zakonczenie
 
+        state_setup_default_wait_for_done, //11 oczekiwanie na zakonczenie ustawienia domyslnej daty
+
+        state_error,
         state_invalid = 0x20 //P32
     }state_t;
 
@@ -192,11 +180,27 @@ private:
 
     /**@brief przygotowuje nowa wiadomosc do ustalenia czasu
      * @param[in] new_time nowy czas w kodowaniu BCD */
-    status_code_t prepare_setup_msg( datetime_bcd_s * new_time );
+    status_code_t prepare_setup_msg( i2c_transaction_buffer * msg_buff, datetime_bcd_s * new_time );
 
     /**@brief przygotowuje wiadomosci do uruchomienia zegara RTC po zapisaniu nowego czasu
      * @param[in] new_time nowy czas w kodowaniu BCD */
-    status_code_t prepare_start_msg( void );
+    status_code_t prepare_start_msg( i2c_transaction_buffer * buffer );
+
+    typedef enum{
+            start_rtc0, /**<@brief uruchomienie RTC i ustawienie domyslnego czasu*/
+            start_rtc,  /**<@brief uruchomienie osc. RTC*/
+            stop_rtc,   /**<@brief zatrzymanie osc. RTC*/
+
+            set_time,   /**<@brief ustawienie nowego czasu*/
+
+            get_time,   /**<@brief pobranie czasu z RTC*/
+            get_status, /**<@brief pobranie statusu (reg0.ST)*/
+            get_oscrun  /**<@brief pobranie stanu oscylatora*/
+      } msg_type_t;
+
+
+    void msg_factory( msg_type_t msg_type, i2c_transaction_buffer * buffer );
+
 };
 
 

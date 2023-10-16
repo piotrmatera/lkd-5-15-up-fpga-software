@@ -6,31 +6,27 @@
  */
 #include <string.h>
 #include "Rtc.h"
-#include "RtcReadSubmachine.h"
 #include "debug/Dbg.h"
 
-class RtcReadSubmachine submachine;/**<@brief zewnetrzna klasa submaszyny
-zdefiniowana tak, aby uproscic przydzielenie dla niej pamieci (nie uzywac new)*/
 
 Rtc::Rtc()
 {
     memset( &last_time_bcd, 0, sizeof(last_time_bcd) );
     state = state_reset;
-    submachine.init( this );
+    i2c_bus = NULL;
 }
 
-status_code_t Rtc::init()
+status_code_t Rtc::init( i2c_transactions_t * i2c_bus )
 {
     status_code_t retc;
-    retc = i2c.set_slave_address( MCP7940N_ADDRESS );
-    if( retc!=status_ok) return retc;
+    this->i2c_bus = i2c_bus;
 
     //wypelnienie 1/3
     // Fmod_i2c = SYSCLK/(I2CPSC+1) = 7-12MHz
     // MCP7940N Tccl_min = 0.6us, Tcch = 1.3us, f=400kHz
 
     static const i2c_t::i2c_clock_config_s clk_cfg = I2C_220kHz_DUTY1_2;
-    retc = i2c.init(&I2caRegs, &clk_cfg);
+    retc = i2c_bus->init(&I2caRegs, &clk_cfg);
     if( retc!=status_ok) return retc;
 
     state = state_idle;
@@ -39,18 +35,15 @@ status_code_t Rtc::init()
 
 void Rtc::process()
 {
-    i2c.interrupt_process();
     process_event( event_periodic );
 }
 
 status_code_t Rtc::process_event( event_t event, void * xdata )
 {
-    status_code_t retc = err_invalid;
+   // status_code_t retc = err_invalid;
 
     if( state != state_idle && event != event_periodic )
         return err_invalid;
-
-    submachine.process_event(event, xdata);
 
     datetime_bcd_s new_time;
 
@@ -64,16 +57,24 @@ status_code_t Rtc::process_event( event_t event, void * xdata )
         /* glowny stan w ktorym mozna wydac polecenie (odczytu, zapisu, inicjalizacji) */
         switch( event ){
         case event_read_time:
-            if( !i2c.is_idle() )
+            msg_factory(get_time, &x_msg_gettime);
+            if( i2c_bus->start_transaction( &x_msg_gettime ) )
                 return err_busy;
 
-            submachine.activate( state_read_time1, MCP7940N_SEC_REG, 7);//wewnatrz jest zmiana stanu
+            change_state_to( state_read_time );
             break;
+
+
+            //TODO zrobic jeden bufor wiadomosci/ew kilka (malo)
+            //     przygotowywac wiadomosci o okreslonej tresci - factory(&msg_buff)
+            //     za duzo buforow teraz
+
         case event_init:
-            if( !i2c.is_idle() )
+            msg_factory(get_status, &x_msg_getstatus);
+            if( i2c_bus->start_transaction( &x_msg_getstatus ) )
                 return err_busy;
 
-            submachine.activate( state_read_reg0_1, MCP7940N_SEC_REG, 1);
+            change_state_to( state_read_reg0 );
             break;
 
         case event_setup_time:
@@ -84,12 +85,13 @@ status_code_t Rtc::process_event( event_t event, void * xdata )
             {
             new_time = *((Rtc::datetime_bcd_s *)xdata);
         l_common:
-            if( prepare_setup_msg( &new_time )!=status_ok )
+            msg_factory(set_time, &x_msg_settime);
+            if( prepare_setup_msg( &x_msg_settime, &new_time )!=status_ok )
                 return err_invalid;
 
-            retc = i2c.write( &msg_stop_rtc, 0 );
-            if( retc != status_ok )
-                 return retc;
+            msg_factory(stop_rtc, &x_msg_rtc);
+            if( i2c_bus->start_transaction( &x_msg_rtc  ))
+                return err_busy;
 
             change_state_to( state_new_time );
             }
@@ -98,82 +100,127 @@ status_code_t Rtc::process_event( event_t event, void * xdata )
         default:
             return err_invalid;
         }
+
     }
+    break;
 
-    //submaszyna odczytu czasu (reg0-reg6)
-    case state_read_time1:
-    case state_read_time2:
-    case state_read_time3:
-        break;
-    case state_read_time4: //tu juz zakonczono odczyt
-        time_is_read( &submachine.msg );
-        change_state_to( state_idle );
-        break;
-
-    //submaszyna odczytu rejestru reg0 - na potrzeby odczytu ST
-    case state_read_reg0_1:
-    case state_read_reg0_2:
-    case state_read_reg0_3:
-        break;
-    case state_read_reg0_4:
-        if( submachine.msg.data[0] & MCP7940N_ST_MASK ){  //czy wlaczony zegar (REG0.ST=1?)
-            dbg_marker('E');
+    case state_read_time:
+        if( x_msg_gettime.state == i2c_transaction_buffer::done ){
+            //tu juz zakonczono odczyt
+            time_is_read( &x_msg_gettime.msg );
             change_state_to( state_idle );
-            break;
+        }else if( x_msg_gettime.state == i2c_transaction_buffer::error ){
+            change_state_to( state_error );
+        }
+        break;
+
+
+    case state_read_reg0:
+        if( x_msg_getstatus.state == i2c_transaction_buffer::error ){
+             change_state_to( state_error );
+             break;
+        }
+        if( x_msg_getstatus.state == i2c_transaction_buffer::done ){
+             //tu juz zakonczono odczyt
+            if( x_msg_getstatus.msg.data[0] & MCP7940N_ST_MASK ){  //czy wlaczony zegar (REG0.ST=1?)
+                dbg_marker('E');
+                change_state_to( state_idle );
+                break;
             }
-        dbg_marker('e');
-        change_state_to( state_setup_default );
-        //TODO nie mozna zbyt szybko wysylac w tym miejscu - nie wysylalo [dlaczego?]
+            //jesli niewlaczony, to ustawienie domyslnego czasu i wystartowanie
+            dbg_marker('e');
+            change_state_to( state_setup_default );
+            //TODO nie mozna zbyt szybko wysylac w tym miejscu - nie wysylalo [dlaczego?]
+        }
+
         break;
 
     case state_setup_default:
-        retc = i2c.write( &msg_start_rtc0, 0 );//jak sie nie uruchomi to niewiele mozna zrobic
-        if( retc != status_ok ){
-            __HOOK_SETUP_DEFAULT_ERROR;
-            return retc;
+        msg_factory(start_rtc0, &x_msg_rtc);
+        if( i2c_bus->start_transaction( &x_msg_rtc ))
+            return err_busy;
+        //jak sie nie uruchomi to niewiele mozna zrobic
+//        if( retc != status_ok ){
+//            __HOOK_SETUP_DEFAULT_ERROR;
+//            return retc;
+//        }
+        change_state_to( state_setup_default_wait_for_done );
+        break;
+    case state_setup_default_wait_for_done:
+        if( x_msg_rtc.state == i2c_transaction_buffer::error ){
+             change_state_to( state_error );
+             break;
         }
-        change_state_to( state_idle );
+        if( x_msg_rtc.state == i2c_transaction_buffer::done ){
+            change_state_to( state_idle );
+        }
         break;
 
     case state_new_time:
-        if( msg_stop_rtc.ready ){
-            submachine.activate( state_new_time1, MCP7940N_WEEKDAY_REG, 1);
-        }
-        break;
-
-//submaszyna odczytu reg3 - tam jest OSCRUN
-    case state_new_time1:
-    case state_new_time2:
-    case state_new_time3:
-        break;
-    case state_new_time4:
-        if( !(submachine.msg.data[0] & MCP7940N_WEEKDAY_OSCRUN_MASK) ){
-             change_state_to( state_new_time5 );
+        if( x_msg_rtc.state == i2c_transaction_buffer::error ){
+             change_state_to( state_error );
              break;
         }
-        submachine.activate( state_new_time1, MCP7940N_WEEKDAY_REG, 1);
+        if( x_msg_rtc.state == i2c_transaction_buffer::done ){
+            //wykonano ST=0
+            change_state_to( state_new_time1 );
+        }
+        break;
+    case state_new_time1:
+        msg_factory(get_oscrun, &x_msg_getosc);
+        if( i2c_bus->start_transaction( &x_msg_getosc )) //odczytac stan OSCRUN
+            return err_busy;
+        change_state_to( state_new_time4 );
+        break;
+
+    case state_new_time4:
+        if( x_msg_getosc.state == i2c_transaction_buffer::error ){
+             change_state_to( state_error );
+             break;
+        }
+        if( x_msg_getosc.state == i2c_transaction_buffer::done ){
+            if( !(x_msg_getosc.msg.data[0] & MCP7940N_WEEKDAY_OSCRUN_MASK) ){
+                //oscylator zatrzymany
+                change_state_to( state_new_time5 );
+            }else{
+                //osc jeszcze pracuje ponowic odczyt
+                change_state_to( state_new_time1 );
+            }
+        }
         break;
 
     case state_new_time5:
-        retc = i2c.write( &msg_new_time, 0 );
-        if( retc != status_ok )
-             return retc;
+        if( i2c_bus->start_transaction( &x_msg_settime )) //ustawienie czasu (wiadomosc przygotowana wczesniej)
+             return err_busy;
         change_state_to( state_new_time6 );
         break;
 
     case state_new_time6:
-        if( msg_new_time.ready ){
-            prepare_start_msg();
-            retc = i2c.write( &msg_new_time, 0 );
-            if( retc != status_ok )
-                 return retc;
+        if( x_msg_settime.state == i2c_transaction_buffer::error ){
+             change_state_to( state_error );
+             break;
+        }
+        if( x_msg_settime.state == i2c_transaction_buffer::done ){
+            prepare_start_msg( &x_msg_settime ); //w tej samej wiadomosci wlaczenie zegara reg0.ST:=1 aby nie zmienic sekund
+            if( i2c_bus->start_transaction( &x_msg_settime ))
+                 return err_busy;
+
             change_state_to( state_new_time7 );
         }
         break;
     case state_new_time7:
-        if( msg_new_time.ready ){
+        if( x_msg_settime.state == i2c_transaction_buffer::error ){
+             change_state_to( state_error );
+             break;
+        }
+        if( x_msg_settime.state == i2c_transaction_buffer::done ){
             change_state_to( state_idle );
         }
+        break;
+    case state_error:
+        //obecnie w przypadku bledu przechodzi do state_idle
+        dbg_marker('R');
+        change_state_to( state_idle );
         break;
     default:
         return err_invalid;
@@ -201,7 +248,7 @@ void Rtc::time_is_read( msg_buffer * msg )
     last_time = time_convert_from_bcd( &last_time_bcd );
 }
 
-status_code_t Rtc::prepare_setup_msg( datetime_bcd_s * new_time ){
+status_code_t Rtc::prepare_setup_msg( i2c_transaction_buffer *msg_buff, datetime_bcd_s * new_time ){
     if( new_time->sec >= 0x60 ) return err_invalid;
     if( new_time->min >= 0x60 ) return err_invalid;
     if( new_time->hour >= 0x23 ) return err_invalid;
@@ -210,20 +257,20 @@ status_code_t Rtc::prepare_setup_msg( datetime_bcd_s * new_time ){
     if( (new_time->month==0) || (new_time->month>0x12)) return err_invalid;
 
     //+1 bo jest adress @[0]
-    msg_new_time.data[ MCP7940N_SEC_REG+1 ] = new_time->sec;
-    msg_new_time.data[ MCP7940N_MIN_REG+1 ] = new_time->min;
-    msg_new_time.data[ MCP7940N_HOUR_REG+1 ] = new_time->hour;
-    msg_new_time.data[ MCP7940N_WEEKDAY_REG+1 ] = new_time->dayofweek | MCP7940N_WEEKDAY_VBATEN_MASK;
-    msg_new_time.data[ MCP7940N_DAY_REG+1 ] = new_time->day;
-    msg_new_time.data[ MCP7940N_MONTH_REG+1 ] = new_time->month;
-    msg_new_time.data[ MCP7940N_YEAR_REG+1 ] = new_time->year;
-    msg_new_time.len = 8;
+    msg_buff->msg.data[ MCP7940N_SEC_REG+1 ] = new_time->sec;
+    msg_buff->msg.data[ MCP7940N_MIN_REG+1 ] = new_time->min;
+    msg_buff->msg.data[ MCP7940N_HOUR_REG+1 ] = new_time->hour;
+    msg_buff->msg.data[ MCP7940N_WEEKDAY_REG+1 ] = new_time->dayofweek | MCP7940N_WEEKDAY_VBATEN_MASK;
+    msg_buff->msg.data[ MCP7940N_DAY_REG+1 ] = new_time->day;
+    msg_buff->msg.data[ MCP7940N_MONTH_REG+1 ] = new_time->month;
+    msg_buff->msg.data[ MCP7940N_YEAR_REG+1 ] = new_time->year;
+    msg_buff->len_out = 8;
     return status_ok;
 }
 
-status_code_t Rtc::prepare_start_msg( void ){
-    msg_new_time.data[ MCP7940N_SEC_REG+1 ] |= MCP7940N_ST_MASK;
-    msg_new_time.len = 2;
+status_code_t Rtc::prepare_start_msg( i2c_transaction_buffer * buffer ){
+    buffer->msg.data[ MCP7940N_SEC_REG+1 ] |= MCP7940N_ST_MASK;
+    buffer->len_out = 2;
     return status_ok;
 }
 
@@ -273,3 +320,99 @@ uint16_t Rtc::bcd_2_dec( uint16_t bcd )
     return (( (bcd>>4)*10) + (bcd%16));
 }
 
+void Rtc::msg_factory( msg_type_t msg_type, i2c_transaction_buffer * buffer )
+{
+    buffer->slave_address = MCP7940N_ADDRESS;
+    buffer->state = i2c_transaction_buffer::idle;
+
+    switch(msg_type){
+    case start_rtc0: /**<@brief uruchomienie RTC i ustawienie domyslnego czasu*/
+    {
+        buffer->len_out = 8;
+        buffer->len_in = 0;
+        buffer->type = i2c_transaction_buffer::write_only;
+        /**@brief wiadomosc do uruchomienia zegara w RTC, wlaczenia baterii i ustawienia czasu domyslnego 0:00:00 pn {20}00-01-01
+         * @note uzywane przy pierwszym uruchomieniu, gdy RTC nie pracowalo, albo po wymianie baterii
+         */
+        const struct msg_buffer msg = { 0, 0, {MCP7940N_SEC_REG, MCP7940N_ST_MASK|0x00 /*sec*/, 0x00/*min*/, 0x00/*hr*/,
+                                               MCP7940N_WEEKDAY_VBATEN_MASK|0x01, 0x01/*day*/, 0x01/*month*/, 0x00 /*year*/}};
+        buffer->msg = msg;
+        break;
+    }
+    case start_rtc:  /**<@brief uruchomienie osc. RTC*/
+    {
+        buffer->len_out = 2;
+        buffer->len_in = 0;
+        buffer->type = i2c_transaction_buffer::write_only;
+        /**@brief wiadomosc do uruchomienia zegara w RTC, wlaczenia baterii i ustawienia czasu domyslnego 0:00:00 pn {20}00-01-01
+         * @note uzywane przy pierwszym uruchomieniu, gdy RTC nie pracowalo, albo po wymianie baterii
+         */
+        const struct msg_buffer msg = { 0, 0, {MCP7940N_SEC_REG, MCP7940N_ST_MASK }};
+        buffer->msg = msg;
+        break;
+    }
+    case stop_rtc:   /**<@brief zatrzymanie osc. RTC*/
+    {
+        buffer->len_out = 2;
+        buffer->len_in = 0;
+        buffer->type = i2c_transaction_buffer::write_only;
+        /**@brief wiadomosc do uruchomienia zegara w RTC, wlaczenia baterii i ustawienia czasu domyslnego 0:00:00 pn {20}00-01-01
+         * @note uzywane przy pierwszym uruchomieniu, gdy RTC nie pracowalo, albo po wymianie baterii
+         */
+        const struct msg_buffer msg = { 0, 0, {MCP7940N_SEC_REG, 0 }};
+        buffer->msg = msg;
+        break;
+    }
+    case set_time:   /**<@brief ustawienie nowego czasu*/
+    {
+        buffer->len_out = 8;
+        buffer->len_in = 0;
+        buffer->type = i2c_transaction_buffer::write_only;
+        /**@brief wiadomosc do uruchomienia zegara w RTC, wlaczenia baterii i ustawienia czasu domyslnego 0:00:00 pn {20}00-01-01
+         * @note uzywane przy pierwszym uruchomieniu, gdy RTC nie pracowalo, albo po wymianie baterii
+         */
+        const struct msg_buffer msg = { 0, 0, {MCP7940N_SEC_REG, 0 }}; //TODO upewnic sie ze ST jest ustawiany
+        buffer->msg = msg;
+        break;
+    }
+    case get_time:   /**<@brief pobranie czasu z RTC*/
+    {
+        buffer->len_out = 1;
+        buffer->len_in = 7;
+        buffer->type = i2c_transaction_buffer::write_nostop_read;
+        /**@brief wiadomosc do uruchomienia zegara w RTC, wlaczenia baterii i ustawienia czasu domyslnego 0:00:00 pn {20}00-01-01
+         * @note uzywane przy pierwszym uruchomieniu, gdy RTC nie pracowalo, albo po wymianie baterii
+         */
+        const struct msg_buffer msg = { 0, 0, {MCP7940N_SEC_REG, 0 }};
+        buffer->msg = msg;
+        break;
+    }
+    //TODO czy odczyt obu ST i OSCRUN jest potrzebny?
+    case get_status: /**<@brief pobranie statusu (reg0.ST)*/
+    {
+        buffer->len_out = 1;
+        buffer->len_in = 1;
+        buffer->type = i2c_transaction_buffer::write_nostop_read;
+        /**@brief wiadomosc do uruchomienia zegara w RTC, wlaczenia baterii i ustawienia czasu domyslnego 0:00:00 pn {20}00-01-01
+         * @note uzywane przy pierwszym uruchomieniu, gdy RTC nie pracowalo, albo po wymianie baterii
+         */
+        const struct msg_buffer msg = { 0, 0, {MCP7940N_SEC_REG, 0 }};
+        buffer->msg = msg;
+        break;
+    }
+    case get_oscrun:  /**<@brief pobranie stanu oscylatora (reg3.OSCRUN)*/
+    {
+        buffer->len_out = 1;
+        buffer->len_in = 1;
+        buffer->type = i2c_transaction_buffer::write_nostop_read;
+        /**@brief wiadomosc do uruchomienia zegara w RTC, wlaczenia baterii i ustawienia czasu domyslnego 0:00:00 pn {20}00-01-01
+         * @note uzywane przy pierwszym uruchomieniu, gdy RTC nie pracowalo, albo po wymianie baterii
+         */
+        const struct msg_buffer msg = { 0, 0, {MCP7940N_WEEKDAY_REG, 0 }};
+        buffer->msg = msg;
+        break;
+    }
+    default:
+        break;
+    }
+}

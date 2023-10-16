@@ -13,6 +13,7 @@
 #include "HWIs.h"
 
 #include "device_check.h"
+#include "i2c_transactions.h"
 
 #if MERGE_PART
 <<<<<<< HEAD
