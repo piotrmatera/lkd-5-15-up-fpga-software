@@ -8,11 +8,11 @@
 #include <string.h>
 #include "i2c_transactions.h"
 #include "Rtc.h"
-////@TODO commented_out_in_partial_merge//#include "driver_eeprom/eeprom_i2c.h"
+#include "driver_eeprom/eeprom_i2c.h"
 
 extern Rtc rtc;
 extern i2c_transactions_t i2c_bus;
-////@TODO commented_out_in_partial_merge//extern eeprom_i2c eeprom;
+extern eeprom_i2c eeprom;
 
 i2c_transactions_t::i2c_transactions_t()
 {
@@ -67,7 +67,7 @@ status_code_t i2c_transactions_t::process( void )
     //obsluga urzadzen na magistrali i2c
     rtc.process(); //obsluga Rtc
 
-    ////@TODO commented_out_in_partial_merge//    eeprom.process();
+    eeprom.process();
 
     for(uint16_t i=0; i<MAX_TASKS; i++) //zwraca blad pierwszy ktory napotka
         if( retc[i] != status_ok )

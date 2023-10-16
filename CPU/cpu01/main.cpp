@@ -14,6 +14,7 @@
 
 #include "device_check.h"
 #include "i2c_transactions.h"
+#include "Software/driver_eeprom/eeprom_i2c.h"
 
 #if MERGE_PART
 <<<<<<< HEAD
@@ -46,6 +47,77 @@ interrupt void NMI_INT()
 }
 >>>>>>> dev-pr-fw-protected
 #endif
+
+
+extern eeprom_i2c eeprom;
+
+#define TESTING_EEPROM_I2C 1
+
+#if TESTING_EEPROM_I2C
+uint16_t memory_buffer[256]; //na razie zbior bajtow; TODO zrobic aby byl zapis obu bajtow ze slowa
+
+void test_eeprom(){
+    static uint16_t cnt = 2;
+
+    static struct eeprom_i2c::event_region_xdata xdata;
+
+    switch( cnt ){
+    case 1: //odczyt
+        xdata.status = eeprom_i2c::event_region_xdata::idle;
+        eeprom.process_event(eeprom_i2c::event_read_region, &xdata);
+        cnt = 10;
+        break;
+    case 2: //zapis
+        {
+            uint32_t tm = ReadIpcTimer();
+            memory_buffer[0]  = tm >> 16;
+            memory_buffer[1]  = tm &0xFFFF;
+            memory_buffer[2] =  0xBE;
+
+            memory_buffer[3] =  0x1234;
+            memory_buffer[4] =  0x5678;
+            memory_buffer[5] =  0xefdc;
+
+            xdata.total_len = 11;
+            xdata.start = 8;
+            xdata.data = memory_buffer;
+
+            xdata.status = eeprom_i2c::event_region_xdata::idle;
+            eeprom.process_event(eeprom_i2c::event_write_region, &xdata);
+        cnt = 3;
+        }
+        break;
+    case 3: //oczekiwanie na zakonczenie
+        if( xdata.status >= eeprom_i2c::event_region_xdata::done_ok ){
+            dbg_marker('K');
+            xdata.total_len = 11;
+            xdata.start = 8;
+            xdata.data = memory_buffer;
+
+            xdata.status = eeprom_i2c::event_region_xdata::idle;
+            eeprom.process_event(eeprom_i2c::event_read_region, &xdata);
+            cnt = 10;
+        }
+        break;
+    case 4: //zapis
+        memory_buffer[0] = 0x6261;
+        memory_buffer[1] = 0x6463;
+        memory_buffer[2] = 0x65;
+
+        xdata.status = eeprom_i2c::event_region_xdata::idle;
+        eeprom.process_event(eeprom_i2c::event_write_region, &xdata);
+        cnt = 5;
+        break;
+//    case 5:
+//        if( eeprom.x_msg_polling.msg.ready == 1)
+//            cnt = 1;
+//
+//        break;
+
+    }
+}
+#endif
+
 
 void main()
 {
@@ -129,6 +201,10 @@ void main()
 
     while(1)
     {
+#if TESTING_EEPROM_I2C
+        test_eeprom();
+#endif
+
         Machine_slave.Main();
         Machine_master.Main();
         Background.Main();

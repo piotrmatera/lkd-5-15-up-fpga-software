@@ -31,12 +31,16 @@
 #include "MosfetCtrlApp.h"
 #include "dbg_calibration.h"
 
+#include "Software/driver_eeprom/eeprom_i2c.h"
 
 FATFS fs;           /* Filesystem object */
 MosfetCtrlApp mosfet_ctrl_app;
 
 i2c_transactions_t i2c_bus;
 Rtc rtc;
+
+eeprom_i2c eeprom;
+
 struct time_BCD_struct RTC_current_time;
 struct time_BCD_struct RTC_new_time;
 
@@ -474,6 +478,10 @@ void ONOFF_switch_func()
 void Background_class::init()
 {
     rtc.init(&i2c_bus);
+
+    eeprom.init(&i2c_bus);
+    eeprom.process_event(eeprom_i2c::event_init);
+
     rtc.process_event(Rtc::event_init);
     RTC_new_time.second = 0;
     RTC_new_time.second10 = 0;

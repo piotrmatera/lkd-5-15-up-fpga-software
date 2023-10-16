@@ -312,7 +312,7 @@ status_code_t eeprom_i2c::msg_factory( msg_type_t msg_type, i2c_transaction_buff
         buffer->msg.data[0] = (data_dsc->start & EEPROM_ADDRESS_MASK) >> 8;
         buffer->msg.data[1] = (data_dsc->start & EEPROM_ADDRESS_MASK) & 0x00FF;
 
-        memcpy_with_unpack( &buffer->msg.data[1], data_dsc->data, data_dsc->len );
+        memcpy_with_unpack( &buffer->msg.data[2], data_dsc->data, data_dsc->len );
         return status_ok;
     }
     case polling:
