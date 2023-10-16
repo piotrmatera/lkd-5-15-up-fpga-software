@@ -57,40 +57,65 @@ extern eeprom_i2c eeprom;
 uint16_t memory_buffer[256]; //na razie zbior bajtow; TODO zrobic aby byl zapis obu bajtow ze slowa
 
 void test_eeprom(){
-    static uint16_t cnt = 2;
+    static uint16_t cnt = 1;
 
     static struct eeprom_i2c::event_region_xdata xdata;
 
     switch( cnt ){
     case 1: //odczyt
+
+        xdata.total_len = 19;
+        xdata.start = 8;
+        xdata.data = memory_buffer;
+
         xdata.status = eeprom_i2c::event_region_xdata::idle;
         eeprom.process_event(eeprom_i2c::event_read_region, &xdata);
-        cnt = 10;
+        cnt = 2;
         break;
+
     case 2: //zapis
+        if( xdata.status >= eeprom_i2c::event_region_xdata::done_ok )
         {
             uint32_t tm = ReadIpcTimer();
             memory_buffer[0]  = tm >> 16;
             memory_buffer[1]  = tm &0xFFFF;
-            memory_buffer[2] =  0xBE;
+
+            tm = ReadIpcTimer();
+            memory_buffer[2] =  tm &0xFFFF;
 
             memory_buffer[3] =  0x1234;
             memory_buffer[4] =  0x5678;
-            memory_buffer[5] =  0xefdc;
 
-            xdata.total_len = 11;
+            tm = ReadIpcTimer();
+            memory_buffer[5] =  tm & 0xFFFF;
+            memory_buffer[6] =  tm >> 16;
+
+            tm = ReadIpcTimer();
+            memory_buffer[7] =  tm & 0xFFFF;
+
+            tm = ReadIpcTimer();
+            memory_buffer[8] =  tm & 0xFFFF;
+
+            tm = ReadIpcTimer();
+            memory_buffer[9] =  tm & 0xFFFF;
+
+            tm = ReadIpcTimer();
+            memory_buffer[10] = tm & 0xFFFF;
+
+
+            xdata.total_len = 19;
             xdata.start = 8;
             xdata.data = memory_buffer;
 
             xdata.status = eeprom_i2c::event_region_xdata::idle;
             eeprom.process_event(eeprom_i2c::event_write_region, &xdata);
-        cnt = 3;
+            cnt = 3;
         }
         break;
     case 3: //oczekiwanie na zakonczenie
         if( xdata.status >= eeprom_i2c::event_region_xdata::done_ok ){
             dbg_marker('K');
-            xdata.total_len = 11;
+            xdata.total_len = 19;
             xdata.start = 8;
             xdata.data = memory_buffer;
 
