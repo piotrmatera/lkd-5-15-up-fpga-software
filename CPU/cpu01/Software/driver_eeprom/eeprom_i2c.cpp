@@ -162,7 +162,7 @@ status_code_t eeprom_i2c::process_event( event_t event, void * xdata )
                 break;
             }
 
-            region->start += region->len;
+            region->start += region->len + (EEPROM_REAL_PAGE-EEPROM_PAGE); //dodanie EEPROM_REAL_PAGE-EEPROM_PAGE jest bezpieczne, bo to jest tez wyrownane do 8
             region->data = &region->data[ region->len/2 ];
 l_loop_write:
             region->len = this->aligned_part( region->start, &region->total_len );
@@ -230,7 +230,7 @@ l_loop_write:
 
               memcpy_with_pack( region->data, &x_msg.msg.data[0], region->len );
 
-              region->start += region->len;
+              region->start += region->len + (EEPROM_REAL_PAGE-EEPROM_PAGE); //dodanie EEPROM_REAL_PAGE-EEPROM_PAGE jest bezpieczne, bo to jest tez wyrownane do 8
               region->data = &region->data[ region->len/2 ];
      l_loop_read:
               region->len = this->aligned_part( region->start, &region->total_len );

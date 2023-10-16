@@ -24,10 +24,31 @@
 // 5ms - zapis strony
 // 128 bajtow - wielkosc strony
 
-#define EEPROM_SIZE 65536 //rozmiar w bajtach
-#define EEPROM_PAGE 128   //rozmiar strony w bajtach
-#define EEPROM_PAGE_MASK 0xFF80
-#define EEPROM_ADDRESS_MASK 0xFFFF
+
+#define EEPROM_SIZE 4096 //rozmiar w bajtach, ktory mozna zapisac
+#define EEPROM_PAGE 8   //rozmiar strony w bajtach
+#define EEPROM_REAL_PAGE 128 //rzeczywisty rozmiar strony eepromu
+// Ominiecia problemu, ze wielkosc bufora sprzetowego modulu i2c wynosi tylko 14 bajtow
+// co jest znacznie mniejsze niz 128 bajtow strony eepromu.
+// TODO rozwiazanie powyzszego wymaga modyfikacji drivera_i2c aby w 'przerwaniu' oproznial/dopisywal do FIFO modulu i2c
+//
+// Na razie zapis tylko 8 bajtow na strone; reszta niewykorzystana - jako przerwa.
+// adresowanie po stronie SW jakby nie bylo tych przerw.
+// adresowanie po stronie HW (eepromu) dla zapisu od adresu 8 ciagu 11 bajtow:
+// adrSW adrHW
+// 0008  0008: zapis 8 pierwszych bajtow
+// 0010  0088: zapis kolejnych 3 bajtow
+//
+// adresy po stronie SW: 8*512 stron -> 4KB
+// adresy po stronie HW 128*512 stron -> 64KB
+
+//#define EEPROM_SIZE 65536 //rozmiar w bajtach
+//#define EEPROM_PAGE_MASK 0xFF80
+//#define EEPROM_ADDRESS_MASK 0xFFFF
+
+//adresy na zewnatrz (dla SW):
+#define EEPROM_PAGE_MASK 0xFF8
+#define EEPROM_ADDRESS_MASK 0xFFF
 
 /**@brief czas zapisu do eepromu, nie mozna wykonac polingu na tym procesorze tms*/
 #define EEPROM_WRITE_TIME_MS 6ULL  //w ms z dok. ukladu
