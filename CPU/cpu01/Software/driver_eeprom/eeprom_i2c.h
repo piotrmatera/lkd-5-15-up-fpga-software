@@ -14,10 +14,20 @@
 
 #define EEPROM_ADDRESS (0xa0 >> 1)
 
-#define EEPROM_SIZE 128 //rozmiar w bajtach
-#define EEPROM_PAGE 8   //rozmiar strony w bajtach
-#define EEPROM_PAGE_MASK 0x78
-#define EEPROM_ADDRESS_MASK 0x7F
+//poprzednia implementacja dla 24LC01
+// 128 bajtow, 1kbit
+// 5ms - zapis strony
+// 8 bajtow - wielkosc strona
+
+//obecna implemntacja dla eepromu 24LC512
+// 64KB, 512kbit
+// 5ms - zapis strony
+// 128 bajtow - wielkosc strony
+
+#define EEPROM_SIZE 65536 //rozmiar w bajtach
+#define EEPROM_PAGE 128   //rozmiar strony w bajtach
+#define EEPROM_PAGE_MASK 0xFF80
+#define EEPROM_ADDRESS_MASK 0xFFFF
 
 /**@brief czas zapisu do eepromu, nie mozna wykonac polingu na tym procesorze tms*/
 #define EEPROM_WRITE_TIME_MS 6ULL  //w ms z dok. ukladu

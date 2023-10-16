@@ -284,13 +284,14 @@ status_code_t eeprom_i2c::msg_factory( msg_type_t msg_type, i2c_transaction_buff
     {
         if( data_dsc->len > EEPROM_PAGE )
              return err_invalid;
-        buffer->len_out = 1;
+        buffer->len_out = 2;
         buffer->len_in = data_dsc->len;
         buffer->type = i2c_transaction_buffer::write_nostop_read;
 
         buffer->msg.len = 0;
         buffer->msg.ready = 0;
-        buffer->msg.data[0] = data_dsc->start & EEPROM_ADDRESS_MASK;
+        buffer->msg.data[0] = (data_dsc->start & EEPROM_ADDRESS_MASK) >> 8;
+        buffer->msg.data[1] = (data_dsc->start & EEPROM_ADDRESS_MASK) & 0x00FF;
 
         return status_ok;
     }
@@ -302,13 +303,14 @@ status_code_t eeprom_i2c::msg_factory( msg_type_t msg_type, i2c_transaction_buff
         if( (data_dsc->start & EEPROM_PAGE_MASK) != ((data_dsc->start+data_dsc->len-1) & EEPROM_PAGE_MASK))
             return err_invalid; //musi byc w obrebie jednej strony
 
-        buffer->len_out = 1 + data_dsc->len;
+        buffer->len_out = 2 + data_dsc->len;
         buffer->len_in = 0;
         buffer->type = i2c_transaction_buffer::write_only;
 
         buffer->msg.len = 0;
         buffer->msg.ready = 0;
-        buffer->msg.data[0] = data_dsc->start & EEPROM_ADDRESS_MASK;
+        buffer->msg.data[0] = (data_dsc->start & EEPROM_ADDRESS_MASK) >> 8;
+        buffer->msg.data[1] = (data_dsc->start & EEPROM_ADDRESS_MASK) & 0x00FF;
 
         memcpy_with_unpack( &buffer->msg.data[1], data_dsc->data, data_dsc->len );
         return status_ok;
