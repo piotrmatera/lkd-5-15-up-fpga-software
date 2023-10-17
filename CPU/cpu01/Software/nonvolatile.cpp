@@ -215,7 +215,7 @@ Uint16 nonvolatile_t::read( Uint16 region_index, Uint16 copy_offset, Uint64 time
 
     struct eeprom_i2c::event_region_xdata xdata;
     xdata.status = eeprom_i2c::event_region_xdata::idle;
-    xdata.start = reg->data_eeprom.address.u16 + copy_offset;
+    xdata.start = (reg->data_eeprom.address.u16 + copy_offset)*EEPROM_VIRT_SCALING;
     xdata.total_len = reg->data_int.size;
     xdata.data = reg->data_int.address.ptr_u16;
 
@@ -231,7 +231,7 @@ Uint16 nonvolatile_t::write( Uint16 region_index, Uint16 copy_offset, Uint64 tim
 
     struct eeprom_i2c::event_region_xdata xdata;
     xdata.status = eeprom_i2c::event_region_xdata::idle;
-    xdata.start = reg->data_eeprom.address.u16 + copy_offset;
+    xdata.start = (reg->data_eeprom.address.u16 + copy_offset)*EEPROM_VIRT_SCALING;
     xdata.total_len = reg->data_int.size;
     xdata.data = reg->data_int.address.ptr_u16;
 
@@ -248,7 +248,7 @@ Uint16 nonvolatile_t::invalidate( Uint16 region_index, Uint16 copy_offset, Uint6
 
     struct eeprom_i2c::event_region_xdata xdata;
     xdata.status = eeprom_i2c::event_region_xdata::idle;
-    xdata.start = reg->data_eeprom.address.u16 + copy_offset;
+    xdata.start = (reg->data_eeprom.address.u16 + copy_offset)*EEPROM_VIRT_SCALING;
     xdata.total_len = 2;
     xdata.data = &invalid_crc;
 

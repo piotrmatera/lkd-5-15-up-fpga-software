@@ -38,6 +38,18 @@ struct region_t{
 /** pozycja drugiej kopii regionow w pamieci eeprom (specyficzne dla pamieci 24lc01 (128 bajtow) */
 #define NONVOL_COPY_OFFSET 64 //w bajtach
 
+/** skalowanie adresu poczatkowego wynikajace z zastosowanego obejscia problemu duzej strony eepromu 24lc512
+ * w stosunku do malego bufora FIFO w module i2c procesora (patrz opis w eeprom_i2c)
+ */
+#ifdef EEPROM_VIRTUAL_PAGES
+# define EEPROM_VIRT_SCALING 16
+#else
+# define EEPROM_VIRT_SCALING 1
+#endif
+
+
+
+
 struct region_memories_t{
     /** lokalizacja (w pamieci RAM) uzytkowej tresci do ktora ma byc nieulotna
      * rozmiar musi byc wielokronoscia dwoch bajtow - dane kopiowane slowami do obszaru data_int*/
