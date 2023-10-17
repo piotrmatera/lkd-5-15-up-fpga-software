@@ -17,7 +17,7 @@
 #include "Scope.h"
 #include "SD_card.h"
 #include "Init.h"
-#include "FLASH.h"
+
 #include "Blink.h"
 #include "Rtc.h"
 #include "i2c_transactions.h"
@@ -32,6 +32,7 @@
 #include "dbg_calibration.h"
 
 #include "Software/driver_eeprom/eeprom_i2c.h"
+#include "nonvolatile_sections.h"
 
 FATFS fs;           /* Filesystem object */
 MosfetCtrlApp mosfet_ctrl_app;
@@ -49,12 +50,6 @@ class Background_class Background;
 struct CT_calc_struct CT_char_vars;
 struct ONOFF_struct ONOFF;
 
-const class FLASH_class switch_FLASH =
-{
- .address = {(Uint16 *)&ONOFF.ONOFF_FLASH, 0},
- .sector = SectorM,
- .size16_each = {sizeof(ONOFF.ONOFF_FLASH), 0},
-};
 
 void CT_char_calc()
 {
@@ -471,7 +466,7 @@ void ONOFF_switch_func()
     if (ONOFF.ONOFF_FLASH != ONOFF.ONOFF)
     {
         ONOFF.ONOFF_FLASH = ONOFF.ONOFF;
-        switch_FLASH.save();
+        nonvolatile.save(NV_ONOFF_SWITCH_TYPE, NV_ONOFF_SAVE_TIMEOUT);
     }
 }
 
@@ -538,8 +533,8 @@ void Background_class::init()
     Fiber_comm_master[2].node_number = 2;
     Fiber_comm_master[3].node_number = 3;
 
-    if(L_grid_FLASH.retrieve()) L_grid_meas.L_grid_previous[0] = 100e-6;
-    error_retry_FLASH.retrieve();
+    if( nonvolatile.retrieve(NV_LGRID_TYPE,NV_LGRID_READ_TIMEOUT)) L_grid_meas.L_grid_previous[0] = 100e-6;
+    nonvolatile.retrieve(NV_ERROR_RETRY_TYPE, NV_RETRY_READ_TIMEOUT_ERROR);
     status_ACDC.error_retry = Machine_slave.error_retry;
 
     SD_card.read_settings();
@@ -683,7 +678,7 @@ void Background_class::init()
     update_harmonics();
     convert_harmonics_to_bits();
 
-    if(!switch_FLASH.retrieve())
+    if(!nonvolatile.retrieve(NV_ONOFF_SWITCH_TYPE, NV_ONOFF_READ_TIMEOUT))
     {
         ONOFF.ONOFF = ONOFF.ONOFF_FLASH;
         ONOFF.ONOFF_last = !ONOFF.ONOFF_FLASH;

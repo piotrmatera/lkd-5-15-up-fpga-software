@@ -15,20 +15,14 @@
 #include "State_master.h"
 
 #include "SD_card.h"
-#include "FLASH.h"
 
 #include "device_check.h"
+#include "nonvolatile_sections.h"
 
 class Machine_master_class Machine_master;
 void (*Machine_master_class::state_pointers[Machine_master_class::state_max])();
 struct L_grid_meas_struct L_grid_meas;
 
-const class FLASH_class L_grid_FLASH =
-{
- .address = {(Uint16 *)&L_grid_meas.L_grid_previous, 0},
- .sector = SectorL,
- .size16_each = {sizeof(L_grid_meas.L_grid_previous), 0},
-};
 
 static int compare_float (const void * a, const void * b)
 {
@@ -620,7 +614,7 @@ void Machine_master_class::Lgrid_meas()
         L_grid_meas.L_grid_previous[2] = L_grid_meas.L_grid_previous[1];
         L_grid_meas.L_grid_previous[1] = L_grid_meas.L_grid_previous[0];
         L_grid_meas.L_grid_previous[0] = L_grid_meas.L_grid_new;
-        L_grid_FLASH.save();
+        nonvolatile.save( NV_LGRID_TYPE, NV_LGRID_SAVE_TIMEOUT);
 
         Lgrid_meas_state++;
         break;

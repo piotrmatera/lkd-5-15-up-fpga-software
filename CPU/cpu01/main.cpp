@@ -146,7 +146,7 @@ void test_eeprom(){
 }
 #endif
 
-#define TESTING_NONVOLATILE 1
+#define TESTING_NONVOLATILE 0
 
 #if TESTING_NONVOLATILE
 uint16_t test_eeprom_buffer[ 64 ]; //do testow - obraz eepromu

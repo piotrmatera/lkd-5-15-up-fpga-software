@@ -16,7 +16,8 @@
 #include "Scope.h"
 #include "SD_card.h"
 #include "Init.h"
-#include "FLASH.h"
+
+#include "nonvolatile_sections.h"
 
 #include "MosfetCtrlApp.h"
 
@@ -26,12 +27,6 @@ class Machine_slave_class Machine_slave;
 void (*Machine_slave_class::state_pointers[Machine_slave_class::state_max])();
 struct timer_struct Timer_total;
 
-const class FLASH_class error_retry_FLASH =
-{
- .address = {(Uint16 *)&Machine_slave.error_retry, 0},
- .sector = SectorK,
- .size16_each = {sizeof(Machine_slave.error_retry), 0},
-};
 
 void timer_update(struct timer_struct *Timer, Uint16 enable_counting)
 {
@@ -68,7 +63,7 @@ void Machine_slave_class::Main()
         {
             Machine_slave.error_retry = 0;
             status_ACDC.error_retry = Machine_slave.error_retry;
-            error_retry_FLASH.save();
+            nonvolatile.save( NV_ERROR_RETRY_TYPE, NV_ERROR_RETRY_SAVE_TIMEOUT);
         }
     }
 }
@@ -553,7 +548,7 @@ void Machine_slave_class::start()
         if(Machine_slave.error_retry) Machine_slave.recent_error = 1;
         if(++Machine_slave.error_retry >= 16) Machine_slave.error_retry = 15;
         status_ACDC.error_retry = Machine_slave.error_retry;
-        error_retry_FLASH.save();
+        nonvolatile.save( NV_ERROR_RETRY_TYPE, NV_ERROR_RETRY_SAVE_TIMEOUT );
 
         memset(&Timer_total, 0, sizeof(Timer_total));
         timer_update(&Timer_total, 0);
