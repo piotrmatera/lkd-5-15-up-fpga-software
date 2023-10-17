@@ -47,9 +47,9 @@
 //#define EEPROM_PAGE_MASK 0xFF80
 //#define EEPROM_ADDRESS_MASK 0xFFFF
 
-//adresy na zewnatrz (dla SW):
-#define EEPROM_PAGE_MASK 0xFF8
-#define EEPROM_ADDRESS_MASK 0xFFF
+//adresy wewn. eeprom_i2c:
+#define EEPROM_PAGE_MASK 0xFF80 //to jest sprawdzane w eeprom_i2c do sprawdzenia czy zapis w obrebie strony
+#define EEPROM_ADDRESS_MASK 0xFFFF //to jest uzywane po tlumaczeniu adresu wirt. na rzeczywisty w eepromie
 
 /**@brief czas zapisu do eepromu, nie mozna wykonac polingu na tym procesorze tms*/
 #define EEPROM_WRITE_TIME_MS 6ULL  //w ms z dok. ukladu
