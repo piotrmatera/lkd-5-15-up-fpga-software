@@ -165,7 +165,7 @@ status_code_t i2c_transactions_t::process_write_only( void )
 status_code_t i2c_transactions_t::process_polling( void )
 {
     status_code_t retc = err_invalid;
-    return err_invalid; //mikrokontroler nie obsluguje transakcji i2c zlozonych tylko z control byte
+    return retc; //mikrokontroler nie obsluguje transakcji i2c zlozonych tylko z control byte
 
     /*switch( this->state ){
     case idle:
