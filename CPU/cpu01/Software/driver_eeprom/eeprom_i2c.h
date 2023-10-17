@@ -24,6 +24,7 @@
 // 5ms - zapis strony
 // 128 bajtow - wielkosc strony
 
+#define EEPROM_VIRTUAL_PAGES 1
 
 #define EEPROM_SIZE 4096 //rozmiar w bajtach, ktory mozna zapisac
 #define EEPROM_PAGE 8   //rozmiar strony w bajtach
