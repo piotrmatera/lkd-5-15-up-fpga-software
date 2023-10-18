@@ -91,7 +91,7 @@ SECTIONS
    .text:    	>>  FLASHE |FLASHF|FLASHG
    .TI.ramfunc:      LOAD = FLASHI
                      RUN = RAMD0_1,
-                     table(BINIT)*/
+                     table(BINIT)
 
    .TI.ramfunc_unsecure: LOAD = FLASHD,   PAGE = 0
                      RUN  = RAMGS8_15,   PAGE = 0,
