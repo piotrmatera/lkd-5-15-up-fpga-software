@@ -89,9 +89,9 @@ SECTIONS
    .cinit:   	>  FLASHI
    .pinit:   	>  FLASHI,   PAGE = 0
    .text:    	>>  FLASHE |FLASHF|FLASHG
-   .TI.ramfunc: {-l F021_API_F2837xD_FPU32.lib} LOAD = FLASHI
+   .TI.ramfunc:      LOAD = FLASHI
                      RUN = RAMD0_1,
-                     table(BINIT)
+                     table(BINIT)*/
 
    .TI.ramfunc_unsecure: LOAD = FLASHD,   PAGE = 0
                      RUN  = RAMGS8_15,   PAGE = 0,
