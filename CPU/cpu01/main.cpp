@@ -66,7 +66,7 @@ void main()
     EALLOW;
     CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 1;
     EDIS;
-
+#if FW_FOR_CALIBRATION
     if( is_unprogrammed_device_id() ){
             programm_device_id();
 
@@ -78,7 +78,7 @@ void main()
             }
 
      }
-
+#endif
 //    static volatile Uint16 go_on1 = 0;
 //    while(!go_on1);
 
