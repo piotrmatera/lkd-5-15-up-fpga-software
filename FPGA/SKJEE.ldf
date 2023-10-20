@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381I" default_implementation="ACDC_5_20_HLQFP">
+<BaliProject version="3.2" title="SKJEE" device="LFE5U-25F-6BG381I" default_implementation="ACDC_25_50_HLQFP">
     <Options/>
     <Implementation title="ACDC_25_50_BGA" dir="ACDC_25_50_BGA" description="ACDC_25_50_BGA" synthesis="lse" default_strategy="Strategy1">
         <Options VERILOG_DIRECTIVES="TYPE_25_50" top="top_ACDC"/>

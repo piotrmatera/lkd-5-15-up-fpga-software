@@ -44,8 +44,8 @@
 `ifdef TYPE_25_50
 	////////////////////////////////////////////////////SELECT HERE
 	
-	`define POWER_25
-	//`define POWER_50
+	//`define POWER_25
+	`define POWER_50
 	
 	`define VERSION_4_0
 

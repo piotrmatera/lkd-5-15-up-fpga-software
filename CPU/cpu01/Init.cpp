@@ -373,8 +373,8 @@ void Init_class::Variables()
     Meas_ACDC_alarm_H.U_dc_balance = 30.0f;
 
     Meas_ACDC_alarm_H.I_conv_rms = Conv.I_lim_nominal * 1.1f;
-    float min_Current = fabsf(Meas_ACDC_gain.def_osr * Meas_ACDC_gain.def_osr / Meas_ACDC_gain.sd_shift * fminf(Meas_ACDC_gain.I_conv.a, fminf(Meas_ACDC_gain.I_conv.b, fminf(Meas_ACDC_gain.I_conv.c, Meas_ACDC_gain.I_conv.n))));
-    Meas_ACDC_alarm_H.I_conv = fminf(min_Current - 10.0f, Conv.I_lim_nominal * 2.0f);
+    float min_Current = fabsf(Meas_ACDC_gain.def_osr * Meas_ACDC_gain.def_osr / Meas_ACDC_gain.sd_shift * fminf(Meas_ACDC_gain.I_conv.a, fminf(Meas_ACDC_gain.I_conv.b, Meas_ACDC_gain.I_conv.c)));
+    Meas_ACDC_alarm_H.I_conv = fminf(min_Current * 0.8f, Conv.I_lim_nominal * 2.0f);
     Meas_ACDC_alarm_L.I_conv = -Meas_ACDC_alarm_H.I_conv;
 
     ///////////////////////////////////////////////////////////////////

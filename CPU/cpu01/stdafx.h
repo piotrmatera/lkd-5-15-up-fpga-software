@@ -3,9 +3,9 @@
 
 #define PWM_CLOCK 125000000
 
-#define CONV_FREQUENCY 40000
+#define CONV_FREQUENCY 31250
 #define CONTROL_RATE 4.0
-#define SCOPE_BUFFER (Uint32)(0.02 * (float)CONV_FREQUENCY * 2.0 / CONTROL_RATE * 2)
+#define SCOPE_BUFFER (Uint32)(0.02 * (float)CONV_FREQUENCY * 2.0 / CONTROL_RATE * 4)
 //#define SCOPE_BUFFER 1250
 #define SCOPE_CHANNEL 12
 typedef float scope_data_type;

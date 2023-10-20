@@ -767,7 +767,7 @@ Uint16 SD_card_class::read_settings()
     if(settings.C_dc < 0.25e-3 || settings.C_dc > 5e-3) return fresult;
     if(settings.L_conv < 100e-6 || settings.L_conv > 2.5e-3) return fresult;
     if(settings.C_conv < 5e-6 || settings.C_conv > 200e-6) return fresult;
-    if(settings.I_lim < 8.0f || settings.I_lim > 40.0f) return fresult;
+    if(settings.I_lim < 8.0f || settings.I_lim > 160.0f) return fresult;
 
     settings.available = 1;
 

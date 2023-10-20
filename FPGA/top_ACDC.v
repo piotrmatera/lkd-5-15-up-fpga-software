@@ -538,8 +538,13 @@ module top_ACDC(CPU_io, FPGA_io, CPU_clk_o);
     IDDRX1F SD_IDDR[SD_NUMBER-1:0](.D(SD_DAT), .RST(1'b0), .SCLK(clk_20MHz), .Q0(SD_DAT_IDDR), .Q1()); 
   
 	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat;  
+	`ifdef TYPE_25_50	
+	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i({~SD_DAT_IDDR[SD_NUMBER-1:8], SD_DAT_IDDR[7:0]}),  
+	.clk_i(clk_20MHz), .decimator_pulse_i(decimator_pulse), .select_i(select_SD), .data_o(SD_dat));  
+	`else	
 	SD_filter_sync #(.ORDER(2), .OSR(OSR), .OUTPUT_WIDTH(SD_WIDTH)) SD_filter_sync[SD_NUMBER-1:0](.data_i({~SD_DAT_IDDR[SD_NUMBER-1:8], SD_DAT_IDDR[7:3], ~SD_DAT_IDDR[2:0]}),  
 	.clk_i(clk_20MHz), .decimator_pulse_i(decimator_pulse), .select_i(select_SD), .data_o(SD_dat));  
+	`endif
 	 
 	wire [SD_WIDTH*SD_NUMBER-1:0] SD_dat_avg; 
 	if(`CONTROL_RATE > 1) begin
