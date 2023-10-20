@@ -423,7 +423,7 @@ void Blink()
 #endif
 }
 
-#pragma CODE_SECTION(".TI.ramfunc_unsecure");
+#pragma CODE_SECTION(".interrupt_code_unsecure");
 void ONOFF_switch_interrupt()
 {
     float switch_timer_temp = ONOFF.switch_timer;

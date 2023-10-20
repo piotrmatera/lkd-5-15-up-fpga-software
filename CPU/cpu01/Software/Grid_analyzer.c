@@ -4,7 +4,7 @@
 
 #include "stdafx.h"
 
-#pragma CODE_SECTION(CIC1_adaptive2_global_calc_CPU, ".TI.ramfunc");
+#pragma CODE_SECTION(CIC1_adaptive2_global_calc_CPU, ".interrupt_code");
 void CIC1_adaptive2_global_calc_CPU(struct CIC1_adaptive2_global_struct* CIC_global, float frequency)
 {
     CIC_global->read_enable =
@@ -58,7 +58,7 @@ void CIC1_adaptive2_global_calc_CPU(struct CIC1_adaptive2_global_struct* CIC_glo
     }
 }
 
-#pragma CODE_SECTION(CIC1_adaptive2_filter_CPU, ".TI.ramfunc");
+#pragma CODE_SECTION(CIC1_adaptive2_filter_CPU, ".interrupt_code");
 float CIC1_adaptive2_filter_CPU(struct CIC1_adaptive2_global_struct* CIC_global, struct CIC1_adaptive2_struct* CIC, float input)
 {
     CIC->integrator += (int32)(input * CIC->range_modifier);
@@ -67,7 +67,7 @@ float CIC1_adaptive2_filter_CPU(struct CIC1_adaptive2_global_struct* CIC_global,
     return CIC->out;
 }
 
-#pragma CODE_SECTION(CIC1_filter_local_CPU, ".TI.ramfunc");
+#pragma CODE_SECTION(CIC1_filter_local_CPU, ".interrupt_code");
 void CIC1_filter_local_CPU(struct CIC1_global_struct* CIC_global, struct CIC1_local_struct* CIC, float input)
 {
     if (!CIC_global->enable_int) return;
@@ -78,7 +78,7 @@ void CIC1_filter_local_CPU(struct CIC1_global_struct* CIC_global, struct CIC1_lo
     *decimator = CIC->integrator;
 }
 
-#pragma CODE_SECTION(CIC1_filter_global_CPU, ".TI.ramfunc");
+#pragma CODE_SECTION(CIC1_filter_global_CPU, ".interrupt_code");
 void CIC1_filter_global_CPU(struct CIC1_global_struct* CIC_global)
 {
     CIC_global->enable_diff =
@@ -97,7 +97,7 @@ void CIC1_filter_global_CPU(struct CIC1_global_struct* CIC_global)
     }
 }
 
-#pragma CODE_SECTION(Grid_analyzer_calc, ".TI.ramfunc_unsecure");
+#pragma CODE_SECTION(Grid_analyzer_calc, ".interrupt_code_unsecure");
 void Grid_analyzer_calc()
 {
     CIC1_adaptive2_global_calc_CPU(&CIC1_adaptive2_global__50Hz, Conv.f_filter);
@@ -229,7 +229,7 @@ void Grid_analyzer_calc()
     Grid.Used_resources.n = Grid.I_conv.n * div_I_lim;
 }
 
-#pragma CODE_SECTION(Energy_meter_calc, ".TI.ramfunc");
+#pragma CODE_SECTION(Energy_meter_calc, ".interrupt_code");
 void Energy_meter_calc()
 {
     register Uint32 float_one = 0x3f800000;
@@ -284,7 +284,7 @@ void Energy_meter_calc()
     Energy_meter_params.sum.input_QIV = fabsf(fminf(temp, 0.0f));
 }
 
-#pragma CODE_SECTION(Grid_analyzer_filter_calc, ".TI.ramfunc");
+#pragma CODE_SECTION(Grid_analyzer_filter_calc, ".interrupt_code");
 void Grid_analyzer_filter_calc()
 {
     CIC1_filter_global_CPU(&CIC1_global__50Hz);

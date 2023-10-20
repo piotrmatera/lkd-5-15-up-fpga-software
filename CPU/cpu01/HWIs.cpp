@@ -17,7 +17,7 @@
 #include "SD_card.h"
 #include "Modbus_devices.h"
 
-#pragma CODE_SECTION(".TI.ramfunc_unsecure");
+#pragma CODE_SECTION(".interrupt_code_unsecure");
 interrupt void SD_AVG_INT()
 {
     Timer_PWM.CPU_SD = TIMESTAMP_PWM;
@@ -486,7 +486,7 @@ interrupt void SD_AVG_INT()
     if(timestamp > Timer_max) Timer_max = timestamp;
 }
 
-#pragma CODE_SECTION(".TI.ramfunc");
+#pragma CODE_SECTION(".interrupt_code");
 interrupt void NMI_INT()
 {
     ESTOP0;

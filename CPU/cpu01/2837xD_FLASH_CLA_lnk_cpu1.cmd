@@ -97,6 +97,10 @@ SECTIONS
                      RUN  = RAMGS8_15,   PAGE = 0,
                      table(BINIT)
 
+   .interrupt_code: >> FLASHI
+   .interrupt_code_unsecure: >> FLASHD  //mimo nazwy to nie jest unsecure, pochodzi od podzialu fn z RAMu na dwie grupy
+   //obecnie wszystko przeniesione do FLASH
+
    /* Initalized sections go in Flash */
    .switch:  	>  FLASHI,   PAGE = 0
    .econst:  	>  FLASHI
