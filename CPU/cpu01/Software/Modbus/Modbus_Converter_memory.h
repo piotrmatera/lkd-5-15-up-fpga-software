@@ -77,6 +77,10 @@ struct Modbus_Converter_memory_struct
             Uint64 QIII;
             Uint64 QIV;
         }Energy_meter_algebraic_sum;
+
+        Uint16 padding3[40];
+        struct hw_info_struct hw_info;
+
     }input_registers;
 
     struct

@@ -404,6 +404,7 @@ Modbus_error_enum_t Modbus_ADU_slave_transparent::Fcn_before_processed()
             Modbus_Converter.input_registers.RTC_current_time = RTC_current_time;
             Modbus_Converter.input_registers.rtu_port_id = this->RTU->get_sci_id();
             Modbus_Converter.input_registers.Machine_slave_state = Machine_slave.state;
+            Modbus_Converter.input_registers.hw_info = Background.hw_info;
         }
         if(Mdb_slave_ADU.start_address < sizeof(Modbus_Converter.input_registers.FatFS_response))
         {

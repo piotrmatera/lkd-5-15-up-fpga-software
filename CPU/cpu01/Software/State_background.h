@@ -5,6 +5,7 @@
 
 #include "stdafx.h"
 #include "time_bcd_struct.h"
+#include "hw_info.h"
 
 class Background_class
 {
@@ -12,6 +13,8 @@ class Background_class
 
     Uint16 harmonics_odd, harmonics_odd_last;
     Uint16 harmonics_even, harmonics_even_last;
+
+    struct hw_info_struct hw_info;
 
     static void init();
     static void Main();

@@ -14,9 +14,10 @@
 # 2023-01-04 PR mapa dla mastera
 # 2023-01-10 PR poprawki mapy, zmiany dla slave'a
 # 2023.01.11-13 PR poprawka alokacji pol bitowych
+# 2023-10-31 PR dodane pola ident. HW
 
 #oznaczenie wersji mapy
-VERSION 0308
+VERSION 0309
 
 #Sekcja typow danych bity/enumy
 SECTION_TYPE_DEF
@@ -674,6 +675,10 @@ SECTION_INPUT_REGISTERS_DEF
 	1148	u64	algebraic_QII
 	1152	u64	algebraic_QIII
 	1156	u64	algebraic_QIV
+	
+	1200	u16 eeprom_img_ver
+	1201	u16 board_cpu_ver
+	1202	u16 board_power_ver
 
 SECTION_HOLDING_REGISTERS_DEF
 	128	bit16_h_odd	H_odd_a
