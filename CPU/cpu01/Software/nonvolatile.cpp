@@ -149,8 +149,8 @@ Uint16 nonvolatile_t::read_info( struct region_info_t* info, struct region_info_
     struct eeprom_i2c::event_region_xdata xdata;
     xdata.status = eeprom_i2c::event_region_xdata::idle;
     xdata.start = NONVOLATILE_INFO_ADDRESS;
-    xdata.total_len = sizeof(*info);
-    xdata.data = (uint16_t*)&info;
+    xdata.total_len = NONVOLATILE_INFO_SIZE;
+    xdata.data = (uint16_t*)info;
 
     Uint16 retc = blocking_wait_for_finished(eeprom_i2c::event_read_region,  &xdata, _timeout );
 

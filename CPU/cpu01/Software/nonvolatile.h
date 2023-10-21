@@ -35,6 +35,9 @@ struct region_t{
 /** adres czesci informacyjnej w eepromie*/
 #define NONVOLATILE_INFO_ADDRESS 0
 
+/** rozmair czesci informacyjnej */
+#define NONVOLATILE_INFO_SIZE 8
+
 /** pozycja drugiej kopii regionow w pamieci eeprom (specyficzne dla pamieci 24lc01 (128 bajtow) */
 //#define NONVOL_COPY_OFFSET 64 //w bajtach
 
