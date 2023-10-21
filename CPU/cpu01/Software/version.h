@@ -12,7 +12,7 @@
 #include "common_utils.h"
 #include "version-id.h"
 
-#define MODBUS_ID 0x0308
+#define MODBUS_ID 0x0309
 #define BOARD_ID 0x0301
 #define SW_ID 0x0301
 

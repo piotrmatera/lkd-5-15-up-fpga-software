@@ -789,13 +789,13 @@ void Background_class::init()
     }
 
     //wczytanie danych dotyczacych plytki CPU
-  /*  struct region_info_t info;
+    struct region_info_t info;
     struct region_info_ext_t info_ext;
     nonvolatile.read_info(&info, &info_ext, NV_READ_INFO);
 
     Background.hw_info.eeprom_img_ver = info.data.eeprom_version;
     Background.hw_info.board_cpu_ver = info.data.pcb_version;
-    Background.hw_info.board_power_ver = 0;*/
+    Background.hw_info.board_power_ver = 0;
 
 
     GPIO_SET(RST_CM);
