@@ -486,7 +486,7 @@ interrupt void SD_AVG_INT()
     if(timestamp > Timer_max) Timer_max = timestamp;
 }
 
-#pragma CODE_SECTION(".interrupt_code");
+#pragma CODE_SECTION(".TI.ramfunc");
 interrupt void NMI_INT()
 {
     ESTOP0;
