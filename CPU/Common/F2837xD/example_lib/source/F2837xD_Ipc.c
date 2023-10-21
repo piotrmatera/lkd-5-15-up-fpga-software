@@ -46,7 +46,7 @@
 #include "F2837xD_device.h"
 #include "F2837xD_Examples.h"
 #include <string.h>
-
+#include "interrupts_control.h"
 //
 // InitIpc - Initialize all IPC registers and clear all flags
 //
@@ -91,13 +91,12 @@ unsigned long long ReadIpcTimer()
 {
     Uint32 low, high;
 
-    Uint16 interrupt_state = __disable_interrupts();
+    Uint16 interrupt_state = _custom_disable_interrupts();
 
     low = IpcRegs.IPCCOUNTERL;
     high = IpcRegs.IPCCOUNTERH;
 
-    if( 0U == (interrupt_state & 0x1 ))
-           __enable_interrupts();
+    _custom_restore_interrupts( interrupt_state );
 
     return ((unsigned long long)high << 32) | (unsigned long long)low;
 }
