@@ -91,10 +91,14 @@ unsigned long long ReadIpcTimer()
 {
     Uint32 low, high;
 
-    DINT;
+    Uint16 interrupt_state = __disable_interrupts();
+
     low = IpcRegs.IPCCOUNTERL;
     high = IpcRegs.IPCCOUNTERH;
-    EINT;
+
+    if( 0U == (interrupt_state & 0x1 ))
+           __enable_interrupts();
+
     return ((unsigned long long)high << 32) | (unsigned long long)low;
 }
 
