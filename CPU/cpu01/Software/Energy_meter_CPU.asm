@@ -11,7 +11,7 @@
 		.endif
 
         .global _Energy_meter_CPUasm
-        .sect ".TI.ramfunc"
+        .sect ".interrupt_code"
 
 _Energy_meter_CPUasm:
 

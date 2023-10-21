@@ -13,7 +13,7 @@
 		.endif
 
         .global _Kalman_THD_calc_CPUasm
-        .sect ".TI.ramfunc"
+        .sect ".interrupt_code"
 
 _Kalman_THD_calc_CPUasm:
 ;		ESTOP0

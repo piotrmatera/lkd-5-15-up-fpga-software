@@ -115,7 +115,7 @@ Uint16 Modbus_RTU_class::get_sci_id(void) const{
     return 0;
 }
 
-#pragma CODE_SECTION(".TI.ramfunc_unsecure");
+#pragma CODE_SECTION(".interrupt_code_unsecure");
 void Modbus_RTU_class::interrupt_task()
 {
     __HOOK_ENTRY_RTU_interrupt_task;

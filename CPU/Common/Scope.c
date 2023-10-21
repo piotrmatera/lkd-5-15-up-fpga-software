@@ -10,13 +10,13 @@
 #pragma DATA_SECTION(Scope,"Scope")
 struct Scope_v1 Scope;
 
-#pragma CODE_SECTION(Scope_start, ".TI.ramfunc_unsecure");
+#pragma CODE_SECTION(Scope_start, ".interrupt_code_unsecure");
 void Scope_start()
 {
     if(!Scope.acquire_counter) Scope.acquire_counter = -1;
 }
 
-#pragma CODE_SECTION(Scope_trigger, ".TI.ramfunc_unsecure");
+#pragma CODE_SECTION(Scope_trigger, ".interrupt_codec_unsecure");
 Uint32 Scope_trigger(float input, float *input_last, float trigger_val, float edge)
 {
     register Uint32 trigger = 0;
@@ -38,13 +38,13 @@ Uint32 Scope_trigger(float input, float *input_last, float trigger_val, float ed
     return trigger;
 }
 
-#pragma CODE_SECTION(Scope_trigger_unc, ".TI.ramfunc_unsecure");
+#pragma CODE_SECTION(Scope_trigger_unc, ".interrupt_code_unsecure");
 void Scope_trigger_unc()
 {
     if(Scope.acquire_counter < 0) Scope.acquire_counter = SCOPE_BUFFER - Scope.acquire_before_trigger;
 }
 
-#pragma CODE_SECTION(Scope_task, ".TI.ramfunc_unsecure");
+#pragma CODE_SECTION(Scope_task, ".interrupt_code_unsecure");
 void Scope_task()
 {
     static Uint32 swap_counter;
