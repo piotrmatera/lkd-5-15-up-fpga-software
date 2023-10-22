@@ -429,7 +429,7 @@ void i2c_t::interrupt_process( i2c_t::I2C_InterruptSource intSource, uint16_t i2
 
         }else if( state == i2c_t::I2C_STATUS_SEND_NOSTOP_BUSY){
             state = i2c_t::I2C_STATUS_RESTART; //sygnalizuje wyzszej warstwie ze zakonczono write_nostop i ze mozna uruchamiac druga faze odczytu
-            _buffer->ready = 1;
+            _buffer->ready = MSG_READY;
         }
     }
 
