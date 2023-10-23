@@ -168,7 +168,6 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
             return err_stop_not_ready;
         }
 
-        i2cregs->I2CSAR.all = this->slave_address;
 
         // Check if bus busy
         if( i2cregs->I2CSTR.bit.BB == 1 )
@@ -179,6 +178,8 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
         if( this->state != I2C_STATUS_INACTIVE ){
             return err_busy;
         }
+
+        i2cregs->I2CSAR.all = this->slave_address;
 
         /*if( (buffer->len == 0) && (this->i2cregs == &I2caRegs)){
             //wylapanie dla przypadku pollingu dla magistrali z eeprom/rtc
