@@ -18,8 +18,7 @@
 #include "testing-eeprom.h"
 #include "i2c_transactions.h"
 
-extern i2c_transactions_t i2c_bus;
-
+/*extern i2c_transactions_t i2c_bus;
 void test_eeprom_page128(void){
     struct msg_buffer msg;
     memset(&msg, 0xde, sizeof(msg));
@@ -51,7 +50,7 @@ void test_eeprom_page128(void){
     while( msg.ready == 0);
 
     while(1);
-}
+}*/
 
 
 
@@ -135,7 +134,6 @@ void main()
 
     Background.init();
 
-    test_eeprom_page128();
     while(1)
     {
 #if TESTING_EEPROM_NV

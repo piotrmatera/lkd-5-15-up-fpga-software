@@ -145,9 +145,9 @@ status_code_t i2c_t::set_slave_address( uint16_t address ){
     return status_ok;
 }
 
-void i2c_t::copy_to_fifo(void){
-    Uint16 this_transfer = (this->_buffer_x_len_left < I2C_TX_FIFO_APPEND_SIZE)?
-                            this->_buffer_x_len_left : I2C_TX_FIFO_APPEND_SIZE;
+void i2c_t::copy_to_fifo( Uint16 limit ){
+    Uint16 this_transfer = (this->_buffer_x_len_left < limit)?
+                            this->_buffer_x_len_left : limit;
 
    for (Uint16 i = 0; i < this_transfer; i++) //zapisanie kolejnej paczki danych
         i2cregs->I2CDXR.all = this->_buffer->data[i + _buffer_next_index ];
@@ -229,7 +229,7 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
 
         i2cregs->I2CFFTX.bit.TXFFIL = I2C_TX_FIFO_LEVEL;
 
-        copy_to_fifo(); //kasownaie flagi w srodku fn
+        copy_to_fifo(MAX_BUFFER_SIZE); //kasownaie flagi w srodku fn
 
         // master send z STOP na koncu
         mode_start_write();
@@ -389,7 +389,7 @@ status_code_t i2c_t::interrupt_process( void ){
     }
 
     if( state == i2c_t::I2C_STATUS_READ_BUSY ){
-        if( i2cregs->I2CFFRX.bit.RXFFINT ){
+        if( i2cregs->I2CFFRX.bit.RXFFINT ){ //flaga sie pojawia gdy w rx-fifo jest >= I2C_RX_FIFO_LEVEL
             copy_from_fifo();
         }
     }
@@ -408,8 +408,8 @@ status_code_t i2c_t::interrupt_process( void ){
     }
 
     if( state == i2c_t::I2C_STATUS_WRITE_BUSY ){
-        if( i2cregs->I2CFFTX.bit.TXFFINT ){
-            copy_to_fifo(); //kasownaie flagi w srodku fn
+        if( i2cregs->I2CFFTX.bit.TXFFINT ){ //flaga sie pojawia gdy w TX-fifo jest <= I2C_TX_FIFO_LEVEL
+            copy_to_fifo(I2C_TX_FIFO_APPEND_SIZE); //kasownaie flagi w srodku fn
         }
     }
 

@@ -4,13 +4,78 @@
  *  Created on: 17 paü 2023
  *      Author: Piotr
  */
-
+#include <string.h>
 #include "Software/driver_eeprom/eeprom_i2c.h"
 #include "i2c_transactions.h"
 #include "nonvolatile.h"
 #include "Rtc.h"
 
+#include "testing-eeprom.h"
+#include "i2c_transactions.h"
+
+extern i2c_transactions_t i2c_bus;
 extern eeprom_i2c eeprom;
+
+
+void testing_large_page_eeprom(void){
+    static Uint16 test_cnt = 1;
+    switch( test_cnt ){
+    case 1: //zapis do pamieci
+        {
+        struct msg_buffer msg;
+        memset(&msg, 0xde, sizeof(msg));
+
+        msg.len = 30;
+        for(Uint16 i = 0; i<msg.len; i++)
+           msg.data[i] = i+10;
+        //zapis pod adresem 0x0a0b 28 wartosci od 12 do 39, losowe pierwsza i ostatnia komorka
+        Uint64 random = ReadIpcTimer();
+        msg.data[2] = random & 0xFF;
+        random = ReadIpcTimer() + (random >> 8);
+        msg.data[29] = random & 0xFF;
+        msg.ready = 0;
+
+        DELAY_US(20000);
+
+        i2c_bus.i2c.set_slave_address( 0x50 );
+        while( i2c_bus.i2c.write(&msg, 0) != status_ok );
+
+        DELAY_US(20000);
+        test_cnt = 2;
+        //break; celowo bez break aby sie nic nie wtracalo podczas testu i wykonalo druga czesc
+        }
+    case 2:
+        { //odczyt z pamieci
+        struct msg_buffer msg;
+        memset(&msg, 0xde, sizeof(msg));
+
+        msg.len = 30;
+        msg.ready = 0;
+
+        DELAY_US(20000);
+
+        i2c_bus.i2c.set_slave_address( 0x50 );
+        struct msg_buffer msg_write_addr;
+        msg_write_addr.data[0] = 10;
+        msg_write_addr.data[1] = 11;
+        msg_write_addr.len = 2;
+        msg_write_addr.ready = 0;
+
+        while( i2c_bus.i2c.write_nostop(&msg_write_addr, 0) != status_ok );
+        while( msg_write_addr.ready == 0);
+
+        msg.len = 30;
+        msg.ready = 0;
+
+        while( i2c_bus.i2c.read(&msg, 0) != status_ok );
+        while( msg.ready == 0);
+
+        test_cnt = 10;
+        break;
+        }
+
+    }
+}
 
 #if TESTING_EEPROM_I2C
 uint16_t memory_buffer[256]; //na razie zbior bajtow; TODO zrobic aby byl zapis obu bajtow ze slowa

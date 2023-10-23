@@ -21,7 +21,7 @@
 
 #define MAX_BUFFER_SIZE             14      // Max 16 bajtowe fifo w module i2c
 
-#define MAX_TRANSFER_SIZE          128
+#define MAX_TRANSFER_SIZE          (128+2)  //do zapisu strony 128 bajtow + 2 bajty adresu
 
 #define I2C_TX_FIFO_LEVEL          8 //poziom Fifo tx gdy bajtow w fifo <= tego, to ustawia flage FFTXINT
 #define I2C_RX_FIFO_LEVEL          8 //jw ale RX Fifo
@@ -40,7 +40,7 @@
 struct msg_buffer{
     uint16_t len;   //ile danych odebrac/wyslac
     volatile uint16_t ready; //do sygnalizacji zakonczenia tx/rx tej wiadomosci
-    uint16_t data[ 64 ];//TODO  MAX_BUFFER_SIZE+2]; //dane do wyslania/ew. dane odebrane
+    uint16_t data[ MAX_TRANSFER_SIZE ];//dane do wyslania/ew. dane odebrane
     //musi byc wiecej bo w tym buforze jest zapisywany tez adres rejestru
 };
 
@@ -155,7 +155,7 @@ private:
     void mode_start_write_nostop(void);
     void mode_start_read(void);
 
-    void copy_to_fifo(void);
+    void copy_to_fifo( Uint16 limit );
 
     void copy_from_fifo(void);
 
