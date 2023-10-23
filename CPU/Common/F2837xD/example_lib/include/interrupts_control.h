@@ -24,6 +24,18 @@ Uint16 _custom_disable_interrupts(void);
 /** odczytanie rejestru ST1 */
 Uint16 _custom_read_st1(void);
 
+/** odpowiednik ReadIpcTimer z biblioteki ale zabezp. przed
+ * przerwaniem w trakcie czytania rejestrow
+ * zoptymalizowane w asemblerze
+ *
+ * Uwagi:
+ * - zabezpieczone przed wtraceniem ISR
+ * - wylacza przerwania na 3 cykle CPU
+ * - odtwarza stan przerwan po odczycie rejestrow
+ *
+ */
+Uint64 _custom_read_ipc_timer(void);
+
 /**przywraca stan przerwan przed wywolaniem _custom_disable_interrupts()
  * @param[in] previous poprzedni stan przerwan zwrocony przez _custom_disable_interrupts()
  */
