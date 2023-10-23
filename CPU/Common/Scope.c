@@ -16,7 +16,7 @@ void Scope_start()
     if(!Scope.acquire_counter) Scope.acquire_counter = -1;
 }
 
-#pragma CODE_SECTION(Scope_trigger, ".interrupt_codec_unsecure");
+#pragma CODE_SECTION(Scope_trigger, ".interrupt_code_unsecure");
 Uint32 Scope_trigger(float input, float *input_last, float trigger_val, float edge)
 {
     register Uint32 trigger = 0;
