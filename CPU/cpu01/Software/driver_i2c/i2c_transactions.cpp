@@ -67,7 +67,6 @@ status_code_t i2c_transactions_t::process( void )
 {
 #define MAX_TASKS 2
     status_code_t retc[MAX_TASKS] = {status_ok, status_ok};
-    if( _custom_read_st1() & 0x01 == 1U )
 
     if( _are_interrupts_masked() ) //jesli przerwnaia sa wylaczone
         retc[0] = i2c.interrupt_process();  //obsluga interfejsu sprzetowego i2c
