@@ -150,7 +150,7 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
         uint16_t i;
         if( buffer == NULL )
             return err_invalid;
-        if( buffer->len > MAX_BUFFER_SIZE+1 )
+        if( buffer->len > MAX_TRANSFER_SIZE+1 )
             return err_invalid;
 
         // nie zezwalac na wysylanie wiadomosci z datalen=0
@@ -193,8 +193,19 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
         this->error = status_ok;
         i2cregs->I2CCNT = this->_buffer->len;
 
-        for (i = 0; i < this->_buffer->len; i++) //zapisanie danych (wartosci do kolejnych rejestrow RTC)
+        this->_buffer_x_len_left = this->_buffer->len;
+        Uint16 this_transfer = (this->_buffer_x_len_left > MAX_BUFFER_SIZE)?
+                                 MAX_BUFFER_SIZE : this->_buffer_x_len_left;
+
+        this->_buffer_x_len_left -= this_transfer;
+        this->_buffer_next_index = this_transfer;
+
+        i2cregs->I2CFFTX.bit.TXFFIL = I2C_TX_FIFO_LEVEL;
+
+        for (i = 0; i < this_transfer; i++) //zapisanie danych (wartosci do kolejnych rejestrow RTC)
             i2cregs->I2CDXR.all = this->_buffer->data[i];
+
+        i2cregs->I2CFFTX.bit.TXFFINTCLR = 1;
 
         // master send z STOP na koncu
         mode_start_write();
@@ -217,7 +228,7 @@ status_code_t i2c_t::write_nostop( msg_buffer * buffer, uint16_t timeout )
        if( buffer == NULL ){
             RETURN_ERR( err_invalid );
        }
-       if( buffer->len > MAX_BUFFER_SIZE+1 )
+       if( buffer->len > MAX_TRANSFER_SIZE+1 )
            RETURN_ERR( err_invalid );
 
        if( buffer->len == 0 )
@@ -327,6 +338,9 @@ __interrupt void i2cAISR(void)
 
 #if !(I2C_USE_INTERRUPTS)
 status_code_t i2c_t::interrupt_process( void ){
+    if( state == I2C_STATUS_INACTIVE || state == I2C_STATUS_RESET || state == I2C_STATUS_RESTART )
+        return status_ok;
+
     i2c_t::I2C_InterruptSource intSource = I2C_INTSRC_NONE;
     uint16_t i2cstreg = i2cregs->I2CSTR.all;//zmieniony sposob odwolania do STR
 
@@ -356,6 +370,24 @@ status_code_t i2c_t::interrupt_process( void ){
            return status_ok;//err_generic;
     }
 
+    if( state == i2c_t::I2C_STATUS_WRITE_BUSY ){
+        if( i2cregs->I2CFFTX.bit.TXFFINT ){
+            Uint16 this_transfer = (this->_buffer_x_len_left < I2C_TX_FIFO_APPEND_SIZE)?
+                                    this->_buffer_x_len_left : I2C_TX_FIFO_APPEND_SIZE;
+
+            this->_buffer_x_len_left -= this_transfer;
+
+//                    i2cregs->I2CFFTX.bit.TXFFIL = I2C_TX_FIFO_LEVEL;
+
+            for (Uint16 i = 0; i < this_transfer; i++) //zapisanie kolejnej paczki danych
+                 i2cregs->I2CDXR.all = this->_buffer->data[i + _buffer_next_index ];
+
+            this->_buffer_next_index += this_transfer;
+
+            i2cregs->I2CFFTX.bit.TXFFINTCLR = 1;
+
+        }
+    }
     return status_ok;
 }
 

@@ -24,7 +24,7 @@
 # define NV_LGRID_READ_TIMEOUT 20 //ms
 # define NV_RETRY_READ_TIMEOUT_ERROR 10 //ms
 
-# define NV_READ_INFO 50
+# define NV_READ_INFO 10
 #else
 
 # define NV_ONOFF_SAVE_TIMEOUT 0 //ms

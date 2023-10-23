@@ -83,9 +83,9 @@ class i2c_transactions_t{
      * To czy mozna rozpoczac czy jest w trakcie transakcja jest rozpoznawane
      * na podstawie (current_transaction == NULL)*/
     state_t state;
-
+public:
     i2c_t i2c; /**<@brief klasa z interfejsem fizycznym i2c*/
-
+private:
     /**@brief aktualnie obslugiwana transakcja, gdy brak, lub sie zakonczy =NULL*/
     struct i2c_transaction_buffer *current_transaction;
 

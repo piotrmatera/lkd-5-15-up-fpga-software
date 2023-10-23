@@ -21,6 +21,12 @@
 
 #define MAX_BUFFER_SIZE             14      // Max 16 bajtowe fifo w module i2c
 
+#define MAX_TRANSFER_SIZE          128
+
+#define I2C_TX_FIFO_LEVEL          8 //poziom Fifo tx gdy bajtow w fifo <= tego, to ustawia flage FFTXINT
+
+#define I2C_TX_FIFO_APPEND_SIZE (MAX_BUFFER_SIZE-I2C_TX_FIFO_LEVEL)
+
 #define I2C_400kHz_DUTY1_3 {16, 13, 3}
 #define I2C_200kHz_DUTY1_3 {19, 25, 10}
 #define I2C_100kHz_DUTY1_3 {19, 60, 26}
@@ -33,7 +39,7 @@
 struct msg_buffer{
     uint16_t len;   //ile danych odebrac/wyslac
     volatile uint16_t ready; //do sygnalizacji zakonczenia tx/rx tej wiadomosci
-    uint16_t data[MAX_BUFFER_SIZE+2]; //dane do wyslania/ew. dane odebrane
+    uint16_t data[ 64 ];//TODO  MAX_BUFFER_SIZE+2]; //dane do wyslania/ew. dane odebrane
     //musi byc wiecej bo w tym buforze jest zapisywany tez adres rejestru
 };
 
@@ -88,6 +94,11 @@ public:
     i2c_state_t state; //stan interfejsu
 
     msg_buffer * _buffer; //bufor do wymiany danych (podczpiany przy rozp. transakcji)
+
+    Uint16       _buffer_x_len_left; //ile zostalo do przeslania danych
+                //potrzebne do odliczania ile doslac do FIFO
+
+    Uint16      _buffer_next_index; //index w _buffer.data[] dane nastepnie wywyslane
 
     i2c_t();
 

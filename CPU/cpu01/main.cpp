@@ -16,6 +16,30 @@
 
 
 #include "testing-eeprom.h"
+#include "i2c_transactions.h"
+
+extern i2c_transactions_t i2c_bus;
+
+void test_eeprom_page128(void){
+    struct msg_buffer msg;
+    memset(&msg, 0xde, sizeof(msg));
+
+    msg.len = 30;
+    for(Uint16 i = 0; i<msg.len; i++)
+        msg.data[i] = i+10;
+
+    msg.ready = 0;
+
+    DELAY_US(20000);
+
+    i2c_bus.i2c.set_slave_address( 0x50 );
+    while( i2c_bus.i2c.write(&msg, 0) != status_ok );
+
+    while( msg.ready == 0);
+
+    while(1);
+}
+
 
 
 void main()
@@ -98,6 +122,7 @@ void main()
 
     Background.init();
 
+    test_eeprom_page128();
     while(1)
     {
 #if TESTING_EEPROM_NV
