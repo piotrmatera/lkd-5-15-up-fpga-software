@@ -21,6 +21,8 @@ extern "C"{
  */
 Uint16 _custom_disable_interrupts(void);
 
+/** odczytanie rejestru ST1 */
+Uint16 _custom_read_st1(void);
 
 /**przywraca stan przerwan przed wywolaniem _custom_disable_interrupts()
  * @param[in] previous poprzedni stan przerwan zwrocony przez _custom_disable_interrupts()

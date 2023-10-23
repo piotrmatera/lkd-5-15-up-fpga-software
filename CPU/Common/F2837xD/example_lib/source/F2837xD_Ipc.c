@@ -91,12 +91,17 @@ unsigned long long ReadIpcTimer()
 {
     Uint32 low, high;
 
-    Uint16 interrupt_state = _custom_disable_interrupts();
+    Uint16 interrupt_state = _custom_read_st1();
 
-    low = IpcRegs.IPCCOUNTERL;
-    high = IpcRegs.IPCCOUNTERH;
-
-    _custom_restore_interrupts( interrupt_state );
+    if( 0U == (interrupt_state & 0x01)){
+        DINT;
+        low = IpcRegs.IPCCOUNTERL;
+        high = IpcRegs.IPCCOUNTERH;
+        EINT;
+    }else{
+        low = IpcRegs.IPCCOUNTERL;
+        high = IpcRegs.IPCCOUNTERH;
+    }
 
     return ((unsigned long long)high << 32) | (unsigned long long)low;
 }
