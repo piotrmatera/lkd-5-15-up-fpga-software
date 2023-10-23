@@ -25,16 +25,29 @@ void test_eeprom_page128(void){
     memset(&msg, 0xde, sizeof(msg));
 
     msg.len = 30;
-    for(Uint16 i = 0; i<msg.len; i++)
-        msg.data[i] = i+10;
+    //for(Uint16 i = 0; i<msg.len; i++)
+    //    msg.data[i] = i+10;
 
     msg.ready = 0;
 
     DELAY_US(20000);
 
     i2c_bus.i2c.set_slave_address( 0x50 );
-    while( i2c_bus.i2c.write(&msg, 0) != status_ok );
+    //while( i2c_bus.i2c.write(&msg, 0) != status_ok );
 
+    struct msg_buffer msg_write_addr;
+    msg_write_addr.data[0] = 10;
+    msg_write_addr.data[1] = 11;
+    msg_write_addr.len = 2;
+    msg_write_addr.ready = 0;
+
+    while( i2c_bus.i2c.write_nostop(&msg_write_addr, 0) != status_ok );
+    while( msg_write_addr.ready == 0);
+
+    msg.len = 30;
+    msg.ready = 0;
+
+    while( i2c_bus.i2c.read(&msg, 0) != status_ok );
     while( msg.ready == 0);
 
     while(1);

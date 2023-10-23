@@ -145,12 +145,43 @@ status_code_t i2c_t::set_slave_address( uint16_t address ){
     return status_ok;
 }
 
+void i2c_t::copy_to_fifo(void){
+    Uint16 this_transfer = (this->_buffer_x_len_left < I2C_TX_FIFO_APPEND_SIZE)?
+                            this->_buffer_x_len_left : I2C_TX_FIFO_APPEND_SIZE;
+
+   for (Uint16 i = 0; i < this_transfer; i++) //zapisanie kolejnej paczki danych
+        i2cregs->I2CDXR.all = this->_buffer->data[i + _buffer_next_index ];
+
+   this->_buffer_x_len_left -= this_transfer;
+   this->_buffer_next_index += this_transfer;
+
+   i2cregs->I2CFFTX.bit.TXFFINTCLR = 1;
+}
+
+void i2c_t::copy_from_fifo(void){
+    Uint16 bytes_in_fifo = i2cregs->I2CFFRX.bit.RXFFST;
+    Uint16 this_transfer = bytes_in_fifo < this->_buffer_x_len_left?
+                           bytes_in_fifo : this->_buffer_x_len_left;
+
+            //(this->_buffer_x_len_left < I2C_RX_FIFO_LEVEL)?
+            //                this->_buffer_x_len_left : I2C_RX_FIFO_LEVEL;
+
+    for(Uint16 i=0; i < this_transfer; i++)
+        this->_buffer->data[i + _buffer_next_index ] = i2cregs->I2CDRR.bit.DATA;
+
+    this->_buffer_x_len_left -= this_transfer;
+    this->_buffer_next_index += this_transfer;
+
+    i2cregs->I2CFFRX.bit.RXFFINTCLR = 1;
+
+}
+
 status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
 {
-        uint16_t i;
+
         if( buffer == NULL )
             return err_invalid;
-        if( buffer->len > MAX_TRANSFER_SIZE+1 )
+        if( buffer->len > MAX_TRANSFER_SIZE )
             return err_invalid;
 
         // nie zezwalac na wysylanie wiadomosci z datalen=0
@@ -194,18 +225,11 @@ status_code_t i2c_t::write( msg_buffer * buffer, uint16_t timeout )
         i2cregs->I2CCNT = this->_buffer->len;
 
         this->_buffer_x_len_left = this->_buffer->len;
-        Uint16 this_transfer = (this->_buffer_x_len_left > MAX_BUFFER_SIZE)?
-                                 MAX_BUFFER_SIZE : this->_buffer_x_len_left;
-
-        this->_buffer_x_len_left -= this_transfer;
-        this->_buffer_next_index = this_transfer;
+        this->_buffer_next_index = 0;
 
         i2cregs->I2CFFTX.bit.TXFFIL = I2C_TX_FIFO_LEVEL;
 
-        for (i = 0; i < this_transfer; i++) //zapisanie danych (wartosci do kolejnych rejestrow RTC)
-            i2cregs->I2CDXR.all = this->_buffer->data[i];
-
-        i2cregs->I2CFFTX.bit.TXFFINTCLR = 1;
+        copy_to_fifo(); //kasownaie flagi w srodku fn
 
         // master send z STOP na koncu
         mode_start_write();
@@ -228,7 +252,7 @@ status_code_t i2c_t::write_nostop( msg_buffer * buffer, uint16_t timeout )
        if( buffer == NULL ){
             RETURN_ERR( err_invalid );
        }
-       if( buffer->len > MAX_TRANSFER_SIZE+1 )
+       if( buffer->len > MAX_BUFFER_SIZE )
            RETURN_ERR( err_invalid );
 
        if( buffer->len == 0 )
@@ -270,7 +294,7 @@ status_code_t i2c_t::read( msg_buffer * buffer, uint16_t timeout )
 {
         if( buffer == NULL )
             return err_invalid;
-        if( buffer->len > MAX_BUFFER_SIZE+1 )
+        if( buffer->len > MAX_TRANSFER_SIZE )
             return err_invalid;
 
         if( buffer->len == 0 )
@@ -294,9 +318,16 @@ status_code_t i2c_t::read( msg_buffer * buffer, uint16_t timeout )
         this->_buffer = buffer;
         this->_buffer->ready = MSG_NOTREADY;
         this->error = status_ok;
+
+        this->_buffer_x_len_left = this->_buffer->len;
+        this->_buffer_next_index = 0;
+
         i2cregs->I2CCNT = this->_buffer->len;
 
         i2cregs->I2CSAR.all = this->slave_address;
+
+        i2cregs->I2CFFRX.bit.RXFFIL = I2C_RX_FIFO_LEVEL;
+        i2cregs->I2CFFRX.bit.RXFFINTCLR = 1;
 
         //master receive
         mode_start_read();
@@ -357,6 +388,12 @@ status_code_t i2c_t::interrupt_process( void ){
         dbg_marker('g');
     }
 
+    if( state == i2c_t::I2C_STATUS_READ_BUSY ){
+        if( i2cregs->I2CFFRX.bit.RXFFINT ){
+            copy_from_fifo();
+        }
+    }
+
     if( intSource != I2C_INTSRC_NONE )
         interrupt_process( intSource, i2cstreg ); //trzeba przekazac stan i2cstreg bo odczyt juz skasowal flage NAK
 
@@ -372,22 +409,10 @@ status_code_t i2c_t::interrupt_process( void ){
 
     if( state == i2c_t::I2C_STATUS_WRITE_BUSY ){
         if( i2cregs->I2CFFTX.bit.TXFFINT ){
-            Uint16 this_transfer = (this->_buffer_x_len_left < I2C_TX_FIFO_APPEND_SIZE)?
-                                    this->_buffer_x_len_left : I2C_TX_FIFO_APPEND_SIZE;
-
-            this->_buffer_x_len_left -= this_transfer;
-
-//                    i2cregs->I2CFFTX.bit.TXFFIL = I2C_TX_FIFO_LEVEL;
-
-            for (Uint16 i = 0; i < this_transfer; i++) //zapisanie kolejnej paczki danych
-                 i2cregs->I2CDXR.all = this->_buffer->data[i + _buffer_next_index ];
-
-            this->_buffer_next_index += this_transfer;
-
-            i2cregs->I2CFFTX.bit.TXFFINTCLR = 1;
-
+            copy_to_fifo(); //kasownaie flagi w srodku fn
         }
     }
+
     return status_ok;
 }
 
@@ -402,7 +427,7 @@ void i2c_t::interrupt_process( i2c_t::I2C_InterruptSource intSource, uint16_t i2
     //UWAGA
     //w zewnetrznej fn najpierw zlecane do obslugi ARDY, potem STOP_COND
 
-    uint16_t i;
+
     //dbg_marker('%');
     //dbg_marker('0'+state);
 
@@ -416,10 +441,7 @@ void i2c_t::interrupt_process( i2c_t::I2C_InterruptSource intSource, uint16_t i2
         case i2c_t::I2C_STATUS_READ_BUSY:
             //zakonczono odczyt danych, odczytanie z fifo
             if( error == status_ok ){
-                for(i=0; i < _buffer->len; i++) {
-                    if( i >= MAX_BUFFER_SIZE ) break;
-                    _buffer->data[i] = i2cregs->I2CDRR.bit.DATA;
-                }
+                copy_from_fifo();
             }else{
                 i2cregs->I2CFFRX.bit.RXFFRST = 0; //skasowanie fifo rx
                 i2cregs->I2CFFRX.bit.RXFFRST = 1; //skasowanie fifo rx

@@ -24,6 +24,7 @@
 #define MAX_TRANSFER_SIZE          128
 
 #define I2C_TX_FIFO_LEVEL          8 //poziom Fifo tx gdy bajtow w fifo <= tego, to ustawia flage FFTXINT
+#define I2C_RX_FIFO_LEVEL          8 //jw ale RX Fifo
 
 #define I2C_TX_FIFO_APPEND_SIZE (MAX_BUFFER_SIZE-I2C_TX_FIFO_LEVEL)
 
@@ -153,6 +154,10 @@ private:
     void mode_start_write(void);
     void mode_start_write_nostop(void);
     void mode_start_read(void);
+
+    void copy_to_fifo(void);
+
+    void copy_from_fifo(void);
 
     status_code_t error;
 #if I2C_USE_INTERRUPTS
