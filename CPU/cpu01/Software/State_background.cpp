@@ -32,6 +32,7 @@
 #include "dbg_calibration.h"
 
 #include "Software/driver_eeprom/eeprom_i2c.h"
+#include "i2c_eeprom_addresses.h"
 #include "nonvolatile_sections.h"
 
 FATFS fs;           /* Filesystem object */
@@ -788,14 +789,30 @@ void Background_class::init()
         if(IpcRegs.IPCCOUNTERL - delay_timer > 200000000) break;
     }
 
-    //wczytanie danych dotyczacych plytki CPU
+    //wczytanie danych dotyczacych plytek CPU i POWER z eepromow
+
+    Background.hw_info.eeprom_img_ver = 0;
+    Background.hw_info.board_cpu_ver = 0;
+    Background.hw_info.board_power_ver = 0;
+
     struct region_info_t info;
     struct region_info_ext_t info_ext;
-    nonvolatile.read_info(&info, &info_ext, NV_READ_INFO);
+    memset( &info, 0, sizeof(info));
+    memset( &info_ext, 0, sizeof(info_ext));
+    eeprom.set_i2c_address( I2C_EEPROM_ADDRESS_BOARD_CPU );
+    static Uint16 retc = nonvolatile.read_info(&info, &info_ext, NV_READ_INFO);
 
     Background.hw_info.eeprom_img_ver = info.data.eeprom_version;
     Background.hw_info.board_cpu_ver = info.data.pcb_version;
-    Background.hw_info.board_power_ver = 0;
+
+    memset( &info, 0, sizeof(info));
+    memset( &info_ext, 0, sizeof(info_ext));
+    eeprom.set_i2c_address( I2C_EEPROM_ADDRESS_BOARD_POWER );
+    retc = nonvolatile.read_info(&info, &info_ext, NV_READ_INFO);
+
+    Background.hw_info.board_power_ver = info.data.pcb_version;
+    eeprom.set_i2c_address( I2C_EEPROM_ADDRESS_BOARD_CPU );
+
 
 
     GPIO_SET(RST_CM);

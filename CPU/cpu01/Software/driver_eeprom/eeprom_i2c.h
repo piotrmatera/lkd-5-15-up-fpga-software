@@ -148,7 +148,12 @@ public:
       }state_t;
 
       state_t state;
-public:
+
+      /**@brief ustawia adres dla nastepnych wywolan*/
+      status_code_t set_i2c_address( Uint16 i2c_addr );
+private:
+      Uint16 i2c_addr;
+
       /**wywolywane wewn. przy zmianie stanu tego obiektu*/
       void change_state_to( state_t new_state );
 

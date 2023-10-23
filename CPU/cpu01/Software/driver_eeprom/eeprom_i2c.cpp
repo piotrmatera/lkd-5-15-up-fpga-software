@@ -39,7 +39,7 @@ status_code_t eeprom_i2c::init( i2c_transactions_t * i2c_bus ){
     //TODO jest to samo w Rtc - powinno byc tylko raz
     status_code_t retc;
     this->i2c_bus = i2c_bus;
-
+    this->i2c_addr = EEPROM_ADDRESS;
     //wypelnienie 1/3
     // Fmod_i2c = SYSCLK/(I2CPSC+1) = 7-12MHz
     // MCP7940N Tccl_min = 0.6us, Tcch = 1.3us, f=400kHz
@@ -50,6 +50,18 @@ status_code_t eeprom_i2c::init( i2c_transactions_t * i2c_bus ){
 
     state = state_idle;
     return status_ok;
+}
+
+status_code_t eeprom_i2c::set_i2c_address( Uint16 i2c_addr )
+{
+    switch( this->state ){
+    case state_reset:
+    case state_idle:
+        this->i2c_addr = i2c_addr;
+        return status_ok;
+    default:
+        return err_busy;
+    }
 }
 
 void eeprom_i2c::process()
@@ -276,7 +288,7 @@ void eeprom_i2c::change_state_to( state_t new_state )
 status_code_t eeprom_i2c::msg_factory( msg_type_t msg_type, i2c_transaction_buffer * buffer, void * xdata ){
     struct event_region_xdata * data_dsc = (struct event_region_xdata*)xdata;
 
-    buffer->slave_address = EEPROM_ADDRESS;
+    buffer->slave_address = this->i2c_addr;
     buffer->state = i2c_transaction_buffer::idle;
 
     switch( msg_type ){
