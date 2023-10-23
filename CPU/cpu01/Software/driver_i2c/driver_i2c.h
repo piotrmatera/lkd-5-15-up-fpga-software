@@ -17,6 +17,8 @@
 
 #define I2C_USE_INTERRUPTS 0
 
+
+
 #define MAX_BUFFER_SIZE             14      // Max 16 bajtowe fifo w module i2c
 
 #define I2C_400kHz_DUTY1_3 {16, 13, 3}

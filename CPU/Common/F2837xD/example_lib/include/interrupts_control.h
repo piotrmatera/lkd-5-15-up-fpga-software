@@ -36,6 +36,11 @@ Uint16 _custom_read_st1(void);
  */
 Uint64 _custom_read_ipc_timer(void);
 
+/** okresla czy przerwnia sa zamaskowane (wylaczone)*/
+#define _are_interrupts_masked() ( (_custom_read_st1() & 0x01) == 1U )
+
+
+
 /**przywraca stan przerwan przed wywolaniem _custom_disable_interrupts()
  * @param[in] previous poprzedni stan przerwan zwrocony przez _custom_disable_interrupts()
  */

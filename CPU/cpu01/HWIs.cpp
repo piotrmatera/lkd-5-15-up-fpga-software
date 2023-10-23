@@ -16,6 +16,10 @@
 #include "Scope.h"
 #include "SD_card.h"
 #include "Modbus_devices.h"
+#include "driver_i2c_cfg.h"
+#include "i2c_transactions.h"
+
+extern i2c_transactions_t i2c_bus;
 
 #pragma CODE_SECTION(".interrupt_code_unsecure");
 interrupt void SD_AVG_INT()
@@ -297,7 +301,10 @@ interrupt void SD_AVG_INT()
 
     Modbus_slave_LCD.RTU->interrupt_task();
     Modbus_slave_EXT.RTU->interrupt_task();
-
+#if USE_SD_INT_FOR_I2C_DRIVER_EEPROM_BUS
+    i2c_bus.process_i2c_interrupt(); //potrzebne wywolanie w przerwaniu aby odpowiednio szybko moglo zareagowac na
+                                     //przerwanie od FIFO
+#endif
     Timer_PWM.CPU_COMM = TIMESTAMP_PWM;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

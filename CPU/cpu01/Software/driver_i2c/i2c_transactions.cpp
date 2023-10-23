@@ -9,6 +9,7 @@
 #include "i2c_transactions.h"
 #include "Rtc.h"
 #include "driver_eeprom/eeprom_i2c.h"
+#include "interrupts_control.h"
 
 extern Rtc rtc;
 extern i2c_transactions_t i2c_bus;
@@ -25,6 +26,12 @@ status_code_t i2c_transactions_t::init(volatile struct I2C_REGS * i2cregs, const
 {
     return this->i2c.init(i2cregs, psc_cfg);
 }
+
+#if USE_SD_INT_FOR_I2C_DRIVER_EEPROM_BUS
+status_code_t i2c_transactions_t::process_i2c_interrupt(void){
+    return this->i2c.interrupt_process();
+}
+#endif
 
 status_code_t i2c_transactions_t::start_transaction( struct i2c_transaction_buffer *trans)
 {
@@ -59,9 +66,12 @@ status_code_t i2c_transactions_t::start_transaction( struct i2c_transaction_buff
 status_code_t i2c_transactions_t::process( void )
 {
 #define MAX_TASKS 2
-    status_code_t retc[MAX_TASKS];
+    status_code_t retc[MAX_TASKS] = {status_ok, status_ok};
+    if( _custom_read_st1() & 0x01 == 1U )
 
-    retc[0] = i2c.interrupt_process();  //obsluga interfejsu sprzetowego i2c
+    if( _are_interrupts_masked() ) //jesli przerwnaia sa wylaczone
+        retc[0] = i2c.interrupt_process();  //obsluga interfejsu sprzetowego i2c
+
     retc[1] = this->process_internal(); //obsluga transakcji i2c
 
     //obsluga urzadzen na magistrali i2c

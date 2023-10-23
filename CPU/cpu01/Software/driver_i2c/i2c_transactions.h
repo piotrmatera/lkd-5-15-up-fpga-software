@@ -10,6 +10,7 @@
 
 
 #include <driver_i2c/driver_i2c.h>
+#include "Software/driver_i2c_cfg.h"
 #include "debug/Dbg.h"
 
 
@@ -110,6 +111,11 @@ public:
      * ze wzgledow praktycznych w srodku sa tez na stale podczepione urzadzenia
      * na razie tylko jedna instancja */
     status_code_t process(void);
+
+#if USE_SD_INT_FOR_I2C_DRIVER_EEPROM_BUS
+    /**@brief wywolanie przerwania od i2c - boczne wejscie gdy wywolanie jest z SD_ISR*/
+    status_code_t process_i2c_interrupt(void);
+#endif
 
 private:
 
