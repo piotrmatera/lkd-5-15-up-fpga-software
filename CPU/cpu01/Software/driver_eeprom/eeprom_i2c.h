@@ -24,11 +24,18 @@
 // 5ms - zapis strony
 // 128 bajtow - wielkosc strony
 
-#define EEPROM_VIRTUAL_PAGES 1
+#define EEPROM_VIRTUAL_PAGES 0
 
-#define EEPROM_SIZE 4096 //rozmiar w bajtach, ktory mozna zapisac
-#define EEPROM_PAGE 8   //rozmiar strony w bajtach
-#define EEPROM_REAL_PAGE 128 //rzeczywisty rozmiar strony eepromu
+#if EEPROM_VIRTUAL_PAGES
+# define EEPROM_PAGE_GAP (EEPROM_REAL_PAGE-EEPROM_PAGE) //dodanie EEPROM_REAL_PAGE-EEPROM_PAGE jest bezpieczne, bo to jest tez wyrownane do 8
+#else
+# define EEPROM_PAGE_GAP 0
+#endif
+
+#if EEPROM_VIRTUAL_PAGES
+# define EEPROM_SIZE 4096 //rozmiar w bajtach, ktory mozna zapisac
+# define EEPROM_PAGE 8   //rozmiar strony w bajtach
+# define EEPROM_REAL_PAGE 128 //rzeczywisty rozmiar strony eepromu
 // Ominiecia problemu, ze wielkosc bufora sprzetowego modulu i2c wynosi tylko 14 bajtow
 // co jest znacznie mniejsze niz 128 bajtow strony eepromu.
 // TODO rozwiazanie powyzszego wymaga modyfikacji drivera_i2c aby w 'przerwaniu' oproznial/dopisywal do FIFO modulu i2c
@@ -46,7 +53,11 @@
 //#define EEPROM_SIZE 65536 //rozmiar w bajtach
 //#define EEPROM_PAGE_MASK 0xFF80
 //#define EEPROM_ADDRESS_MASK 0xFFFF
+#else
+# define EEPROM_SIZE 65536 //rozmiar w bajtach, ktory mozna zapisac
+# define EEPROM_PAGE 8   //rozmiar strony w bajtach - do tego wyrownywane i w takich paczkach wysylane do eepromu
 
+#endif
 //adresy wewn. eeprom_i2c:
 #define EEPROM_PAGE_MASK 0xFF80 //to jest sprawdzane w eeprom_i2c do sprawdzenia czy zapis w obrebie strony
 #define EEPROM_ADDRESS_MASK 0xFFFF //to jest uzywane po tlumaczeniu adresu wirt. na rzeczywisty w eepromie

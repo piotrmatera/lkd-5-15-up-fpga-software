@@ -4,13 +4,15 @@
  *  Created on: 17 paü 2023
  *      Author: Piotr
  */
-
+#include <string.h>
 #include "Software/driver_eeprom/eeprom_i2c.h"
 #include "i2c_transactions.h"
 #include "nonvolatile.h"
 #include "Rtc.h"
+#include "testing-eeprom.h"
 
 extern eeprom_i2c eeprom;
+extern i2c_transactions_t i2c_bus;
 
 #if TESTING_EEPROM_I2C
 uint16_t memory_buffer[256]; //na razie zbior bajtow; TODO zrobic aby byl zapis obu bajtow ze slowa
@@ -105,8 +107,8 @@ void test_eeprom(){
 
 
 #if TESTING_NONVOLATILE
-uint16_t test_eeprom_buffer[ 64 ]; //do testow - obraz eepromu
-uint16_t nv_shadow_buffer[ 128 ];  //jako bufor tymczasowy do dzialania nonvolatile
+static uint16_t test_eeprom_buffer[ 64 ]; //do testow - obraz eepromu
+static uint16_t nv_shadow_buffer[ 128 ];  //jako bufor tymczasowy do dzialania nonvolatile
 
 
 extern Rtc rtc;
@@ -187,7 +189,9 @@ const class nonvolatile_t nonvolatile = //korzysta z globalnego obiektu eeprom
 
 #define LGRID_REGION 0
 
-void test_nv(){
+
+
+void _test_nv(){
     static uint16_t cnt = 1;
 
     static struct eeprom_i2c::event_region_xdata xdata;
@@ -276,4 +280,14 @@ void test_nv(){
 
     }
 }
+
+void test_nv(){
+    while(1){
+        _test_nv();
+        i2c_bus.process(); // wywolywanie cykliczne konieczne do dzialania i2c
+
+
+    }
+}
+
 #endif
