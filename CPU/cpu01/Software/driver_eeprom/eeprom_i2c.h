@@ -123,6 +123,8 @@ public:
     /**@brief ogolna funkcja do wyslania polecen w postaci zdarzenia
      * @param[in] event wysylane zdarzenie - odpowiada roznym poleceniom
      * @param[in] xdata argument zdarzenia - opis danych struktura event_region_data
+     *              UWAGA! xdata ulega modyfikacjom podczas czytania/zapisu
+     *                     wszystkie pola po zakonczeniu sa zmienione
      * @return status_ok gdy wlasciwie przekazano, uwaga! to nie znaczy jeszcze prawidlowego wykonania - bo wykonanie jest pozniej*/
     status_code_t process_event( event_t event, void * xdata = NULL);
 

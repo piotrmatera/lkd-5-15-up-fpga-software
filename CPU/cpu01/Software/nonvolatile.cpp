@@ -280,12 +280,13 @@ Uint16 nonvolatile_t::fast_is_copy_incorrect( Uint16 region_index, Uint16 copy_o
     Uint16 retc = blocking_wait_for_finished( eeprom_i2c::event_read_region, &xdata, timeout );
     if( retc != NONVOLATILE_OK)
         return retc;
+//UWAGA! xdata.data jest modyfikowane w eeprom_i2c podczas odczytow
+    Uint16 * ptr_crc_word = reg->data_int.address.ptr_u16;
+ //   if( crc_word == NONVOLATILE_INVALID_CRC )
+ //       return NONVOLATILE_INVALID; //gdy jest oznaczona jako niepoprawna
+ // gdy = 0xDEAD to starszy bajt != 0  - obsluzy to nastepny warunek
 
-    Uint16 crc_word = xdata.data[0];
-    if( crc_word == NONVOLATILE_INVALID_CRC )
-        return NONVOLATILE_INVALID; //gdy jest oznaczona jako niepoprawna
-
-    if( ((crc_word >> 8 )& 0xFF) != 0U )
+    if( ((*ptr_crc_word) & 0xFF00 ) != 0U )
         return NONVOLATILE_INVALID; //gdy jest nieoczekiwana wartosc CRC (sprawzany bajt powinein byc = 0)
 
     return NONVOLATILE_UNKNOWN;//nie wiadomo czy jest poprawna
