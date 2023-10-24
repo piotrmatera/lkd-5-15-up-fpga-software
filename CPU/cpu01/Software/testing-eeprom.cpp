@@ -16,6 +16,45 @@
 extern i2c_transactions_t i2c_bus;
 extern eeprom_i2c eeprom;
 
+#error Przetestowac dla poniszych scenariuszy i przeczytac UWAGI
+/* TODO
+ *    jesli dobrze wspoldziala z przerwaniami, to przeniesc odczyty i zapisy duzymi stronami do
+ *    obiektow powyzej:
+ *       i2c_transactions_t
+ *       eeprom_i2c_t
+ *       nonvolatile_t
+ *
+ * Testy i2c_t
+ * zapis bufora o dlugosci <14, 14, 15, 20, 21, 26, 27, (128+2)
+ * odczyt o dlugosciach <8 8 9 15 16 23 24
+ *
+ * TODO sprawdzic ile wiecej zabiera pamieci struct msg_buffer gdy dane zostaly zwiekszone do [130]
+ * moze to tez obciazac stos tam gdzie sa tymczasowe wiadomosci
+ *
+ * wprowadzic ew. klase o roznej wielkosci danych (kilka rozmiarow) - uzywanej wg. potrzeb
+ *
+ * TODO pomierzyc czy czas wykonania i2c_interrupt_process w przerwaniu SD_INT nie psuje wymogow czasowych
+ *
+ * Inne istotne uwagi majace wplyw na dzialanie i optymalizacje:
+ * ==============================================================
+ * TS:"W zale¿noœci od czêstotliwoœci pracy przekszta³tnika czêstotliwoœæ wywo³ania to 50us/64us"
+
+ * TS:"Jedyne co widzê jako potencjalne zagro¿enie to blokuj¹cy na d³ugi czas zapis b³êdu na kartê SD
+ * (funkcja SD_card.save_state()).Obecnie w kodzie doda³em te¿ odczytywanie co sekundê stanu rejestrów
+ * sterowników bramkowych, bo zawieraj¹ w sobie pomiar temperatury, który czasami potrafi lepiej odwzorowaæ
+ * rzeczywistoœæ ni¿ NTC przykrêcony do radiatora. Wiem, ¿e jakiœ bug tym stworzy³em, bo po b³êdzie i
+ * ponownej próbie startu potrafi siê pojawiæ Driver_soft_error.
+ *
+ * TS:"Nie ma œciœle okreœlonej wartoœci. Te¿ mówi¹c o 90% mam na myœli maksymalny czas wykonywania przerwania,
+ * a nie œredni który jest krótszy. W HWIs.cpp na koñcu pliku jest kod:
+    static volatile Uint16 Timer_max;
+    Uint16 timestamp = TIMESTAMP_PWM;
+    if(timestamp < 2500) timestamp += 5000;
+    if(timestamp > Timer_max) Timer_max = timestamp;
+  Podgl¹daj¹c Timer_max, mo¿e Pan oceniæ gdzie dotar³o najd³u¿sze przerwanie i jak blisko/daleko jest ten punkt
+  punktu rozpoczêcia kolejnego przerwania (pamiêtaj¹c o tym, ¿e licznik siê przepe³nia przy wartoœci 5000 (50us),
+  a pokazuje on czas w dziesi¹tkach nanosekund).
+ */
 
 void testing_large_page_eeprom(void){
     static Uint16 test_cnt = 1;
