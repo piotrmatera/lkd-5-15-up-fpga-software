@@ -192,7 +192,13 @@ Uint16 nonvolatile_t::find_last_correct_copy( Uint16 region_index, Uint64 timeou
 
 Uint16 nonvolatile_t::is_copy_correct( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const{
     Uint16 retc;
-    //@OPT mozna odczytac tylko crc z regionu i sprawdzic czy Hbyte!=0 aby szybko wylapac uniewazniona kopie
+    //tylko odczyt crc z regionu i sprawdzanie czy Hbyte!=0 albo oznaczone jako niewazne
+    // aby szybko wylapac uniewazniona kopie
+
+    retc = this->fast_is_copy_incorrect(region_index, copy_offset, timeout);
+    if( retc == NONVOLATILE_INVALID )
+        return retc;
+
     const region_memories_t *reg = &regions[ region_index ];
 
     retc = this->read( region_index, copy_offset, timeout);
@@ -256,10 +262,34 @@ Uint16 nonvolatile_t::invalidate( Uint16 region_index, Uint16 copy_offset, Uint6
     return retc;
 }
 
-//Uint16 nonvolatile_t::fast_is_copy_incorrect( Uint16 region_index, Uint16 copy_offset ){
-//    //TODO odczytac starszy bajt (ten ktory nie zawiera CRC ale info o uniewaznieniu) CRC i sprawdzic czy jest = 0
-//
-//}
+
+Uint16 nonvolatile_t::fast_is_copy_incorrect( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const{
+    //TODO odczytac starszy bajt (ten ktory nie zawiera CRC ale info o uniewaznieniu) CRC i sprawdzic czy jest = 0
+
+    if( region_index >= this->regions_count )
+        return NONVOLATILE_INVALID;
+
+    const region_memories_t *reg = &regions[ region_index ];
+
+    struct eeprom_i2c::event_region_xdata xdata;
+    xdata.status = eeprom_i2c::event_region_xdata::idle;
+    xdata.start = (reg->data_eeprom.address.u16 + copy_offset)*EEPROM_VIRT_SCALING;
+    xdata.total_len = REGION_CRC_SIZE; //2
+    xdata.data = reg->data_int.address.ptr_u16;
+
+    Uint16 retc = blocking_wait_for_finished( eeprom_i2c::event_read_region, &xdata, timeout );
+    if( retc != NONVOLATILE_OK)
+        return retc;
+
+    Uint16 crc_word = xdata.data[0];
+    if( crc_word == NONVOLATILE_INVALID_CRC )
+        return NONVOLATILE_INVALID; //gdy jest oznaczona jako niepoprawna
+
+    if( ((crc_word >> 8 )& 0xFF) != 0U )
+        return NONVOLATILE_INVALID; //gdy jest nieoczekiwana wartosc CRC (sprawzany bajt powinein byc = 0)
+
+    return NONVOLATILE_UNKNOWN;//nie wiadomo czy jest poprawna
+}
 
 
 //ogolna funkcja blokujaca, czeka na zakonczenie transakcji

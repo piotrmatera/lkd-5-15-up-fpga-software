@@ -107,8 +107,8 @@ void test_eeprom(){
 
 
 #if TESTING_NONVOLATILE
-static uint16_t test_eeprom_buffer[ 64 ]; //do testow - obraz eepromu
-static uint16_t nv_shadow_buffer[ 128 ];  //jako bufor tymczasowy do dzialania nonvolatile
+uint16_t test_eeprom_buffer[ 64 ]; //do testow - obraz eepromu
+uint16_t test_nv_shadow_buffer[ 128 ];  //jako bufor tymczasowy do dzialania nonvolatile
 
 
 extern Rtc rtc;
@@ -173,18 +173,18 @@ static void Lgrid_clear(){
     memset( &Lgrid, 0xBCBC, sizeof(Lgrid) );
 }
 
-const region_memories_t _nv_regions[] = {
+const region_memories_t test_nv_regions[] = {
   // REGION index = 0 L_grid_test
   {  /*ext*/{ .address.ptr_u16 = (Uint16 *)&Lgrid.L,      .size = 28 },//musi byc wielokrotnosc 2 - kopiowanie ext<->int slowami u16
-     /*int*/{ .address.ptr_u16 = &nv_shadow_buffer[16/2], .size = 30 },
+     /*int*/{ .address.ptr_u16 = &test_nv_shadow_buffer[16/2], .size = 30 },
      /*eep*/{ .address.u16 = 16, .size = 32 /*NU?*/  }}
 };
 
 
-const class nonvolatile_t nonvolatile = //korzysta z globalnego obiektu eeprom
+const class nonvolatile_t test_nonvolatile = //korzysta z globalnego obiektu eeprom
 {
      .regions_count  = 1,
-     .regions = _nv_regions
+     .regions = test_nv_regions
 };
 
 #define LGRID_REGION 0
@@ -238,7 +238,7 @@ void _test_nv(){
 
         Lgrid_init();
         Lgrid.L.L[0] = *(float*)&delay; //aby byla zmienna tresc
-        nonvolatile.save(LGRID_REGION, 100 /*ms*/); //test timeoutu
+        test_nonvolatile.save(LGRID_REGION, 0 /*ms*/); //test timeoutu
 
         cnt = 3;
 
@@ -246,7 +246,7 @@ void _test_nv(){
     }
     case 3: //odczyt regionu - blokujaco
         Lgrid_clear();
-        nonvolatile.retrieve(LGRID_REGION, 100 /*ms*/);
+        test_nonvolatile.retrieve(LGRID_REGION, 0 /*ms*/);
         cnt = 4;
         break;
 

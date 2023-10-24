@@ -32,6 +32,8 @@ struct region_t{
  * pierwsze dwa bajty sa przeznaczone na pole CRC */
 #define REGION_DATA_OFFSET 2  //w bajtach
 
+#define REGION_CRC_SIZE 2  //w bajtach
+
 /** adres czesci informacyjnej w eepromie*/
 #define NONVOLATILE_INFO_ADDRESS 0
 
@@ -93,6 +95,7 @@ struct region_info_ext_t{
 #define NONVOLATILE_NO_VALID_COPY 100
 #define NONVOLATILE_TIMEOUT 200
 #define NONVOLATILE_INVALID 10
+#define NONVOLATILE_UNKNOWN 11
 #define NONVOLATILE_OK 0
 
 #define NONVOLATILE_COPY_0 0
