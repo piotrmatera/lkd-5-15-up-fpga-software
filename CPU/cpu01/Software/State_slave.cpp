@@ -523,7 +523,7 @@ void Machine_slave_class::calibrate_DC_voltage_gain()
                 status_ACDC.calibration_procedure_error = 0;
                 memcpy(&SD_card.calibration.Meas_ACDC_gain, &Meas_ACDC_gain, sizeof(Meas_ACDC_gain));
                 memcpy(&SD_card.calibration.Meas_ACDC_offset, &Meas_ACDC_offset, sizeof(Meas_ACDC_offset));
-                SD_card.save(SD_card_class::sec_calibration_data);
+                NV_CLASS_save(sec_calibration_data);
                 Machine_slave.state = state_idle;
                 control_ACDC.triggers.bit.CPU_reset = 1;
             }

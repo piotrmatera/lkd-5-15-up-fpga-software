@@ -12,6 +12,7 @@
 #include "State_slave.h"
 #include "stdafx.h"
 #include "ff.h"
+#include "nv_section_types.h"
 
 #define WBUF_SIZE 100
 
@@ -31,15 +32,7 @@ class SD_card_class
     static Uint16 log_data();
     static Uint16 save_state();
 
-    typedef enum{
-        sec_CT_characteristic,
-        sec_settings,
-        sec_H_settings,
-        sec_calibration_data,
-        sec_meter_data,
 
-        sec_type_max
-    } section_type_t;
 
     static Uint16 save( section_type_t section );
     static Uint16 read( section_type_t section );
