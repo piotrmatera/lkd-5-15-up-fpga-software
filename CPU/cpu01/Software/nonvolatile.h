@@ -113,10 +113,11 @@ struct region_info_ext_t{
 
 //typ wskaznika do funkcji wywolywany gdy juz gotowe do zapisu
 //okreslilo miejsce zapisu
-typedef void (*callback_copy_t)(Uint16 * shadow_buffer_internal, Uint16 shadow_buffer_size);
+typedef Uint16 (*callback_copy_t)(Uint16 * shadow_buffer_internal, Uint16 shadow_buffer_size);
 
 
 class nonvolatile_t{
+
 public:
     const Uint16 regions_count;/**<@brief liczba regionow*/
 
@@ -135,8 +136,9 @@ public:
      * funkcja blokujaca
      * @param[in] region_index index regionu z tabeli regions
      * @param[in] timeout przeterminowanie w ms
+     * @param[in] copy-to_external czy ma skopiowac dane do external po odczytaniu
      * @return zwraca 0 gdy sie udalo odczytac */
-    Uint16 retrieve(Uint16 region_index, Uint64 timeout) const;
+    Uint16 retrieve(Uint16 region_index, Uint64 timeout, Uint16 copy_to_external = 1) const;
 
     /** zapis czesci informacyjnych, tylko 1 czesc odczytywana
      * funkcja blokujaca
@@ -147,6 +149,9 @@ public:
      * funkcja blokujaca
      * @return 0 gdy poprawny odczyt (zgodne crc)*/
     Uint16 read_info( struct region_info_t* info, struct region_info_ext_t * info_ext, Uint64 timeout = 0) const;
+
+    uint16_t crc8_continue(const Uint16 * data, size_t size, Uint16 crc_init) const;
+    uint16_t crc8(const Uint16 * data, size_t size) const;
 
 private:
     // UWAGA wszystkie funkcje prywatne pobieraja timeout jako konczowa wartosc licznika RPC
@@ -180,6 +185,7 @@ private:
     /** szybkie stwierdzenie czy kopia jest uniewazniona, bez czytania calej tresci*/
     Uint16 fast_is_copy_incorrect( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const;
 
+public: //dla nv_read_CT_characteristic()
     /** ogolna funkcja oczekujaca na zakonczenie transackji*/
     Uint16 blocking_wait_for_finished( eeprom_i2c::event_t event, struct eeprom_i2c::event_region_xdata *xdata, Uint64 timeout) const;
 };

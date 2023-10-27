@@ -48,7 +48,8 @@ struct CT_characteristic_struct
 {
     Uint16 available;
     Uint16 number_of_elements;
-    float set_current[CT_CHARACTERISTIC_POINTS];
+    float set_current[CT_CHARACTERISTIC_POINTS];  //UWAGA! zalozenie w nonvolatile.cpp nv_read_calibration_data
+                                                  //ze kolejne tablice sa po kolei w strukturze CT_char
     float CT_ratio_a[CT_CHARACTERISTIC_POINTS];
     float CT_ratio_b[CT_CHARACTERISTIC_POINTS];
     float CT_ratio_c[CT_CHARACTERISTIC_POINTS];

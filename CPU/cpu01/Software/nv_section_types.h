@@ -19,9 +19,13 @@ typedef enum{
         sec_type_max
     } section_type_t;
 
-//przygotowanie do przelaczalnego IF
-#define NV_CLASS_read( section ) SD_card.read( section )
-
-#define NV_CLASS_save( section ) SD_card.save( section )
+#if NV_IN_EEPROM
+//przelaczalny IF
+# define NV_CLASS_read( section ) nonvolatile_read( section )
+# define NV_CLASS_save( section ) nonvolatile_save( section )
+#else
+# define NV_CLASS_read( section ) SD_card.read( section )
+# define NV_CLASS_save( section ) SD_card.save( section )
+#endif
 
 #endif /* SOFTWARE_NV_SECTION_TYPES_H_ */

@@ -53,9 +53,22 @@ static const Uint16 CRC_TABLE[256] = {
 /* oblicza sume crc8
  * @param[in] data dane do wyznaczenia crc
  * @param[in] size rozmiar danych w [bajtach], gdy nieparzyste to pobiera mlodsza czesc z ostatniego slowa*/
-uint16_t crc8(const Uint16 * data, size_t size) {
+uint16_t nonvolatile_t::crc8(const Uint16 * data, size_t size) const{
     Uint16 ix;
     Uint16 val = 0;
+
+    for(ix = 0; ix<size/2; ix++){
+        val = CRC_TABLE[ (val ^ data[ix]) & 0xFF ];
+        if( ix+1 < size )
+            val = CRC_TABLE[ (val ^ data[ix]>>8) & 0xFF ];
+    }
+
+    return val;
+}
+
+uint16_t nonvolatile_t::crc8_continue(const Uint16 * data, size_t size, Uint16 crc_init) const{
+    Uint16 ix;
+    Uint16 val = crc_init;
 
     for(ix = 0; ix<size/2; ix++){
         val = CRC_TABLE[ (val ^ data[ix]) & 0xFF ];
@@ -113,7 +126,7 @@ Uint16 nonvolatile_t::save( Uint16 region_index, Uint64 timeout, callback_copy_t
     return NONVOLATILE_OK;
 }
 
-Uint16 nonvolatile_t::retrieve(Uint16 region_index, Uint64 timeout) const{
+Uint16 nonvolatile_t::retrieve(Uint16 region_index, Uint64 timeout, Uint16 copy_to_external) const{
     Uint16 retc;
     Uint64 _timeout = timeout==0? 0ULL :((Uint64)timeout)*200ULL*1000ULL + ReadIpcTimer();
     if( region_index >= this->regions_count )
@@ -127,7 +140,7 @@ Uint16 nonvolatile_t::retrieve(Uint16 region_index, Uint64 timeout) const{
         return retc;
 
     //skopiowanie danych z lokalnego bufora
-    if( reg->data_ext.address.ptr_u16 != NULL)
+    if( copy_to_external && reg->data_ext.address.ptr_u16!=NULL)
         memcpy( reg->data_ext.address.ptr_u16, &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.size/2);
 
     return 0;
