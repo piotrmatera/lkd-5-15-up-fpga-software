@@ -69,7 +69,7 @@ uint16_t crc8(const Uint16 * data, size_t size) {
 
 //-------------------------- API na zewnatrz ---------------------------
 
-Uint16 nonvolatile_t::save( Uint16 region_index, Uint64 timeout) const{
+Uint16 nonvolatile_t::save( Uint16 region_index, Uint64 timeout, callback_copy_t cb) const{
     Uint64 _timeout = timeout==0? 0ULL : ((Uint64)timeout)*200ULL*1000ULL + ReadIpcTimer();
     //TODO sprawdzic czy moze dojsc do przewiniecia
 
@@ -90,7 +90,12 @@ Uint16 nonvolatile_t::save( Uint16 region_index, Uint64 timeout) const{
     }
 
     //skopiowanie danych do lokalnego bufora
-    memcpy( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.address.ptr_u16, reg->data_ext.size/2);
+    if( cb == NULL ){
+        if( reg->data_ext.address.ptr_u16 != NULL )
+            memcpy( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.address.ptr_u16, reg->data_ext.size/2);
+    }else{
+        cb( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_int.size/2);
+    }
 
     reg->data_int.address.ptr_u16[0] = crc8( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.size );
 
@@ -122,7 +127,9 @@ Uint16 nonvolatile_t::retrieve(Uint16 region_index, Uint64 timeout) const{
         return retc;
 
     //skopiowanie danych z lokalnego bufora
-    memcpy( reg->data_ext.address.ptr_u16, &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.size/2);
+    if( reg->data_ext.address.ptr_u16 != NULL)
+        memcpy( reg->data_ext.address.ptr_u16, &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.size/2);
+
     return 0;
 }
 

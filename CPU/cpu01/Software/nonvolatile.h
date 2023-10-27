@@ -111,6 +111,11 @@ struct region_info_ext_t{
 *  podczas zapisu musi najpierw odczytac kopie, zapisac tresc oraz uniewaznic kopie
 * */
 
+//typ wskaznika do funkcji wywolywany gdy juz gotowe do zapisu
+//okreslilo miejsce zapisu
+typedef void (*callback_copy_t)(Uint16 * shadow_buffer_internal, Uint16 shadow_buffer_size);
+
+
 class nonvolatile_t{
 public:
     const Uint16 regions_count;/**<@brief liczba regionow*/
@@ -121,15 +126,17 @@ public:
      * funkcja blokujaca
      * @param[in] region_index index regionu z tabeli regions
      * @param[in] timeout przeterminowanie w ms, =0 oznacza ze w przypadku bledu (zajetosci) wrocic od razu
+     * @param[in] funkcja wywolywana gdy mozna juz skpiowac dane do bufora wewn.
+     *            jako argument dostaje miejsce do skopiowania
      * @return zwraca 0 gdy sie udalo*/
-    Uint16 save( Uint16 region_index, Uint64 timeout = 0) const;
+    Uint16 save( Uint16 region_index, Uint64 timeout, callback_copy_t callback_copy = NULL) const;
 
     /** odczytuje z eepromu tresc
      * funkcja blokujaca
      * @param[in] region_index index regionu z tabeli regions
      * @param[in] timeout przeterminowanie w ms
      * @return zwraca 0 gdy sie udalo odczytac */
-    Uint16 retrieve(Uint16 region_index, Uint64 timeout = 0) const;
+    Uint16 retrieve(Uint16 region_index, Uint64 timeout) const;
 
     /** zapis czesci informacyjnych, tylko 1 czesc odczytywana
      * funkcja blokujaca
