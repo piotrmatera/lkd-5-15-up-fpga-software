@@ -31,16 +31,35 @@ class SD_card_class
     static Uint16 log_data();
     static Uint16 save_state();
 
+    typedef enum{
+        sec_CT_characteristic,
+        sec_settings,
+        sec_H_settings,
+        sec_calibration_data,
+        sec_meter_data,
+
+        sec_type_max
+    } section_type_t;
+
+    static Uint16 save( section_type_t section );
+    static Uint16 read( section_type_t section );
+
+private:
     static Uint16 save_settings();
     static Uint16 read_settings();
+
     static Uint16 read_CT_characteristic();
+
     static Uint16 save_H_settings();
     static Uint16 read_H_settings();
+
     static Uint16 save_calibration_data();
     static Uint16 read_calibration_data();
+
     static Uint16 save_meter_data();
     static Uint16 read_meter_data();
 
+public:
     static void Modbus_FatFS();
     static void Scope_snapshot_task();
     static Uint16 Scope_snapshot_state;

@@ -538,12 +538,12 @@ void Background_class::init()
     nonvolatile.retrieve(NV_ERROR_RETRY_TYPE, NV_RETRY_READ_TIMEOUT_ERROR);
     status_ACDC.error_retry = Machine_slave.error_retry;
 
-    SD_card.read_settings();
+    SD_card.read(SD_card_class::sec_settings);
 
-    SD_card.read_CT_characteristic();
-    SD_card.read_H_settings();
-    SD_card.read_calibration_data();
-    SD_card.read_meter_data();
+    SD_card.read(SD_card_class::sec_CT_characteristic);
+    SD_card.read(SD_card_class::sec_H_settings);
+    SD_card.read(SD_card_class::sec_calibration_data);
+    SD_card.read(SD_card_class::sec_meter_data);
     if(SD_card.meter.available) memcpy(&Energy_meter.upper, &SD_card.meter.Energy_meter, sizeof(Energy_meter.upper));
     else status_ACDC.SD_no_meter = 1;
 
@@ -961,7 +961,7 @@ void Background_class::Main()
         SD_card.log_data();
         if(++blink_multiple > 60)
         {
-            SD_card.save_meter_data();
+            SD_card.save(SD_card_class::sec_meter_data);
             blink_multiple = 0;
         }
     }
@@ -1159,7 +1159,7 @@ void Background_class::Main()
         memcpy(SD_card.harmonics.on_off_even_c, on_off_even_c, sizeof(SD_card.harmonics.on_off_even_c));
         SD_card.harmonics.available = 1;
 
-        if(!SD_card.save_H_settings()) status_ACDC.SD_no_harmonic_settings = 0;
+        if(!SD_card.save(SD_card_class::sec_H_settings)) status_ACDC.SD_no_harmonic_settings = 0;
         else status_ACDC.SD_no_harmonic_settings = 1;
     }
 
@@ -1173,7 +1173,7 @@ void Background_class::Main()
         SD_card.settings.modbus_ext_server_id = control_ext_modbus.fields.ext_server_id;
         SD_card.settings.wifi_on = status_ACDC.wifi_on;
 
-        if(!SD_card.save_settings()) status_ACDC.SD_no_settings = 0;
+        if(!SD_card.save(SD_card_class::sec_settings)) status_ACDC.SD_no_settings = 0;
         else status_ACDC.SD_no_settings = 1;
     }
 
@@ -1192,7 +1192,7 @@ void Background_class::Main()
         DINT_copy_CPUasm((Uint16 *)&Energy_meter.upper.QIV,  (Uint16 *)&SD_card.meter.Energy_meter.QIV,  sizeof(Energy_meter.upper.QIV));
         DINT_copy_CPUasm((Uint16 *)&Energy_meter.upper.sum,  (Uint16 *)&SD_card.meter.Energy_meter.sum,  sizeof(Energy_meter.upper.sum));
 
-        SD_card.save_meter_data();
+        SD_card.save(SD_card_class::sec_meter_data);
 
         SD_card.meter.available = 1;
     }

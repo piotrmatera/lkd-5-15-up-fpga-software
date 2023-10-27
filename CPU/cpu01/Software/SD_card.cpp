@@ -768,6 +768,34 @@ Uint16 SD_card_class::read_settings()
     return fresult;
 }
 
+Uint16 SD_card_class::save( section_type_t section ){
+    switch( section ){
+
+    case sec_settings:   return save_settings();
+    case sec_H_settings: return save_H_settings();
+    case sec_calibration_data: return save_calibration_data();
+    case sec_meter_data:      return save_meter_data();
+
+    case sec_CT_characteristic:
+    default:
+        return FR_INVALID_PARAMETER;
+    }
+}
+
+Uint16 SD_card_class::read( section_type_t section ){
+    switch( section ){
+
+    case sec_settings:   return read_settings();
+    case sec_H_settings: return read_H_settings();
+    case sec_calibration_data: return read_calibration_data();
+    case sec_meter_data:      return read_meter_data();
+    case sec_CT_characteristic:
+                         return read_CT_characteristic();
+    default:
+        return FR_INVALID_PARAMETER;
+    }
+}
+
 Uint16 SD_card_class::save_settings()
 {
     FIL fil;

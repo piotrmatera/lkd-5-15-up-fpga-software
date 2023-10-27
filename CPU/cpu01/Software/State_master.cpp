@@ -601,7 +601,7 @@ void Machine_master_class::Lgrid_meas()
         if(save)
         {
             memcpy(&SD_card.calibration.Meas_ACDC_gain, &CT_char_vars.calibration.Meas_ACDC_gain, sizeof(SD_card.calibration.Meas_ACDC_gain));
-            SD_card.save_calibration_data();
+            SD_card.save(SD_card_class::sec_calibration_data);
         }
 
         L_grid_meas.L_grid_previous[9] = L_grid_meas.L_grid_previous[8];
