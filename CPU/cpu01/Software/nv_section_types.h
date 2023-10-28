@@ -19,8 +19,13 @@ typedef enum{
         sec_type_max
     } section_type_t;
 
+#define NV_IN_EEPROM 1
+
 #if NV_IN_EEPROM
 //przelaczalny IF
+Uint16 nonvolatile_read( section_type_t section );
+Uint16 nonvolatile_save( section_type_t section );
+
 # define NV_CLASS_read( section ) nonvolatile_read( section )
 # define NV_CLASS_save( section ) nonvolatile_save( section )
 #else

@@ -113,7 +113,7 @@ const region_memories_t _nv_regions[] = {
 
 const class nonvolatile_t nonvolatile = //korzysta z globalnego obiektu eeprom
 {
-     .regions_count  = 7,
+     .regions_count  = sizeof(_nv_regions)/sizeof(_nv_regions[0]),
      .regions = _nv_regions
 };
 
