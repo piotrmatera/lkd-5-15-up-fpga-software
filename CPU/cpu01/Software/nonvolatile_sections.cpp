@@ -442,7 +442,10 @@ static Uint16 nv_read_meter_data(){
     //lokalizacja odczytanej kopii, UWAGA pierwsze slowo to CRC
     Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_METER-1 ].data_int.address.ptr_u16;
     Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_METER-1 ].data_ext.size/2; // /2 bo w bajtach
-//TODO kontrola rozmiaru
+
+    if( data_buffer_size != sizeof(SD_card.meter.Energy_meter))
+        return FR_INVALID_PARAMETER;
+
     memcpy( (Uint16 *)&SD_card.meter.Energy_meter, shadow_buffer, sizeof(SD_card.meter.Energy_meter));
 
     SD_card.meter.available = 1;
@@ -451,8 +454,18 @@ static Uint16 nv_read_meter_data(){
 }
 
 static Uint16 cb_nv_save_meter( Uint16* shadow_buffer, Uint16 buffer_size ){
-    Uint16 items_max = buffer_size/sizeof(struct harmon_item);
     void * items_data = (void*)&shadow_buffer[1];
+
+    Uint16 total_len = sizeof(SD_card.meter.Energy_meter.P_p);
+    total_len += sizeof(SD_card.meter.Energy_meter.P_n);
+    total_len += sizeof(SD_card.meter.Energy_meter.QI);
+    total_len += sizeof(SD_card.meter.Energy_meter.QII);
+    total_len += sizeof(SD_card.meter.Energy_meter.QIII);
+    total_len += sizeof(SD_card.meter.Energy_meter.QIV);
+    total_len += sizeof(SD_card.meter.Energy_meter.sum);
+
+    if( buffer_size != total_len )
+        return err_invalid;
 
     DINT_copy_CPUasm((Uint16 *)&SD_card.meter.Energy_meter.P_p,  (Uint16 *)&Energy_meter.upper.P_p,  sizeof(SD_card.meter.Energy_meter.P_p));
     DINT_copy_CPUasm((Uint16 *)&SD_card.meter.Energy_meter.P_n,  (Uint16 *)&Energy_meter.upper.P_n,  sizeof(SD_card.meter.Energy_meter.P_n));
@@ -462,9 +475,7 @@ static Uint16 cb_nv_save_meter( Uint16* shadow_buffer, Uint16 buffer_size ){
     DINT_copy_CPUasm((Uint16 *)&SD_card.meter.Energy_meter.QIV,  (Uint16 *)&Energy_meter.upper.QIV,  sizeof(SD_card.meter.Energy_meter.QIV));
     DINT_copy_CPUasm((Uint16 *)&SD_card.meter.Energy_meter.sum,  (Uint16 *)&Energy_meter.upper.sum,  sizeof(SD_card.meter.Energy_meter.sum));
 
-    //TODO kontrola rozmiaru
     memcpy( items_data, (Uint16 *)&SD_card.meter.Energy_meter, sizeof(SD_card.meter.Energy_meter));
-
 
     return status_ok;
 }
@@ -477,15 +488,16 @@ static Uint16 nv_save_meter_data(){
 static Uint16 nv_read_calibration_data(){
    Uint16 retc = nonvolatile.retrieve(NV_REGION_CALIB, NV_REGION_READ_CALIB_TIMEOUT, DO_NOT_COPY);
    if( retc!= 0 )
-     return FR_INVALID_PARAMETER;
-
-   //TODO kontrola rozmiaru
+       return FR_INVALID_PARAMETER;
 
    //lokalizacja odczytanej kopii, UWAGA pierwsze slowo to CRC
    Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_METER-1 ].data_int.address.ptr_u16;
-   Uint16   data_buffer = nonvolatile.regions[ NV_REGION_METER-1 ].data_ext.size/2; // /2 bo w bajtach
+   Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_METER-1 ].data_ext.size/2; // /2 bo w bajtach
 
    size_t first_part = sizeof(struct Measurements_ACDC_gain_offset_struct);
+   if( data_buffer_size != first_part + sizeof(struct Measurements_ACDC_gain_offset_struct))
+       return FR_INVALID_PARAMETER;
+
    memcpy( (Uint16 *)&SD_card.calibration.Meas_ACDC_gain, shadow_buffer, first_part);
 
    memcpy( (Uint16 *)&SD_card.calibration.Meas_ACDC_offset, &shadow_buffer[ first_part ], sizeof(struct Measurements_ACDC_gain_offset_struct));
@@ -496,11 +508,12 @@ static Uint16 nv_read_calibration_data(){
 }
 
 static Uint16 cb_nv_save_calibration_data( Uint16* shadow_buffer, Uint16 buffer_size ){
-    Uint16 items_max = buffer_size/sizeof(struct harmon_item);
     Uint16 * items_table = &shadow_buffer[1];
 
-    //TODO sprawdzic rozmair kopiowanych danych czy sie mieszcza
     size_t first_part = sizeof(struct Measurements_ACDC_gain_offset_struct);
+    if( buffer_size != first_part + sizeof(struct Measurements_ACDC_gain_offset_struct))
+        return err_invalid;
+
     memcpy( items_table, (Uint16 *)&SD_card.calibration.Meas_ACDC_gain, first_part);
 
     memcpy( &items_table[ first_part ], (Uint16 *)&SD_card.calibration.Meas_ACDC_offset, sizeof(struct Measurements_ACDC_gain_offset_struct));

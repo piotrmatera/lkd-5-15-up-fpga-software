@@ -107,7 +107,8 @@ Uint16 nonvolatile_t::save( Uint16 region_index, Uint64 timeout, callback_copy_t
         if( reg->data_ext.address.ptr_u16 != NULL )
             memcpy( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.address.ptr_u16, reg->data_ext.size/2);
     }else{
-        cb( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_int.size/2);
+        if( cb( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_int.size/2) != status_ok )
+            return 1;
     }
 
     reg->data_int.address.ptr_u16[0] = crc8( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.size );
