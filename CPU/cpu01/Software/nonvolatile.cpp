@@ -106,6 +106,8 @@ Uint16 nonvolatile_t::save( Uint16 region_index, Uint64 timeout, callback_copy_t
     if( cb == NULL ){
         if( reg->data_ext.address.ptr_u16 != NULL )
             memcpy( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.address.ptr_u16, reg->data_ext.size/2);
+        else //niedozwolone wywolanie bez podania callbacka gdy ext=NULL
+            return 1;
     }else{
         if( cb( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_int.size/2) != status_ok )
             return 1;
@@ -127,7 +129,7 @@ Uint16 nonvolatile_t::save( Uint16 region_index, Uint64 timeout, callback_copy_t
     return NONVOLATILE_OK;
 }
 
-Uint16 nonvolatile_t::retrieve(Uint16 region_index, Uint64 timeout, Uint16 copy_to_external) const{
+Uint16 nonvolatile_t::retrieve(Uint16 region_index, Uint64 timeout) const{
     Uint16 retc;
     Uint64 _timeout = timeout==0? 0ULL :((Uint64)timeout)*200ULL*1000ULL + ReadIpcTimer();
     if( region_index >= this->regions_count )
@@ -141,7 +143,7 @@ Uint16 nonvolatile_t::retrieve(Uint16 region_index, Uint64 timeout, Uint16 copy_
         return retc;
 
     //skopiowanie danych z lokalnego bufora
-    if( copy_to_external && reg->data_ext.address.ptr_u16!=NULL)
+    if( reg->data_ext.address.ptr_u16!=NULL)
         memcpy( reg->data_ext.address.ptr_u16, &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_ext.size/2);
 
     return 0;

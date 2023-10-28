@@ -36,6 +36,7 @@ extern class Machine_slave_class Machine_slave;
 #define NV_SECTION_3_EXT_SIZE 2
 #define NV_SECTION_3_INT_SIZE 8
 
+
 //calibration
 #define NV_SECTION_4_EXT_SIZE 112
 #define NV_SECTION_4_INT_SIZE 224
@@ -64,7 +65,6 @@ extern class Machine_slave_class Machine_slave;
 #define NV_SECTIONS_SIZE      (NV_SECTION_7_EPP_ADDR+NV_SECTION_7_INT_SIZE)
 
 
-//TODO inicjalizacja i uzycie sekcji eeprom.info
 
 uint16_t nv_shadow_buffer[ NV_SECTIONS_SIZE ];  //jako bufor tymczasowy do dzialania nonvolatile
 
@@ -173,11 +173,8 @@ Uint16 nv_data_t::save( section_type_t section ){
 
 
 
-
-#define DO_NOT_COPY 0 //UWAGA! mozna na podstawie ext_ptr=NULL juz zaimplementowane
-
 Uint16 nv_data_t::read_settings(){
-    Uint16 retc = nonvolatile.retrieve(NV_REGION_SETTINGS, NV_REGION_READ_SETTING_TIMEOUT, DO_NOT_COPY);
+    Uint16 retc = nonvolatile.retrieve(NV_REGION_SETTINGS, NV_REGION_READ_SETTING_TIMEOUT);
     if( retc!= 0 )
         return FR_INVALID_PARAMETER;
 
@@ -311,7 +308,7 @@ Uint16 nv_data_t::save_settings(){
 
 
 Uint16 nv_data_t::read_H_settings(){
-   Uint16 retc = nonvolatile.retrieve(NV_REGION_HARMON, NV_REGION_READ_HARMON_TIMEOUT, DO_NOT_COPY);
+   Uint16 retc = nonvolatile.retrieve(NV_REGION_HARMON, NV_REGION_READ_HARMON_TIMEOUT);
    if( retc!= 0 )
        return FR_INVALID_PARAMETER;
 
@@ -391,7 +388,7 @@ Uint16 nv_data_t::save_H_settings(){
 
 
 Uint16 nv_data_t::read_meter_data(){
-    Uint16 retc = nonvolatile.retrieve(NV_REGION_METER, NV_REGION_READ_METER_TIMEOUT, DO_NOT_COPY);
+    Uint16 retc = nonvolatile.retrieve(NV_REGION_METER, NV_REGION_READ_METER_TIMEOUT);
     if( retc!= 0 )
       return FR_INVALID_PARAMETER;
 
@@ -442,7 +439,7 @@ Uint16 nv_data_t::save_meter_data(){
 }
 
 Uint16 nv_data_t::read_calibration_data(){
-   Uint16 retc = nonvolatile.retrieve(NV_REGION_CALIB, NV_REGION_READ_CALIB_TIMEOUT, DO_NOT_COPY);
+   Uint16 retc = nonvolatile.retrieve(NV_REGION_CALIB, NV_REGION_READ_CALIB_TIMEOUT);
    if( retc!= 0 )
        return FR_INVALID_PARAMETER;
 

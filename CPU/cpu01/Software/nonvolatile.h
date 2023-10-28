@@ -136,9 +136,9 @@ public:
      * funkcja blokujaca
      * @param[in] region_index index regionu z tabeli regions
      * @param[in] timeout przeterminowanie w ms
-     * @param[in] copy-to_external czy ma skopiowac dane do external po odczytaniu
+     * Jesli adres ext jest =NULL to pomija kopiowanie do zewn. zmiennej
      * @return zwraca 0 gdy sie udalo odczytac */
-    Uint16 retrieve(Uint16 region_index, Uint64 timeout, Uint16 copy_to_external = 1) const;
+    Uint16 retrieve(Uint16 region_index, Uint64 timeout) const;
 
     /** zapis czesci informacyjnych, tylko 1 czesc odczytywana
      * funkcja blokujaca
