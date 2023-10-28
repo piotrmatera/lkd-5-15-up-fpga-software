@@ -21,8 +21,6 @@ extern struct L_grid_meas_struct L_grid_meas;
 extern class Machine_slave_class Machine_slave;
 
 
-//eeprom wersja 1.03
-//TODO gdzie powinno byc testowanie wersji eepromu (powinno sie zgadzac z tym w FW)?
 
 //on-off switch
 #define NV_SECTION_1_EXT_SIZE 2  /*wielkosc uzywanego pola w app (UWAGA! jesli poda sie za duzo bedzie 'mazac' po pamieci w APP)*/

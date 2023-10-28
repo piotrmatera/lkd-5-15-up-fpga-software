@@ -8,7 +8,7 @@
 #ifndef SOFTWARE_NV_SECTION_TYPES_H_
 #define SOFTWARE_NV_SECTION_TYPES_H_
 
-
+/** typ do wyboru ktore dane beda odczytane, uzywnae przez nv_data_t oraz SD_card_class, do uogolnienia*/
 typedef enum{
         sec_CT_characteristic,
         sec_settings,
@@ -19,18 +19,38 @@ typedef enum{
         sec_type_max
     } section_type_t;
 
+/** przelaczalnie w trakcie kompilacji, jaki obiekt bedzie uzywany do zapisu ustawien konfiguracyjnych
+ *  a zarazem gdzie beda zapisywane te ustawienia
+ *
+ *  =1 nv_data_t     eeprom
+ *  =0 SD_card_class karta_SD
+ */
 #define NV_IN_EEPROM 1
 
-#if NV_IN_EEPROM
-//przelaczalny IF
 
+#if NV_IN_EEPROM
+
+/* klasa zastepuje operacje na plikacjh konfiguracyjnych wykonywane przez SD_card_class
+ * ze wzgledu na wpasowanie do istniejacego kodu dane zapisuje do/z struktur w SD_card_t
+ *
+ * Zamiast na karte SD dane beda zapisywane do EEPROMU
+ */
 class nv_data_t{
 public:
+        /** odczyt danych konfiguracyjnych z eepromu do struktur w SD_card
+         * @param[in] wybor, ktore dane odczytac
+         * @return 0 gdy sie udalo
+         */
         Uint16 read( section_type_t section );
 
+        /**zapis danych konfiguracyjnych z SD_card do eepromu
+         * @param[in] wybor, ktore dane odczytac
+         * @return 0 gdy sie udalo
+         */
         Uint16 save( section_type_t section );
 
 //private: publiczne dla callbackow
+        //wewnetrzne typy danych uzywane przez callbacki
         typedef enum {
             //UWAGA! nie zmieniac kolejnosci ani nie dopisywac do srodka - wart. enum sa zapisane w eepromie
             SETTINGS_STATIC_Q_COMPENSATION_A,
@@ -63,11 +83,13 @@ public:
             SETTINGS_MAX
         } settings_t;
 
+        /** format zapisanych danych w sekcji settings*/
         struct settings_item{
-                Uint16 type;
+                Uint16 type; //typ wg settings_t
                 float  value;
         };
 
+        //** format zapisanych danych do sekcji harmonicznych*/
         struct harmon_item{
             Uint16 a:4;
             Uint16 b:4;
@@ -83,12 +105,11 @@ private:
         Uint16 read_CT_characteristic();
 
    //funkcje odczytuja dane do obiektu SD_card
+   //uwaga: wlasciwe kopiowanie odbywa sie w callbackach
         Uint16 save_settings();
         Uint16 save_H_settings();
         Uint16 save_calibration_data();
         Uint16 save_meter_data();
-
-
 
 };
 
