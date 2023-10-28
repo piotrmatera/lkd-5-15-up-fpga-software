@@ -148,10 +148,13 @@ Uint16 nv_data_t::save( section_type_t section ){
     }
 }
 
+//uzywane wewnetrznie, na zewnatrz uzywane section_type_t
+
 #define NV_REGION_CALIB 4 //numeracja regionow od 1.
 #define NV_REGION_HARMON 5
 #define NV_REGION_METER 6
 #define NV_REGION_SETTINGS 7
+
 #define NV_REGION_READ_SETTING_TIMEOUT 0
 #define NV_REGION_SAVE_SETTING_TIMEOUT 0
 #define NV_REGION_READ_HARMON_TIMEOUT 0
@@ -167,42 +170,9 @@ Uint16 nv_data_t::save( section_type_t section ){
 
 #define NV_CT_CHAR_SIZE (7*60*4) //w bajtach
 
-typedef enum {
-    //UWAGA! nie zmieniac kolejnosci ani nie dopisywac do srodka - wart. enum sa zapisane w eepromie
-    SETTINGS_STATIC_Q_COMPENSATION_A,
-    SETTINGS_STATIC_Q_COMPENSATION_B,
-    SETTINGS_STATIC_Q_COMPENSATION_C,
-    SETTINGS_ENABLE_Q_COMPENSATION_A,
-    SETTINGS_ENABLE_Q_COMPENSATION_B,
-    SETTINGS_ENABLE_Q_COMPENSATION_C,
-    SETTINGS_ENABLE_P_SYMMETRIZATION,
-    SETTINGS_ENABLE_H_COMPENSATION,
-    SETTINGS_VERSION_P_SYMMETRIZATION,
-    SETTINGS_VERSION_Q_COMPENSATION_A,
-    SETTINGS_VERSION_Q_COMPENSATION_B,
-    SETTINGS_VERSION_Q_COMPENSATION_C,
-    SETTINGS_TANGENS_RANGE_A_HIGH,
-    SETTINGS_TANGENS_RANGE_B_HIGH,
-    SETTINGS_TANGENS_RANGE_C_HIGH,
-    SETTINGS_TANGENS_RANGE_A_LOW,
-    SETTINGS_TANGENS_RANGE_B_LOW,
-    SETTINGS_TANGENS_RANGE_C_LOW,
-    SETTINGS_BAUDRATE,
-    SETTINGS_EXT_SERVER_ID,
-    SETTINGS_WIFI_ONOFF,
-    SETTINGS_C_DC,
-    SETTINGS_L,
-    SETTINGS_C,
-    SETTINGS_I_LIM,
-    SETTINGS_NUMBER_OF_SLAVES,
-    SETTINGS_NO_NEUTRAL,
-    SETTINGS_MAX
-} settings_t;
 
-struct settings_item{
-        Uint16 type;
-        float  value;
-    };
+
+
 
 #define DO_NOT_COPY 0 //UWAGA! mozna na podstawie ext_ptr=NULL juz zaimplementowane
 
@@ -282,44 +252,44 @@ Uint16 nv_data_t::read_settings(){
  * @param[in] buffer_size ilosc slow w buforze do wykorzystania
  */
 static Uint16 cb_nv_save_settings( Uint16* shadow_buffer, Uint16 buffer_size ){
-    Uint16 items = buffer_size/sizeof(struct settings_item);
-    struct settings_item * items_table = (struct settings_item *) &shadow_buffer[1];
+    Uint16 items = buffer_size/sizeof(struct nv_data_t::settings_item);
+    struct nv_data_t::settings_item * items_table = (struct nv_data_t::settings_item *) &shadow_buffer[1];
 
     float value = 0;
 
-    for(int i=0; i<SETTINGS_MAX; i++){
+    for(int i=0; i<nv_data_t::SETTINGS_MAX; i++){
         //gdy brak miejsca w sekcji to przerwac
 
         if (i >= items) break; //TODO sprawdzic czy dobry warunek, czy nie za lagodny
 
         switch( i ){
-        case SETTINGS_STATIC_Q_COMPENSATION_A: value = SD_card.settings.control.Q_set.a; break;
-        case SETTINGS_STATIC_Q_COMPENSATION_B: value = SD_card.settings.control.Q_set.b; break;
-        case SETTINGS_STATIC_Q_COMPENSATION_C: value = SD_card.settings.control.Q_set.c; break;
-        case SETTINGS_ENABLE_Q_COMPENSATION_A: value = SD_card.settings.control.flags.bit.enable_Q_comp_a; break;
-        case SETTINGS_ENABLE_Q_COMPENSATION_B: value = SD_card.settings.control.flags.bit.enable_Q_comp_b; break;
-        case SETTINGS_ENABLE_Q_COMPENSATION_C: value = SD_card.settings.control.flags.bit.enable_Q_comp_c; break;
-        case SETTINGS_ENABLE_P_SYMMETRIZATION: value = SD_card.settings.control.flags.bit.enable_P_sym; break;
-        case SETTINGS_ENABLE_H_COMPENSATION:   value = SD_card.settings.control.flags.bit.enable_H_comp; break;
-        case SETTINGS_VERSION_P_SYMMETRIZATION: value = SD_card.settings.control.flags.bit.version_P_sym; break;
-        case SETTINGS_VERSION_Q_COMPENSATION_A: value = SD_card.settings.control.flags.bit.version_Q_comp_a; break;
-        case SETTINGS_VERSION_Q_COMPENSATION_B: value = SD_card.settings.control.flags.bit.version_Q_comp_b; break;
-        case SETTINGS_VERSION_Q_COMPENSATION_C: value = SD_card.settings.control.flags.bit.version_Q_comp_c; break;
-        case SETTINGS_TANGENS_RANGE_A_HIGH: value = SD_card.settings.control.tangens_range[0].a; break;
-        case SETTINGS_TANGENS_RANGE_B_HIGH: value = SD_card.settings.control.tangens_range[0].b; break;
-        case SETTINGS_TANGENS_RANGE_C_HIGH: value = SD_card.settings.control.tangens_range[0].c; break;
-        case SETTINGS_TANGENS_RANGE_A_LOW:  value = SD_card.settings.control.tangens_range[1].a; break;
-        case SETTINGS_TANGENS_RANGE_B_LOW:  value = SD_card.settings.control.tangens_range[1].b; break;
-        case SETTINGS_TANGENS_RANGE_C_LOW:  value = SD_card.settings.control.tangens_range[1].c; break;
-        case SETTINGS_BAUDRATE:             value = SD_card.settings.Baudrate; break;
-        case SETTINGS_EXT_SERVER_ID: value = SD_card.settings.modbus_ext_server_id; break;
-        case SETTINGS_WIFI_ONOFF:   value = SD_card.settings.wifi_on; break;
-        case SETTINGS_C_DC:         value = SD_card.settings.C_dc; break;
-        case SETTINGS_L:            value = SD_card.settings.L_conv; break;
-        case SETTINGS_C:            value = SD_card.settings.C_conv; break;
-        case SETTINGS_I_LIM:        value = SD_card.settings.I_lim; break;
-        case SETTINGS_NUMBER_OF_SLAVES: value = SD_card.settings.number_of_slaves; break;
-        case SETTINGS_NO_NEUTRAL:   value = SD_card.settings.no_neutral; break;
+        case nv_data_t::SETTINGS_STATIC_Q_COMPENSATION_A: value = SD_card.settings.control.Q_set.a; break;
+        case nv_data_t::SETTINGS_STATIC_Q_COMPENSATION_B: value = SD_card.settings.control.Q_set.b; break;
+        case nv_data_t::SETTINGS_STATIC_Q_COMPENSATION_C: value = SD_card.settings.control.Q_set.c; break;
+        case nv_data_t::SETTINGS_ENABLE_Q_COMPENSATION_A: value = SD_card.settings.control.flags.bit.enable_Q_comp_a; break;
+        case nv_data_t::SETTINGS_ENABLE_Q_COMPENSATION_B: value = SD_card.settings.control.flags.bit.enable_Q_comp_b; break;
+        case nv_data_t::SETTINGS_ENABLE_Q_COMPENSATION_C: value = SD_card.settings.control.flags.bit.enable_Q_comp_c; break;
+        case nv_data_t::SETTINGS_ENABLE_P_SYMMETRIZATION: value = SD_card.settings.control.flags.bit.enable_P_sym; break;
+        case nv_data_t::SETTINGS_ENABLE_H_COMPENSATION:   value = SD_card.settings.control.flags.bit.enable_H_comp; break;
+        case nv_data_t::SETTINGS_VERSION_P_SYMMETRIZATION: value = SD_card.settings.control.flags.bit.version_P_sym; break;
+        case nv_data_t::SETTINGS_VERSION_Q_COMPENSATION_A: value = SD_card.settings.control.flags.bit.version_Q_comp_a; break;
+        case nv_data_t::SETTINGS_VERSION_Q_COMPENSATION_B: value = SD_card.settings.control.flags.bit.version_Q_comp_b; break;
+        case nv_data_t::SETTINGS_VERSION_Q_COMPENSATION_C: value = SD_card.settings.control.flags.bit.version_Q_comp_c; break;
+        case nv_data_t::SETTINGS_TANGENS_RANGE_A_HIGH: value = SD_card.settings.control.tangens_range[0].a; break;
+        case nv_data_t::SETTINGS_TANGENS_RANGE_B_HIGH: value = SD_card.settings.control.tangens_range[0].b; break;
+        case nv_data_t::SETTINGS_TANGENS_RANGE_C_HIGH: value = SD_card.settings.control.tangens_range[0].c; break;
+        case nv_data_t::SETTINGS_TANGENS_RANGE_A_LOW:  value = SD_card.settings.control.tangens_range[1].a; break;
+        case nv_data_t::SETTINGS_TANGENS_RANGE_B_LOW:  value = SD_card.settings.control.tangens_range[1].b; break;
+        case nv_data_t::SETTINGS_TANGENS_RANGE_C_LOW:  value = SD_card.settings.control.tangens_range[1].c; break;
+        case nv_data_t::SETTINGS_BAUDRATE:             value = SD_card.settings.Baudrate; break;
+        case nv_data_t::SETTINGS_EXT_SERVER_ID: value = SD_card.settings.modbus_ext_server_id; break;
+        case nv_data_t::SETTINGS_WIFI_ONOFF:   value = SD_card.settings.wifi_on; break;
+        case nv_data_t::SETTINGS_C_DC:         value = SD_card.settings.C_dc; break;
+        case nv_data_t::SETTINGS_L:            value = SD_card.settings.L_conv; break;
+        case nv_data_t::SETTINGS_C:            value = SD_card.settings.C_conv; break;
+        case nv_data_t::SETTINGS_I_LIM:        value = SD_card.settings.I_lim; break;
+        case nv_data_t::SETTINGS_NUMBER_OF_SLAVES: value = SD_card.settings.number_of_slaves; break;
+        case nv_data_t::SETTINGS_NO_NEUTRAL:   value = SD_card.settings.no_neutral; break;
         default:
             break;
         }
@@ -338,12 +308,7 @@ Uint16 nv_data_t::save_settings(){
 }
 
 
-struct harmon_item{
-    Uint16 a:4;
-    Uint16 b:4;
-    Uint16 c:4;
-    Uint16 res:4;
-};
+
 
 Uint16 nv_data_t::read_H_settings(){
    Uint16 retc = nonvolatile.retrieve(NV_REGION_HARMON, NV_REGION_READ_HARMON_TIMEOUT, DO_NOT_COPY);
@@ -394,10 +359,10 @@ Uint16 nv_data_t::read_H_settings(){
 }
 
 static Uint16 cb_nv_save_harmon( Uint16* shadow_buffer, Uint16 buffer_size ){
-    Uint16 items_max = buffer_size/sizeof(struct harmon_item);
-    struct harmon_item * items_table = (struct harmon_item *) &shadow_buffer[1];
+    Uint16 items_max = buffer_size/sizeof(struct nv_data_t::harmon_item);
+    struct nv_data_t::harmon_item * items_table = (struct nv_data_t::harmon_item *) &shadow_buffer[1];
 
-    struct harmon_item h_item;
+    struct nv_data_t::harmon_item h_item;
 
     Uint16 ix = 0;
     for(int i=0; i<25; i++){

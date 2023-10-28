@@ -30,8 +30,51 @@ public:
 
         Uint16 save( section_type_t section );
 
-private:
+//private: publiczne dla callbackow
+        typedef enum {
+            //UWAGA! nie zmieniac kolejnosci ani nie dopisywac do srodka - wart. enum sa zapisane w eepromie
+            SETTINGS_STATIC_Q_COMPENSATION_A,
+            SETTINGS_STATIC_Q_COMPENSATION_B,
+            SETTINGS_STATIC_Q_COMPENSATION_C,
+            SETTINGS_ENABLE_Q_COMPENSATION_A,
+            SETTINGS_ENABLE_Q_COMPENSATION_B,
+            SETTINGS_ENABLE_Q_COMPENSATION_C,
+            SETTINGS_ENABLE_P_SYMMETRIZATION,
+            SETTINGS_ENABLE_H_COMPENSATION,
+            SETTINGS_VERSION_P_SYMMETRIZATION,
+            SETTINGS_VERSION_Q_COMPENSATION_A,
+            SETTINGS_VERSION_Q_COMPENSATION_B,
+            SETTINGS_VERSION_Q_COMPENSATION_C,
+            SETTINGS_TANGENS_RANGE_A_HIGH,
+            SETTINGS_TANGENS_RANGE_B_HIGH,
+            SETTINGS_TANGENS_RANGE_C_HIGH,
+            SETTINGS_TANGENS_RANGE_A_LOW,
+            SETTINGS_TANGENS_RANGE_B_LOW,
+            SETTINGS_TANGENS_RANGE_C_LOW,
+            SETTINGS_BAUDRATE,
+            SETTINGS_EXT_SERVER_ID,
+            SETTINGS_WIFI_ONOFF,
+            SETTINGS_C_DC,
+            SETTINGS_L,
+            SETTINGS_C,
+            SETTINGS_I_LIM,
+            SETTINGS_NUMBER_OF_SLAVES,
+            SETTINGS_NO_NEUTRAL,
+            SETTINGS_MAX
+        } settings_t;
 
+        struct settings_item{
+                Uint16 type;
+                float  value;
+        };
+
+        struct harmon_item{
+            Uint16 a:4;
+            Uint16 b:4;
+            Uint16 c:4;
+            Uint16 res:4;
+        };
+private:
    //funkcje zapisuja dane do SD_card
         Uint16 read_settings();
         Uint16 read_H_settings();
