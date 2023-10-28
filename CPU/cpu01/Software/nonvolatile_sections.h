@@ -10,6 +10,7 @@
 
 #include "nonvolatile.h"
 
+//numeracja regionow od 0
 #define NV_ONOFF_SWITCH_TYPE 0
 #define NV_LGRID_TYPE 1
 #define NV_ERROR_RETRY_TYPE 2

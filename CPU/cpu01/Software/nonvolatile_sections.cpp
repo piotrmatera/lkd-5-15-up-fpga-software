@@ -117,39 +117,30 @@ const class nonvolatile_t nonvolatile = //korzysta z globalnego obiektu eeprom
      .regions = _nv_regions
 };
 
+nv_data_t nv_data;
 
-static Uint16 nv_read_settings();
-static Uint16 nv_read_H_settings();
-static Uint16 nv_read_calibration_data();
-static Uint16 nv_read_meter_data();
-static Uint16 nv_read_CT_characteristic();
 
-static Uint16 nv_save_settings();
-static Uint16 nv_save_H_settings();
-static Uint16 nv_save_calibration_data();
-static Uint16 nv_save_meter_data();
-
-Uint16 nonvolatile_read( section_type_t section ){
+Uint16 nv_data_t::read( section_type_t section ){
     switch( section ){
 
-    case sec_settings:   return nv_read_settings();
-    case sec_H_settings: return nv_read_H_settings();
-    case sec_calibration_data: return nv_read_calibration_data();
-    case sec_meter_data:      return nv_read_meter_data();
+    case sec_settings:   return read_settings();
+    case sec_H_settings: return read_H_settings();
+    case sec_calibration_data: return read_calibration_data();
+    case sec_meter_data:      return read_meter_data();
     case sec_CT_characteristic:
-                         return nv_read_CT_characteristic();
+                         return read_CT_characteristic();
     default:
         return FR_INVALID_PARAMETER;
     }
 }
 
-Uint16 nonvolatile_save( section_type_t section ){
+Uint16 nv_data_t::save( section_type_t section ){
     switch( section ){
 
-    case sec_settings:   return nv_save_settings();
-    case sec_H_settings: return nv_save_H_settings();
-    case sec_calibration_data: return nv_save_calibration_data();
-    case sec_meter_data:      return nv_save_meter_data();
+    case sec_settings:   return save_settings();
+    case sec_H_settings: return save_H_settings();
+    case sec_calibration_data: return save_calibration_data();
+    case sec_meter_data:      return save_meter_data();
 
     case sec_CT_characteristic:
     default:
@@ -215,7 +206,7 @@ struct settings_item{
 
 #define DO_NOT_COPY 0 //UWAGA! mozna na podstawie ext_ptr=NULL juz zaimplementowane
 
-static Uint16 nv_read_settings(){
+Uint16 nv_data_t::read_settings(){
     Uint16 retc = nonvolatile.retrieve(NV_REGION_SETTINGS, NV_REGION_READ_SETTING_TIMEOUT, DO_NOT_COPY);
     if( retc!= 0 )
         return FR_INVALID_PARAMETER;
@@ -341,7 +332,7 @@ static Uint16 cb_nv_save_settings( Uint16* shadow_buffer, Uint16 buffer_size ){
 
 }
 
-static Uint16 nv_save_settings(){
+Uint16 nv_data_t::save_settings(){
     Uint16 retc = nonvolatile.save(NV_REGION_SETTINGS, NV_REGION_SAVE_SETTING_TIMEOUT, cb_nv_save_settings);
     return ( retc!= 0 )? FR_INVALID_PARAMETER : FR_OK;
 }
@@ -354,7 +345,7 @@ struct harmon_item{
     Uint16 res:4;
 };
 
-static Uint16 nv_read_H_settings(){
+Uint16 nv_data_t::read_H_settings(){
    Uint16 retc = nonvolatile.retrieve(NV_REGION_HARMON, NV_REGION_READ_HARMON_TIMEOUT, DO_NOT_COPY);
    if( retc!= 0 )
        return FR_INVALID_PARAMETER;
@@ -428,13 +419,13 @@ static Uint16 cb_nv_save_harmon( Uint16* shadow_buffer, Uint16 buffer_size ){
 }
 
 
-static Uint16 nv_save_H_settings(){
+Uint16 nv_data_t::save_H_settings(){
     Uint16 retc = nonvolatile.save(NV_REGION_HARMON, NV_REGION_SAVE_HARMON_TIMEOUT, cb_nv_save_harmon);
     return ( retc!= 0 )? FR_INVALID_PARAMETER : FR_OK;
 }
 
 
-static Uint16 nv_read_meter_data(){
+Uint16 nv_data_t::read_meter_data(){
     Uint16 retc = nonvolatile.retrieve(NV_REGION_METER, NV_REGION_READ_METER_TIMEOUT, DO_NOT_COPY);
     if( retc!= 0 )
       return FR_INVALID_PARAMETER;
@@ -480,12 +471,12 @@ static Uint16 cb_nv_save_meter( Uint16* shadow_buffer, Uint16 buffer_size ){
     return status_ok;
 }
 
-static Uint16 nv_save_meter_data(){
+Uint16 nv_data_t::save_meter_data(){
     Uint16 retc = nonvolatile.save(NV_REGION_METER, NV_REGION_SAVE_METER_TIMEOUT, cb_nv_save_meter);
     return ( retc!= 0 )? FR_INVALID_PARAMETER : FR_OK;
 }
 
-static Uint16 nv_read_calibration_data(){
+Uint16 nv_data_t::read_calibration_data(){
    Uint16 retc = nonvolatile.retrieve(NV_REGION_CALIB, NV_REGION_READ_CALIB_TIMEOUT, DO_NOT_COPY);
    if( retc!= 0 )
        return FR_INVALID_PARAMETER;
@@ -520,7 +511,7 @@ static Uint16 cb_nv_save_calibration_data( Uint16* shadow_buffer, Uint16 buffer_
     return status_ok;
 }
 
-static Uint16 nv_save_calibration_data(){
+Uint16 nv_data_t::save_calibration_data(){
     Uint16 retc = nonvolatile.save(NV_REGION_CALIB, NV_REGION_SAVE_CALIB_TIMEOUT, cb_nv_save_calibration_data);
     return ( retc!= 0 )? FR_INVALID_PARAMETER : FR_OK;
 }
@@ -532,7 +523,7 @@ static int compare_float (const void * a, const void * b)
     else return 0;
 }
 
-static Uint16 nv_read_CT_characteristic(){
+Uint16 nv_data_t::read_CT_characteristic(){
     struct crc_n_len_s{
         Uint16 crc;
         Uint16 len;
