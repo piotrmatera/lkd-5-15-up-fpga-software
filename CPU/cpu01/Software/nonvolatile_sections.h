@@ -14,6 +14,9 @@
 #define NV_LGRID_TYPE 1
 #define NV_ERROR_RETRY_TYPE 2
 
+#define NV_EEPROM_VERSION 0x103 //TODO blokowac start przeksztaltnika gdy nie zgadza sie z tym w eepromie
+
+
 #define ENABLE_NV_TIMEOUTS 1
 #if ENABLE_NV_TIMEOUTS
 # define NV_ONOFF_SAVE_TIMEOUT 40 //ms
