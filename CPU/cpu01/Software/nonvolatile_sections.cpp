@@ -64,7 +64,7 @@ extern class Machine_slave_class Machine_slave;
 
 
 
-uint16_t nv_shadow_buffer[ NV_SECTIONS_SIZE ];  //jako bufor tymczasowy do dzialania nonvolatile
+uint16_t nv_shadow_buffer[ NV_SECTIONS_SIZE ];  //jako bufor wewnetrzny do dzialania nonvolatile
 
 /* deklarowanie sekcji w eepromie
  * @param[in] _sw_data_ptr_ wskaznik do danych w FW (moze byc NULL, jesli samodzielnie kopiowane dane FW<->shadow_buffer)
@@ -115,6 +115,8 @@ const class nonvolatile_t nonvolatile = //korzysta z globalnego obiektu eeprom
      .regions = _nv_regions
 };
 
+
+
 nv_data_t nv_data;
 
 
@@ -146,12 +148,12 @@ Uint16 nv_data_t::save( section_type_t section ){
     }
 }
 
-//uzywane wewnetrznie, na zewnatrz uzywane section_type_t
+//ponizsze definicje regionow uzywane wewnetrznie (tylko w tym pliku); na zewnatrz sa uzywane section_type_t
 
-#define NV_REGION_CALIB 4 //numeracja regionow od 1.
-#define NV_REGION_HARMON 5
-#define NV_REGION_METER 6
-#define NV_REGION_SETTINGS 7
+#define NV_REGION_CALIB    3  //numeracja od 0
+#define NV_REGION_HARMON   4
+#define NV_REGION_METER    5
+#define NV_REGION_SETTINGS 6
 
 #define NV_REGION_READ_SETTING_TIMEOUT 0
 #define NV_REGION_SAVE_SETTING_TIMEOUT 0
@@ -177,8 +179,8 @@ Uint16 nv_data_t::read_settings(){
         return FR_INVALID_PARAMETER;
 
     //lokalizacja odczytanej kopii, UWAGA pierwsze slowo to CRC
-    Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_SETTINGS-1 ].data_int.address.ptr_u16;
-    Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_SETTINGS-1 ].data_ext.size/2; // /2 bo w bajtach
+    Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_SETTINGS ].data_int.address.ptr_u16;
+    Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_SETTINGS ].data_ext.size/2; // /2 bo w bajtach
     //mozna odcyztywac z data_buffer_size/2 slow
 
 
@@ -311,8 +313,8 @@ Uint16 nv_data_t::read_H_settings(){
        return FR_INVALID_PARAMETER;
 
    //lokalizacja odczytanej kopii, UWAGA pierwsze slowo to CRC
-   Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_HARMON-1 ].data_int.address.ptr_u16;
-   Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_HARMON-1 ].data_ext.size/2; // /2 bo w bajtach
+   Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_HARMON ].data_int.address.ptr_u16;
+   Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_HARMON ].data_ext.size/2; // /2 bo w bajtach
    //mozna odcyztywac z data_buffer_size/2 slow
 
    Uint16 items_max = data_buffer_size/sizeof(struct harmon_item);
@@ -391,8 +393,8 @@ Uint16 nv_data_t::read_meter_data(){
       return FR_INVALID_PARAMETER;
 
     //lokalizacja odczytanej kopii, UWAGA pierwsze slowo to CRC
-    Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_METER-1 ].data_int.address.ptr_u16;
-    Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_METER-1 ].data_ext.size/2; // /2 bo w bajtach
+    Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_METER ].data_int.address.ptr_u16;
+    Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_METER ].data_ext.size/2; // /2 bo w bajtach
 
     if( data_buffer_size != sizeof(SD_card.meter.Energy_meter))
         return FR_INVALID_PARAMETER;
@@ -442,8 +444,8 @@ Uint16 nv_data_t::read_calibration_data(){
        return FR_INVALID_PARAMETER;
 
    //lokalizacja odczytanej kopii, UWAGA pierwsze slowo to CRC
-   Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_METER-1 ].data_int.address.ptr_u16;
-   Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_METER-1 ].data_ext.size/2; // /2 bo w bajtach
+   Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_METER ].data_int.address.ptr_u16;
+   Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_METER ].data_ext.size/2; // /2 bo w bajtach
 
    size_t first_part = sizeof(struct Measurements_ACDC_gain_offset_struct);
    if( data_buffer_size != first_part + sizeof(struct Measurements_ACDC_gain_offset_struct))
