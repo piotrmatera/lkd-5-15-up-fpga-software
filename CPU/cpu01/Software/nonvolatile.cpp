@@ -59,7 +59,7 @@ uint16_t nonvolatile_t::crc8(const Uint16 * data, size_t size) const{
 
     for(ix = 0; ix<size/2; ix++){
         val = CRC_TABLE[ (val ^ data[ix]) & 0xFF ];
-        if( ix+1 < size )
+        if( ix+1 < size )//BUG powinno byc 2*ix+1 [?] - ujawni sie dla nieparzystych size
             val = CRC_TABLE[ (val ^ data[ix]>>8) & 0xFF ];
     }
 

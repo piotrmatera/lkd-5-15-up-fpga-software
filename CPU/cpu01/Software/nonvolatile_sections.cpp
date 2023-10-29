@@ -20,7 +20,9 @@ extern struct ONOFF_struct ONOFF;
 extern struct L_grid_meas_struct L_grid_meas;
 extern class Machine_slave_class Machine_slave;
 
-
+#warning Sekcje ktorych start nie jest wyrownany do strony sa potencjalnie niebezpieczne
+#warning Jesli przy zapisie przekracza sie granice stwony to sie zawija i niszczy inna tresc
+#warning Powyzsze jest szczegolnie niebezp. dla sekcji info -> moze doprowadzic do zablokowania upgrade
 
 //on-off switch
 #define NV_SECTION_1_EXT_SIZE 2  /*wielkosc uzywanego pola w app (UWAGA! jesli poda sie za duzo bedzie 'mazac' po pamieci w APP)*/
