@@ -105,11 +105,29 @@ public:
         };
 
         //** format zapisanych danych do sekcji harmonicznych*/
-        struct harmon_item{
-            Uint16 a:4;
-            Uint16 b:4;
-            Uint16 c:4;
-            Uint16 res:4;
+        class harmon_item{
+            Uint16 data;
+        public:
+            Uint16 get_a(){
+                return data & 0x03;
+            }
+            Uint16 get_b(){
+                return (data >> 2)& 0x03;
+            }
+            Uint16 get_c(){
+                return (data >> 4)& 0x03;
+            }
+            void set_a( Uint16 x ){
+                data = (data & (~0x03)) | (x &0x03);
+            }
+            void set_b( Uint16 x ){
+                data = (data & (~0x0c)) | ((x<<2) &0x0c);
+            }
+            void set_c( Uint16 x ){
+                data = (data & (~0x30)) | ((x<<4) &0x30);
+            }
+
+
         };
 private:
    //funkcje zapisuja dane do SD_card

@@ -203,12 +203,12 @@ Uint16 nv_data_t::read_settings(){
 }
 
 /** kopiowanie ze struktur prorgamu do bufora
- * @param[in] shadow_buffer bufor do ktorego kopiowac, rozpoczac od [1], [0]-rezerwacja na CRC
+ * @param[in] shadow_buffer bufor do ktorego kopiowac (od [0], wywolujacy przesunal o CRC)
  * @param[in] buffer_size ilosc slow w buforze do wykorzystania
  */
 static Uint16 cb_nv_save_settings( Uint16* shadow_buffer, Uint16 buffer_size ){
     Uint16 items = buffer_size/sizeof(struct nv_data_t::settings_item);
-    struct nv_data_t::settings_item * items_table = (struct nv_data_t::settings_item *) &shadow_buffer[1];
+    struct nv_data_t::settings_item * items_table = (struct nv_data_t::settings_item *) shadow_buffer;
 
     float value = 0;
 
@@ -290,13 +290,13 @@ Uint16 nv_data_t::read_H_settings(){
            continue;
 
        if( ix<=25 ){
-           SD_card.harmonics.on_off_odd_a[ i ] = h_item.a;
-           SD_card.harmonics.on_off_odd_b[ i ] = h_item.b;
-           SD_card.harmonics.on_off_odd_c[ i ] = h_item.c;
+           SD_card.harmonics.on_off_odd_a[ i ] = h_item.get_a();
+           SD_card.harmonics.on_off_odd_b[ i ] = h_item.get_b();
+           SD_card.harmonics.on_off_odd_c[ i ] = h_item.get_c();
        }else if( ix<=25+2 ){
-           SD_card.harmonics.on_off_even_a[ i-25 ] = h_item.a;
-           SD_card.harmonics.on_off_even_b[ i-25 ] = h_item.b;
-           SD_card.harmonics.on_off_even_c[ i-25 ] = h_item.c;
+           SD_card.harmonics.on_off_even_a[ i-25 ] = h_item.get_a();
+           SD_card.harmonics.on_off_even_b[ i-25 ] = h_item.get_b();
+           SD_card.harmonics.on_off_even_c[ i-25 ] = h_item.get_c();
        }
    }
    SD_card.harmonics.available = 1;
@@ -305,24 +305,24 @@ Uint16 nv_data_t::read_H_settings(){
 
 static Uint16 cb_nv_save_harmon( Uint16* shadow_buffer, Uint16 buffer_size ){
     Uint16 items_max = buffer_size/sizeof(struct nv_data_t::harmon_item);
-    struct nv_data_t::harmon_item * items_table = (struct nv_data_t::harmon_item *) &shadow_buffer[1];
+    struct nv_data_t::harmon_item * items_table = (struct nv_data_t::harmon_item *) shadow_buffer;
 
     struct nv_data_t::harmon_item h_item;
 
     Uint16 ix = 0;
     for(int i=0; i<25; i++){
         if( ix >= items_max ) break;//TODO sprawdzic warunek
-        h_item.a = SD_card.harmonics.on_off_odd_a[ i ];
-        h_item.b = SD_card.harmonics.on_off_odd_b[ i ];
-        h_item.c = SD_card.harmonics.on_off_odd_c[ i ];
+        h_item.set_a( SD_card.harmonics.on_off_odd_a[ i ] );
+        h_item.set_b( SD_card.harmonics.on_off_odd_b[ i ] );
+        h_item.set_c( SD_card.harmonics.on_off_odd_c[ i ] );
         items_table[ix++] = h_item;
     }
 
     for(int i=0; i<2; i++){
         if( ix >= items_max ) break;//TODO sprawdzic warunek
-        h_item.a = SD_card.harmonics.on_off_even_a[ i ];
-        h_item.b = SD_card.harmonics.on_off_even_b[ i ];
-        h_item.c = SD_card.harmonics.on_off_even_c[ i ];
+        h_item.set_a( SD_card.harmonics.on_off_odd_a[ i ] );
+        h_item.set_b( SD_card.harmonics.on_off_odd_b[ i ] );
+        h_item.set_c( SD_card.harmonics.on_off_odd_c[ i ] );
         items_table[ix++] = h_item;
     }
     return status_ok;
@@ -355,7 +355,7 @@ Uint16 nv_data_t::read_meter_data(){
 }
 
 static Uint16 cb_nv_save_meter( Uint16* shadow_buffer, Uint16 buffer_size ){
-    void * items_data = (void*)&shadow_buffer[1];
+    void * items_data = (void*)shadow_buffer;
 
     Uint16 total_len = sizeof(SD_card.meter.Energy_meter.P_p);
     total_len += sizeof(SD_card.meter.Energy_meter.P_n);
@@ -409,7 +409,7 @@ Uint16 nv_data_t::read_calibration_data(){
 }
 
 static Uint16 cb_nv_save_calibration_data( Uint16* shadow_buffer, Uint16 buffer_size ){
-    Uint16 * items_table = &shadow_buffer[1];
+    Uint16 * items_table = shadow_buffer;
 
     size_t first_part = sizeof(struct Measurements_ACDC_gain_offset_struct);
     if( buffer_size != first_part + sizeof(struct Measurements_ACDC_gain_offset_struct))
