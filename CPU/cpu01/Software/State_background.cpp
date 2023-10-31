@@ -1151,6 +1151,7 @@ void Background_class::Main()
     {
         control_ACDC.triggers.bit.SD_save_H_settings = 0;
 
+        convert_harmonics_to_floats();
         memcpy(SD_card.harmonics.on_off_odd_a, on_off_odd_a, sizeof(SD_card.harmonics.on_off_odd_a));
         memcpy(SD_card.harmonics.on_off_odd_b, on_off_odd_b, sizeof(SD_card.harmonics.on_off_odd_b));
         memcpy(SD_card.harmonics.on_off_odd_c, on_off_odd_c, sizeof(SD_card.harmonics.on_off_odd_c));
