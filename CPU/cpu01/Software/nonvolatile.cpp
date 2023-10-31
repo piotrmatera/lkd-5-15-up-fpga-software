@@ -109,7 +109,7 @@ Uint16 nonvolatile_t::save( Uint16 region_index, Uint64 timeout, callback_copy_t
         else //niedozwolone wywolanie bez podania callbacka gdy ext=NULL
             return 1;
     }else{
-        if( cb( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], reg->data_int.size/2) != status_ok )
+        if( cb( &reg->data_int.address.ptr_u16[REGION_DATA_OFFSET/2], (reg->data_int.size-REGION_DATA_OFFSET)/2 ) != status_ok )
             return 1;
     }
 

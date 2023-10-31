@@ -204,7 +204,7 @@ Uint16 nv_data_t::read_settings(){
 
 /** kopiowanie ze struktur prorgamu do bufora
  * @param[in] shadow_buffer bufor do ktorego kopiowac (od [0], wywolujacy przesunal o CRC)
- * @param[in] buffer_size ilosc slow w buforze do wykorzystania
+ * @param[in] buffer_size ilosc slow w buforze do wykorzystania (bez CRC, same dane)
  */
 static Uint16 cb_nv_save_settings( Uint16* shadow_buffer, Uint16 buffer_size ){
     Uint16 items = buffer_size/sizeof(struct nv_data_t::settings_item);
