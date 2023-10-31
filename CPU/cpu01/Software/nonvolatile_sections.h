@@ -15,7 +15,7 @@
 #define NV_LGRID_TYPE 1
 #define NV_ERROR_RETRY_TYPE 2
 
-#define NV_EEPROM_VERSION 0x103 //TODO blokowac start przeksztaltnika gdy nie zgadza sie z tym w eepromie
+#define NV_EEPROM_VERSION 0x104 //TODO blokowac start przeksztaltnika gdy nie zgadza sie z tym w eepromie
 //opis formatu obrazu eepromu w nonvolatile_sections.cpp
 
 #define ENABLE_NV_TIMEOUTS 1

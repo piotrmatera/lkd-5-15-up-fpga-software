@@ -8,6 +8,13 @@
 #include <string.h>
 #include "eeprom_i2c.h"
 
+static inline _min( Uint16 a, Uint16 b ){
+    if( a < b )
+        return a;
+    else
+        return b;
+}
+
 void memcpy_with_unpack( uint16_t * dest, const uint16_t * src, uint16_t bytes ){
     uint16_t ix;
     for( ix = 0; ix < bytes; ix+=2 ){
@@ -356,7 +363,7 @@ uint16_t eeprom_i2c::aligned_part( uint16_t start_address, uint16_t * len_left )
         part_size_to_end_of_page = EEPROM_PAGE - (start_address & (EEPROM_PAGE-1));//do konca strony
     }
 
-    part_size = ( (*len_left) < part_size_to_end_of_page )? (*len_left) : EEPROM_PAGE;
+    part_size = ( (*len_left) <= part_size_to_end_of_page )? (*len_left) : part_size_to_end_of_page;
 
     *len_left -= part_size;
 

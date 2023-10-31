@@ -84,9 +84,24 @@ public:
         } settings_t;
 
         /** format zapisanych danych w sekcji settings*/
-        struct settings_item{
+        class settings_item{
+        public:
                 Uint16 type; //typ wg settings_t
-                float  value;
+        private:
+                Uint16 _float[2]; //recznie skladane bo kompilator dodawal przez u16 dla wyrownania
+        public:
+                float get_value(void) const{
+                    float v = 0;
+                    Uint16 * p_float = (Uint16*)(void*)&v;
+                    p_float[0] = this->_float[0];
+                    p_float[1] = this->_float[1];
+                    return v;
+                }
+                void set_value(float v){
+                    Uint16 * p_float = (Uint16*)(void*)&v;
+                    this->_float[0] = p_float[0];
+                    this->_float[1] = p_float[1];
+                }
         };
 
         //** format zapisanych danych do sekcji harmonicznych*/

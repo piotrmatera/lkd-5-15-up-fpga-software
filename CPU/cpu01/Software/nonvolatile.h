@@ -45,7 +45,7 @@ struct region_t{
 
 /** pozycja drugiej kopii regionow w pamieci eeprom (specyficzne dla pamieci 24lc512 witualne stony 8 bajtowe (co 128 bajtow),
  * calkowita pojemnosc pamieci 65536 bajtow; wykorzystana przy wirtualnej stronie 8 bajtow wynosi 4096 */
-#define NONVOL_COPY_OFFSET 2048 //w bajtach
+#define NONVOL_COPY_OFFSET 0x0800 //=2048 //w bajtach
 
 /** skalowanie adresu poczatkowego wynikajace z zastosowanego obejscia problemu duzej strony eepromu 24lc512
  * w stosunku do malego bufora FIFO w module i2c procesora (patrz opis w eeprom_i2c)

@@ -20,53 +20,7 @@ extern struct ONOFF_struct ONOFF;
 extern struct L_grid_meas_struct L_grid_meas;
 extern class Machine_slave_class Machine_slave;
 
-#warning Sekcje ktorych start nie jest wyrownany do strony sa potencjalnie niebezpieczne
-#warning Jesli przy zapisie przekracza sie granice stwony to sie zawija i niszczy inna tresc
-#warning Powyzsze jest szczegolnie niebezp. dla sekcji info -> moze doprowadzic do zablokowania upgrade
 
-//on-off switch
-#define NV_SECTION_1_EXT_SIZE 2  /*wielkosc uzywanego pola w app (UWAGA! jesli poda sie za duzo bedzie 'mazac' po pamieci w APP)*/
-#define NV_SECTION_1_INT_SIZE 8  /*wielkosc bufora (+crc {2B}; musi byc wyrownany do strony - 8 bajtow; zaokraglony w gore) wewnetrznego na kopie tymczasowa*/
-
-//Lgrid_previous
-#define NV_SECTION_2_EXT_SIZE 40
-#define NV_SECTION_2_INT_SIZE 48
-
-//error_retry
-#define NV_SECTION_3_EXT_SIZE 2
-#define NV_SECTION_3_INT_SIZE 8
-
-
-//calibration
-#define NV_SECTION_4_EXT_SIZE 112
-#define NV_SECTION_4_INT_SIZE 224
-
-//harmonics
-#define NV_SECTION_5_EXT_SIZE 27
-#define NV_SECTION_5_INT_SIZE 56
-
-//meter
-#define NV_SECTION_6_EXT_SIZE 192
-#define NV_SECTION_6_INT_SIZE 384
-
-//settings
-#define NV_SECTION_7_EXT_SIZE 144
-#define NV_SECTION_7_INT_SIZE 288 //UWAGA nonvolatile odczytuje cala sekcje
-
-
-#define NV_SECTION_1_EPP_ADDR 8 //adres poczatku sekcji w eepromie
-#define NV_SECTION_2_EPP_ADDR (NV_SECTION_1_EPP_ADDR+NV_SECTION_1_INT_SIZE)
-#define NV_SECTION_3_EPP_ADDR (NV_SECTION_2_EPP_ADDR+NV_SECTION_2_INT_SIZE)
-#define NV_SECTION_4_EPP_ADDR (NV_SECTION_3_EPP_ADDR+NV_SECTION_3_INT_SIZE)
-#define NV_SECTION_5_EPP_ADDR (NV_SECTION_4_EPP_ADDR+NV_SECTION_4_INT_SIZE)
-#define NV_SECTION_6_EPP_ADDR (NV_SECTION_5_EPP_ADDR+NV_SECTION_5_INT_SIZE)
-#define NV_SECTION_7_EPP_ADDR (NV_SECTION_6_EPP_ADDR+NV_SECTION_6_INT_SIZE)
-
-#define NV_SECTIONS_SIZE      (NV_SECTION_7_EPP_ADDR+NV_SECTION_7_INT_SIZE)
-
-
-
-uint16_t nv_shadow_buffer[ NV_SECTIONS_SIZE ];  //jako bufor wewnetrzny do dzialania nonvolatile
 
 /* deklarowanie sekcji w eepromie
  * @param[in] _sw_data_ptr_ wskaznik do danych w FW (moze byc NULL, jesli samodzielnie kopiowane dane FW<->shadow_buffer)
@@ -85,30 +39,32 @@ uint16_t nv_shadow_buffer[ NV_SECTIONS_SIZE ];  //jako bufor wewnetrzny do dzial
               //  eeprom.size jest nieuzywane
 
 
+//UWAGA Sekcje ktorych start nie jest wyrownany do strony sa potencjalnie niebezpieczne
+//      Jesli przy zapisie przekracza sie granice stwony to sie zawija i niszczy inna tresc
+//      Powyzsze jest szczegolnie niebezp. dla sekcji info -> moze doprowadzic do zablokowania upgrade
+
+
+struct{
+    Uint16 onoff_switch[4/2];
+    Uint16 Lgrid_prev[42/2];
+    Uint16 error_retry[4/2];
+    Uint16 calib[114/2];
+    Uint16 harmon[56/2];
+    Uint16 meter[194/2];
+    Uint16 settings[302/2];
+
+}_shadow;
+
 const region_memories_t _nv_regions[] = {
-// REGION 1. ONOFF switch
-    NV_SEC_DECLARE( &ONOFF.ONOFF_FLASH,           NV_SECTION_1_EXT_SIZE, &nv_shadow_buffer[NV_SECTION_1_EPP_ADDR/2], NV_SECTION_1_EPP_ADDR, NV_SECTION_1_INT_SIZE),
 
-// REGION 2. L_grid_previous
-    NV_SEC_DECLARE( &L_grid_meas.L_grid_previous, NV_SECTION_2_EXT_SIZE, &nv_shadow_buffer[NV_SECTION_2_EPP_ADDR/2], NV_SECTION_2_EPP_ADDR, NV_SECTION_2_INT_SIZE),
-
-
-// REGION 3. error_retry
-    NV_SEC_DECLARE( &Machine_slave.error_retry,   NV_SECTION_3_EXT_SIZE, &nv_shadow_buffer[NV_SECTION_3_EPP_ADDR/2], NV_SECTION_3_EPP_ADDR, NV_SECTION_3_INT_SIZE),
-
-// REGION 4. calibration
-    NV_SEC_DECLARE( NULL,                         NV_SECTION_4_EXT_SIZE, &nv_shadow_buffer[NV_SECTION_4_EPP_ADDR/2], NV_SECTION_4_EPP_ADDR, NV_SECTION_4_INT_SIZE),
-
-// REGION 5. harmoniczne
-    NV_SEC_DECLARE( NULL,                         NV_SECTION_5_EXT_SIZE, &nv_shadow_buffer[NV_SECTION_5_EPP_ADDR/2], NV_SECTION_5_EPP_ADDR, NV_SECTION_5_INT_SIZE),
-
-// REGION 6. meter
-    NV_SEC_DECLARE( NULL,                         NV_SECTION_6_EXT_SIZE, &nv_shadow_buffer[NV_SECTION_6_EPP_ADDR/2], NV_SECTION_6_EPP_ADDR, NV_SECTION_6_INT_SIZE),
-
-// REGION 7. settings
-    NV_SEC_DECLARE( NULL,                         NV_SECTION_7_EXT_SIZE, &nv_shadow_buffer[NV_SECTION_7_EPP_ADDR/2], NV_SECTION_7_EPP_ADDR, NV_SECTION_7_INT_SIZE)
-
-
+         NV_SEC_DECLARE( &ONOFF.ONOFF_FLASH,           2, _shadow.onoff_switch, 0x0080,   4 ), // REGION 1. ONOFF switch
+         NV_SEC_DECLARE( &L_grid_meas.L_grid_previous,40, _shadow.Lgrid_prev,   0x0090,  42 ), // REGION 2. L_grid_previous
+         NV_SEC_DECLARE( &Machine_slave.error_retry,   2, _shadow.error_retry,  0x00c0,   4 ), // REGION 3. error_retry
+         NV_SEC_DECLARE( NULL,                       112, _shadow.calib,        0x0100, 114 ), // REGION 4. calibration
+         NV_SEC_DECLARE( NULL,                        54, _shadow.harmon,       0x0200,  56 ), // REGION 5. harmoniczne
+         NV_SEC_DECLARE( NULL,                       192, _shadow.meter,        0x0280, 194 ), // REGION 6. meter
+         NV_SEC_DECLARE( NULL,                       300, _shadow.settings,     0x0400, 302 )  // REGION 7. settings
+//obecne w eepromie ct_char (1 kopia) 0x4000, dlugosc 2(len)+2(crc)+1682 (7*60*float)
 };
 
 const class nonvolatile_t nonvolatile = //korzysta z globalnego obiektu eeprom
@@ -182,7 +138,7 @@ Uint16 nv_data_t::read_settings(){
 
     //lokalizacja odczytanej kopii, UWAGA pierwsze slowo to CRC
     Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_SETTINGS ].data_int.address.ptr_u16;
-    Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_SETTINGS ].data_ext.size/2; // /2 bo w bajtach
+    Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_SETTINGS ].data_ext.size/2 +REGION_CRC_SIZE; // /2 bo w bajtach
     //mozna odcyztywac z data_buffer_size/2 slow
 
 
@@ -191,7 +147,7 @@ Uint16 nv_data_t::read_settings(){
     struct settings_item * items_table = (struct settings_item *) &shadow_buffer[1];
 
     for(int i=0; i<items; i++){
-        float value = items_table[i].value;
+        float value = items_table[i].get_value();
 
         switch( items_table[i].type){
         case SETTINGS_STATIC_Q_COMPENSATION_A: SD_card.settings.control.Q_set.a = value; break;
@@ -293,7 +249,7 @@ static Uint16 cb_nv_save_settings( Uint16* shadow_buffer, Uint16 buffer_size ){
             break;
         }
 
-        items_table[i].value = value;
+        items_table[i].set_value(value);
         items_table[i].type = i;
     }
 
@@ -327,30 +283,20 @@ Uint16 nv_data_t::read_H_settings(){
    struct harmon_item h_item;
 
    Uint16 ix = 0;
-    for(int i=0; i<items_max; i++){
-      h_item = items_table[ix++];
-      if( ix<=25 ){
-          SD_card.harmonics.on_off_odd_a[ i ] = 0;
-          SD_card.harmonics.on_off_odd_b[ i ] = 0;
-          SD_card.harmonics.on_off_odd_c[ i ] = 0;
-      }else if( ix<=25+2 ){
-          SD_card.harmonics.on_off_even_a[ i ] = 0;
-          SD_card.harmonics.on_off_even_b[ i ] = 0;
-          SD_card.harmonics.on_off_even_c[ i ] = 0;
-      }
-    }
-
-   ix = 0;
    for(int i=0; i<items_max; i++){
        h_item = items_table[ix++];
+       //celowe pominiecie dla h=1, w SD_card tez to nie bylo brane pod uwage
+       if( ix == 1)
+           continue;
+
        if( ix<=25 ){
            SD_card.harmonics.on_off_odd_a[ i ] = h_item.a;
            SD_card.harmonics.on_off_odd_b[ i ] = h_item.b;
            SD_card.harmonics.on_off_odd_c[ i ] = h_item.c;
        }else if( ix<=25+2 ){
-           SD_card.harmonics.on_off_even_a[ i ] = h_item.a;
-           SD_card.harmonics.on_off_even_b[ i ] = h_item.b;
-           SD_card.harmonics.on_off_even_c[ i ] = h_item.c;
+           SD_card.harmonics.on_off_even_a[ i-25 ] = h_item.a;
+           SD_card.harmonics.on_off_even_b[ i-25 ] = h_item.b;
+           SD_card.harmonics.on_off_even_c[ i-25 ] = h_item.c;
        }
    }
    SD_card.harmonics.available = 1;
@@ -395,7 +341,7 @@ Uint16 nv_data_t::read_meter_data(){
       return FR_INVALID_PARAMETER;
 
     //lokalizacja odczytanej kopii, UWAGA pierwsze slowo to CRC
-    Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_METER ].data_int.address.ptr_u16;
+    Uint16 * shadow_buffer = &nonvolatile.regions[ NV_REGION_METER ].data_int.address.ptr_u16[1];
     Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_METER ].data_ext.size/2; // /2 bo w bajtach
 
     if( data_buffer_size != sizeof(SD_card.meter.Energy_meter))
@@ -446,8 +392,8 @@ Uint16 nv_data_t::read_calibration_data(){
        return FR_INVALID_PARAMETER;
 
    //lokalizacja odczytanej kopii, UWAGA pierwsze slowo to CRC
-   Uint16 * shadow_buffer = nonvolatile.regions[ NV_REGION_METER ].data_int.address.ptr_u16;
-   Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_METER ].data_ext.size/2; // /2 bo w bajtach
+   Uint16 * shadow_buffer = &nonvolatile.regions[ NV_REGION_CALIB ].data_int.address.ptr_u16[1];
+   Uint16   data_buffer_size = nonvolatile.regions[ NV_REGION_CALIB ].data_ext.size/2; // /2 bo w bajtach
 
    size_t first_part = sizeof(struct Measurements_ACDC_gain_offset_struct);
    if( data_buffer_size != first_part + sizeof(struct Measurements_ACDC_gain_offset_struct))
@@ -487,11 +433,15 @@ static int compare_float (const void * a, const void * b)
     else return 0;
 }
 
+float _shadow_ct_line[7];
+
 Uint16 nv_data_t::read_CT_characteristic(){
     struct crc_n_len_s{
         Uint16 crc;
         Uint16 len;
     } crc_n_len;
+
+    SD_card.CT_char.available = 0;
 
     struct eeprom_i2c::event_region_xdata xdata;
     xdata.status = eeprom_i2c::event_region_xdata::idle;
@@ -506,26 +456,42 @@ Uint16 nv_data_t::read_CT_characteristic(){
     if( crc_n_len.len > NV_CT_CHAR_SIZE )
         return FR_INVALID_PARAMETER;
 
-
-    xdata.status = eeprom_i2c::event_region_xdata::idle;
-    xdata.start = NV_CT_CHAR_FILE_ADDRESS + 4;
-    xdata.total_len = crc_n_len.len;
-    xdata.data = (uint16_t*)&SD_card.CT_char.set_current; //UWAGA! zalozenie ze kolejne tablice sa po kolei w strukturze CT_char
-
-    retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_read_region, &xdata, NV_CT_CHAR_FILE_DATA_TIMEOUT );
-    if( retc != 0 )
-        return FR_INVALID_PARAMETER;
-
-    //sprawdzenie CRC
+    Uint16 rows = crc_n_len.len/(4*7);
+    SD_card.CT_char.number_of_elements = rows;
 
     Uint16 crc_calc = nonvolatile.crc8( &crc_n_len.len, 2);
-    crc_calc = nonvolatile.crc8_continue( (uint16_t*)&SD_card.CT_char.set_current, crc_n_len.len, crc_calc );
 
+    //odwrotna kolejnosc rzedy <-> kolumny w pliku i pamieci - trzeba czytac kawalkami
+
+    for(Uint16 row = 0; row< rows; row++){
+        xdata.status = eeprom_i2c::event_region_xdata::idle;
+        xdata.start = NV_CT_CHAR_FILE_ADDRESS + 4 + row*7*4;
+        xdata.total_len = 7*4;
+        xdata.data = (uint16_t*)&_shadow_ct_line;
+
+        retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_read_region, &xdata, NV_CT_CHAR_FILE_DATA_TIMEOUT );
+        if( retc != 0 )
+            return FR_INVALID_PARAMETER;
+
+        crc_calc = nonvolatile.crc8_continue( (Uint16*)&_shadow_ct_line, 7*4, crc_calc);
+
+        SD_card.CT_char.set_current[row] = _shadow_ct_line[0];
+        SD_card.CT_char.CT_ratio_a[row] = _shadow_ct_line[1];
+        SD_card.CT_char.CT_ratio_b[row] = _shadow_ct_line[2];
+        SD_card.CT_char.CT_ratio_c[row] = _shadow_ct_line[3];
+        SD_card.CT_char.phase_a[row] = _shadow_ct_line[4];
+        SD_card.CT_char.phase_b[row] = _shadow_ct_line[5];
+        SD_card.CT_char.phase_c[row] = _shadow_ct_line[6];
+    }
+
+    //sprawdzenie CRC
     if( crc_calc != crc_n_len.crc )
         return FR_INVALID_PARAMETER;
 
 
-    SD_card.CT_char.number_of_elements = crc_n_len.len/sizeof(float)/7;
+
+    //odwrotna kolejnosc rzedy <-> kolumny w pliku i pamieci
+
 
     float sort_buffer[CT_CHARACTERISTIC_POINTS][7];
     for(Uint16 i = 0; i < SD_card.CT_char.number_of_elements;i++)
