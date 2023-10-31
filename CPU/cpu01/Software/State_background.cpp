@@ -208,7 +208,7 @@ void convert_harmonics_to_floats()
         register float *dest_harmonic_a = on_off_odd_a;
         register float *dest_harmonic_b = on_off_odd_b;
         register float *dest_harmonic_c = on_off_odd_c;
-        for(i = 1; i<sizeof(on_off_odd_a)/sizeof(on_off_odd_a[0]); i++)
+        for(i = 0; i<sizeof(on_off_odd_a)/sizeof(on_off_odd_a[0]); i++)
         {
             *dest_harmonic_a++ = (temp_harmonic_a >> i) & 0x01;
             *dest_harmonic_b++ = (temp_harmonic_b >> i) & 0x01;
