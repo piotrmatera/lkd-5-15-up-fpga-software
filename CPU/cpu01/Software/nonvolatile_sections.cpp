@@ -320,9 +320,9 @@ static Uint16 cb_nv_save_harmon( Uint16* shadow_buffer, Uint16 buffer_size ){
 
     for(int i=0; i<2; i++){
         if( ix >= items_max ) break;//TODO sprawdzic warunek
-        h_item.set_a( SD_card.harmonics.on_off_odd_a[ i ] );
-        h_item.set_b( SD_card.harmonics.on_off_odd_b[ i ] );
-        h_item.set_c( SD_card.harmonics.on_off_odd_c[ i ] );
+        h_item.set_a( SD_card.harmonics.on_off_even_a[ i ] );
+        h_item.set_b( SD_card.harmonics.on_off_even_b[ i ] );
+        h_item.set_c( SD_card.harmonics.on_off_even_c[ i ] );
         items_table[ix++] = h_item;
     }
     return status_ok;
