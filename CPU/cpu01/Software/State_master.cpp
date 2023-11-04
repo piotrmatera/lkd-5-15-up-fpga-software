@@ -87,7 +87,9 @@ void Machine_master_class::idle()
     if (!status_ACDC.master_slave_selector && status_ACDC.master_rdy) status_ACDC.control_override = status_ACDC_master.control_override;
     else status_ACDC.control_override = 0;
 
-    if(Conv.master.total.I_lim && !status_ACDC.master_rdy) Machine_master.state = state_start;
+    if(Conv.master.total.I_lim && !status_ACDC.master_rdy)
+        if( Background.is_hw_compatible() )
+            Machine_master.state = state_start;
 }
 
 void Machine_master_class::start()

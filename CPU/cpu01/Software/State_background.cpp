@@ -34,6 +34,7 @@
 #include "Software/driver_eeprom/eeprom_i2c.h"
 #include "i2c_eeprom_addresses.h"
 #include "nonvolatile_sections.h"
+#include "version.h"
 
 FATFS fs;           /* Filesystem object */
 MosfetCtrlApp mosfet_ctrl_app;
@@ -469,6 +470,11 @@ void ONOFF_switch_func()
         ONOFF.ONOFF_FLASH = ONOFF.ONOFF;
         nonvolatile.save(NV_ONOFF_SWITCH_TYPE, NV_ONOFF_SAVE_TIMEOUT);
     }
+}
+
+bool Background_class::is_hw_compatible(void)
+{
+    return (hw_info.board_cpu_ver == BOARD_ID);
 }
 
 void Background_class::init()

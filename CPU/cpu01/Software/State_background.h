@@ -19,6 +19,12 @@ class Background_class
     static void init();
     static void Main();
 
+    /**sprawdza czy HW (wersja zapisana w eepromie) jest kompatybilny z SW,
+     * jest to wykorzystywane w blokadzie startu
+     * sprawdza tylko wersje dla cpu-board (nie sprawdza dla plytki power)
+     */
+    bool is_hw_compatible(void);
+
     private:
 };
 

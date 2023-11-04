@@ -149,7 +149,9 @@ void Machine_slave_class::idle()
             static volatile float U32H = (float)(0x100000000)/200e6;
             static volatile float U32L = (float)(0x1)/200e6;
             delay_timer_real = (float)convert.l[1] * U32H + (float)convert.l[0] * U32L;
-            if(delay_timer_real > delay) Machine_slave.state = state_start;
+            if(delay_timer_real > delay)
+                if( Background.is_hw_compatible() )
+                    Machine_slave.state = state_start;
         }
     }
 }
