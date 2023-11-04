@@ -6,12 +6,14 @@
  */
 #include <string.h>
 #include "nonvolatile.h"
-
+#include "stats.h"
 
 extern eeprom_i2c eeprom;
 extern i2c_transactions_t i2c_bus;//magistrala i2c na ktorej jest RTC i EEPROM
 
 #define NONVOLATILE_INVALID_CRC 0xDEAD
+
+stats_t stats;
 
 //#include "crc8.h"
 
@@ -202,6 +204,7 @@ Uint16 nonvolatile_t::find_last_correct_copy( Uint16 region_index, Uint64 timeou
     if( retc == NONVOLATILE_OK )
         return NONVOLATILE_COPY_1;
 
+    stats.increment(stats_t::nv_no_valid_copy)
     return NONVOLATILE_NO_VALID_COPY;
 }
 
