@@ -80,6 +80,8 @@ struct Modbus_Converter_memory_struct
 
         Uint16 padding3[40];
         struct hw_info_struct hw_info;
+        Uint16 padding4[18]; //aby ponizsze sie zaczynalo od 1220
+        Uint16 stats_no_valid_copy;//statystyka no_valid_copy
 
     }input_registers;
 
