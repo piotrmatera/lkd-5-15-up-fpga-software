@@ -53,27 +53,15 @@ static const Uint16 CRC_TABLE[256] = {
 /* oblicza sume crc8
  * @param[in] data dane do wyznaczenia crc
  * @param[in] size rozmiar danych w [bajtach], gdy nieparzyste to pobiera mlodsza czesc z ostatniego slowa*/
-uint16_t crc8(const Uint16 * data, size_t size) {
-    Uint16 ix;
-    Uint16 val = 0;
-
-    //TODO zamienic ponizszy kod na wywolanie     return crc8_continue(data, size, 0);
-
-    // funkcjonalnie taki sam kod w pythonie w narzedziach do eepromu
-    // ponizej wprowadzona poprawka dla nieparzystych dlugosci
-    Uint16 ix_max = size/2;
-    if( 2*(size/2) < size ) //dla nieparzytej dlugosci trzeba o jedno slowo wiecej przeliczyc
-        ix_max = size/2+1;   // tam jest jeszcze jeden koncowy, nieparzysty bajt w mlodszej czeci slowa
-
-    for(ix = 0; ix<ix_max; ix++){
-        val = CRC_TABLE[ (val ^ data[ix]) & 0xFF ];
-        if( 2*ix+1 < size ) //to sie nie wykona dla ostatniego bajtu, gdy size jest nieparzysta
-            val = CRC_TABLE[ (val ^ data[ix]>>8) & 0xFF ];
-    }
-
-    return val;
+uint16_t nonvolatile_t::crc8(const Uint16 * data, size_t size) const{
+    return crc8_continue(data, size, 0);
 }
 
+
+/* oblicza sume crc8 wersja przystosowana do obliczania strumieniowo (po kawalku)
+ * @param[in] data dane do wyznaczenia crc
+ * @param[in] size rozmiar danych w [bajtach], gdy nieparzyste to pobiera mlodsza czesc z ostatniego slowa
+ * @param[in] crc_init poprzednia wartosc */
 uint16_t nonvolatile_t::crc8_continue(const Uint16 * data, size_t size, Uint16 crc_init) const{
     Uint16 ix;
     Uint16 val = crc_init;
@@ -167,7 +155,7 @@ Uint16 nonvolatile_t::retrieve(Uint16 region_index, Uint64 timeout) const{
 Uint16 nonvolatile_t::write_info( const struct region_info_t* info, const struct region_info_ext_t * info_ext, Uint64 timeout ) const{
     Uint64 _timeout = timeout==0? 0ULL :((Uint64)timeout)*200ULL*1000ULL + ReadIpcTimer();
     struct region_info_t info_wr = *info;
-    info_wr.crc = crc8( (uint16_t*)&info_wr.data, sizeof(info_wr.data));//TODO sprawdzic czy wlasciwy rozmiar w bajtach
+    info_wr.crc = crc8( (uint16_t*)&info_wr.data, sizeof(info_wr.data));
 
     struct eeprom_i2c::event_region_xdata xdata;
     xdata.status = eeprom_i2c::event_region_xdata::idle;
@@ -194,7 +182,7 @@ Uint16 nonvolatile_t::read_info( struct region_info_t* info, struct region_info_
     if( xdata.status != eeprom_i2c::event_region_xdata::done_ok )
         return retc;
 
-    Uint16 crc = crc8( (uint16_t*)&info->data, sizeof(info->data));//TODO sprawdzic czy wlasciwy rozmiar w bajtach
+    Uint16 crc = crc8( (uint16_t*)&info->data, sizeof(info->data));
     return ( crc != info->crc )? NONVOLATILE_INVALID : NONVOLATILE_OK;
 }
 
