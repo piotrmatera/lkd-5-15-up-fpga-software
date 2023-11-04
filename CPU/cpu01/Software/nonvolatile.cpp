@@ -53,13 +53,21 @@ static const Uint16 CRC_TABLE[256] = {
 /* oblicza sume crc8
  * @param[in] data dane do wyznaczenia crc
  * @param[in] size rozmiar danych w [bajtach], gdy nieparzyste to pobiera mlodsza czesc z ostatniego slowa*/
-uint16_t nonvolatile_t::crc8(const Uint16 * data, size_t size) const{
+uint16_t crc8(const Uint16 * data, size_t size) {
     Uint16 ix;
     Uint16 val = 0;
 
-    for(ix = 0; ix<size/2; ix++){
+    //TODO zamienic ponizszy kod na wywolanie     return crc8_continue(data, size, 0);
+
+    // funkcjonalnie taki sam kod w pythonie w narzedziach do eepromu
+    // ponizej wprowadzona poprawka dla nieparzystych dlugosci
+    Uint16 ix_max = size/2;
+    if( 2*(size/2) < size ) //dla nieparzytej dlugosci trzeba o jedno slowo wiecej przeliczyc
+        ix_max = size/2+1;   // tam jest jeszcze jeden koncowy, nieparzysty bajt w mlodszej czeci slowa
+
+    for(ix = 0; ix<ix_max; ix++){
         val = CRC_TABLE[ (val ^ data[ix]) & 0xFF ];
-        if( ix+1 < size )//BUG powinno byc 2*ix+1 [?] - ujawni sie dla nieparzystych size
+        if( 2*ix+1 < size ) //to sie nie wykona dla ostatniego bajtu, gdy size jest nieparzysta
             val = CRC_TABLE[ (val ^ data[ix]>>8) & 0xFF ];
     }
 
@@ -70,9 +78,15 @@ uint16_t nonvolatile_t::crc8_continue(const Uint16 * data, size_t size, Uint16 c
     Uint16 ix;
     Uint16 val = crc_init;
 
-    for(ix = 0; ix<size/2; ix++){
+    // funkcjonalnie taki sam kod w pythonie w narzedziach do eepromu
+    // ponizej wprowadzona poprawka dla nieparzystych dlugosci
+    Uint16 ix_max = size/2;
+    if( 2*(size/2) < size ) //dla nieparzytej dlugosci trzeba o jedno slowo wiecej przeliczyc
+        ix_max = size/2+1;   // tam jest jeszcze jeden koncowy, nieparzysty bajt w mlodszej czeci slowa
+
+    for(ix = 0; ix<ix_max; ix++){
         val = CRC_TABLE[ (val ^ data[ix]) & 0xFF ];
-        if( ix+1 < size )
+        if( 2*ix+1 < size ) //to sie nie wykona dla ostatniego bajtu, gdy size jest nieparzysta
             val = CRC_TABLE[ (val ^ data[ix]>>8) & 0xFF ];
     }
 
