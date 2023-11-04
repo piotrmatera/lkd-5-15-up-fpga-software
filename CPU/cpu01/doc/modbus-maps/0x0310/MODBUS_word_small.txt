@@ -1,6 +1,6 @@
 #Mapa rejestrow MODBUS
 # ograniczony dostep
-VERSION 0309
+VERSION 0310
 
 #poczatek sekcji typow danych bity/enumy z nazwami bitow/stanow
 SECTION_TYPE_DEF

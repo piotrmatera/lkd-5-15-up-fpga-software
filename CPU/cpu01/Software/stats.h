@@ -33,17 +33,17 @@ public:
 
     void clear( stats_types stat ){
         if( stat < stats_max )
-            counters[ stats ] = 0;
+            counters[ stat ] = 0;
     }
 
     void increment( stats_types stat ){
         if( stat < stats_max )
-            counters[ stats ]++;
+            counters[ stat ]++;
     }
 
     Uint16 get_counter( stats_types stat ) const{
         if( stat < stats_max )
-            return counters[ stats ];
+            return counters[ stat ];
         return 0;
     }
 

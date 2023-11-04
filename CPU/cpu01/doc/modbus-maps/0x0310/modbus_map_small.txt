@@ -4,8 +4,6 @@
 # biale znaki (spacje i tabulacje) sa zjadane z poczatku linii
 # Linie rozpoczynajace sie od znaku # - komentarz, dozwolone linie puste
 #
-# 2020-11-05 PR uzupelnienie brakujacych parametrow w holding-registers (wstawienie tangens_range)
-# 2022-01-18 PR dodane rejestry licznikow energii 
 # [...]
 # 2022-06-27 PR poprawka bitow bit16_h_even - byl blad uniemozliwiajacy kontrolowanie parzystych harmonciznych
 # 2022-07-13 PR dodane pola do przeksztaltnikow
@@ -15,9 +13,10 @@
 # 2023-01-10 PR poprawki mapy, zmiany dla slave'a
 # 2023.01.11-13 PR poprawka alokacji pol bitowych
 # 2023-10-31 PR dodane pola ident. HW
+# 2023-11-04 PR dodane pole statystyki nv-no-valid-copy
 
 #oznaczenie wersji mapy
-VERSION 0309
+VERSION 0310
 
 #Sekcja typow danych bity/enumy
 SECTION_TYPE_DEF
@@ -679,6 +678,8 @@ SECTION_INPUT_REGISTERS_DEF
 	1200	u16 eeprom_img_ver
 	1201	u16 board_cpu_ver
 	1202	u16 board_power_ver
+	
+	1220	u16 stats_no_valid_copy
 
 SECTION_HOLDING_REGISTERS_DEF
 	128	bit16_h_odd	H_odd_a

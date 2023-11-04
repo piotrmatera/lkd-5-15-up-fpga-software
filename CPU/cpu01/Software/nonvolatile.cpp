@@ -204,7 +204,8 @@ Uint16 nonvolatile_t::find_last_correct_copy( Uint16 region_index, Uint64 timeou
     if( retc == NONVOLATILE_OK )
         return NONVOLATILE_COPY_1;
 
-    stats.increment(stats_t::nv_no_valid_copy)
+    stats.increment(stats_t::nv_no_valid_copy);
+
     return NONVOLATILE_NO_VALID_COPY;
 }
 

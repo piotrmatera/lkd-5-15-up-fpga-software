@@ -12,7 +12,7 @@
 #include "common_utils.h"
 #include "version-id.h"
 
-#define MODBUS_ID 0x0309 //wersja mapy modbus
+#define MODBUS_ID 0x0310 //wersja mapy modbus
 
 #define BOARD_ID 0x0303 //UWAGA!!! to oznaczenie jest uzywane jako numer wersji plytki CPU i musi byc zapisane w EEPROMie
                         //         bootloader kontroluje czy to jest zgone inaczaj nie zaladuje FW
