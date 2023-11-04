@@ -212,10 +212,9 @@ static Uint16 cb_nv_save_settings( Uint16* shadow_buffer, Uint16 buffer_size ){
 
     float value = 0;
 
-    for(int i=0; i<nv_data_t::SETTINGS_MAX; i++){
-        //gdy brak miejsca w sekcji to przerwac
+    for(int i=0; i<items; i++){
 
-        if (i >= items) break; //TODO sprawdzic czy dobry warunek, czy nie za lagodny
+        Uint16 type_index = i;
 
         switch( i ){
         case nv_data_t::SETTINGS_STATIC_Q_COMPENSATION_A: value = SD_card.settings.control.Q_set.a; break;
@@ -246,11 +245,13 @@ static Uint16 cb_nv_save_settings( Uint16* shadow_buffer, Uint16 buffer_size ){
         case nv_data_t::SETTINGS_NUMBER_OF_SLAVES: value = SD_card.settings.number_of_slaves; break;
         case nv_data_t::SETTINGS_NO_NEUTRAL:   value = SD_card.settings.no_neutral; break;
         default:
+            value = 0;
+            type_index = nv_data_t::SETTINGS_EMPTY;
             break;
         }
 
         items_table[i].set_value(value);
-        items_table[i].type = i;
+        items_table[i].type = type_index;
     }
 
     return status_ok;

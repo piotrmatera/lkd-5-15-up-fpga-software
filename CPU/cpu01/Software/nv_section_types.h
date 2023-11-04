@@ -80,7 +80,9 @@ public:
             SETTINGS_I_LIM,
             SETTINGS_NUMBER_OF_SLAVES,
             SETTINGS_NO_NEUTRAL,
-            SETTINGS_MAX
+            SETTINGS_MAX,
+
+            SETTINGS_EMPTY //pusty parametr
         } settings_t;
 
         /** format zapisanych danych w sekcji settings*/
