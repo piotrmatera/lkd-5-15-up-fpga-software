@@ -93,8 +93,20 @@ struct Modbus_Converter_memory_struct
         Uint16 even_address_padding;
         union CONTROL_EXT_MODBUS control_ext_modbus;
         float PWM_phase_shift;
+        Uint16 res;
+        Uint16 command;
+        Uint16 result;
+        Uint16 ext_result;
+
     }holding_registers;
 };
+
+typedef enum{
+    CMD_COPY_EEPROM_TO_SDCARD = 0xE25D,
+    CMD_COPY_SDCARD_TO_EEPROM = 0x5D2E,
+    CMD_FORMAT_INFO           = 0xFE1F,
+    CMD_EEPROM_ERASE_ALL      = 0xEA11
+}modbus_holding_commands_t;
 
 extern struct Modbus_Converter_memory_struct Modbus_Converter;
 

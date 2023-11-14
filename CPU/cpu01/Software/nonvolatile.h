@@ -150,6 +150,8 @@ public:
      * @return 0 gdy poprawny odczyt (zgodne crc)*/
     Uint16 read_info( struct region_info_t* info, struct region_info_ext_t * info_ext, Uint64 timeout = 0) const;
 
+    Uint16 erase_eeprom( void ) const;
+
     uint16_t crc8_continue(const Uint16 * data, size_t size, Uint16 crc_init) const;
     uint16_t crc8(const Uint16 * data, size_t size) const;
 

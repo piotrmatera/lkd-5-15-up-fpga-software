@@ -29,6 +29,7 @@
 # define NV_RETRY_READ_TIMEOUT_ERROR 10 //ms
 
 # define NV_READ_INFO 50
+# define NV_WRITE_INFO_TIMEOUT 100
 #else
 
 # define NV_ONOFF_SAVE_TIMEOUT 0 //ms
@@ -40,6 +41,7 @@
 # define NV_RETRY_READ_TIMEOUT_ERROR 0 //ms
 
 # define NV_READ_INFO 0
+# define NV_WRITE_INFO_TIMEOUT 0
 #endif
 
 

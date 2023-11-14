@@ -15,6 +15,11 @@ typedef enum{
         status_terminated,
         status_continue,
 
+        err_nv_invalid = 10,
+        err_nv_unknown = 11,
+        err_nv_no_valid_copy = 100,
+        err_nv_timeout = 200,
+
         err_generic = 0x80,
         err_timeout,
         err_busy,

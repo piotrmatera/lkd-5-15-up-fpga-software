@@ -274,6 +274,60 @@ Uint16 nonvolatile_t::write( Uint16 region_index, Uint16 copy_offset, Uint64 tim
     return retc;
 }
 
+Uint16 erase_data[EEPROM_PAGE/2] = {
+   0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF
+};
+
+Uint16 nonvolatile_t::erase_eeprom( void ) const{
+    Uint64 timeout = 0ULL;
+    status_code_t retc;
+    const eeprom_i2c::event_t event = eeprom_i2c::event_write_region;
+
+    for( Uint16 address = 0; address<(EEPROM_SIZE-1)/*aby nie przepelnic, dla 64kB nie misci sie w Uint16*/; address += EEPROM_PAGE){
+        struct eeprom_i2c::event_region_xdata xdata;
+        xdata.status = eeprom_i2c::event_region_xdata::idle;
+        xdata.start = address;
+        xdata.total_len = EEPROM_PAGE;
+        xdata.data = erase_data;
+
+        while(1){
+                retc = eeprom.process_event(event, &xdata);
+                if( retc == status_ok )
+                    break;
+
+                if( (timeout == 0) && (retc == err_busy) )
+                    continue;
+
+                if( (timeout == 0) && (retc == err_invalid) )
+                    return NONVOLATILE_INVALID;
+
+                if( timeout )
+                    if( ReadIpcTimer()>timeout )
+                        return NONVOLATILE_TIMEOUT;
+            }
+
+        //etap 2. oczekiwanie na zakonczenie operacji
+           while(1){
+               i2c_bus.process(); // wywolywanie cykliczne konieczne do dzialania i2c
+       //TODO sprawdzic czy wystarczy wywolywac powyzsze
+       //czy nie trzeba jeszcze czegos wywolywac od RTC albo DriverowTranzystorow
+
+               if( xdata.status == eeprom_i2c::event_region_xdata::done_ok )
+                   return NONVOLATILE_OK;
+
+               if( timeout )
+                     if( ReadIpcTimer()>timeout ){
+                         eeprom.process_event(eeprom_i2c::event_abort);
+                         return NONVOLATILE_TIMEOUT;
+                     }
+
+               if( (timeout == 0) && (xdata.status == eeprom_i2c::event_region_xdata::done_error))
+                   return NONVOLATILE_INVALID;
+           }
+    }
+    return NONVOLATILE_OK;
+}
+
 Uint16 nonvolatile_t::invalidate( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const{
     if( region_index >= this->regions_count )
         return 1;
