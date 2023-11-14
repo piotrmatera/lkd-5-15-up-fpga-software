@@ -699,10 +699,8 @@ SECTION_HOLDING_REGISTERS_DEF
 	154	float3	tangens_range_L
 	160	time	RTC_new_time
 	164	u16	hbaudrate #wartosc baudrate/100
-	165	u16	ext_server_id
-        166     u16     res2
-        167     float   pwm_phase_shift
-        
+	165	u16	ext_server_id        
+        166     float   pwm_phase_shift        
         170     u16     command
         171     u16     arg1
         172     u16     arg2

@@ -50,8 +50,9 @@ public:
          */
         Uint16 save( section_type_t section );
 
-        /**uniewaznaia wszystkie sekcje plikow*/
-        Uint16 invalidate_sections(void);
+        /**uniewaznaia wszystkie sekcje plikow
+         * @param[in] phase etap na ktorym ukonczono wykonanie*/
+        Uint16 invalidate_sections(Uint16 * phase);
 
 //private: publiczne dla callbackow
         //wewnetrzne typy danych uzywane przez callbacki

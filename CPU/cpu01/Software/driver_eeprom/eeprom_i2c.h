@@ -57,6 +57,7 @@
 # define EEPROM_SIZE 65536 //rozmiar w bajtach, ktory mozna zapisac
 # define EEPROM_PAGE 8   //rozmiar strony w bajtach - do tego wyrownywane i w takich paczkach wysylane do eepromu
 
+
 #endif
 //adresy wewn. eeprom_i2c:
 #define EEPROM_PAGE_MASK 0xFF80 //to jest sprawdzane w eeprom_i2c do sprawdzenia czy zapis w obrebie strony

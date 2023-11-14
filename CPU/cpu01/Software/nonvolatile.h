@@ -153,11 +153,22 @@ public:
      * @return 0 gdy poprawny odczyt (zgodne crc)*/
     Uint16 read_info( struct region_info_t* info, struct region_info_ext_t * info_ext, Uint64 timeout = 0) const;
 
-    /** kasuje caly eeprom - wypelnia FFami*/
+    /** kasuje caly eeprom - wypelnia FFami
+     * UWAGA! skasowanie calego eepromu zajmuje okolo minuty*/
     Uint16 erase_eeprom( void ) const;
 
-    /**uniewaznaia kopie w pamieci eeprom*/
-    Uint16 invalidate( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const;
+    /**uniewaznaia kopie regionu w pamieci eeprom
+     * @param[in] region_index
+     * @param[in] copy_offset adres odrozniajacy kopie
+     * @param[in] timeout [ms]*/
+    Uint16 invalidate_region( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const;
+
+    /**przeliczanie timeout w ms na wartosc licznika ipc gdy nastapi przeterminowanie
+     * @param[in] timeout czas [ms]
+     * @return wartosc licznika ipc*/
+    Uint64 timeout_to_ipctimer( Uint64 timeout ) const{
+        return ((timeout==0)? 0ULL : ((Uint64)timeout)*200ULL*1000ULL + ReadIpcTimer());
+    }
 
     uint16_t crc8_continue(const Uint16 * data, size_t size, Uint16 crc_init) const;
     uint16_t crc8(const Uint16 * data, size_t size) const;
@@ -169,6 +180,9 @@ private:
 
     /**odczytuje region z pamieci eeprom do pamieci lokalnej (wewn.)*/
     Uint16 write( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const;
+
+    /**uniewaznaia kopie w pamieci eeprom*/
+    Uint16 invalidate( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const;
 
     /**odczytuje region i sprawdza czy kopia jest poprawna
      * zwraca NONVOLATILE_OK gdy jest poprawna (albo NONVOLATILE_INVALID, NONVOLATILE_TIMEOUT)*/
@@ -191,7 +205,7 @@ private:
     Uint16 fast_is_copy_incorrect( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const;
 
 public: //dla nv_read_CT_characteristic()
-    /** ogolna funkcja oczekujaca na zakonczenie transackji*/
+    /** ogolna funkcja oczekujaca na zakonczenie transakcji*/
     Uint16 blocking_wait_for_finished( eeprom_i2c::event_t event, struct eeprom_i2c::event_region_xdata *xdata, Uint64 timeout) const;
 };
 

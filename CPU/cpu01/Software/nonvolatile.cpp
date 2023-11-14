@@ -279,14 +279,17 @@ Uint16 erase_data[EEPROM_PAGE/2] = {
 };
 
 Uint16 nonvolatile_t::erase_eeprom( void ) const{
-    Uint64 timeout = 0ULL;
+    Uint64 timeout = 0ULL; //UWAGA: jesli pdany timeout to jest on wartoscia licznika a nie czasem
+    //ew. uzyc ponizsze
+    //    Uint64 _timeout = timeout==0? 0ULL : ((Uint64)timeout)*200ULL*1000ULL + ReadIpcTimer();
+
     status_code_t retc;
     const eeprom_i2c::event_t event = eeprom_i2c::event_write_region;
 
-    for( Uint16 address = 0; address<(EEPROM_SIZE-1)/*aby nie przepelnic, dla 64kB nie misci sie w Uint16*/; address += EEPROM_PAGE){
+    for( Uint32 address = 0; address<EEPROM_SIZE; address += EEPROM_PAGE){
         struct eeprom_i2c::event_region_xdata xdata;
         xdata.status = eeprom_i2c::event_region_xdata::idle;
-        xdata.start = address;
+        xdata.start = (Uint16)address;
         xdata.total_len = EEPROM_PAGE;
         xdata.data = erase_data;
 
@@ -313,7 +316,7 @@ Uint16 nonvolatile_t::erase_eeprom( void ) const{
        //czy nie trzeba jeszcze czegos wywolywac od RTC albo DriverowTranzystorow
 
                if( xdata.status == eeprom_i2c::event_region_xdata::done_ok )
-                   return NONVOLATILE_OK;
+                   break;
 
                if( timeout )
                      if( ReadIpcTimer()>timeout ){
@@ -326,6 +329,11 @@ Uint16 nonvolatile_t::erase_eeprom( void ) const{
            }
     }
     return NONVOLATILE_OK;
+}
+
+Uint16 nonvolatile_t::invalidate_region( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const{
+    Uint64 _timeout = timeout==0? 0ULL : ((Uint64)timeout)*200ULL*1000ULL + ReadIpcTimer();
+    return this->invalidate(region_index, copy_offset, _timeout);
 }
 
 Uint16 nonvolatile_t::invalidate( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const{

@@ -24,7 +24,7 @@ nonvolatile_commands_t::nonvolatile_commands_t(){
 }
 
 const section_type_t section_type[]={
-//   sec_CT_characteristic, TODO dopisac zapis dla sd_card i nv_sections
+   sec_CT_characteristic,
    sec_settings,
    sec_H_settings,
    sec_calibration_data,
@@ -35,6 +35,9 @@ void nonvolatile_commands_t::result( Uint16 res, Uint16 ext_res ){
     Modbus_Converter.holding_registers.result = res;
     Modbus_Converter.holding_registers.ext_result = ext_res;
 }
+
+
+
 
 status_code_t nonvolatile_commands_t::process( modbus_holding_commands_t cmd, Uint16 arg1, Uint16 arg2 ){
     (void)arg1;
@@ -59,7 +62,7 @@ status_code_t nonvolatile_commands_t::process( modbus_holding_commands_t cmd, Ui
             if( nv_data.read( section ) != 0 )
                 goto l_error;
             ext_res = 2*i+1;
-            if( SD_card.save( section ) != 0 );
+            if( SD_card.save( section ) != 0 )
                 goto l_error;
         }
         retc = status_ok;
@@ -71,7 +74,7 @@ status_code_t nonvolatile_commands_t::process( modbus_holding_commands_t cmd, Ui
             if( SD_card.read( section ) != 0 )
                 goto l_error;
             ext_res = 2*i+1;
-            if( nv_data.save( section ) != 0 );
+            if( nv_data.save( section ) != 0 )
                 goto l_error;
         }
         retc = status_ok;
@@ -95,7 +98,7 @@ status_code_t nonvolatile_commands_t::process( modbus_holding_commands_t cmd, Ui
 
     case CMD_INVALIDATE_ALL_SECTIONS:
     {
-        retc = (status_code_t)nv_data.invalidate_sections();
+        retc = (status_code_t)nv_data.invalidate_sections(&ext_res);
         break;
     }
     default:

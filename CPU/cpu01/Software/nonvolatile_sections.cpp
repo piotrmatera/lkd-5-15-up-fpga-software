@@ -123,25 +123,29 @@ Uint16 nv_data_t::save( section_type_t section ){
 #define NV_REGION_READ_CALIB_TIMEOUT 0
 #define NV_REGION_SAVE_CALIB_TIMEOUT 0
 
-#define NV_CT_CHAR_FILE_WRITE_INV_TIMEOUT 20
+#define NV_CT_CHAR_FILE_WRITE_INV_TIMEOUT 40
 
 #define NV_CT_CHAR_FILE_ADDRESS 0x4000
 #define NV_CT_CHAR_FILE_HDR_TIMEOUT 0
 #define NV_CT_CHAR_FILE_DATA_TIMEOUT 0
 
-#define NV_CT_CHAR_FILE_WRITE_HDR_TIMEOUT 0
-#define NV_CT_CHAR_FILE_WRITE_DATA_TIMEOUT 0
+#define NV_CT_CHAR_FILE_WRITE_HDR_TIMEOUT 40
+#define NV_CT_CHAR_FILE_WRITE_DATA_TIMEOUT 40
 
 #define NV_CT_CHAR_SIZE (7*60*4) //w bajtach
 
-Uint16 nv_data_t::invalidate_sections(void){
+Uint16 nv_data_t::invalidate_sections(Uint16 * phase){
     Uint16 retc = 0;
+    *phase = 0xFF;
+    Uint16 copy = 0;
     for(Uint16 offset = 0; offset<=NONVOL_COPY_OFFSET; offset+=NONVOL_COPY_OFFSET){
         for(Uint16 region_index = NV_REGION_CALIB; region_index <= NV_REGION_SETTINGS; region_index++){
-            retc = (status_code_t)nonvolatile.invalidate(region_index, offset, NV_CT_CHAR_FILE_WRITE_INV_TIMEOUT);
+            *phase = (copy<<8)|(region_index&0xFF);
+            retc = (status_code_t)nonvolatile.invalidate_region(region_index, offset, NV_CT_CHAR_FILE_WRITE_INV_TIMEOUT);
             if( retc )
-                 break;
+                 return retc;
             }
+        copy++;
         }
 
     uint16_t invalid_crc = NONVOLATILE_INVALID_CRC;
@@ -152,8 +156,8 @@ Uint16 nv_data_t::invalidate_sections(void){
     xdata.total_len = 2;
     xdata.data = &invalid_crc;
 
-    retc = nonvolatile.blocking_wait_for_finished(eeprom_i2c::event_write_region, &xdata, NV_CT_CHAR_FILE_WRITE_INV_TIMEOUT );
-
+    retc = nonvolatile.blocking_wait_for_finished(eeprom_i2c::event_write_region, &xdata, nonvolatile.timeout_to_ipctimer(NV_CT_CHAR_FILE_WRITE_INV_TIMEOUT) );
+    *phase = 0x00FC;
     return retc;
 }
 
@@ -448,7 +452,7 @@ Uint16 nv_data_t::save_CT_characteristic(){
         xdata.total_len = 7*4;
         xdata.data = (uint16_t*)&_shadow_ct_line;
 
-        retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_write_region, &xdata, NV_CT_CHAR_FILE_WRITE_DATA_TIMEOUT );
+        retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_write_region, &xdata, nonvolatile.timeout_to_ipctimer(NV_CT_CHAR_FILE_WRITE_DATA_TIMEOUT ));
         if( retc != 0 )
            return FR_INVALID_PARAMETER;
 
@@ -462,7 +466,7 @@ Uint16 nv_data_t::save_CT_characteristic(){
     xdata.data = (uint16_t*)&crc_n_len;
 
 
-    retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_write_region, &xdata, NV_CT_CHAR_FILE_WRITE_HDR_TIMEOUT );
+    retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_write_region, &xdata, nonvolatile.timeout_to_ipctimer(NV_CT_CHAR_FILE_WRITE_HDR_TIMEOUT) );
     if( retc != 0 )
        return FR_INVALID_PARAMETER;
 
@@ -536,7 +540,7 @@ Uint16 nv_data_t::read_CT_characteristic(){
     xdata.total_len = 4; //tylko crc i dlugosc
     xdata.data = (uint16_t*)&crc_n_len;
 
-    Uint16 retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_read_region, &xdata, NV_CT_CHAR_FILE_HDR_TIMEOUT );
+    Uint16 retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_read_region, &xdata, nonvolatile.timeout_to_ipctimer(NV_CT_CHAR_FILE_HDR_TIMEOUT) );
     if( retc != 0 )
         return FR_INVALID_PARAMETER;
 
@@ -556,7 +560,7 @@ Uint16 nv_data_t::read_CT_characteristic(){
         xdata.total_len = 7*4;
         xdata.data = (uint16_t*)&_shadow_ct_line;
 
-        retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_read_region, &xdata, NV_CT_CHAR_FILE_DATA_TIMEOUT );
+        retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_read_region, &xdata, nonvolatile.timeout_to_ipctimer(NV_CT_CHAR_FILE_DATA_TIMEOUT) );
         if( retc != 0 )
             return FR_INVALID_PARAMETER;
 
