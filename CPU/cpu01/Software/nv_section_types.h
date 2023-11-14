@@ -145,6 +145,7 @@ private:
         Uint16 save_H_settings();
         Uint16 save_calibration_data();
         Uint16 save_meter_data();
+        Uint16 save_CT_characteristic();
 
 };
 

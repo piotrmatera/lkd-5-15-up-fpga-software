@@ -99,8 +99,8 @@ Uint16 nv_data_t::save( section_type_t section ){
     case sec_H_settings: return save_H_settings();
     case sec_calibration_data: return save_calibration_data();
     case sec_meter_data:      return save_meter_data();
+    case sec_CT_characteristic: return save_CT_characteristic();
 
-    case sec_CT_characteristic:
     default:
         return FR_INVALID_PARAMETER;
     }
@@ -125,6 +125,9 @@ Uint16 nv_data_t::save( section_type_t section ){
 #define NV_CT_CHAR_FILE_ADDRESS 0x4000
 #define NV_CT_CHAR_FILE_HDR_TIMEOUT 0
 #define NV_CT_CHAR_FILE_DATA_TIMEOUT 0
+
+#define NV_CT_CHAR_FILE_WRITE_HDR_TIMEOUT 0
+#define NV_CT_CHAR_FILE_WRITE_DATA_TIMEOUT 0
 
 #define NV_CT_CHAR_SIZE (7*60*4) //w bajtach
 
@@ -387,6 +390,65 @@ Uint16 nv_data_t::save_meter_data(){
     return ( retc!= 0 )? FR_INVALID_PARAMETER : FR_OK;
 }
 
+float _shadow_ct_line[7];
+
+Uint16 nv_data_t::save_CT_characteristic(){
+    struct crc_n_len_s{
+            Uint16 crc;
+            Uint16 len;
+        } crc_n_len;
+    if( SD_card.CT_char.available == 0 )
+        return FR_INVALID_PARAMETER;
+
+    Uint16 rows = SD_card.CT_char.number_of_elements;
+    crc_n_len.len = 7 * 4/*sizeof(float) in eeprom*/ * rows;
+
+    Uint16 retc;
+    struct eeprom_i2c::event_region_xdata xdata;
+
+    Uint16 crc_calc = nonvolatile.crc8( &crc_n_len.len, 2);
+
+    for(Uint16 row = 0; row<rows; row++){
+        _shadow_ct_line[0] = SD_card.CT_char.set_current[row];
+        _shadow_ct_line[1] = SD_card.CT_char.CT_ratio_a[row];
+        _shadow_ct_line[2] = SD_card.CT_char.CT_ratio_b[row];
+        _shadow_ct_line[3] = SD_card.CT_char.CT_ratio_c[row];
+        _shadow_ct_line[4] = SD_card.CT_char.phase_a[row];
+        _shadow_ct_line[5] = SD_card.CT_char.phase_b[row];
+        _shadow_ct_line[6] = SD_card.CT_char.phase_c[row];
+
+        crc_calc = nonvolatile.crc8_continue( (Uint16*)&_shadow_ct_line, 7*4, crc_calc);
+
+        xdata.status = eeprom_i2c::event_region_xdata::idle;
+        xdata.start = NV_CT_CHAR_FILE_ADDRESS + 4 + row*7*4;
+        xdata.total_len = 7*4;
+        xdata.data = (uint16_t*)&_shadow_ct_line;
+
+        retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_write_region, &xdata, NV_CT_CHAR_FILE_WRITE_DATA_TIMEOUT );
+        if( retc != 0 )
+           return FR_INVALID_PARAMETER;
+
+    }
+
+    crc_n_len.crc = crc_calc;
+
+    xdata.status = eeprom_i2c::event_region_xdata::idle;
+    xdata.start = NV_CT_CHAR_FILE_ADDRESS;
+    xdata.total_len = 4; //tylko crc i dlugosc
+    xdata.data = (uint16_t*)&crc_n_len;
+
+
+    retc = nonvolatile.blocking_wait_for_finished( eeprom_i2c::event_write_region, &xdata, NV_CT_CHAR_FILE_WRITE_HDR_TIMEOUT );
+    if( retc != 0 )
+       return FR_INVALID_PARAMETER;
+
+    if( crc_n_len.len > NV_CT_CHAR_SIZE )
+       return FR_INVALID_PARAMETER;
+
+    return FR_OK;
+
+}
+
 Uint16 nv_data_t::read_calibration_data(){
    Uint16 retc = nonvolatile.retrieve(NV_REGION_CALIB, NV_REGION_READ_CALIB_TIMEOUT);
    if( retc!= 0 )
@@ -434,7 +496,7 @@ static int compare_float (const void * a, const void * b)
     else return 0;
 }
 
-float _shadow_ct_line[7];
+
 
 Uint16 nv_data_t::read_CT_characteristic(){
     struct crc_n_len_s{
