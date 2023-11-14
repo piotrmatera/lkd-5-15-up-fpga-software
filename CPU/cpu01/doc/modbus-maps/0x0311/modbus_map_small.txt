@@ -5,7 +5,6 @@
 # Linie rozpoczynajace sie od znaku # - komentarz, dozwolone linie puste
 #
 # [...]
-# 2022-06-27 PR poprawka bitow bit16_h_even - byl blad uniemozliwiajacy kontrolowanie parzystych harmonciznych
 # 2022-07-13 PR dodane pola do przeksztaltnikow
 # 2022-08-31 PR dodane liczniki
 # 2022-09-09 PR kontrola zapadow
@@ -14,9 +13,11 @@
 # 2023.01.11-13 PR poprawka alokacji pol bitowych
 # 2023-10-31 PR dodane pola ident. HW
 # 2023-11-04 PR dodane pole statystyki nv-no-valid-copy
+# 2023-11-14 PR dodany rejestr polecen
+# 0xE25D=ee2sd, 0x5D2E=sd2ee, 0xFE1F=frmt_info, 0xEA11=eraseAll
 
 #oznaczenie wersji mapy
-VERSION 0310
+VERSION 0311
 
 #Sekcja typow danych bity/enumy
 SECTION_TYPE_DEF
@@ -699,4 +700,6 @@ SECTION_HOLDING_REGISTERS_DEF
 	160	time	RTC_new_time
 	164	u16	hbaudrate #wartosc baudrate/100
 	165	u16	ext_server_id
+        170     u16     command
+        
 	
