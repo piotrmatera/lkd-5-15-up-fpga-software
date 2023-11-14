@@ -11,7 +11,7 @@
 extern eeprom_i2c eeprom;
 extern i2c_transactions_t i2c_bus;//magistrala i2c na ktorej jest RTC i EEPROM
 
-#define NONVOLATILE_INVALID_CRC 0xDEAD
+
 
 stats_t stats;
 

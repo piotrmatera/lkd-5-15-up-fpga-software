@@ -106,6 +106,7 @@ Uint16 nv_data_t::save( section_type_t section ){
     }
 }
 
+
 //ponizsze definicje regionow uzywane wewnetrznie (tylko w tym pliku); na zewnatrz sa uzywane section_type_t
 
 #define NV_REGION_CALIB    3  //numeracja od 0
@@ -122,6 +123,8 @@ Uint16 nv_data_t::save( section_type_t section ){
 #define NV_REGION_READ_CALIB_TIMEOUT 0
 #define NV_REGION_SAVE_CALIB_TIMEOUT 0
 
+#define NV_CT_CHAR_FILE_WRITE_INV_TIMEOUT 20
+
 #define NV_CT_CHAR_FILE_ADDRESS 0x4000
 #define NV_CT_CHAR_FILE_HDR_TIMEOUT 0
 #define NV_CT_CHAR_FILE_DATA_TIMEOUT 0
@@ -131,7 +134,28 @@ Uint16 nv_data_t::save( section_type_t section ){
 
 #define NV_CT_CHAR_SIZE (7*60*4) //w bajtach
 
+Uint16 nv_data_t::invalidate_sections(void){
+    Uint16 retc = 0;
+    for(Uint16 offset = 0; offset<=NONVOL_COPY_OFFSET; offset+=NONVOL_COPY_OFFSET){
+        for(Uint16 region_index = NV_REGION_CALIB; region_index <= NV_REGION_SETTINGS; region_index++){
+            retc = (status_code_t)nonvolatile.invalidate(region_index, offset, NV_CT_CHAR_FILE_WRITE_INV_TIMEOUT);
+            if( retc )
+                 break;
+            }
+        }
 
+    uint16_t invalid_crc = NONVOLATILE_INVALID_CRC;
+
+    struct eeprom_i2c::event_region_xdata xdata;
+    xdata.status = eeprom_i2c::event_region_xdata::idle;
+    xdata.start = NV_CT_CHAR_FILE_ADDRESS;
+    xdata.total_len = 2;
+    xdata.data = &invalid_crc;
+
+    retc = nonvolatile.blocking_wait_for_finished(eeprom_i2c::event_write_region, &xdata, NV_CT_CHAR_FILE_WRITE_INV_TIMEOUT );
+
+    return retc;
+}
 
 
 Uint16 nv_data_t::read_settings(){

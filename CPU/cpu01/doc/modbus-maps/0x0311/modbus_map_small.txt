@@ -14,7 +14,7 @@
 # 2023-10-31 PR dodane pola ident. HW
 # 2023-11-04 PR dodane pole statystyki nv-no-valid-copy
 # 2023-11-14 PR dodany rejestr polecen
-# 0xE25D=ee2sd, 0x5D2E=sd2ee, 0xFE1F=frmt_info, 0xEA11=eraseAll
+# 0xE25D=ee2sd, 0x5D2E=sd2ee, 0xFE1F=frmt_info, 0xEA11=eraseAll, 0x1A5E=invalidateAllSections
 
 #oznaczenie wersji mapy
 VERSION 0311

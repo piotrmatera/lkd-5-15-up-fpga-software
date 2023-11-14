@@ -28,6 +28,7 @@ typedef enum{
 #define NV_IN_EEPROM 1
 
 
+
 #if NV_IN_EEPROM
 
 /* klasa zastepuje operacje na plikacjh konfiguracyjnych wykonywane przez SD_card_class
@@ -48,6 +49,9 @@ public:
          * @return 0 gdy sie udalo
          */
         Uint16 save( section_type_t section );
+
+        /**uniewaznaia wszystkie sekcje plikow*/
+        Uint16 invalidate_sections(void);
 
 //private: publiczne dla callbackow
         //wewnetrzne typy danych uzywane przez callbacki

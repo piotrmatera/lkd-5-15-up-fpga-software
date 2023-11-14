@@ -92,6 +92,9 @@ struct region_info_ext_t{
     uint16_t res[4];
 };
 
+
+#define NONVOLATILE_INVALID_CRC 0xDEAD
+
 #define NONVOLATILE_NO_VALID_COPY 100
 #define NONVOLATILE_TIMEOUT 200
 #define NONVOLATILE_INVALID 10
@@ -150,7 +153,11 @@ public:
      * @return 0 gdy poprawny odczyt (zgodne crc)*/
     Uint16 read_info( struct region_info_t* info, struct region_info_ext_t * info_ext, Uint64 timeout = 0) const;
 
+    /** kasuje caly eeprom - wypelnia FFami*/
     Uint16 erase_eeprom( void ) const;
+
+    /**uniewaznaia kopie w pamieci eeprom*/
+    Uint16 invalidate( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const;
 
     uint16_t crc8_continue(const Uint16 * data, size_t size, Uint16 crc_init) const;
     uint16_t crc8(const Uint16 * data, size_t size) const;
@@ -162,10 +169,6 @@ private:
 
     /**odczytuje region z pamieci eeprom do pamieci lokalnej (wewn.)*/
     Uint16 write( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const;
-
-    /**uniewaznaia kopie w pamieci eeprom*/
-    Uint16 invalidate( Uint16 region_index, Uint16 copy_offset, Uint64 timeout )const;
-
 
     /**odczytuje region i sprawdza czy kopia jest poprawna
      * zwraca NONVOLATILE_OK gdy jest poprawna (albo NONVOLATILE_INVALID, NONVOLATILE_TIMEOUT)*/

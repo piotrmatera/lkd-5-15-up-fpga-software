@@ -107,7 +107,8 @@ typedef enum{
     CMD_COPY_EEPROM_TO_SDCARD = 0xE25D,
     CMD_COPY_SDCARD_TO_EEPROM = 0x5D2E,
     CMD_FORMAT_INFO           = 0xFE1F,
-    CMD_EEPROM_ERASE_ALL      = 0xEA11
+    CMD_EEPROM_ERASE_ALL      = 0xEA11,
+    CMD_INVALIDATE_ALL_SECTIONS = 0x1A5E
 }modbus_holding_commands_t;
 
 extern struct Modbus_Converter_memory_struct Modbus_Converter;

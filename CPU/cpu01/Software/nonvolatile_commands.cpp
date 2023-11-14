@@ -16,6 +16,7 @@
 
 
 
+
 nonvolatile_commands_t nonvolatile_commands;
 
 nonvolatile_commands_t::nonvolatile_commands_t(){
@@ -91,6 +92,12 @@ status_code_t nonvolatile_commands_t::process( modbus_holding_commands_t cmd, Ui
     case CMD_EEPROM_ERASE_ALL:
         retc = (status_code_t)nonvolatile.erase_eeprom();
         break;
+
+    case CMD_INVALIDATE_ALL_SECTIONS:
+    {
+        retc = (status_code_t)nv_data.invalidate_sections();
+        break;
+    }
     default:
         break;
     }
