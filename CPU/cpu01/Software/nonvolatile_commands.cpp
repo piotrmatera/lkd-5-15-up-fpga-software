@@ -23,7 +23,7 @@ nonvolatile_commands_t::nonvolatile_commands_t(){
 }
 
 const section_type_t section_type[]={
-   sec_CT_characteristic,
+//   sec_CT_characteristic, TODO dopisac zapis dla sd_card i nv_sections
    sec_settings,
    sec_H_settings,
    sec_calibration_data,
@@ -35,7 +35,10 @@ void nonvolatile_commands_t::result( Uint16 res, Uint16 ext_res ){
     Modbus_Converter.holding_registers.ext_result = ext_res;
 }
 
-status_code_t nonvolatile_commands_t::process( modbus_holding_commands_t cmd ){
+status_code_t nonvolatile_commands_t::process( modbus_holding_commands_t cmd, Uint16 arg1, Uint16 arg2 ){
+    (void)arg1;
+    (void)arg2;
+
     status_code_t retc = err_invalid;
     Uint16 ext_res = 0xFF;
 

@@ -15,7 +15,7 @@ class nonvolatile_commands_t{
 public:
     nonvolatile_commands_t();
 
-    status_code_t process( modbus_holding_commands_t cmd );
+    status_code_t process( modbus_holding_commands_t cmd, Uint16 arg1, Uint16 arg2 );
 
     void result( Uint16 res, Uint16 ext_res );
 };

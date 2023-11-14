@@ -449,8 +449,12 @@ void Modbus_ADU_slave_transparent::Fcn_after_processed()
         Uint16 phase_size = sizeof(Modbus_Converter.holding_registers.PWM_phase_shift);
         if(Mdb_slave_ADU.start_address <= phase_offset && Mdb_slave_ADU.end_address >= phase_offset + phase_size - 1)
             Conv.PWM_phase_shift = Modbus_Converter.holding_registers.PWM_phase_shift;
-        if(Mdb_slave_ADU.start_address == Uint16_offset(Modbus_Converter.holding_registers, command ))
-            nonvolatile_commands.process( (modbus_holding_commands_t)Modbus_Converter.holding_registers.command );
+        if(Mdb_slave_ADU.start_address == Uint16_offset(Modbus_Converter.holding_registers, command )){
+            Uint16 arg1 = Modbus_Converter.holding_registers.arg1;
+            Uint16 arg2 = Modbus_Converter.holding_registers.arg2;
+            nonvolatile_commands.process( (modbus_holding_commands_t)Modbus_Converter.holding_registers.command, arg1, arg2 );
+            Modbus_Converter.holding_registers.command = 0;
+        }
     }
 
     if(Mdb_slave_ADU.function == Read_Input_Registers)

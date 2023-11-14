@@ -703,7 +703,9 @@ SECTION_HOLDING_REGISTERS_DEF
         167     float   pwm_phase_shift
         
         170     u16     command
-        171     u16     result
-        172     u16     ext_result
+        171     u16     arg1
+        172     u16     arg2
+        173     u16     result
+        174     u16     ext_result
         
 	

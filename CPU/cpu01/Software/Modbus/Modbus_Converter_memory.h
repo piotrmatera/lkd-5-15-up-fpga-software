@@ -95,6 +95,8 @@ struct Modbus_Converter_memory_struct
         float PWM_phase_shift;
         Uint16 res;
         Uint16 command;
+        Uint16 arg1;
+        Uint16 arg2;
         Uint16 result;
         Uint16 ext_result;
 
