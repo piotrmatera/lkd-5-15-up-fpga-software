@@ -157,7 +157,7 @@ Uint16 nonvolatile_t::retrieve(Uint16 region_index, Uint64 timeout) const{
 Uint16 nonvolatile_t::write_info( const struct region_info_t* info, const struct region_info_ext_t * info_ext, Uint64 timeout ) const{
     Uint64 _timeout = timeout==0? 0ULL :((Uint64)timeout)*200ULL*1000ULL + ReadIpcTimer();
     struct region_info_t info_wr = *info;
-    info_wr.crc = crc8( (uint16_t*)&info_wr.data, sizeof(info_wr.data));
+    info_wr.crc = crc8( (uint16_t*)&info_wr.data, sizeof(info_wr.data)*2);
 
     struct eeprom_i2c::event_region_xdata xdata;
     xdata.status = eeprom_i2c::event_region_xdata::idle;
@@ -184,7 +184,7 @@ Uint16 nonvolatile_t::read_info( struct region_info_t* info, struct region_info_
     if( xdata.status != eeprom_i2c::event_region_xdata::done_ok )
         return retc;
 
-    Uint16 crc = crc8( (uint16_t*)&info->data, sizeof(info->data));
+    Uint16 crc = crc8( (uint16_t*)&info->data, sizeof(info->data)*2);
     return ( crc != info->crc )? NONVOLATILE_INVALID : NONVOLATILE_OK;
 }
 
