@@ -8,12 +8,12 @@
 #include <string.h>
 #include "eeprom_i2c.h"
 
-static inline _min( Uint16 a, Uint16 b ){
+/*static inline Uint16 _min( Uint16 a, Uint16 b ){
     if( a < b )
         return a;
     else
         return b;
-}
+}*/
 
 void memcpy_with_unpack( uint16_t * dest, const uint16_t * src, uint16_t bytes ){
     uint16_t ix;
