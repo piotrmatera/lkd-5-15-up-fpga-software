@@ -775,8 +775,8 @@ Uint16 SD_card_class::save( section_type_t section ){
     case sec_H_settings: return save_H_settings();
     case sec_calibration_data: return save_calibration_data();
     case sec_meter_data:      return save_meter_data();
+    case sec_CT_characteristic: return save_CT_characteristic();
 
-    case sec_CT_characteristic:
     default:
         return FR_INVALID_PARAMETER;
     }
@@ -924,6 +924,25 @@ Uint16 SD_card_class::save_settings()
     snprintf(working_buffer, WBUF_SIZE, "%g", settings.no_neutral);
     f_puts(working_buffer, &fil);
     f_putc('\n', &fil);
+
+    fresult = f_close(&fil);
+    return fresult;
+}
+
+Uint16 SD_card_class::save_CT_characteristic()
+{
+    FIL fil;
+    if(fresult = f_open(&fil, "CT_char.csv", FA_READ | FA_WRITE | FA_CREATE_ALWAYS))
+    {
+        f_close(&fil);
+        return fresult;
+    }
+
+    f_puts("Current [A];CT A ratio[A/A];CT B ratio[A/A];CT C ratio[A/A];CT A phase[degrees];CT B phase[degrees];CT C phase[degrees]\n", &fil);
+    const Uint16 no_columns = 7;
+    save_table(&fil, "%g", no_columns, CT_char.number_of_elements, CT_char.set_current,
+               CT_char.CT_ratio_a, CT_char.CT_ratio_b, CT_char.CT_ratio_c,
+               CT_char.phase_a, CT_char.phase_b, CT_char.phase_c);
 
     fresult = f_close(&fil);
     return fresult;

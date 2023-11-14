@@ -41,6 +41,7 @@ private:
     static Uint16 save_settings();
     static Uint16 read_settings();
 
+    static Uint16 save_CT_characteristic();
     static Uint16 read_CT_characteristic();
 
     static Uint16 save_H_settings();
